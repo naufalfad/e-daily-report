@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Core;
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use App\Models\LkhBukti;
+use App\Models\Tupoksi; // [BARU] Import Tupoksi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,13 +16,46 @@ use App\Services\NotificationService;
 class LkhController extends Controller
 {
     /**
+     * [BARU] Mengambil Data Referensi untuk Form Input
+     * Endpoint ini dipanggil saat User membuka halaman "Buat Laporan"
+     */
+    public function getReferensi(Request $request)
+    {
+        $user = Auth::user();
+
+        // 1. Ambil Tupoksi hanya milik Bidang user tersebut
+        $listTupoksi = [];
+        if ($user->bidang_id) {
+            $listTupoksi = Tupoksi::where('bidang_id', $user->bidang_id)
+                ->select('id', 'uraian_tugas')
+                ->get();
+        }
+
+        // 2. List Jenis Aktivitas (Sesuai titah Paduka)
+        $jenisAktivitas = [
+            'Rapat',
+            'Pelayanan Publik',
+            'Penyusunan Dokumen',
+            'Kunjungan Lapangan',
+            'Lainnya'
+        ];
+
+        return response()->json([
+            'tupoksi' => $listTupoksi,
+            'jenis_aktivitas' => $jenisAktivitas,
+            'user_bidang_info' => $user->bidang ? $user->bidang->nama_bidang : 'User belum memiliki bidang'
+        ]);
+    }
+
+    /**
      * 1. LIST LKH
      */
     public function index(Request $request)
     {
         $userId = Auth::id();
         
-        $query = LaporanHarian::with(['skp', 'bukti', 'validator'])
+        // [UPDATE] Muat relasi tupoksi
+        $query = LaporanHarian::with(['tupoksi', 'skp', 'bukti', 'validator'])
             ->where('user_id', $userId);
 
         if ($request->has('tanggal')) {
@@ -42,12 +76,18 @@ class LkhController extends Controller
      */
     public function store(Request $request)
     {
+        // [BARU] Daftar aktivitas yang valid
+        $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
+
         $validator = Validator::make($request->all(), [
+            // [BARU] Validasi Tupoksi & Jenis Kegiatan
+            'tupoksi_id'        => 'required|exists:tupoksi,id',
+            'jenis_kegiatan'    => 'required|in:' . $validAktivitas,
+
             'skp_id'            => 'nullable|exists:skp,id',
             'tanggal_laporan'   => 'required|date',
             'waktu_mulai'       => 'required',
             'waktu_selesai'     => 'required|after:waktu_mulai',
-            'jenis_kegiatan'    => 'required|string',
             'deskripsi_aktivitas'=> 'required|string',
             'output_hasil_kerja'=> 'required|string',
             
@@ -79,9 +119,9 @@ class LkhController extends Controller
                 if ($kelurahan && $kelurahan->latitude) {
                     $finalLat = $kelurahan->latitude;
                     $finalLng = $kelurahan->longitude;
-                } else {
-                    throw new \Exception("Data koordinat wilayah tidak ditemukan.");
                 }
+                // (Tidak perlu throw exception jika kelurahan tidak ada koordinat, 
+                // $finalLat akan tetap null dan tersimpan sebagai null di DB)
             }
 
             // --- Logika Geofencing ---
@@ -90,7 +130,7 @@ class LkhController extends Controller
             $radius    = config('services.office.radius');
             $isLuarLokasi = true;
 
-            if ($officeLat && $officeLng && $finalLat) {
+            if ($officeLat && $officeLng && $finalLat && $finalLng) {
                 $distanceQuery = DB::selectOne("
                     SELECT ST_DistanceSphere(
                         ST_Point(?, ?), 
@@ -103,29 +143,27 @@ class LkhController extends Controller
                 }
             }
 
-            // Simpan LKH
+            // Simpan LKH [UPDATE]
             $lkh = LaporanHarian::create([
                 'user_id'            => Auth::id(),
                 'skp_id'             => $request->skp_id,
+                'tupoksi_id'         => $request->tupoksi_id, // [BARU]
+                'jenis_kegiatan'     => $request->jenis_kegiatan, // [BARU]
                 'tanggal_laporan'    => $request->tanggal_laporan,
                 'waktu_mulai'        => $request->waktu_mulai,
                 'waktu_selesai'      => $request->waktu_selesai,
-                'jenis_kegiatan'     => $request->jenis_kegiatan,
                 'deskripsi_aktivitas'=> $request->deskripsi_aktivitas,
                 'output_hasil_kerja' => $request->output_hasil_kerja,
                 'status'             => 'waiting_review',
                 'master_kelurahan_id'=> $request->master_kelurahan_id,
                 'is_luar_lokasi'     => $isLuarLokasi,
-                'lokasi' => DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)")
-
+                'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
             // --- UPLOAD KE MINIO ---
             if ($request->hasFile('bukti')) {
                 foreach ($request->file('bukti') as $file) {
-                    // [PERBAIKAN] Gunakan disk 'minio'
                     $path = $file->store('lkh_bukti', 'minio'); 
-                    
                     LkhBukti::create([
                         'laporan_id'         => $lkh->id,
                         'file_path'          => $path,
@@ -142,7 +180,7 @@ class LkhController extends Controller
                 NotificationService::send(
                     $request->user()->atasan_id,
                     'lkh_new_submission',
-                    'Pegawai ' . $request->user()->name . ' baru saja mengirim LKH baru.',
+                    'Pegawai ' . $request->user()->name . ' mengirim laporan: ' . $request->jenis_kegiatan, // Pesan lebih deskriptif
                     $lkh->id
                 );
             }
@@ -150,7 +188,7 @@ class LkhController extends Controller
             return response()->json([
                 'message' => 'Laporan Harian berhasil dikirim',
                 'is_luar_lokasi' => $isLuarLokasi,
-                'data' => $lkh->load('bukti')
+                'data' => $lkh->load(['bukti', 'tupoksi']) // [UPDATE] Muat tupoksi
             ], 201);
 
         } catch (\Exception $e) {
@@ -161,9 +199,22 @@ class LkhController extends Controller
 
     public function show($id)
     {
-        $lkh = LaporanHarian::with(['skp', 'bukti', 'validator', 'user'])
-            ->where('user_id', Auth::id()) 
+        // [UPDATE] Cek Laporan milik user ybs ATAU user adalah atasan dari pelapor
+        $user = Auth::user();
+        $lkh = LaporanHarian::with(['tupoksi', 'skp', 'bukti', 'validator', 'user.bidang', 'user.jabatan'])
+            ->where(function($query) use ($user) {
+                $query->where('user_id', $user->id) // Laporan miliknya
+                      ->orWhere('validator_id', $user->id); // Laporan yg dia validasi
+            })
             ->find($id);
+            
+        // Jika tidak ditemukan, coba cari tahu apakah dia Atasan dari si pembuat laporan
+        if (!$lkh) {
+             $lkhCheck = LaporanHarian::find($id);
+             if ($lkhCheck && $lkhCheck->user->atasan_id == $user->id) {
+                 $lkh = $lkhCheck->load(['tupoksi', 'skp', 'bukti', 'validator', 'user.bidang', 'user.jabatan']);
+             }
+        }
 
         if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
 
@@ -183,7 +234,6 @@ class LkhController extends Controller
             return response()->json(['message' => 'Laporan yang sudah disetujui tidak bisa dihapus'], 403);
         }
 
-        // [PERBAIKAN] Hapus file fisik di MinIO
         foreach ($lkh->bukti as $file) {
             Storage::disk('minio')->delete($file->file_path);
         }

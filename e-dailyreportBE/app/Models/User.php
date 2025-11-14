@@ -6,64 +6,48 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait; // Pastikan library ini terinstall
-use Illuminate\Support\Facades\Storage; // <-- PENTING: Untuk MinIO
+use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait; 
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SpatialTrait;
 
-    /**
-     * Kolom yang tidak boleh diisi secara mass assignment.
-     * Kosongkan array agar semua kolom bisa diisi (unguarded).
-     */
     protected $guarded = [];
 
-    /**
-     * Atribut yang harus disembunyikan saat return JSON.
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Casting tipe data otomatis.
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
-    /**
-     * Konfigurasi kolom Spatial (PostGIS).
-     * Jika tabel users belum punya kolom geometry, biarkan array kosong.
-     */
     protected $spatialFields = [];
 
-    /**
-     * Menambahkan atribut custom ke dalam JSON response otomatis.
-     */
     protected $appends = ['foto_profil_url'];
 
     // ======================================================================
-    // ACCESSORS (Atribut Tambahan)
+    // ACCESSORS
     // ======================================================================
 
-    /**
-     * Mengubah path 'profil/namafile.jpg' menjadi URL lengkap MinIO
-     * Contoh: http://127.0.0.1:9000/edaily-report/profil/namafile.jpg
-     */
     public function getFotoProfilUrlAttribute()
     {
         if ($this->foto_profil) {
-            // Pastikan disk 'minio' sudah dikonfigurasi di config/filesystems.php
             return Storage::disk('minio')->url($this->foto_profil);
         }
-        
-        // Return null atau URL avatar default jika tidak ada foto
-        // return 'https://ui-avatars.com/api/?name=' . urlencode($this->name);
         return null; 
+    }
+    
+    public function getTupoksiTersediaAttribute()
+    {
+        // Pastikan relasi bidang ada
+        if ($this->bidang) {
+            return Tupoksi::where('bidang_id', $this->bidang_id)->get();
+        }
+        return collect(); // Kembalikan koleksi kosong jika tidak punya bidang
     }
 
     // ======================================================================
@@ -75,86 +59,75 @@ class User extends Authenticatable
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
 
+    public function bidang()
+    {
+        return $this->belongsTo(Bidang::class, 'bidang_id');
+    }
+
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 
-    /**
-     * Atasan langsung dari user ini.
-     */
     public function atasan()
     {
         return $this->belongsTo(User::class, 'atasan_id');
     }
 
-    /**
-     * Daftar bawahan yang melapor ke user ini.
-     */
     public function bawahan()
     {
         return $this->hasMany(User::class, 'atasan_id');
     }
-
+    
     /**
-     * Role User (Super Admin, Pegawai, Penilai, Kadis)
+     * [BARU] Relasi Rekursif (Hierarki Pohon)
+     * Ini akan mengambil semua bawahan, dan juga 'bawahanRecursif' dari bawahan tersebut,
+     * sekaligus memuat data jabatan dan bidang mereka.
      */
+    public function bawahanRecursif()
+    {
+        return $this->hasMany(User::class, 'atasan_id')
+                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
+    }
+
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
     }
 
     // ======================================================================
-    // RELASI CORE BUSINESS (SKP & LKH)
+    // RELASI CORE BUSINESS
     // ======================================================================
 
-    /**
-     * SKP yang dibuat oleh user ini.
-     */
     public function skp()
     {
         return $this->hasMany(Skp::class, 'user_id');
     }
 
-    /**
-     * Laporan Harian yang dibuat oleh user ini.
-     */
     public function laporanHarian()
     {
         return $this->hasMany(LaporanHarian::class, 'user_id');
     }
 
-    /**
-     * Laporan Harian yang divalidasi OLEH user ini (sebagai Atasan/Validator).
-     */
     public function laporanValidasi()
     {
         return $this->hasMany(LaporanHarian::class, 'validator_id');
     }
 
     // ======================================================================
-    // RELASI PENDUKUNG (Notif, Pengumuman, Log)
+    // RELASI PENDUKUNG
     // ======================================================================
 
-    /**
-     * Pengumuman yang DIBUAT oleh user ini.
-     */
     public function pengumumanDibuat()
     {
         return $this->hasMany(Pengumuman::class, 'user_id_creator');
     }
 
-    /**
-     * Notifikasi yang DITERIMA oleh user ini.
-     */
     public function notifikasiDiterima()
     {
         return $this->hasMany(Notifikasi::class, 'user_id_recipient');
     }
 
-    /**
-     * Log aktivitas yang dilakukan user ini.
-     */
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class, 'user_id');

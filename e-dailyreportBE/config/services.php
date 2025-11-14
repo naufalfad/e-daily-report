@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'office' => [
+    'lat' => env('OFFICE_LATITUDE'),
+    'lng' => env('OFFICE_LONGITUDE'),
+    'radius' => env('OFFICE_RADIUS_METER', 100),
+    ],
+
 ];

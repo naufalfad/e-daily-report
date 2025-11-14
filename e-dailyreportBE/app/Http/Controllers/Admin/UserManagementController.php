@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Bidang; // [BARU] Import Model Bidang
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -16,8 +17,8 @@ class UserManagementController extends Controller
      */
     public function index(Request $request)
     {
-        // Eager Load relasi agar hemat query
-        $query = User::with(['unitKerja', 'jabatan', 'roles', 'atasan']);
+        // [UPDATE] Tambahkan 'bidang' ke eager load agar datanya muncul di JSON
+        $query = User::with(['unitKerja', 'bidang', 'jabatan', 'roles', 'atasan']);
 
         // Filter Pencarian (Nama / NIP)
         if ($request->has('search')) {
@@ -28,12 +29,16 @@ class UserManagementController extends Controller
             });
         }
 
-        // Filter per Unit Kerja (Opsional)
+        // Filter per Unit Kerja
         if ($request->has('unit_kerja_id')) {
             $query->where('unit_kerja_id', $request->unit_kerja_id);
         }
 
-        // Urutkan dari yang paling baru dibuat
+        // [BARU] Filter per Bidang (Opsional, jika Admin ingin lihat pegawai bidang tertentu saja)
+        if ($request->has('bidang_id')) {
+            $query->where('bidang_id', $request->bidang_id);
+        }
+
         $users = $query->latest()->paginate(10);
         
         return response()->json($users);
@@ -50,12 +55,25 @@ class UserManagementController extends Controller
             'nip'           => 'nullable|string|unique:users,nip',
             'password'      => 'required|string|min:6',
             'unit_kerja_id' => 'required|exists:unit_kerja,id',
+            'bidang_id'     => 'required|exists:bidang,id', // [BARU] Wajib pilih bidang
             'jabatan_id'    => 'required|exists:jabatan,id',
             'role_id'       => 'required|exists:roles,id',
             'atasan_id'     => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+
+        // [BARU] Validasi Konsistensi: Pastikan Bidang yang dipilih BENAR anak dari Unit Kerja yang dipilih
+        // Jangan sampai Unit "Bapenda" tapi Bidangnya "IGD" (milik RSUD)
+        $cekBidang = Bidang::where('id', $request->bidang_id)
+                           ->where('unit_kerja_id', $request->unit_kerja_id)
+                           ->exists();
+
+        if (!$cekBidang) {
+            return response()->json([
+                'errors' => ['bidang_id' => ['Bidang tidak sesuai dengan Unit Kerja yang dipilih.']]
+            ], 422);
+        }
 
         try {
             DB::beginTransaction();
@@ -66,9 +84,9 @@ class UserManagementController extends Controller
                 'nip'           => $request->nip,
                 'password'      => Hash::make($request->password),
                 'unit_kerja_id' => $request->unit_kerja_id,
+                'bidang_id'     => $request->bidang_id, // [BARU] Simpan bidang
                 'jabatan_id'    => $request->jabatan_id,
                 'atasan_id'     => $request->atasan_id,
-                // 'foto_profil' bisa ditambahkan nanti jika ada upload file
             ]);
 
             // Assign Role
@@ -78,7 +96,7 @@ class UserManagementController extends Controller
 
             return response()->json([
                 'message' => 'Pegawai berhasil didaftarkan',
-                'data'    => $user->load('roles')
+                'data'    => $user->load(['roles', 'bidang'])
             ], 201);
 
         } catch (\Exception $e) {
@@ -92,7 +110,8 @@ class UserManagementController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['unitKerja', 'jabatan', 'roles', 'atasan', 'bawahan'])->findOrFail($id);
+        // [UPDATE] Load bidang
+        $user = User::with(['unitKerja', 'bidang', 'jabatan', 'roles', 'atasan', 'bawahan'])->findOrFail($id);
         return response()->json($user);
     }
 
@@ -105,14 +124,11 @@ class UserManagementController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'          => 'required|string|max:255',
-            // Perhatikan: unique ignore ID user yang sedang diedit
             'email'         => 'required|email|unique:users,email,'.$id,
             'nip'           => 'nullable|string|unique:users,nip,'.$id,
-            
-            // Password nullable (hanya diisi jika ingin ganti password)
             'password'      => 'nullable|string|min:6',
-            
             'unit_kerja_id' => 'required|exists:unit_kerja,id',
+            'bidang_id'     => 'required|exists:bidang,id', // [BARU]
             'jabatan_id'    => 'required|exists:jabatan,id',
             'role_id'       => 'required|exists:roles,id',
             'atasan_id'     => 'nullable|exists:users,id',
@@ -120,27 +136,36 @@ class UserManagementController extends Controller
 
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
+        // [BARU] Validasi Konsistensi lagi saat update
+        $cekBidang = Bidang::where('id', $request->bidang_id)
+                           ->where('unit_kerja_id', $request->unit_kerja_id)
+                           ->exists();
+
+        if (!$cekBidang) {
+            return response()->json([
+                'errors' => ['bidang_id' => ['Bidang tidak sesuai dengan Unit Kerja yang dipilih.']]
+            ], 422);
+        }
+
         try {
             DB::beginTransaction();
 
-            // Update data dasar
             $userData = [
                 'name'          => $request->name,
                 'email'         => $request->email,
                 'nip'           => $request->nip,
                 'unit_kerja_id' => $request->unit_kerja_id,
+                'bidang_id'     => $request->bidang_id, // [BARU] Update bidang
                 'jabatan_id'    => $request->jabatan_id,
                 'atasan_id'     => $request->atasan_id,
             ];
 
-            // Cek apakah password diganti?
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
 
             $user->update($userData);
 
-            // Update Role (Gunakan sync agar role lama terhapus & diganti yang baru)
             if ($request->has('role_id')) {
                 $user->roles()->sync([$request->role_id]);
             }
@@ -149,7 +174,7 @@ class UserManagementController extends Controller
 
             return response()->json([
                 'message' => 'Data pegawai berhasil diperbarui',
-                'data'    => $user->load('roles')
+                'data'    => $user->load(['roles', 'bidang'])
             ]);
 
         } catch (\Exception $e) {
@@ -163,17 +188,12 @@ class UserManagementController extends Controller
      */
     public function destroy($id)
     {
-        // Jangan biarkan user menghapus dirinya sendiri
         if (auth()->id() == $id) {
             return response()->json(['message' => 'Anda tidak bisa menghapus akun sendiri!'], 403);
         }
 
         try {
             $user = User::findOrFail($id);
-            
-            // Hapus user
-            // Note: Karena di migration kita pakai ON DELETE CASCADE/SET NULL
-            // Data di tabel lain (LKH, user_roles) aman terhapus/terupdate otomatis.
             $user->delete();
 
             return response()->json(['message' => 'Pegawai berhasil dihapus']);

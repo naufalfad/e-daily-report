@@ -27,4 +27,16 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    protected function unauthenticated($request, \Illuminate\Auth\AuthenticationException $exception)
+{
+    // Jika request API, kembalikan JSON
+    if ($request->expectsJson() || $request->is('api/*')) {
+        return response()->json(['message' => 'Unauthenticated.'], 401);
+    }
+
+    // Default behavior untuk web (redirect)
+    return redirect()->guest(route('login'));
+}
+
 }

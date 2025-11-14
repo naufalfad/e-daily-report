@@ -55,14 +55,33 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
         ],
-        'minio' => [
+            'minio' => [
+            'driver' => 's3',
+            'endpoint' => env('MINIO_ENDPOINT', 'http://127.0.0.1:9000'),
+            'use_path_style_endpoint' => true,
+            'key' => env('MINIO_KEY'),
+            'secret' => env('MINIO_SECRET'),
+            'region' => env('MINIO_REGION', 'us-east-1'),
+            'bucket' => env('MINIO_BUCKET'),
+            'throw' => false,
+            // TAMBAHAN PENTING INI:
+            'url' => env('MINIO_ENDPOINT') . '/' . env('MINIO_BUCKET'),
+        ],
+
+        'r2' => [
         'driver' => 's3',
-        'endpoint' => env('MINIO_ENDPOINT', 'http://127.0.0.1:9000'),
+        'key' => env('R2_ACCESS_KEY_ID'),
+        'secret' => env('R2_SECRET_ACCESS_KEY'),
+        'region' => env('R2_REGION', 'auto'),
+
+        // Endpoint Wajib Format AWS-Compatible
+        'endpoint' => "https://" . env('R2_ACCOUNT_ID') . ".r2.cloudflarestorage.com",
+
+        'bucket' => env('R2_BUCKET'),
         'use_path_style_endpoint' => true,
-        'key' => env('MINIO_KEY'),
-        'secret' => env('MINIO_SECRET'),
-        'region' => env('MINIO_REGION', 'us-east-1'),
-        'bucket' => env('MINIO_BUCKET'),
+
+        // Optional: Jika pakai domain publik sendiri
+        'url' => env('R2_PUBLIC_URL'),
     ],
 
     ],

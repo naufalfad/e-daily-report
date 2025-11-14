@@ -39,12 +39,15 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            // [BARU] Pasang Penjaga Maintenance Mode di baris paling atas sini!
+            \App\Http\Middleware\CheckMaintenanceMode::class, 
+
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
-
+    
     /**
      * The application's middleware aliases.
      *

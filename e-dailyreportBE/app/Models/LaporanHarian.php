@@ -4,46 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait; // <-- 1. IMPORT TRAIT BARU
+use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait;
 
 class LaporanHarian extends Model
 {
-    use HasFactory, SpatialTrait; // <-- 2. GUNAKAN TRAIT BARU
+    use HasFactory, SpatialTrait;
 
     protected $table = 'laporan_harian';
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
-    // 3. TENTUKAN KOLOM SPATIAL ANDA DI SINI
-    protected $spatial = [
-        'lokasi',
+    // Konfigurasi PostGIS (Nama kolom yang tipe datanya GEOMETRY/GEOGRAPHY)
+    protected $spatialFields = [
+        'lokasi', 
     ];
 
-    // == RELASI UTAMA ==
-    
-    public function pegawai()
+    // Relasi ke User
+    public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function validator()
-    {
-        return $this->belongsTo(User::class, 'validator_id');
-    }
-
+    // Relasi ke SKP (Bisa Null jika Non-SKP)
     public function skp()
     {
-        return $this->belongsTo(Skp::class, 'skp_id');
+        return $this->belongsTo(Skp::class)->withDefault([
+            'nama_skp' => 'Non-SKP / Tugas Tambahan'
+        ]);
     }
 
+    // Relasi ke Bukti (Foto/PDF)
     public function bukti()
     {
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
     
-    // == RELASI LOKASI MANUAL ==
-    
-    public function kelurahan()
+    // Relasi ke Validator (Atasan)
+    public function validator()
     {
-        return $this->belongsTo(MasterKelurahan::class, 'master_kelurahan_id', 'id');
+        return $this->belongsTo(User::class, 'validator_id');
     }
 }

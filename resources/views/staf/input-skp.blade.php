@@ -338,8 +338,9 @@
                         <button @click="open = false" type="button" class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                             Batal
                         </button>
-                        <button type="button"
-                            class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
+                        <button type="button" 
+                                @click="openEditModal()" 
+                                class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
                             Edit SKP
                         </button>
                     </div>
@@ -349,6 +350,81 @@
         </div>
     </div>
     {{-- / MODAL --}}
+
+    {{-- MODAL EDIT (BARU) --}}
+    <div x-show="openEdit" 
+         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" 
+         style="display: none;">
+    
+        <div class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl overflow-hidden" @click.outside="openEdit = false">
+            
+            {{-- Header Modal Edit --}}
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800">Edit Sasaran Kinerja</h3>
+                <button @click="openEdit = false" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            {{-- Form Edit --}}
+            <form @submit.prevent="saveEdit" class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+                <template x-if="editData">
+                    <div class="space-y-4 text-sm">
+                        {{-- Input Tanggal --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Periode Mulai</label>
+                                <input type="date" x-model="editData.tgl_mulai_raw" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Periode Selesai</label>
+                                <input type="date" x-model="editData.tgl_selesai_raw" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                        </div>
+
+                        {{-- Input Sasaran & Indikator --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Sasaran Kinerja</label>
+                                <input type="text" x-model="editData.sasaran_kinerja" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Indikator Kinerja</label>
+                                <input type="text" x-model="editData.indikator_kinerja" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                        </div>
+
+                        {{-- Input Rencana Aksi --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Rencana Aksi</label>
+                            <textarea x-model="editData.rencana_aksi" rows="3" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"></textarea>
+                        </div>
+
+                        {{-- Input Target --}}
+                        <div class="grid grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Target</label>
+                                <input type="number" x-model="editData.target_kuantitas" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Satuan</label>
+                                <input type="text" x-model="editData.satuan" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kualitas (%)</label>
+                                <input type="number" x-model="editData.target_kualitas" class="w-full rounded-[8px] border border-slate-300 px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-end space-x-3">
+                    <button type="button" @click="openEdit = false" class="px-4 py-2 rounded-[8px] border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-[8px] bg-[#0F4C75] text-white text-sm font-medium hover:bg-[#0B3A5B] shadow-lg">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </section>
 
 @endsection
@@ -358,7 +434,6 @@
 <script src="//unpkg.com/alpinejs" defer></script>
 
 <script>
-// ANALISIS: Menggabungkan semua JS ke dalam Alpine component
 function skpPageData() {
     return {
         skpList: [],
@@ -381,23 +456,22 @@ function skpPageData() {
                 })
                 .catch(err => {
                     console.error('Gagal memuat data SKP:', err);
-                    // Tetap tampilkan data hardcode dari blade jika fetch gagal
-                    // (Anda bisa hapus ini jika sudah production)
+                    // Fallback data jika fetch gagal
                     this.skpList = [
                         { "id": 1, "periode": "10/01/2025 - 10/12/2025", "sasaran_kinerja": "Meningkatkan perolehan wajib pajak daerah.", "indikator_kinerja": "Jumlah pajak yang dibayarkan...", "atasan_langsung": "Fahrizal M.", "rencana_aksi": "Melakukan entri data...", "target_kuantitas": 300, "satuan": "Berkas", "target_kualitas": 100 }
                     ];
                 });
         },
 
-        // 2. Fungsi untuk membuka modal
+        // 2. Fungsi untuk membuka modal detail
         openModal(skp) {
             this.modalData = skp;
             this.open = true;
         },
 
-        // 3. Helper untuk date picker (dari script asli)
+        // 3. Helper untuk date picker
         initDatePickers() {
-            this.$nextTick(() => { // Pastikan DOM siap
+            this.$nextTick(() => {
                 const initDatePicker = (inputId, buttonId) => {
                     const input = document.getElementById(inputId);
                     const button = document.getElementById(buttonId);
@@ -413,9 +487,9 @@ function skpPageData() {
             });
         },
 
-        // 4. Helper untuk placeholder dropdown (dari script asli)
+        // 4. Helper untuk placeholder dropdown
         initSelectPlaceholders() {
-            this.$nextTick(() => { // Pastikan DOM siap
+            this.$nextTick(() => {
                 const initSelectPlaceholder = (selectId) => {
                     const select = document.getElementById(selectId);
                     if (select) {
@@ -423,11 +497,62 @@ function skpPageData() {
                             select.style.color = (select.value === "") ? '#9CA3AF' : '#111827';
                         };
                         select.addEventListener('change', setColor);
-                        setColor(); // Panggil saat inisialisasi
+                        setColor();
                     }
                 };
                 initSelectPlaceholder('atasan_langsung');
             });
+        }, // <--- KOMANYA TADI HILANG DISINI YANG MULIA
+
+        // --- TAMBAHAN UNTUK MODAL EDIT ---
+        openEdit: false, 
+        editData: null, 
+
+        // Fungsi Buka Modal Edit (Dipanggil dari Modal Detail)
+        openEditModal() {
+            // 1. Salin data agar aman
+            this.editData = JSON.parse(JSON.stringify(this.modalData));
+
+            // 2. Pecah tanggal untuk input date HTML
+            if (this.editData.periode) {
+                let dates = this.editData.periode.split(' - ');
+                this.editData.tgl_mulai_raw = this.convertDateToISO(dates[0]);
+                this.editData.tgl_selesai_raw = this.convertDateToISO(dates[1]);
+            }
+
+            // 3. Switch Modal
+            this.open = false;
+            this.openEdit = true;
+        },
+
+        // Fungsi Simpan Perubahan
+        saveEdit() {
+            // Format balik tanggal untuk tampilan
+            let start = this.convertDateToDisplay(this.editData.tgl_mulai_raw);
+            let end = this.convertDateToDisplay(this.editData.tgl_selesai_raw);
+            this.editData.periode = `${start} - ${end}`;
+
+            // Update data di tabel (Array skpList)
+            let index = this.skpList.findIndex(item => item.id === this.editData.id);
+            if (index !== -1) {
+                this.skpList[index] = this.editData;
+            }
+
+            this.openEdit = false;
+        },
+
+        // Helper: "10/01/2025" -> "2025-01-10"
+        convertDateToISO(dateStr) {
+            if (!dateStr) return '';
+            let parts = dateStr.trim().split('/'); 
+            return (parts.length === 3) ? `${parts[2]}-${parts[1]}-${parts[0]}` : '';
+        },
+
+        // Helper: "2025-01-10" -> "10/01/2025"
+        convertDateToDisplay(isoDate) {
+            if (!isoDate) return '';
+            let parts = isoDate.split('-');
+            return (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : '';
         }
     };
 }

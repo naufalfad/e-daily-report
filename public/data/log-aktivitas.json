@@ -1,0 +1,42 @@
+[
+    {
+        "id": 1,
+        "tanggal": "2025-11-17",
+        "waktu": "08:30",
+        "aktivitas": "Login Sistem",
+        "deskripsi": "Berhasil masuk ke sistem menggunakan perangkat Desktop (Windows 10).",
+        "tipe": "system"
+    },
+    {
+        "id": 2,
+        "tanggal": "2025-11-17",
+        "waktu": "09:15",
+        "aktivitas": "Input Laporan Harian",
+        "deskripsi": "Menambahkan laporan kegiatan 'Rapat Koordinasi Internal'.",
+        "tipe": "create"
+    },
+    {
+        "id": 3,
+        "tanggal": "2025-11-16",
+        "waktu": "16:45",
+        "aktivitas": "Logout Sistem",
+        "deskripsi": "Keluar dari sistem.",
+        "tipe": "system"
+    },
+    {
+        "id": 4,
+        "tanggal": "2025-11-16",
+        "waktu": "14:20",
+        "aktivitas": "Update Profil",
+        "deskripsi": "Memperbarui data nomor telepon dan alamat email.",
+        "tipe": "update"
+    },
+    {
+        "id": 5,
+        "tanggal": "2025-11-15",
+        "waktu": "10:00",
+        "aktivitas": "Input SKP",
+        "deskripsi": "Membuat sasaran kinerja pegawai untuk periode 2025.",
+        "tipe": "create"
+    }
+]

@@ -45,6 +45,18 @@
     input[type="time"].time-filled {
         color: #111827;
     }
+
+    /* HIDE SCROLLBAR TAPI MASIH BISA SCROLL */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        /* IE & Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
     </style>
 </head>
 

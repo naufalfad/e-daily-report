@@ -10,302 +10,360 @@
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
         <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
 
-        <div class="space-y-4">
-            {{-- Row 1: Tanggal + Jenis Kegiatan --}}
-            <div class="grid md:grid-cols-2 gap-4">
-
-                {{-- Tanggal --}}
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
-                    <div class="relative">
-                        <input id="tanggal_lkh" type="date" class="tanggal-placeholder w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                      px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                      focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-
-                        {{-- Icon kalender lokal --}}
-                        <button type="button" id="tanggal_lkh_btn"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
-                            <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal"
-                                class="h-4 w-4 opacity-80" />
-                        </button>
+        {{-- 
+            [PENTING] Kita tambahkan tag <form> di sini agar tombol submit berfungsi normal 
+            Action kosong karena kita asumsikan handle via JS atau default submit 
+        --}}
+        <form id="form-lkh"> 
+            <div class="space-y-4">
+                
+                {{-- Row 1: Tanggal + Jenis Kegiatan --}}
+                <div class="grid md:grid-cols-2 gap-4">
+                    {{-- Tanggal --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
+                        <div class="relative">
+                            <input id="tanggal_lkh" name="tanggal_laporan" type="date" class="tanggal-placeholder w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                          focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                            <button type="button" id="tanggal_lkh_btn"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal" class="h-4 w-4 opacity-80" />
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-                {{-- Jenis Kegiatan (custom dropdown) --}}
-                <div x-data="{
-                        open: false,
-                        value: '',
-                        label: 'Pilih Jenis Kegiatan',
-                        options: [
-                            { value: 'rapat',     label: 'Rapat' },
-                            { value: 'pelayanan', label: 'Pelayanan Publik' },
-                            { value: 'dokumen',   label: 'Penyusunan Dokumen' },
-                            { value: 'lapangan',  label: 'Kunjungan Lapangan' },
-                            { value: 'lainnya',   label: 'Lainnya' },
-                        ],
-                        select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                    }">
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
+                    {{-- Jenis Kegiatan (SUDAH DIPERBAIKI: Value Title Case) --}}
+                    <div x-data="{
+                            open: false,
+                            value: '',
+                            label: 'Pilih Jenis Kegiatan',
+                            options: [
+                                { value: 'Rapat',              label: 'Rapat' },
+                                { value: 'Pelayanan Publik',   label: 'Pelayanan Publik' },
+                                { value: 'Penyusunan Dokumen', label: 'Penyusunan Dokumen' },
+                                { value: 'Kunjungan Lapangan', label: 'Kunjungan Lapangan' },
+                                { value: 'Lainnya',            label: 'Lainnya' },
+                            ],
+                            select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                        }">
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
+                        <input type="hidden" name="jenis_kegiatan" x-model="value">
 
-                    {{-- untuk submit ke backend --}}
-                    <input type="hidden" name="jenis_kegiatan" x-model="value">
+                        <div class="relative">
+                            <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                           px-3.5 py-2.5 text-sm pr-9 text-left flex items-center justify-between
+                                           focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                                <span x-text="label"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70" alt="">
+                            </button>
 
-                    <div class="relative">
-                        <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                       px-3.5 py-2.5 text-sm pr-9 text-left flex items-center justify-between
-                                       focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                            :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
-                            <span x-text="label"></span>
-                            <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70" alt="">
-                        </button>
-
-                        <div x-show="open" @click.outside="open = false" x-transition
-                            class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
-                            <template x-for="opt in options" :key="opt.value">
-                                <button type="button"
-                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between"
-                                    :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
-                                    @click="select(opt)">
-                                    <span x-text="opt.label"></span>
-                                    <span x-show="opt.value === value" class="text-xs">✓</span>
-                                </button>
-                            </template>
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
+                                <template x-for="opt in options" :key="opt.value">
+                                    <button type="button"
+                                        class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between"
+                                        :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                                        @click="select(opt)">
+                                        <span x-text="opt.label"></span>
+                                        <span x-show="opt.value === value" class="text-xs">✓</span>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Row 2: Referensi Tupoksi --}}
-            <div x-data="{
-                    open: false,
-                    value: '',
-                    label: 'Pilih Referensi Tupoksi',
-                    options: [
-                        { value: 'rencana',    label: 'Penyusunan rencana dan program kerja' },
-                        { value: 'petunjuk',   label: 'Penyusunan dan perumusan bahan petunjuk teknis' },
-                        { value: 'pengawasan', label: 'Pengawasan, pemantauan dan evaluasi pelaksanaan' },
-                        { value: 'pembukuan',  label: 'Pelaksanaan dan pembinaan pembukuan' },
-                    ],
-                    select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                {{-- Row 2: Referensi Tupoksi (SUDAH DIPERBAIKI: Dynamic Fetching) --}}
+                <div x-data="{
+                        open: false,
+                        value: '',
+                        label: 'Pilih Referensi Tupoksi',
+                        options: [],
+                        isLoading: false,
+                        async init() {
+                            this.isLoading = true;
+                            try {
+                                const token = localStorage.getItem('token'); 
+                                const response = await fetch('/api/lkh/referensi', {
+                                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                                });
+                                const data = await response.json();
+                                this.options = data.tupoksi.map(item => ({ value: item.id, label: item.uraian_tugas }));
+                            } catch (error) {
+                                console.error(error); this.label = 'Gagal memuat data';
+                            } finally { this.isLoading = false; }
+                        },
+                        select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                    }" x-init="init()">
+                    
+                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
+                    <input type="hidden" name="tupoksi_id" x-model="value">
+
+                    <div class="relative">
+                        <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                       px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                       focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                            :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                            <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
+                            <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
+                        </button>
+
+                        <div x-show="open" @click.outside="open = false" x-transition
+                            class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
+                            <template x-for="opt in options" :key="opt.value">
+                                <button type="button"
+                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
+                                    :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                                    @click="select(opt)">
+                                    <span x-text="opt.label" class="line-clamp-2"></span>
+                                    <span x-show="opt.value === value" class="text-xs flex-shrink-0">✓</span>
+                                </button>
+                            </template>
+                            <div x-show="options.length === 0 && !isLoading" class="px-3.5 py-2 text-sm text-slate-400 italic">Data kosong</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Row 3: Uraian Kegiatan --}}
+                <div>
+                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
+                    {{-- [FIX] Name ditambahkan --}}
+                    <textarea name="deskripsi_aktivitas" rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                     px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
+                                     focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                        placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
+                </div>
+
+                {{-- 
+                    [MODIFIKASI BESAR] Row 4 & 5: Output, Volume, Satuan, Kategori, dan SKP 
+                    Kita bungkus dalam satu x-data besar agar logika Kategori & SKP terhubung 
+                --}}
+                <div x-data="{
+                    kategori: 'non-skp',
+                    skpId: '',
+                    skpLabel: 'Pilih Target SKP',
+                    skpOptions: [],
+                    skpLoading: false,
+                    satuanValue: '',
+                    satuanLabel: 'Satuan',
+                    satuanOpen: false,
+                    kategoriOpen: false,
+                    skpOpen: false,
+
+                    // Fungsi fetch SKP
+                    async fetchSkp() {
+                        this.skpLoading = true;
+                        try {
+                            const token = localStorage.getItem('token');
+                            const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
+                                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                            });
+                            const res = await response.json();
+                            if(res.data) {
+                                this.skpOptions = res.data.map(s => ({ value: s.id, label: s.rencana_aksi }));
+                            }
+                        } catch (e) { console.error(e); } finally { this.skpLoading = false; }
+                    },
+                    // Saat kategori berubah
+                    setKategori(val) {
+                        this.kategori = val;
+                        this.kategoriOpen = false;
+                        if (val === 'skp' && this.skpOptions.length === 0) {
+                            this.fetchSkp();
+                        }
+                    }
                 }">
-                <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
+                    
+                    {{-- Baris Atas: Output, Volume, Satuan, Kategori --}}
+                    <div class="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-start">
+                        
+                        {{-- Output --}}
+                        <div>
+                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
+                            <input type="text" name="output_hasil_kerja" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                placeholder="Contoh: Notulensi">
+                        </div>
 
-                <input type="hidden" name="referensi_tupoksi" x-model="value">
+                        {{-- Volume --}}
+                        <div>
+                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
+                            <input type="number" name="volume" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" 
+                                placeholder="0">
+                        </div>
 
-                <div class="relative">
-                    <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                   px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                   focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                        :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
-                        <span x-text="label"></span>
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70" alt="">
-                    </button>
-
-                    <div x-show="open" @click.outside="open = false" x-transition
-                        class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
-                        <template x-for="opt in options" :key="opt.value">
-                            <button type="button"
-                                class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between"
-                                :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
-                                @click="select(opt)">
-                                <span x-text="opt.label"></span>
-                                <span x-show="opt.value === value" class="text-xs">✓</span>
+                        {{-- Satuan --}}
+                        <div class="relative">
+                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Satuan</label>
+                            <input type="hidden" name="satuan" x-model="satuanValue">
+                            
+                            <button type="button" @click="satuanOpen = !satuanOpen" @click.outside="satuanOpen = false" 
+                                class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 pl-3.5 pr-3 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
+                                <span x-text="satuanValue ? satuanValue : 'Satuan'" :class="!satuanValue ? 'text-[#9CA3AF]' : 'text-slate-700'" class="truncate"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
                             </button>
-                        </template>
-                    </div>
-                </div>
-            </div>
 
-            {{-- Row 3: Uraian Kegiatan --}}
-            <div>
-                <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
-                <textarea rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
-                                 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                    placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
-            </div>
+                            <div x-show="satuanOpen" x-transition class="absolute left-0 mt-1 w-full rounded-[10px] border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                                <template x-for="opt in ['Jam', 'Dokumen', 'Kegiatan']">
+                                    <button type="button" @click="satuanValue = opt; satuanOpen = false" class="w-full px-3.5 py-2 text-sm text-left hover:bg-slate-50">
+                                        <span x-text="opt"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
 
-            {{-- Row 4 & 5: Output + Volume + Satuan + Kategori (1 baris) --}}
-            <div class="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-start">
-
-                {{-- Output --}}
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
-                    <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                        placeholder="Contoh: Notulensi Rapat">
-                </div>
-
-                {{-- Volume --}}
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
-                    <input type="number" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="Volume">
-                </div>
-
-                {{-- Satuan (Alpine dropdown) --}}
-                <div x-data="{
-                        open: false,
-                        value: '',
-                        options: [
-                            { value: 'jam',      label: 'Jam' },
-                            { value: 'dokumen',  label: 'Dokumen' },
-                            { value: 'kegiatan', label: 'Kegiatan' },
-                        ],
-                        get label() {
-                            const found = this.options.find(o => o.value === this.value);
-                            return found ? found.label : 'Satuan';
-                        },
-                    }" x-cloak class="relative">
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">
-                        Satuan
-                    </label>
-
-                    <button type="button" @click="open = !open" @click.outside="open = false" class="w-full flex items-center justify-between rounded-[10px]
-                                   border border-slate-200 bg-slate-50/60
-                                   pl-3.5 pr-3 py-2.5 text-sm text-left
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
-                        <span x-text="label" :class="value === '' ? 'text-[#9CA3AF]' : 'text-slate-700'"
-                            class="truncate"></span>
-
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                            class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
-                    </button>
-
-                    <div x-show="open" x-transition class="absolute left-0 mt-1 w-full rounded-[10px]
-                                border border-slate-200 bg-white shadow-lg
-                                z-20 overflow-hidden">
-                        <template x-for="opt in options" :key="opt.value">
-                            <button type="button" @click="value = opt.value; open = false" class="w-full flex items-center justify-between
-                                           px-3.5 py-2 text-sm text-left hover:bg-slate-50">
-                                <span x-text="opt.label" class="text-slate-700"></span>
-                                <span x-show="opt.value === value" class="text-xs text-[#1C7C54]">
-                                    •
-                                </span>
+                        {{-- Kategori (Trigger Logika SKP) --}}
+                        <div class="relative">
+                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Kategori</label>
+                            
+                            <button type="button" @click="kategoriOpen = !kategoriOpen" @click.outside="kategoriOpen = false" 
+                                class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 pl-3.5 pr-3 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
+                                <span x-text="kategori === 'skp' ? 'SKP' : 'Non-SKP'" class="text-slate-700"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2" alt="" />
                             </button>
-                        </template>
+
+                            <div x-show="kategoriOpen" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 overflow-hidden">
+                                <button type="button" @click="setKategori('skp')" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">SKP</button>
+                                <button type="button" @click="setKategori('non-skp')" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">Non-SKP</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <input type="hidden" name="satuan" x-model="value">
-                </div>
+                    {{-- Dropdown Tambahan: PILIH SKP (Hanya muncul jika Kategori = SKP) --}}
+                    <div x-show="kategori === 'skp'" x-transition class="mt-4">
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target SKP</label>
+                        <input type="hidden" name="skp_id" x-model="skpId">
 
-                {{-- Kategori (Alpine dropdown) --}}
-                <div x-data="{
-                        open: false,
-                        value: '',
-                        options: [
-                            { value: 'skp',     label: 'SKP' },
-                            { value: 'non-skp', label: 'Non-SKP' },
-                        ],
-                        get label() {
-                            const found = this.options.find(o => o.value === this.value);
-                            return found ? found.label : 'Kategori';
-                        },
-                    }" x-cloak class="relative">
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">
-                        Kategori
-                    </label>
-
-                    <button type="button" @click="open = !open" @click.outside="open = false" class="w-full flex items-center justify-between rounded-[10px]
-                                   border border-slate-200 bg-slate-50/60
-                                   pl-3.5 pr-3 py-2.5 text-sm text-left
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
-                        <span x-text="label" :class="value === '' ? 'text-[#9CA3AF]' : 'text-slate-700'"
-                            class="truncate"></span>
-
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                            class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
-                    </button>
-
-                    <div x-show="open" x-transition class="absolute left-0 mt-1 w-full rounded-[10px]
-                                border border-slate-200 bg-white shadow-lg
-                                z-20 overflow-hidden">
-                        <template x-for="opt in options" :key="opt.value">
-                            <button type="button" @click="value = opt.value; open = false" class="w-full flex items-center justify-between
-                                           px-3.5 py-2 text-sm text-left hover:bg-slate-50">
-                                <span x-text="opt.label" class="text-slate-700"></span>
-                                <span x-show="opt.value === value" class="text-xs text-[#1C7C54]">
-                                    •
-                                </span>
+                        <div class="relative">
+                            <button type="button" @click="skpOpen = !skpOpen" @click.outside="skpOpen = false"
+                                class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
+                                <span x-text="skpLoading ? 'Memuat data...' : skpLabel" class="truncate text-slate-700"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2" alt="">
                             </button>
-                        </template>
-                    </div>
 
-                    <input type="hidden" name="kategori" x-model="value">
-                </div>
-            </div>
-
-            {{-- Row 6: Jam Mulai + Jam Selesai --}}
-            <div class="grid md:grid-cols-2 gap-4">
-                {{-- Jam Mulai --}}
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
-                    <div class="relative">
-                        <input id="jam_mulai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                      px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                      focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
-
-                        <button type="button" id="jam_mulai_btn"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                            <img src="{{ asset('assets/icon/time.svg') }}"
-                                class="h-4 w-4 opacity-70 pointer-events-none" alt="Pilih jam mulai">
-                        </button>
+                            <div x-show="skpOpen" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
+                                <template x-for="opt in skpOptions" :key="opt.value">
+                                    <button type="button" @click="skpId = opt.value; skpLabel = opt.label; skpOpen = false"
+                                        class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                                        <span x-text="opt.label" class="line-clamp-2"></span>
+                                    </button>
+                                </template>
+                                <div x-show="skpOptions.length === 0 && !skpLoading" class="p-2 text-xs text-slate-400 text-center">
+                                    Tidak ada data SKP.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Jam Selesai --}}
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
-                    <div class="relative">
-                        <input id="jam_selesai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                      px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                      focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                {{-- Row 6: Jam Mulai + Jam Selesai --}}
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
+                        <div class="relative">
+                            <input id="jam_mulai" name="waktu_mulai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                          focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                            <button type="button" id="jam_mulai_btn"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70 pointer-events-none" alt="Time">
+                            </button>
+                        </div>
+                    </div>
 
-                        <button type="button" id="jam_selesai_btn"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                            <img src="{{ asset('assets/icon/time.svg') }}"
-                                class="h-4 w-4 opacity-70 pointer-events-none" alt="Pilih jam selesai">
-                        </button>
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
+                        <div class="relative">
+                            <input id="jam_selesai" name="waktu_selesai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                          focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                            <button type="button" id="jam_selesai_btn"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70 pointer-events-none" alt="Time">
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Row 7: Unggah Bukti + Lokasi --}}
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
-                    <label class="w-full flex items-center justify-between rounded-[10px]
-                                   border border-dashed border-slate-300 bg-slate-50/60
-                                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer">
-                        <span class="truncate">Pilih File</span>
-                        <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
-                        <input type="file" class="hidden">
-                    </label>
+                {{-- Row 7: Unggah Bukti + [MODIFIKASI BESAR] Geolocation --}}
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+                        <label class="w-full flex items-center justify-between rounded-[10px]
+                                       border border-dashed border-slate-300 bg-slate-50/60
+                                       px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
+                            <span class="truncate">Pilih File</span>
+                            <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
+                            <input type="file" name="bukti[]" multiple class="hidden">
+                        </label>
+                    </div>
+
+                    {{-- Input Lokasi dengan Geolocation --}}
+                    <div x-data="{
+                        lat: '',
+                        lng: '',
+                        status: 'Klik tombol untuk ambil lokasi',
+                        loading: false,
+                        getLocation() {
+                            this.loading = true;
+                            this.status = 'Mencari koordinat...';
+                            if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(
+                                    (position) => {
+                                        this.lat = position.coords.latitude;
+                                        this.lng = position.coords.longitude;
+                                        this.status = 'Terkunci: ' + this.lat.toFixed(5) + ', ' + this.lng.toFixed(5);
+                                        this.loading = false;
+                                    },
+                                    (error) => {
+                                        this.status = 'Gagal: Izin lokasi ditolak/error.';
+                                        this.loading = false;
+                                    }
+                                );
+                            } else {
+                                this.status = 'Browser tidak support GPS.';
+                                this.loading = false;
+                            }
+                        }
+                    }">
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
+                        
+                        {{-- Hidden Input untuk Backend --}}
+                        <input type="hidden" name="latitude" x-model="lat">
+                        <input type="hidden" name="longitude" x-model="lng">
+
+                        <div class="flex gap-2">
+                            {{-- Input Visual (Readonly) --}}
+                            <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-100
+                                          px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
+                                x-model="status" readonly>
+
+                            {{-- Tombol Trigger GPS --}}
+                            <button type="button" @click="getLocation()" 
+                                class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center transition-colors"
+                                :disabled="loading">
+                                {{-- Icon Maps/Pin --}}
+                                <img src="{{ asset('assets/icon/location.svg') }}" class="h-5 w-5 filter brightness-0 invert" alt="GPS">
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">*Pastikan izin lokasi browser aktif.</p>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
-                    <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] placeholder:text-slate-400"
-                        placeholder="Otomatis Terisi">
+                {{-- Tombol Aksi --}}
+                <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                    <button type="button" class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white">
+                        Simpan Draft
+                    </button>
+                    <button type="submit" class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:bg-[#0b633b]">
+                        Kirim LKH
+                    </button>
                 </div>
             </div>
-
-            {{-- Tombol Aksi --}}
-            <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                <button class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white">
-                    Simpan Draft
-                </button>
-                <button class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white">
-                    Kirim LKH
-                </button>
-            </div>
-        </div>
+        </form>
     </div>
 
     {{-- KANAN ATAS: PANDUAN SINGKAT --}}

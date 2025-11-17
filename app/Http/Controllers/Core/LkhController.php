@@ -72,25 +72,31 @@ class LkhController extends Controller
     }
 
     /**
-     * 2. CREATE LKH (Upload ke MinIO)
+     * 2. CREATE LKH (Update Integrasi Volume & Satuan)
      */
     public function store(Request $request)
     {
-        // [BARU] Daftar aktivitas yang valid
+        // Daftar aktivitas yang valid (Whitelist)
         $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
 
         $validator = Validator::make($request->all(), [
-            // [BARU] Validasi Tupoksi & Jenis Kegiatan
             'tupoksi_id'        => 'required|exists:tupoksi,id',
-            'jenis_kegiatan'    => 'required|in:' . $validAktivitas,
+            // Validasi case-sensitive, pastikan FE mengirim string yang persis sama
+            'jenis_kegiatan'    => 'required|in:' . $validAktivitas, 
 
             'skp_id'            => 'nullable|exists:skp,id',
             'tanggal_laporan'   => 'required|date',
             'waktu_mulai'       => 'required',
             'waktu_selesai'     => 'required|after:waktu_mulai',
+            
             'deskripsi_aktivitas'=> 'required|string',
             'output_hasil_kerja'=> 'required|string',
             
+            // [BARU] Validasi Volume & Satuan
+            'volume'            => 'required|integer|min:1',
+            'satuan'            => 'required|string|max:50',
+
+            // Validasi Lokasi
             'latitude'          => 'nullable|numeric|required_without:master_kelurahan_id',
             'longitude'         => 'nullable|numeric|required_without:master_kelurahan_id',
             'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id|required_without:latitude',
@@ -103,7 +109,7 @@ class LkhController extends Controller
         try {
             DB::beginTransaction();
 
-            // --- Logika Koordinat ---
+            // --- Logika Koordinat (TETAP SAMA) ---
             $finalLat = null;
             $finalLng = null;
 
@@ -120,11 +126,9 @@ class LkhController extends Controller
                     $finalLat = $kelurahan->latitude;
                     $finalLng = $kelurahan->longitude;
                 }
-                // (Tidak perlu throw exception jika kelurahan tidak ada koordinat, 
-                // $finalLat akan tetap null dan tersimpan sebagai null di DB)
             }
 
-            // --- Logika Geofencing ---
+            // --- Logika Geofencing (TETAP SAMA) ---
             $officeLat = config('services.office.lat');
             $officeLng = config('services.office.lng');
             $radius    = config('services.office.radius');
@@ -143,24 +147,29 @@ class LkhController extends Controller
                 }
             }
 
-            // Simpan LKH [UPDATE]
+            // Simpan LKH [UPDATE UTAMA DI SINI]
             $lkh = LaporanHarian::create([
                 'user_id'            => Auth::id(),
                 'skp_id'             => $request->skp_id,
-                'tupoksi_id'         => $request->tupoksi_id, // [BARU]
-                'jenis_kegiatan'     => $request->jenis_kegiatan, // [BARU]
+                'tupoksi_id'         => $request->tupoksi_id,
+                'jenis_kegiatan'     => $request->jenis_kegiatan,
                 'tanggal_laporan'    => $request->tanggal_laporan,
                 'waktu_mulai'        => $request->waktu_mulai,
                 'waktu_selesai'      => $request->waktu_selesai,
                 'deskripsi_aktivitas'=> $request->deskripsi_aktivitas,
                 'output_hasil_kerja' => $request->output_hasil_kerja,
+                
+                // [BARU] Simpan Volume & Satuan
+                'volume'             => $request->volume,
+                'satuan'             => $request->satuan,
+
                 'status'             => 'waiting_review',
                 'master_kelurahan_id'=> $request->master_kelurahan_id,
                 'is_luar_lokasi'     => $isLuarLokasi,
                 'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
-            // --- UPLOAD KE MINIO ---
+            // --- UPLOAD KE MINIO (TETAP SAMA) ---
             if ($request->hasFile('bukti')) {
                 foreach ($request->file('bukti') as $file) {
                     $path = $file->store('lkh_bukti', 'minio'); 
@@ -175,12 +184,12 @@ class LkhController extends Controller
 
             DB::commit();
 
-            // Kirim Notif
+            // Kirim Notif (TETAP SAMA)
             if ($request->user()->atasan_id) {
                 NotificationService::send(
                     $request->user()->atasan_id,
                     'lkh_new_submission',
-                    'Pegawai ' . $request->user()->name . ' mengirim laporan: ' . $request->jenis_kegiatan, // Pesan lebih deskriptif
+                    'Pegawai ' . $request->user()->name . ' mengirim laporan: ' . $request->jenis_kegiatan,
                     $lkh->id
                 );
             }
@@ -188,7 +197,7 @@ class LkhController extends Controller
             return response()->json([
                 'message' => 'Laporan Harian berhasil dikirim',
                 'is_luar_lokasi' => $isLuarLokasi,
-                'data' => $lkh->load(['bukti', 'tupoksi']) // [UPDATE] Muat tupoksi
+                'data' => $lkh->load(['bukti', 'tupoksi'])
             ], 201);
 
         } catch (\Exception $e) {
@@ -196,7 +205,7 @@ class LkhController extends Controller
             return response()->json(['message' => 'Gagal mengirim laporan', 'error' => $e->getMessage()], 500);
         }
     }
-
+    
     public function show($id)
     {
         // [UPDATE] Cek Laporan milik user ybs ATAU user adalah atasan dari pelapor

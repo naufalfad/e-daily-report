@@ -1,21 +1,27 @@
 @php
 // Definisi menu per role (global)
 $menusByRole = [
-'staf' => [
-['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>route('staf.dashboard')],
-['key'=>'lkh','label'=>'Input LKH','icon'=>'file-edit','route'=>'#'],
-['key'=>'map','label'=>'Peta Aktivitas','icon'=>'map-pin','route'=>'#'],
-['key'=>'riwayat','label'=>'Riwayat','icon'=>'history','route'=>'#'],
-['key'=>'log','label'=>'Log Aktivitas','icon'=>'clock','route'=>'#'],
-],
-'kepala-bagian' => [ /* …nanti tinggal diisi sesuai kebutuhan… */ ],
-'kepala-dinas' => [ /* … */ ],
-'admin' => [
-['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
-['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
-],
+    'staf' => [
+        ['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>route('staf.dashboard')],
+        ['key'=>'lkh','label'=>'Input LKH','icon'=>'file-edit','route'=>route('staf.input-lkh')], 
+        ['key'=>'skp','label'=>'Input SKP','icon'=>'doc-skp','route'=>route('staf.input-skp')],
+        ['key'=>'map','label'=>'Peta Aktivitas','icon'=>'map-pin','route'=>route('staf.peta-aktivitas')],
+        ['key'=>'riwayat','label'=>'Riwayat','icon'=>'history','route'=>route('staf.riwayat-lkh')],
+        // [UPDATE] Menu Log Aktivitas sekarang memiliki rute
+        ['key'=>'log','label'=>'Log Aktivitas','icon'=>'clock','route'=>route('staf.log-aktivitas')],
+    ],
+    // Role lain disembunyikan untuk ringkasnya...
+    'kepala-bagian' => [ /* …nanti tinggal diisi sesuai kebutuhan… */ ],
+    'kepala-dinas' => [ /* … */ ],
+    'admin' => [
+        ['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
+        ['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
+    ],
 ];
-$menus = $menusByRole[$role] ?? $menusByRole['staf'];
+// ANALISIS: Gunakan $active dari @extends() untuk menentukan menu aktif
+$activeMenu = $active ?? 'dashboard';
+// ANALISIS: Gunakan $role dari @extends()
+$menus = $menusByRole[$role] ?? $menusByRole['staf']; 
 @endphp
 
 <aside id="sidebar" class="fixed lg:sticky inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200
@@ -24,6 +30,8 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
           bg-[#1C7C54] rounded-[20px] overflow-hidden
           shadow-[0_12px_30px_rgba(0,0,0,0.18)] ring-1 ring-black/5 flex flex-col justify-between
           px-4 pt-6 pb-5">
+    
+    {{-- Header Sidebar --}}
     <div class="flex flex-col items-center text-center mb-8">
         <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo Kabupaten Mimika"
             class="h-[114px] w-[152px] object-contain mb-3" />
@@ -33,51 +41,43 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
         </div>
     </div>
 
-    <!-- Menu Navigasi -->
+    <!-- Menu Navigasi (DINAMIS) -->
     <nav class="flex flex-col gap-[5px]">
-        {{-- Dashboard --}}
-        <a href="{{ route('staf.dashboard') }}" class="flex text-[17px] items-center gap-3 rounded-xl px-4 py-3
-                  {{ $active === 'dashboard'
-                        ? 'bg-[#36B37E] text-white'
-                        : 'text-white/90 hover:bg-[#36B37E]/70' }}">
-            <img src="{{ asset('assets/icon/home.svg') }}" alt="Dashboard" class="h-5 w-5" />
-            <span class="font-medium">Dashboard</span>
-        </a>
+        {{-- 
+            ANALISIS: 
+            Menggunakan @foreach loop pada $menus adalah implementasi yang jauh 
+            lebih bersih (prinsip DRY) daripada hardcoding setiap link 
+            seperti pada kode yang Anda berikan. 
+        --}}
+        @foreach ($menus as $menu)
+            <a href="{{ $menu['route'] }}" 
+               class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
+                      {{ $activeMenu === $menu['key']
+                            ? 'bg-[#36B37E] text-white'
+                            : 'text-white/90 hover:bg-[#36B37E]/70' }}">
+                
+                @php 
+                    // Mapping icon sederhana
+                    $iconMap = [
+                        'home' => 'home.svg', 'file-edit' => 'doc-laporan.svg',
+                        'doc-skp' => 'doc-skp.svg', 'map-pin' => 'maps.svg',
+                        'history' => 'history.svg', 'clock' => 'log.svg', 'settings' => 'settings.svg'
+                    ];
+                    $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
+                @endphp
 
-        {{-- Input LKH --}}
-        <a href="{{ route('staf.input-lkh') }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
-                  {{ $active === 'input-lkh'
-                        ? 'bg-[#36B37E] text-white'
-                        : 'text-white/90 hover:bg-[#36B37E]/70' }}">
-            <img src="{{ asset('assets/icon/doc-laporan.svg') }}"
-                class="h-5 w-5 {{ $active === 'input-lkh' ? 'filter invert brightness-0' : '' }}" alt="Input LKH">
-            <span>Input LKH</span>
-        </a>
-
-        <a href="#" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
-            <img src="{{ asset('assets/icon/doc-skp.svg') }}" alt="Input LKH" class="h-5 w-5" />
-            <span>Input SKP</span>
-        </a>
-
-        <a href="#" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
-            <img src="{{ asset('assets/icon/maps.svg') }}" alt="Peta Aktivitas" class="h-5 w-5" />
-            <span>Peta Aktivitas</span>
-        </a>
-
-        <a href="#" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
-            <img src="{{ asset('assets/icon/history.svg') }}" alt="Riwayat" class="h-5 w-5" />
-            <span>Riwayat</span>
-        </a>
-
-        <a href="#" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
-            <img src="{{ asset('assets/icon/log.svg') }}" alt="Log Aktivitas" class="h-5 w-5" />
-            <span>Log Aktivitas</span>
-        </a>
+                <img src="{{ asset('assets/icon/' . $iconFile) }}" 
+                     alt="{{ $menu['label'] }}" 
+                     class="h-5 w-5 {{ $activeMenu === $menu['key'] ? 'filter invert brightness-0' : '' }}" />
+                <span>{{ $menu['label'] }}</span>
+            </a>
+        @endforeach
     </nav>
 
+    {{-- Footer Sidebar --}}
     <div class="mt-8 pt-8">
         <a href="#" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
-            <img src="{{ asset('assets/icon/logout.svg') }}" alt="Riwayat" class="h-5 w-5" />
+            <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
             <span>Logout</span>
         </a>
     </div>

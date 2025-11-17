@@ -9,15 +9,16 @@
     {{-- Panggil CSS dan JS sekaligus lewat Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    {{-- Hapus baris <link rel="stylesheet"...> yang manual tadi --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    @stack('styles') {{-- Memindahkan stack styles ke head --}}
     <style>
     body {
         font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif
     }
 
+    /* ... [Sisa style Anda yang lain tetap di sini] ... */
     input[type="time"]::-webkit-calendar-picker-indicator {
         opacity: 0 !important;
         display: none !important;
@@ -28,28 +29,22 @@
         display: none !important;
     }
 
-    /* Hilangkan ikon datepicker bawaan (Chrome/Edge dll) */
     input[type="date"]::-webkit-calendar-picker-indicator {
         opacity: 0 !important;
         display: none !important;
     }
 
-    /* Hilangkan spin & clear jika muncul */
     input[type="date"]::-webkit-inner-spin-button,
     input[type="date"]::-webkit-clear-button {
         display: none !important;
     }
 
-    /* Warna teks untuk input time ketika masih kosong (strip placeholder) */
     input[type="time"].time-placeholder {
         color: #9CA3AF;
-        /* abu seperti icon */
     }
 
-    /* Warna teks ketika sudah terisi nilai jam */
     input[type="time"].time-filled {
         color: #111827;
-        /* slate-900 / teks normal */
     }
     </style>
 </head>
@@ -63,10 +58,13 @@
             'active' => $active ?? null,
             ])
 
-            {{-- Main --}}
+            {{-- 
+                ANALISIS REVISI (app.blade.php):
+                Struktur kolom utama diubah menjadi 'flex flex-col' dengan 'min-h-dvh'.
+                Ini adalah kunci agar 'flex-1' pada <main> dapat berfungsi.
+            --}}
             <div class="min-h-dvh flex flex-col pl-9">
                 {{-- TOPBAR --}}
-                {{-- sticky, nempel atas, background sama dengan layout --}}
                 <header class="sticky top-5 z-40">
                     <div class="relative flex items-center gap-35 pb-3">
                         {{-- Burger (mobile) --}}
@@ -112,12 +110,23 @@
                     </div>
                 </header>
 
-                {{-- Content --}}
-                <main class="pt-1 p-0">
+                {{-- 
+                    ANALISIS REVISI (app.blade.php):
+                    1. 'flex-1' ditambahkan agar <main> mengisi sisa ruang.
+                    2. 'flex flex-col' ditambahkan agar konten di dalamnya (dari @yield) 
+                       juga bisa menggunakan flexbox untuk mengisi <main>.
+                --}}
+                <main class="pt-1 p-0 flex-1 flex flex-col">
                     @yield('content')
                 </main>
 
-                <footer class="mt-3 mb-0">
+                {{-- 
+                    ANALISIS REVISI (app.blade.php):
+                    'mt-auto' menggantikan 'mt-3'. Ini memaksa footer
+                    menempel ke bagian bawah container flex ('div.min-h-dvh').
+                    'pt-3' ditambahkan untuk mengganti margin atas.
+                --}}
+                <footer class="mt-auto mb-0 pt-3">
                     <div
                         class="mx-auto rounded-[10px] bg-white ring-1 ring-slate-200 px-2 py-4 text-center text-xs text-[#9CA3AF]">
                         © 2025 Badan Pendapatan Daerah Kabupaten Mimika | Sistem E-Daily Report versi 1.0

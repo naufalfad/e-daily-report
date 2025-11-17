@@ -1,3 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Warna placeholder (tanggal sebelum dipilih) */
+.tanggal-placeholder::-webkit-datetime-edit-text,
+.tanggal-placeholder::-webkit-datetime-edit-month-field,
+.tanggal-placeholder::-webkit-datetime-edit-day-field,
+.tanggal-placeholder::-webkit-datetime-edit-year-field {
+    color: #9CA3AF; /* abu-abu placeholder */
+}
+
+/* Setelah user memilih tanggal → warna normal */
+.tanggal-placeholder:not(:placeholder-shown) {
+    color: #374151; /* slate-700 */
+}

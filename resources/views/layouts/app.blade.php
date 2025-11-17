@@ -5,11 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'E-Daily Report' }}</title>
-    
-    {{-- Panggil CSS dan JS sekaligus lewat Vite --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-    {{-- Hapus baris <link rel="stylesheet"...> yang manual tadi --}}
+    @vite(['resources/js/app.js'])
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="{{ asset('build/tailwind.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -80,9 +78,9 @@
                         </button>
 
                         {{-- WRAPPER KANAN: search + icon --}}
-                        <div class="flex-1 flex items-center gap-35">
+                        <div class="flex-1 flex items-center gap-[110px]">
                             {{-- SEARCH BAR --}}
-                            <div class="relative flex-1 max-w-[450px]">
+                            <div class="relative flex-1 max-w-[500px]">
                                 <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm text-slate-700 placeholder:text-slate-400 shadow-sm focus:outline-none
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
@@ -97,7 +95,7 @@
                             </div>
 
                             {{-- ICON NOTIF + PROFIL --}}
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-[2px]">
                                 <button class="h-10 w-10 flex items-center justify-center">
                                     <img src="{{ asset('assets/icon/notification.svg') }}" alt="Notifikasi"
                                         class="h-5 w-5">

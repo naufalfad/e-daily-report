@@ -6,280 +6,328 @@
 {{-- GRID UTAMA: FORM KIRI, PANDUAN + STATUS KANAN --}}
 <section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4">
 
-    {{-- FORM INPUT LKH --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
-        <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
+    {{-- KOLOM KIRI: FORM + DRAFT --}}
+    <div class="space-y-4">
 
-        <div class="space-y-4">
-            {{-- Row 1: Tanggal + Jenis Kegiatan --}}
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
+        {{-- FORM INPUT LKH --}}
+        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
+            <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
+
+            <div class="space-y-4">
+                {{-- Row 1: Tanggal + Jenis Kegiatan --}}
+                <div class="grid md:grid-cols-2 gap-4">
+
+                    {{-- Tanggal --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
+                        <div class="relative">
+                            <input id="tanggal_lkh" type="date" class="tanggal-placeholder w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+           px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+           focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                            {{-- Icon kalender lokal --}}
+                            <button type="button" id="tanggal_lkh_btn" class="absolute right-3 top-1/2 -translate-y-1/2
+                   h-7 w-7 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal"
+                                    class="h-4 w-4 opacity-80" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Jenis Kegiatan (custom dropdown) --}}
+                    <div x-data="{
+                            open: false,
+                            value: '',
+                            label: 'Pilih Jenis Kegiatan',
+                            options: [
+                                { value: 'rapat',     label: 'Rapat' },
+                                { value: 'pelayanan', label: 'Pelayanan Publik' },
+                                { value: 'dokumen',   label: 'Penyusunan Dokumen' },
+                                { value: 'lapangan',  label: 'Kunjungan Lapangan' },
+                                { value: 'lainnya',   label: 'Lainnya' },
+                            ],
+                            select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                        }">
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
+
+                        {{-- untuk submit ke backend --}}
+                        <input type="hidden" name="jenis_kegiatan" x-model="value">
+
+                        <div class="relative">
+                            <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                       px-3.5 py-2.5 text-sm pr-9 text-left flex items-center justify-between
+                                       focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                                <span x-text="label"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70"
+                                    alt="">
+                            </button>
+
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
+                                <template x-for="opt in options" :key="opt.value">
+                                    <button type="button"
+                                        class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between"
+                                        :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                                        @click="select(opt)">
+                                        <span x-text="opt.label"></span>
+                                        <span x-show="opt.value === value" class="text-xs">✓</span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Row 2: Referensi Tupoksi --}}
+                <div x-data="{
+                        open: false,
+                        value: '',
+                        label: 'Pilih Referensi Tupoksi',
+                        options: [
+                            { value: 'rencana',    label: 'Penyusunan rencana dan program kerja' },
+                            { value: 'petunjuk',   label: 'Penyusunan dan perumusan bahan petunjuk teknis' },
+                            { value: 'pengawasan', label: 'Pengawasan, pemantauan dan evaluasi pelaksanaan' },
+                            { value: 'pembukuan',  label: 'Pelaksanaan dan pembinaan pembukuan' },
+                        ],
+                        select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                    }">
+                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
+
+                    <input type="hidden" name="referensi_tupoksi" x-model="value">
+
                     <div class="relative">
-                        <input id="tanggal_lkh" type="date" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" placeholder="dd/mm/yyyy" />
-
-                        {{-- Icon kalender lokal, klik untuk buka datepicker --}}
-                        <button type="button" id="tanggal_lkh_btn" class="absolute right-3 top-1/2 -translate-y-1/2
-                        h-7 w-7 flex items-center justify-center">
-                            <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal"
-                                class="h-4 w-4 opacity-80" {{-- HAPUS filter/invert-nya --}} />
+                        <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                   px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                   focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                            :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                            <span x-text="label"></span>
+                            <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70" alt="">
                         </button>
 
+                        <div x-show="open" @click.outside="open = false" x-transition
+                            class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
+                            <template x-for="opt in options" :key="opt.value">
+                                <button type="button"
+                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between"
+                                    :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                                    @click="select(opt)">
+                                    <span x-text="opt.label"></span>
+                                    <span x-show="opt.value === value" class="text-xs">✓</span>
+                                </button>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
-                <style>
-                /* Placeholder abu-abu ketika value masih kosong */
-                select:invalid {
-                    color: #9CA3AF;
-                }
-
-                /* Warna teks untuk semua pilihan di dropdown */
-                select option {
-                    color: #111827;
-                    /* atau pakai #1F2933 / warna teks utama kamu */
-                }
-
-                /* Kalau mau placeholder di list tetap abu-abu (opsional) */
-                select option[disabled][value=""] {
-                    color: #9CA3AF;
-                }
-                </style>
-
+                {{-- Row 3: Uraian Kegiatan --}}
                 <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
+                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
+                    <textarea rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                               px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
+                               focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                        placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
+                </div>
 
-                    <div class="relative">
-                        <select required class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm pr-9
-                   focus:outline-none focus:ring-2
-                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
-                   appearance-none">
+                {{-- Row 4 & 5: Output + Volume + Satuan + Kategori (1 baris) --}}
+                <div
+                    class="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-start">
 
-                            <option value="" disabled selected hidden>Pilih Jenis Kegiatan</option>
-
-                            <option value="rapat">Rapat</option>
-                            <option value="pelayanan">Pelayanan Publik</option>
-                            <option value="dokumen">Penyusunan Dokumen</option>
-                            <option value="lapangan">Kunjungan Lapangan</option>
-                            <option value="lainnya">Lainnya</option>
-                        </select>
-
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" />
+                    {{-- Output --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
+                        <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                      px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                      focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="Contoh: Notulensi Rapat">
                     </div>
-                </div>
 
-            </div>
-            {{-- Row 2: Referensi Tupoksi --}}
-            <style>
-            /* Placeholder abu-abu ketika value masih kosong */
-            select:invalid {
-                color: #9CA3AF;
-            }
-
-            /* Warna teks untuk semua pilihan di dropdown */
-            select option {
-                color: #111827;
-                /* atau pakai #1F2933 / warna teks utama kamu */
-            }
-
-            /* Kalau mau placeholder di list tetap abu-abu (opsional) */
-            select option[disabled][value=""] {
-                color: #9CA3AF;
-            }
-            </style>
-
-            <div>
-                <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
-
-                <div class="relative">
-                    <select required class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm pr-9 focus:outline-none focus:ring-2
-                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
-                   appearance-none">
-
-                        <option value="" disabled selected hidden>Pilih Referensi Tupoksi</option>
-
-                        <option>Penyusunan rencana dan program kerja</option>
-                        <option>Penyusunan dan perumusan bahan petunjuk teknis</option>
-                        <option>Pengawasan, pemantauan dan evaluasi pelaksanaan</option>
-                        <option>Pelaksanaan dan pembinaan pembukuan</option>
-                    </select>
-
-                    <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" />
-                </div>
-            </div>
-
-            {{-- Row 3: Uraian Kegiatan --}}
-            <div>
-                <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
-                <textarea rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                     px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
-                                     focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                    placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
-            </div>
-
-            {{-- Row 4: Output --}}
-            <div>
-                <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
-                <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                               px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                               focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="Contoh: Notulensi Rapat">
-            </div>
-
-            {{-- Row 5: Volume + Satuan + Kategori --}}
-            <style>
-            /* Placeholder abu-abu ketika value masih kosong */
-            select:invalid {
-                color: #9CA3AF;
-            }
-
-            /* Warna teks untuk semua pilihan di dropdown */
-            select option {
-                color: #111827;
-                /* atau pakai #1F2933 / warna teks utama kamu */
-            }
-
-            /* Kalau mau placeholder di list tetap abu-abu (opsional) */
-            select option[disabled][value=""] {
-                color: #9CA3AF;
-            }
-            </style>
-
-            <div class="grid md:grid-cols-[120px_1fr_1fr] gap-4">
-
-                {{-- Volume --}}
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
-                    <input type="number" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                    {{-- Volume --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
+                        <input type="number" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                       px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="Volume">
-                </div>
-
-                {{-- Satuan --}}
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Satuan</label>
-                    <div class="relative">
-                        <select required class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                       px-3.5 py-2.5 text-sm pr-9 focus:outline-none focus:ring-2
-                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none">
-
-                            <option value="" disabled selected hidden>Pilih Satuan</option>
-                            <option>Jam</option>
-                            <option>Dokumen</option>
-                            <option>Kegiatan</option>
-                        </select>
-
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" />
                     </div>
-                </div>
 
-                {{-- Kategori --}}
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Kategori</label>
-                    <div class="relative">
-                        <select required class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                        px-3.5 py-2.5 text-sm pr-9 focus:outline-none focus:ring-2
-                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none">
+                    {{-- Satuan (Alpine dropdown) --}}
+                    <div x-data="{
+        open: false,
+        value: '',
+        options: [
+            { value: 'jam',      label: 'Jam' },
+            { value: 'dokumen',  label: 'Dokumen' },
+            { value: 'kegiatan', label: 'Kegiatan' },
+        ],
+        get label() {
+            const found = this.options.find(o => o.value === this.value);
+            return found ? found.label : 'Satuan';
+        },
+    }" x-cloak class="relative">
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">
+                            Satuan
+                        </label>
 
-                            <option value="" disabled selected hidden>Pilih Kategori</option>
-                            <option>SKP</option>
-                            <option>Non-SKP</option>
-                        </select>
+                        {{-- Tombol utama --}}
+                        <button type="button" @click="open = !open" @click.outside="open = false" class="w-full flex items-center justify-between rounded-[10px]
+           border border-slate-200 bg-slate-50/60
+           pl-3.5 pr-3 py-2.5 text-sm text-left
+           focus:outline-none focus:ring-2
+           focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
+                            <span x-text="label" :class="value === '' ? 'text-[#9CA3AF]' : 'text-slate-700'"
+                                class="truncate"></span>
 
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" />
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- Row 6: Jam Mulai + Jam Selesai --}}
-            <div class="grid md:grid-cols-2 gap-4">
-
-                {{-- Jam Mulai --}}
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
-                    <div class="relative">
-                        <input id="jam_mulai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                       px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
-
-                        {{-- Icon jam (ukuran konsisten) --}}
-                        <button type="button" id="jam_mulai_btn"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                            <img src="{{ asset('assets/icon/time.svg') }}"
-                                class="h-4 w-4 opacity-70 pointer-events-none" alt="Pilih jam mulai">
+                            <img src="{{ asset('assets/icon/chevron-down.svg') }}"
+                                class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
                         </button>
+
+                        {{-- List opsi --}}
+                        <div x-show="open" x-transition class="absolute left-0 mt-1 w-full rounded-[10px]
+               border border-slate-200 bg-white shadow-lg
+               z-20 overflow-hidden">
+                            <template x-for="opt in options" :key="opt.value">
+                                <button type="button" @click="value = opt.value; open = false" class="w-full flex items-center justify-between
+                       px-3.5 py-2 text-sm text-left hover:bg-slate-50">
+                                    <span x-text="opt.label" class="text-slate-700"></span>
+                                    <span x-show="opt.value === value" class="text-xs text-[#1C7C54]">
+                                        •
+                                    </span>
+                                </button>
+                            </template>
+                        </div>
+
+                        {{-- nilai yang dikirim ke backend --}}
+                        <input type="hidden" name="satuan" x-model="value">
                     </div>
-                </div>
 
-                {{-- Jam Selesai --}}
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
-                    <div class="relative">
-                        <input id="jam_selesai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                       px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                    {{-- Kategori (Alpine dropdown) --}}
+                    <div x-data="{
+        open: false,
+        value: '',
+        options: [
+            { value: 'skp',     label: 'SKP' },
+            { value: 'non-skp', label: 'Non-SKP' },
+        ],
+        get label() {
+            const found = this.options.find(o => o.value === this.value);
+            return found ? found.label : 'Kategori';
+        },
+    }" x-cloak class="relative">
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">
+                            Kategori
+                        </label>
 
-                        {{-- Icon jam (ukuran konsisten) --}}
-                        <button type="button" id="jam_mulai_btn"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                            <img src="{{ asset('assets/icon/time.svg') }}"
-                                class="h-4 w-4 opacity-70 pointer-events-none" alt="Pilih jam mulai">
+                        {{-- Tombol utama --}}
+                        <button type="button" @click="open = !open" @click.outside="open = false" class="w-full flex items-center justify-between rounded-[10px]
+           border border-slate-200 bg-slate-50/60
+           pl-3.5 pr-3 py-2.5 text-sm text-left
+           focus:outline-none focus:ring-2
+           focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
+                            <span x-text="label" :class="value === '' ? 'text-[#9CA3AF]' : 'text-slate-700'"
+                                class="truncate"></span>
+
+                            <img src="{{ asset('assets/icon/chevron-down.svg') }}"
+                                class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
                         </button>
+
+                        {{-- List opsi --}}
+                        <div x-show="open" x-transition class="absolute left-0 mt-1 w-full rounded-[10px]
+               border border-slate-200 bg-white shadow-lg
+               z-20 overflow-hidden">
+                            <template x-for="opt in options" :key="opt.value">
+                                <button type="button" @click="value = opt.value; open = false" class="w-full flex items-center justify-between
+                       px-3.5 py-2 text-sm text-left hover:bg-slate-50">
+                                    <span x-text="opt.label" class="text-slate-700"></span>
+                                    <span x-show="opt.value === value" class="text-xs text-[#1C7C54]">
+                                        •
+                                    </span>
+                                </button>
+                            </template>
+                        </div>
+
+                        {{-- nilai yang dikirim ke backend --}}
+                        <input type="hidden" name="kategori" x-model="value">
+                    </div>
+
+                </div>
+
+                {{-- Row 6: Jam Mulai + Jam Selesai --}}
+                <div class="grid md:grid-cols-2 gap-4">
+                    {{-- Jam Mulai --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
+                        <div class="relative">
+                            <input id="jam_mulai" type="time"
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                       px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+
+                            <button type="button" id="jam_mulai_btn"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/time.svg') }}"
+                                    class="h-4 w-4 opacity-70 pointer-events-none" alt="Pilih jam mulai">
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Jam Selesai --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
+                        <div class="relative">
+                            <input id="jam_selesai" type="time"
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                       px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                       focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+
+                            <button type="button" id="jam_selesai_btn"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/time.svg') }}"
+                                    class="h-4 w-4 opacity-70 pointer-events-none" alt="Pilih jam selesai">
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Row 7: Unggah Bukti + Lokasi --}}
-            <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
-                    <label class="w-full flex items-center justify-between rounded-[10px]
-                   border border-dashed border-slate-300 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer">
-                        <span class="truncate">Pilih File</span>
-                        <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
-                        <input type="file" class="hidden">
-                    </label>
+                {{-- Row 7: Unggah Bukti + Lokasi --}}
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+                        <label class="w-full flex items-center justify-between rounded-[10px]
+                                   border border-dashed border-slate-300 bg-slate-50/60
+                                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer">
+                            <span class="truncate">Pilih File</span>
+                            <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
+                            <input type="file" class="hidden">
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
+                        <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                   px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] placeholder:text-slate-400"
+                            placeholder="Otomatis Terisi">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
-                    <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] placeholder:text-slate-400"
-                        placeholder="Otomatis Terisi">
+                {{-- Tombol Aksi --}}
+                <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                    <button class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white">
+                        Simpan Draft
+                    </button>
+                    <button class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white">
+                        Kirim LKH
+                    </button>
                 </div>
-            </div>
-
-            {{-- Tombol Aksi --}}
-            <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                <button class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white hover:bg-slate-50">
-                    Simpan Draft
-                </button>
-                <button
-                    class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
-                    Kirim LKH
-                </button>
             </div>
         </div>
 
-        {{-- Draft LKH di bawah form --}}
-        <div class="mt-5 rounded-[14px] bg-slate-50/80 border border-slate-200 px-4 py-3">
+        {{-- DRAFT LKH (CARD TERPISAH DI BAWAH FORM) --}}
+        <div class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3">
             <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-semibold text-slate-800">Draft LKH</h3>
+                <h3 class="text-[15px] font-normal text-black">Draft LKH</h3>
                 <a href="#" class="text-[11px] text-slate-500 hover:underline">Lihat Semua Draft</a>
             </div>
 
-            <div
-                class="rounded-xl bg-white border border-slate-200 px-3 py-2.5 flex items-center justify-between text-xs">
+            <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between text-xs">
                 <div>
                     <div class="font-medium text-slate-800">Rapat Koordinasi Pajak</div>
                     <div class="mt-[2px] text-[11px] text-slate-500">
@@ -288,7 +336,7 @@
                 </div>
                 <div class="flex items-center gap-2 ml-2">
                     <button
-                        class="rounded-[6px] bg-emerald-600 text-white text-[11px] px-3 py-[4px] leading-none hover:brightness-95">
+                        class="rounded-[6px] bg-[#0E7A4A] text-white text-[11px] px-3 py-[4px] leading-none hover:brightness-95">
                         Lanjutkan
                     </button>
                     <button
@@ -303,11 +351,10 @@
     {{-- KOLOM KANAN: PANDUAN SINGKAT + STATUS LAPORAN --}}
     <div class="space-y-4">
 
-        {{-- PANDUAN SINGKAT (SCROLLABLE BODY) --}}
+        {{-- PANDUAN SINGKAT --}}
         <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
             <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
 
-            {{-- BAGIAN INI YANG DISCROLL --}}
             <div class="mt-3 space-y-2 max-h-[420px] overflow-y-auto pr-1">
                 @foreach ([
                 ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan, bukan tanggal pengisian.'],
@@ -335,7 +382,6 @@
             <h3 class="text-sm font-semibold text-slate-800 mb-3">Status Laporan Terakhir</h3>
 
             <div class="space-y-2 text-xs">
-                {{-- Item 1 --}}
                 <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
                     <div class="flex items-center gap-2">
                         <span
@@ -350,7 +396,6 @@
                     <span class="text-[11px] text-slate-400 whitespace-nowrap">07 Nov 2025</span>
                 </div>
 
-                {{-- Item 2 --}}
                 <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
                     <div class="flex items-center gap-2">
                         <span
@@ -365,7 +410,6 @@
                     <span class="text-[11px] text-slate-400 whitespace-nowrap">09 Nov 2025</span>
                 </div>
 
-                {{-- Item 3 --}}
                 <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
                     <div class="flex items-center gap-2">
                         <span
@@ -385,3 +429,63 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+// Placeholder custom untuk input tanggal
+document.addEventListener('DOMContentLoaded', () => {
+    const tgl = document.getElementById('tanggal_lkh');
+    const ph = document.getElementById('tanggal_placeholder');
+
+    if (!tgl || !ph) return;
+
+    const syncTanggal = () => {
+        if (tgl.value) {
+            ph.classList.add('hidden');
+            tgl.classList.remove('text-transparent');
+            tgl.classList.add('text-slate-900');
+        } else {
+            ph.classList.remove('hidden');
+            tgl.classList.add('text-transparent');
+        }
+    };
+
+    tgl.addEventListener('change', syncTanggal);
+    tgl.addEventListener('input', syncTanggal);
+    syncTanggal();
+
+    // Klik icon = buka datepicker
+    document.getElementById('tanggal_lkh_btn')?.addEventListener('click', () => tgl.showPicker && tgl
+        .showPicker());
+});
+
+// Placeholder untuk input time (class time-placeholder/time-filled)
+document.addEventListener('DOMContentLoaded', () => {
+    ['jam_mulai', 'jam_selesai'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const sync = () => {
+            if (el.value) {
+                el.classList.remove('time-placeholder');
+                el.classList.add('time-filled');
+            } else {
+                el.classList.add('time-placeholder');
+                el.classList.remove('time-filled');
+            }
+        };
+
+        el.addEventListener('change', sync);
+        el.addEventListener('input', sync);
+        sync();
+    });
+
+    // tombol icon time → buka picker jika ada
+    const jm = document.getElementById('jam_mulai');
+    document.getElementById('jam_mulai_btn')?.addEventListener('click', () => jm?.showPicker?.());
+    const js = document.getElementById('jam_selesai');
+    document.getElementById('jam_selesai_btn')?.addEventListener('click', () => js?.showPicker?.());
+});
+</script>
+
+@endpush

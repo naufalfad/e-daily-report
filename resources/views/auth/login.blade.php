@@ -28,10 +28,10 @@
         <!-- KIRI: Panel hijau + hero + fitur -->
         <section class="relative hidden lg:block overflow-hidden">
             <!-- Background image -->
-            <img src="{{ asset('img/bg-mimika.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
+            <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
                 alt="Latar Mimika" />
             <!-- Overlay gradient hijau -->
-            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.88)_0%,rgba(24,140,96,0.90)_100%)]">
+            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]">
             </div>
 
             <div class="relative z-10 h-full pb-[12px] lg:pb-[15px]">
@@ -58,7 +58,7 @@
 
                         <!-- Monitoring -->
                         <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/80 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/monitoring-icon.svg') }}" alt="Monitoring Real-Time"
                                     class="mb-3 h-12 w-12">
@@ -69,7 +69,7 @@
 
                         <!-- Tracking -->
                         <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/80 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/tracking-icon.svg') }}" alt="Tracking Lokasi"
                                     class="mb-3 h-12 w-12 text-white">
@@ -80,7 +80,7 @@
 
                         <!-- Validasi -->
                         <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/80 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/validasi-icon.svg') }}" alt="Validasi Digital"
                                     class="mb-3 h-12 w-12 text-white">
@@ -91,7 +91,7 @@
 
                         <!-- Proteksi -->
                         <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/80 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/proteksi-icon.svg') }}" alt="Data Terproteksi"
                                     class="mb-3 h-12 w-12 text-white">

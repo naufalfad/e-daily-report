@@ -1,0 +1,38 @@
+[
+    { 
+        "id": 1, 
+        "lat": -4.557, 
+        "lng": 136.885, 
+        "kegiatan": "Rapat Koordinasi Internal", 
+        "user": "Ahmad Saeful", 
+        "status": "approved",
+        "tanggal_laporan": "2025-11-10"
+    },
+    { 
+        "id": 2, 
+        "lat": -4.560, 
+        "lng": 136.890, 
+        "kegiatan": "Kunjungan Lapangan Proyek Jalan", 
+        "user": "Sari Dewi", 
+        "status": "rejected",
+        "tanggal_laporan": "2025-11-11"
+    },
+    { 
+        "id": 3, 
+        "lat": -4.550, 
+        "lng": 136.880, 
+        "kegiatan": "Penyusunan Dokumen SKP", 
+        "user": "Fahrizal M.", 
+        "status": "pending",
+        "tanggal_laporan": "2025-11-12"
+    },
+    { 
+        "id": 4, 
+        "lat": -4.545, 
+        "lng": 136.875, 
+        "kegiatan": "Pelayanan Publik Loket", 
+        "user": "Ahmad Saeful", 
+        "status": "approved",
+        "tanggal_laporan": "2025-11-12"
+    }
+]

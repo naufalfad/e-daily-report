@@ -1,0 +1,36 @@
+[
+    {
+        "id": 1,
+        "tanggal_kirim": "07 nov 2025 | 12:10",
+        "nama_kegiatan": "rapat koordinasi internal",
+        "tanggal_verifikasi": "08 13:20",
+        "penilai": "ahmad saeful muridan, s.e., m.h.",
+        "status": "Diterima",
+        "uraian": "melaksanakan rapat internal untuk evaluasi kinerja bulanan.",
+        "output": "notulensi rapat",
+        "volume": 1,
+        "satuan": "dokumen",
+        "kategori": "skp",
+        "jam_mulai": "13:00",
+        "jam_selesai": "16:00",
+        "lokasi": "kantor bapenda",
+        "catatan": "good job! tingkatkan lagi kinerjamu!"
+    },
+    {
+        "id": 2,
+        "tanggal_kirim": "08 nov 2025 | 10:30",
+        "nama_kegiatan": "rapat koordinasi eksternal",
+        "tanggal_verifikasi": "08 12:00",
+        "penilai": "budi santoso",
+        "status": "Ditolak",
+        "uraian": "rapat koordinasi dengan pihak luar",
+        "output": "notulensi rapat",
+        "volume": 1,
+        "satuan": "dokumen",
+        "kategori": "skp",
+        "jam_mulai": "10:00",
+        "jam_selesai": "12:00",
+        "lokasi": "kantor bapenda",
+        "catatan": "perbaiki format laporan!"
+    }
+]

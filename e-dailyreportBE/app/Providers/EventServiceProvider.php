@@ -6,6 +6,12 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Models\LaporanHarian;
+use App\Observers\LaporanHarianObserver;
+use App\Models\Skp;
+use App\Observers\SkpObserver;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -25,7 +31,9 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+       LaporanHarian::observe(LaporanHarianObserver::class);
+        Skp::observe(SkpObserver::class);
+        User::observe(UserObserver::class);
     }
 
     /**

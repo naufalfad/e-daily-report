@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait; 
+use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait;
 use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
@@ -29,54 +29,22 @@ class User extends Authenticatable
 
     protected $appends = ['foto_profil_url'];
 
-    // ======================================================================
-    // OVERRIDE LOGIN FIELD
-    // ======================================================================
-    /**
-     * Laravel default uses email, override to use 'username' for login.
-     */
-    public function username()
-    {
-        return 'username';
-    }
+    // Eager load agar otomatis ikut saat query user
+    protected $with = ['atasan', 'jabatan', 'bidang'];
 
-    // ======================================================================
-    // ACCESSORS
-    // ======================================================================
+    // ---------------------------------------------------------------------
+    // Accessor foto profil
+    // ---------------------------------------------------------------------
     public function getFotoProfilUrlAttribute()
     {
-        if ($this->foto_profil) {
-            return Storage::disk('minio')->url($this->foto_profil);
-        }
-        return null; 
-    }
-    
-    public function getTupoksiTersediaAttribute()
-    {
-        if ($this->bidang) {
-            return Tupoksi::where('bidang_id', $this->bidang_id)->get();
-        }
-        return collect(); // Kembalikan koleksi kosong jika tidak punya bidang
+        return $this->foto_profil
+            ? Storage::disk('minio')->url($this->foto_profil)
+            : asset('images/default-user.png');
     }
 
-    // ======================================================================
-    // RELASI ORGANISASI & HIERARKI
-    // ======================================================================
-    public function unitKerja()
-    {
-        return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
-    }
-
-    public function bidang()
-    {
-        return $this->belongsTo(Bidang::class, 'bidang_id');
-    }
-
-    public function jabatan()
-    {
-        return $this->belongsTo(Jabatan::class, 'jabatan_id');
-    }
-
+    // ---------------------------------------------------------------------
+    // Hierarki organisasi
+    // ---------------------------------------------------------------------
     public function atasan()
     {
         return $this->belongsTo(User::class, 'atasan_id');
@@ -93,32 +61,49 @@ class User extends Authenticatable
                     ->with(['jabatan', 'bidang', 'bawahanRecursif']);
     }
 
+    // ---------------------------------------------------------------------
+    // Relasi role
+    // ---------------------------------------------------------------------
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
     }
 
-    // ======================================================================
-    // RELASI CORE BUSINESS
-    // ======================================================================
-    public function skp()
-    {
-        return $this->hasMany(Skp::class, 'user_id');
-    }
-
+    // ---------------------------------------------------------------------
+    // Relasi ke core business
+    // ---------------------------------------------------------------------
     public function laporanHarian()
     {
         return $this->hasMany(LaporanHarian::class, 'user_id');
     }
 
+    // laporan yang harus divalidasi oleh user sebagai atasan
     public function laporanValidasi()
     {
-        return $this->hasMany(LaporanHarian::class, 'validator_id');
+        return $this->hasMany(LaporanHarian::class, 'atasan_id');
     }
 
-    // ======================================================================
-    // RELASI PENDUKUNG
-    // ======================================================================
+    // ---------------------------------------------------------------------
+    // Unit kerja / jabatan / bidang
+    // ---------------------------------------------------------------------
+    public function unitKerja()
+    {
+        return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
+    }
+
+    public function bidang()
+    {
+        return $this->belongsTo(Bidang::class, 'bidang_id');
+    }
+
+    public function jabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+    }
+
+    // ---------------------------------------------------------------------
+    // Relasi lain-lain
+    // ---------------------------------------------------------------------
     public function pengumumanDibuat()
     {
         return $this->hasMany(Pengumuman::class, 'user_id_creator');

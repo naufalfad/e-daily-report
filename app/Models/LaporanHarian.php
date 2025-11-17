@@ -11,20 +11,24 @@ class LaporanHarian extends Model
     use HasFactory, SpatialTrait;
 
     protected $table = 'laporan_harian';
+
     protected $guarded = ['id'];
 
-    // Konfigurasi PostGIS (Nama kolom yang tipe datanya GEOMETRY/GEOGRAPHY)
     protected $spatialFields = [
-        'lokasi', 
+        'lokasi',
     ];
 
-    // Relasi ke User
+    // ---------------------------------------------------------------------
+    // Relasi langsung ke pegawai (pembuat laporan)
+    // ---------------------------------------------------------------------
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke SKP (Bisa Null jika Non-SKP)
+    // ---------------------------------------------------------------------
+    // Relasi laporan SKP
+    // ---------------------------------------------------------------------
     public function skp()
     {
         return $this->belongsTo(Skp::class)->withDefault([
@@ -32,15 +36,19 @@ class LaporanHarian extends Model
         ]);
     }
 
-    // Relasi ke Bukti (Foto/PDF)
+    // ---------------------------------------------------------------------
+    // Relasi bukti laporan (foto, file)
+    // ---------------------------------------------------------------------
     public function bukti()
     {
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
-    
-    // Relasi ke Validator (Atasan)
-    public function validator()
+
+    // ---------------------------------------------------------------------
+    // Relasi ke atasan yang memvalidasi
+    // ---------------------------------------------------------------------
+    public function atasan()
     {
-        return $this->belongsTo(User::class, 'validator_id');
+        return $this->belongsTo(User::class, 'atasan_id');
     }
 }

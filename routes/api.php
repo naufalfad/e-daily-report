@@ -30,6 +30,7 @@ use App\Http\Controllers\Core\OrganisasiController;
 // 1. PUBLIC ROUTES (Tanpa Login)
 // ======================================================
 Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
 
 
 // ======================================================

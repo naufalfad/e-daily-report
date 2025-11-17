@@ -60,16 +60,21 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(errorText);
         }
 
-        // --- Login sukses ---
-        localStorage.setItem('auth_token', result.access_token); // simpan token
-        localStorage.setItem('user_data', JSON.stringify(result.data)); // simpan user info
+        localStorage.setItem('auth_token', result.access_token);
+        localStorage.setItem('user_data', JSON.stringify(result.data));
 
         const roles = result.data.roles || [];
-        const roleName = roles.length > 0 ? (roles[0].name || 'staf').toLowerCase() : 'staf';
+        
+        // --- PERBAIKAN KRITIS ---
+        // 1. Ganti .name menjadi .nama_role
+        // 2. Pastikan perbandingan menggunakan lowercase yang konsisten
+        const roleName = roles.length > 0 ? (roles[0].nama_role || 'staf').toLowerCase() : 'staf';
 
-        if (roleName.includes('admin')) {
-          window.location.href = '/admin/dashboard';
+        // Ganti 'Penilai' menjadi 'penilai' agar konsisten dengan .toLowerCase()
+        if (roleName.includes('penilai')) {
+          window.location.href = '/penilai/dashboard';
         } else {
+          // Akan menjadi default jika role bukan 'penilai' atau role tidak teridentifikasi
           window.location.href = '/staf/dashboard';
         }
 

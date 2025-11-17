@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Core;
 
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use App\Services\NotificationService; // <-- PENTING: Import Service Notifikasi
+use App\Services\NotificationService;
 
 class ValidatorController extends Controller
 {
@@ -18,17 +17,19 @@ class ValidatorController extends Controller
     public function index(Request $request)
     {
         $atasanId = Auth::id();
-        $bawahanIds = User::where('atasan_id', $atasanId)->pluck('id');
 
         $query = LaporanHarian::with(['user', 'skp', 'bukti'])
-            ->whereIn('user_id', $bawahanIds);
+            ->where('atasan_id', $atasanId);
 
+        // Filter status
         if ($request->has('status')) {
             $query->where('status', $request->status);
         } else {
+            // Prioritaskan waiting_review
             $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END");
         }
 
+        // Filter tanggal
         if ($request->has('tanggal')) {
             $query->whereDate('tanggal_laporan', $request->tanggal);
         }
@@ -39,33 +40,34 @@ class ValidatorController extends Controller
     }
 
     /**
-     * 2. SHOW (Detail LKH Bawahan)
+     * 2. SHOW DETAIL LKH
      */
     public function show($id)
     {
         $atasanId = Auth::id();
-        $bawahanIds = User::where('atasan_id', $atasanId)->pluck('id');
 
         $lkh = LaporanHarian::with(['user', 'skp', 'bukti'])
-            ->whereIn('user_id', $bawahanIds)
+            ->where('atasan_id', $atasanId)
             ->find($id);
 
         if (!$lkh) {
-            return response()->json(['message' => 'Laporan tidak ditemukan atau bukan milik bawahan Anda'], 404);
+            return response()->json([
+                'message' => 'Laporan tidak ditemukan atau bukan milik bawahan Anda'
+            ], 404);
         }
 
         return response()->json(['data' => $lkh]);
     }
 
     /**
-     * 3. ACTION (Approve / Reject + Notifikasi)
+     * 3. VALIDASI LKH (approve/reject)
      */
     public function validateLkh(Request $request, $id)
     {
         $atasanId = Auth::id();
-        $bawahanIds = User::where('atasan_id', $atasanId)->pluck('id');
 
-        $lkh = LaporanHarian::whereIn('user_id', $bawahanIds)->find($id);
+        // Ambil laporan yang memang ditujukan ke atasan
+        $lkh = LaporanHarian::where('atasan_id', $atasanId)->find($id);
 
         if (!$lkh) {
             return response()->json(['message' => 'Akses ditolak'], 403);
@@ -80,18 +82,18 @@ class ValidatorController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Update Data LKH
+        // Update LKH
         $lkh->update([
             'status' => $request->status,
-            'validator_id' => $atasanId,
+            'atasan_id' => $atasanId, // pastikan atasan_id terisi (op)
             'waktu_validasi' => now(),
             'komentar_validasi' => $request->komentar_validasi
         ]);
 
-        // [BARU] Kirim Notifikasi Balik ke Pegawai
+        // Kirim Notifikasi
         $type = $request->status == 'approved' ? 'lkh_approved' : 'lkh_rejected';
-        $msg  = $request->status == 'approved' 
-                ? 'Selamat! LKH tanggal ' . $lkh->tanggal_laporan . ' disetujui.' 
+        $msg  = $request->status == 'approved'
+                ? 'Selamat! LKH tanggal ' . $lkh->tanggal_laporan . ' disetujui.'
                 : 'LKH tanggal ' . $lkh->tanggal_laporan . ' ditolak. Cek komentar atasan.';
 
         NotificationService::send(
@@ -101,10 +103,8 @@ class ValidatorController extends Controller
             $lkh->id
         );
 
-        $pesan = $request->status == 'approved' ? 'Laporan diterima' : 'Laporan ditolak';
-
         return response()->json([
-            'message' => $pesan,
+            'message' => $request->status == 'approved' ? 'Laporan diterima' : 'Laporan ditolak',
             'data' => $lkh
         ]);
     }

@@ -85,7 +85,7 @@
                     async init() {
                         this.isLoading = true;
                         try {
-                            const token = localStorage.getItem('token'); 
+                            const token = localStorage.getItem('auth_token'); 
                             const response = await fetch('/api/lkh/referensi', {
                                 headers: {
                                     'Authorization': `Bearer ${token}`,
@@ -174,7 +174,7 @@
                     async fetchSkp() {
                         this.skpLoading = true;
                         try {
-                            const token = localStorage.getItem('token');
+                            const token = localStorage.getItem('auth_token');
                             const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
                                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                             });

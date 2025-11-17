@@ -76,4 +76,9 @@ class AuthController extends Controller
             $request->user()->load(['roles', 'unitKerja', 'jabatan', 'atasan'])
         );
     }
+
+    public function me(Request $request)
+    {
+        return response()->json($request->user());
+    }
 }

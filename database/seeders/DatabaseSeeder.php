@@ -12,9 +12,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            BapendaSeeder::class,
-            MasterDataSeeder::class,
-            LkhSimulationSeeder::class,
+            TestingSeeder::class
+            // BapendaSeeder::class,
+            // MasterDataSeeder::class,
+            // LkhSimulationSeeder::class,
         ]);
     }
 }

@@ -1,38 +1,62 @@
 [
-    { 
-        "id": 1, 
-        "lat": -4.557, 
-        "lng": 136.885, 
-        "kegiatan": "Rapat Koordinasi Internal", 
-        "user": "Ahmad Saeful", 
+    {
+        "id": 1,
+        "lat": -4.557,
+        "lng": 136.885,
+        "kegiatan": "Rapat Koordinasi Internal",
+        "kategori_aktivitas": "Administrasi",
+        "user": "Ahmad Saeful",
         "status": "approved",
-        "tanggal_laporan": "2025-11-10"
+        "tanggal": "2025-11-10",
+        "waktu": "09:00 WIT",
+        "deskripsi": "Pembahasan evaluasi kinerja triwulan III dan perencanaan anggaran.",
+        "lokasi": "Ruang Meeting Lt. 2",
+        "surat_tugas": null,
+        "foto": null
     },
-    { 
-        "id": 2, 
-        "lat": -4.560, 
-        "lng": 136.890, 
-        "kegiatan": "Kunjungan Lapangan Proyek Jalan", 
-        "user": "Sari Dewi", 
+    {
+        "id": 2,
+        "lat": -4.56,
+        "lng": 136.89,
+        "kegiatan": "Kunjungan Lapangan Proyek",
+        "kategori_aktivitas": "Lapangan",
+        "user": "Sari Dewi",
         "status": "rejected",
-        "tanggal_laporan": "2025-11-11"
+        "tanggal": "2025-11-11",
+        "waktu": "13:30 WIT",
+        "deskripsi": "Monitoring progres pengaspalan jalan poros selatan distrik.",
+        "lokasi": "Jl. Poros Selatan, Distrik Mimika Timur",
+        "surat_tugas": null,
+        "foto": null
     },
-    { 
-        "id": 3, 
-        "lat": -4.550, 
-        "lng": 136.880, 
-        "kegiatan": "Penyusunan Dokumen SKP", 
-        "user": "Fahrizal M.", 
+    {
+        "id": 3,
+        "lat": -4.55,
+        "lng": 136.88,
+        "kegiatan": "Penyusunan Dokumen SKP",
+        "kategori_aktivitas": "Pemberkasan",
+        "user": "Fahrizal M.",
         "status": "pending",
-        "tanggal_laporan": "2025-11-12"
+        "tanggal": "2025-11-12",
+        "waktu": "08:15 WIT",
+        "deskripsi": "Finalisasi sasaran kinerja pegawai untuk periode semester genap.",
+        "lokasi": "Ruang Kerja Staff Kepegawaian",
+        "surat_tugas": null,
+        "foto": null
     },
-    { 
-        "id": 4, 
-        "lat": -4.545, 
-        "lng": 136.875, 
-        "kegiatan": "Pelayanan Publik Loket", 
-        "user": "Ahmad Saeful", 
+    {
+        "id": 4,
+        "lat": -4.545,
+        "lng": 136.875,
+        "kegiatan": "Pelayanan Publik Loket",
+        "kategori_aktivitas": "Pelayanan",
+        "user": "Ahmad Saeful",
         "status": "approved",
-        "tanggal_laporan": "2025-11-12"
+        "tanggal": "2025-11-12",
+        "waktu": "10:00 WIT",
+        "deskripsi": "Melayani antrian pembuatan e-KTP dan Kartu Keluarga warga.",
+        "lokasi": "Gedung Pelayanan Terpadu",
+        "surat_tugas": null,
+        "foto": null
     }
 ]

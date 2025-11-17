@@ -7,7 +7,6 @@ $menusByRole = [
         ['key'=>'skp','label'=>'Input SKP','icon'=>'doc-skp','route'=>route('staf.input-skp')],
         ['key'=>'map','label'=>'Peta Aktivitas','icon'=>'map-pin','route'=>route('staf.peta-aktivitas')],
         ['key'=>'riwayat','label'=>'Riwayat','icon'=>'history','route'=>route('staf.riwayat-lkh')],
-        // [UPDATE] Menu Log Aktivitas sekarang memiliki rute
         ['key'=>'log','label'=>'Log Aktivitas','icon'=>'clock','route'=>route('staf.log-aktivitas')],
     ],
     // Role lain disembunyikan untuk ringkasnya...
@@ -18,9 +17,8 @@ $menusByRole = [
         ['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
     ],
 ];
-// ANALISIS: Gunakan $active dari @extends() untuk menentukan menu aktif
+// Gunakan $active dan $role dari @extends()
 $activeMenu = $active ?? 'dashboard';
-// ANALISIS: Gunakan $role dari @extends()
 $menus = $menusByRole[$role] ?? $menusByRole['staf']; 
 @endphp
 
@@ -41,14 +39,7 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
         </div>
     </div>
 
-    <!-- Menu Navigasi (DINAMIS) -->
     <nav class="flex flex-col gap-[5px]">
-        {{-- 
-            ANALISIS: 
-            Menggunakan @foreach loop pada $menus adalah implementasi yang jauh 
-            lebih bersih (prinsip DRY) daripada hardcoding setiap link 
-            seperti pada kode yang Anda berikan. 
-        --}}
         @foreach ($menus as $menu)
             <a href="{{ $menu['route'] }}" 
                class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
@@ -57,7 +48,6 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
                             : 'text-white/90 hover:bg-[#36B37E]/70' }}">
                 
                 @php 
-                    // Mapping icon sederhana
                     $iconMap = [
                         'home' => 'home.svg', 'file-edit' => 'doc-laporan.svg',
                         'doc-skp' => 'doc-skp.svg', 'map-pin' => 'maps.svg',
@@ -76,7 +66,8 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
 
     {{-- Footer Sidebar --}}
     <div class="mt-8 pt-8">
-        <a href="#" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
+        {{-- [UBAH] Tambahkan ID "btn-logout" di sini --}}
+        <a href="#" id="btn-logout" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
             <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
             <span>Logout</span>
         </a>

@@ -21,7 +21,7 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'username_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -30,9 +30,19 @@ class User extends Authenticatable
     protected $appends = ['foto_profil_url'];
 
     // ======================================================================
+    // OVERRIDE LOGIN FIELD
+    // ======================================================================
+    /**
+     * Laravel default uses email, override to use 'username' for login.
+     */
+    public function username()
+    {
+        return 'username';
+    }
+
+    // ======================================================================
     // ACCESSORS
     // ======================================================================
-
     public function getFotoProfilUrlAttribute()
     {
         if ($this->foto_profil) {
@@ -43,7 +53,6 @@ class User extends Authenticatable
     
     public function getTupoksiTersediaAttribute()
     {
-        // Pastikan relasi bidang ada
         if ($this->bidang) {
             return Tupoksi::where('bidang_id', $this->bidang_id)->get();
         }
@@ -53,7 +62,6 @@ class User extends Authenticatable
     // ======================================================================
     // RELASI ORGANISASI & HIERARKI
     // ======================================================================
-
     public function unitKerja()
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
@@ -78,12 +86,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'atasan_id');
     }
-    
-    /**
-     * [BARU] Relasi Rekursif (Hierarki Pohon)
-     * Ini akan mengambil semua bawahan, dan juga 'bawahanRecursif' dari bawahan tersebut,
-     * sekaligus memuat data jabatan dan bidang mereka.
-     */
+
     public function bawahanRecursif()
     {
         return $this->hasMany(User::class, 'atasan_id')
@@ -98,7 +101,6 @@ class User extends Authenticatable
     // ======================================================================
     // RELASI CORE BUSINESS
     // ======================================================================
-
     public function skp()
     {
         return $this->hasMany(Skp::class, 'user_id');
@@ -117,7 +119,6 @@ class User extends Authenticatable
     // ======================================================================
     // RELASI PENDUKUNG
     // ======================================================================
-
     public function pengumumanDibuat()
     {
         return $this->hasMany(Pengumuman::class, 'user_id_creator');

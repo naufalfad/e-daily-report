@@ -6,16 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Throwable;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // 1. Validasi input dari Frontend
-        // Kita ubah rule validasi: Frontend mengirim 'username', bukan 'email'.
+        // 1. Validasi input
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string', // Input field dari form login
+            'username' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -23,37 +24,44 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // 2. Tentukan tipe kredensial (Fleksibilitas Cerdas)
-        // Logika: Jika input seperti email, kita cek ke kolom 'email'.
-        // Jika tidak (angka/string biasa), kita anggap itu NIP dan cek ke kolom 'nip'.
-        $loginType = filter_var($request->username, FILTER_VALIDATE_EMAIL) ? 'email' : 'nip';
+        try {
+            $username = $request->username;
 
-        // 3. Susun kredensial untuk Auth::attempt
-        $credentials = [
-            $loginType => $request->username,
-            'password' => $request->password
-        ];
+            // 2. Cari User berdasarkan username
+            $user = User::where('username', $username)->first();
 
-        // 4. Eksekusi Login
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Kredensial tidak valid (NIP/Email atau Password salah)'], 401);
+            if (!$user) {
+                return response()->json(['message' => 'Kredensial tidak valid (Pengguna tidak ditemukan)'], 401);
+            }
+
+            // 3. Cek password
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json(['message' => 'Kredensial tidak valid (Password salah)'], 401);
+            }
+
+            // 4. Login manual
+            Auth::login($user);
+
+            // 5. Muat relasi dan buat token
+            $user->load(['roles', 'unitKerja', 'jabatan', 'atasan']);
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            // 6. Respon sukses
+            return response()->json([
+                'message' => 'Login berhasil',
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+                'data' => $user
+            ]);
+
+        } catch (Throwable $e) {
+            \Log::error("Authentication failed: " . $e->getMessage(), ['exception' => $e]);
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan internal saat mencoba login. Silakan coba lagi.',
+                'debug' => env('APP_DEBUG') ? $e->getMessage() : null
+            ], 500);
         }
-
-        // 5. Ambil data User setelah login berhasil
-        // Kita cari user berdasarkan kolom yang dipakai login tadi ($loginType)
-        $user = User::with(['roles', 'unitKerja', 'jabatan', 'atasan'])
-                    ->where($loginType, $request->username)
-                    ->firstOrFail();
-
-        // 6. Buat Token
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login berhasil',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'data' => $user
-        ]);
     }
 
     public function logout(Request $request)
@@ -64,7 +72,6 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        // Return user dengan relasi terkini
         return response()->json(
             $request->user()->load(['roles', 'unitKerja', 'jabatan', 'atasan'])
         );

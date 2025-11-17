@@ -18,16 +18,12 @@ use App\Models\Pengumuman;
 
 class TestingSeeder extends Seeder
 {
-    /**
-     * Menjalankan seluruh proses seeding Master Data, User, dan Simulasi LKH/SKP.
-     * Kredensial Login: NIP (dibuat di bawah) dan Password: password123.
-     */
     public function run()
     {
         DB::transaction(function () {
-            $this->command->info('Memulai Proses Seeding Master Data dan Simulasi Aktivitas (Single File)...');
+            $this->command->info('Memulai Proses Seeding Master Data dan Simulasi Aktivitas...');
 
-            // --- HAPUS DATA LAMA (CLEAN UP) ---
+            // --- HAPUS DATA LAMA ---
             LaporanHarian::query()->delete();
             Skp::query()->delete();
             Pengumuman::query()->delete();
@@ -42,10 +38,10 @@ class TestingSeeder extends Seeder
             $this->command->warn('Semua password diatur menjadi: password123');
 
             // =================================================================
-            // 1. MASTER DATA (ROLES, JABATAN, UNIT, BIDANG)
+            // 1. MASTER DATA
             // =================================================================
             $rAdmin   = Role::firstOrCreate(['nama_role' => 'Super Admin']);
-            $rKadis   = Role::firstOrCreate(['nama_role' => 'Kadis']); // Kepala Badan
+            $rKadis   = Role::firstOrCreate(['nama_role' => 'Kadis']);
             $rPenilai = Role::firstOrCreate(['nama_role' => 'Penilai']); 
             $rPegawai = Role::firstOrCreate(['nama_role' => 'Pegawai']); 
 
@@ -62,61 +58,112 @@ class TestingSeeder extends Seeder
             $bPbb         = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Bidang PBB dan BPHTB']);
             $bDana        = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Bidang Dana Perimbangan & Lain-lain Pendapatan']);
             
-            // Tupoksi (Diperlukan untuk form input LKH)
+            // Tupoksi
             Tupoksi::firstOrCreate(['bidang_id' => $bPimpinan->id, 'uraian_tugas' => 'Penyelenggaraan kebijakan teknis Pendapatan daerah']);
             Tupoksi::firstOrCreate(['bidang_id' => $bPbb->id, 'uraian_tugas' => 'Pelaksanaan perencanaan, pengendalian dan operasional PBB']);
             Tupoksi::firstOrCreate(['bidang_id' => $bSekretariat->id, 'uraian_tugas' => 'Pelayanan administrasi umum dan kepegawaian']);
 
-
             // =================================================================
-            // 2. USER HIERARCHY & CREDENTIALS (NIP AS USERNAME)
+            // 2. USER HIERARCHY & CREDENTIALS (USERNAME)
             // =================================================================
             
-            // --- LEVEL 1: KABAN (Kadis) ---
+            // --- LEVEL 1: KABAN ---
             $kaban = User::firstOrCreate(
-                ['email' => 'darius'],
-                ['name' => 'Darius Sabon Rain (Kaban)', 'nip' => '197001011995011001', 'password' => 'password123', 'unit_kerja_id' => $ukBapenda->id, 'jabatan_id' => $jKaban->id, 'bidang_id' => $bPimpinan->id, 'atasan_id' => null]
+                ['username' => 'kaban'], // ganti email jadi username
+                [
+                    'name' => 'Darius Sabon Rain (Kaban)',
+                    'nip' => '197001011995011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jKaban->id,
+                    'bidang_id' => $bPimpinan->id,
+                    'atasan_id' => null,
+                    'email' => null
+                ]
             );
             $kaban->roles()->sync([$rKadis->id, $rPenilai->id]);
 
-            // --- LEVEL 2: SEKRETARIS (SETARA KABID) ---
+            // --- LEVEL 2: SEKRETARIS ---
             $sekban = User::firstOrCreate(
-                ['email' => 'sekban@bapenda.go.id'],
-                ['name' => 'Sekretaris Bapenda', 'nip' => '197501012000011001', 'password' => $globalPassword, 'unit_kerja_id' => $ukBapenda->id, 'jabatan_id' => $jSekban->id, 'bidang_id' => $bSekretariat->id, 'atasan_id' => $kaban->id]
+                ['username' => 'sekban'],
+                [
+                    'name' => 'Sekretaris Bapenda',
+                    'nip' => '197501012000011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jSekban->id,
+                    'bidang_id' => $bSekretariat->id,
+                    'atasan_id' => $kaban->id,
+                    'email' => null
+                ]
             );
             $sekban->roles()->sync([$rPenilai->id]);
 
             // --- LEVEL 2: KABID PBB ---
             $kabidPbb = User::firstOrCreate(
-                ['email' => 'kabid.pbb@bapenda.go.id'],
-                ['name' => 'Kabid PBB & BPHTB', 'nip' => '198001012005011001', 'password' => $globalPassword, 'unit_kerja_id' => $ukBapenda->id, 'jabatan_id' => $jKabid->id, 'bidang_id' => $bPbb->id, 'atasan_id' => $kaban->id]
+                ['username' => 'kabid.pbb'],
+                [
+                    'name' => 'Kabid PBB & BPHTB',
+                    'nip' => '198001012005011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jKabid->id,
+                    'bidang_id' => $bPbb->id,
+                    'atasan_id' => $kaban->id,
+                    'email' => null
+                ]
             );
             $kabidPbb->roles()->sync([$rPenilai->id]);
             
-            // --- LEVEL 3: KASUBID PBB (BAWAHAN KABID) ---
+            // --- LEVEL 3: KASUBID PBB ---
             $kasubPbbData = User::firstOrCreate(
-                ['email' => 'kasub.pbb.data@bapenda.go.id'],
-                ['name' => 'Kasubid Pendataan PBB', 'nip' => '198501012010011001', 'password' => $globalPassword, 'unit_kerja_id' => $ukBapenda->id, 'jabatan_id' => $jKasub->id, 'bidang_id' => $bPbb->id, 'atasan_id' => $kabidPbb->id]
+                ['username' => 'kasub.pbb.data'],
+                [
+                    'name' => 'Kasubid Pendataan PBB',
+                    'nip' => '198501012010011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jKasub->id,
+                    'bidang_id' => $bPbb->id,
+                    'atasan_id' => $kabidPbb->id,
+                    'email' => null
+                ]
             );
             $kasubPbbData->roles()->sync([$rPenilai->id]);
 
-            // --- LEVEL 4: STAF PBB (BAWAHAN KASUBID) ---
+            // --- LEVEL 4: STAF PBB ---
             $stafPbbData = User::firstOrCreate(
-                ['email' => 'staf.pbb.data@bapenda.go.id'],
-                ['name' => 'Staf Pendataan PBB', 'nip' => '199501012020011001', 'password' => $globalPassword, 'unit_kerja_id' => $ukBapenda->id, 'jabatan_id' => $jStaf->id, 'bidang_id' => $bPbb->id, 'atasan_id' => $kasubPbbData->id]
+                ['username' => 'staf.pbb.data'],
+                [
+                    'name' => 'Staf Pendataan PBB',
+                    'nip' => '199501012020011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jStaf->id,
+                    'bidang_id' => $bPbb->id,
+                    'atasan_id' => $kasubPbbData->id,
+                    'email' => null
+                ]
             );
             $stafPbbData->roles()->sync([$rPegawai->id]);
             
-            // --- LEVEL 3: KASUBAG UMUM (BAWAHAN SEKBAN) ---
+            // --- LEVEL 3: KASUBAG UMUM ---
             $kasubUmum = User::firstOrCreate(
-                ['email' => 'kasub.umum@bapenda.go.id'],
-                ['name' => 'Kasubag Umum & Kepegawaian', 'nip' => '199001012015011001', 'password' => $globalPassword, 'unit_kerja_id' => $ukBapenda->id, 'jabatan_id' => $jKasub->id, 'bidang_id' => $bSekretariat->id, 'atasan_id' => $sekban->id]
+                ['username' => 'kasub.umum'],
+                [
+                    'name' => 'Kasubag Umum & Kepegawaian',
+                    'nip' => '199001012015011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jKasub->id,
+                    'bidang_id' => $bSekretariat->id,
+                    'atasan_id' => $sekban->id,
+                    'email' => null
+                ]
             );
             $kasubUmum->roles()->sync([$rPenilai->id]);
 
-            // --- AMBIL ID KELURAHAN (Placeholder) ---
-            $kelurahanId = '9404011001'; // Placeholder ID untuk Mimika
-
+            $kelurahanId = '9404011001'; // Placeholder ID
 
             // =================================================================
             // 3. SIMULASI SKP (CREATE)

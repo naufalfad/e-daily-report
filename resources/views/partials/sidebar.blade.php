@@ -22,19 +22,34 @@ route('penilai.validasi-laporan')],
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
-['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement','route' => route('penilai.pengumuman')],
+['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
 ],
 
 'kepala-bagian' => [],
 'kepala-dinas' => [],
 'admin' => [
-['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
-['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => '#'],
+['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'settings', 'route' => '#'],
 ],
 ];
+
 // Gunakan $active dan $role dari @extends()
 $activeMenu = $active ?? 'dashboard';
-$menus = $menusByRole[$role] ?? $menusByRole['staf']; 
+$menus = $menusByRole[$role] ?? $menusByRole['staf'];
+
+// Peta icon global (cukup sekali, di luar loop)
+$iconMap = [
+'home' => 'home.svg',
+'file-edit' => 'doc-laporan.svg',
+'doc-skp' => 'doc-skp.svg',
+'map-pin' => 'maps.svg',
+'history' => 'history.svg',
+'clock' => 'log.svg',
+'settings' => 'settings.svg',
+'announcement' => 'pengumuman.svg',
+'validation' => 'validation.svg',
+'skoring' => 'skoring.svg',
+];
 @endphp
 
 <aside id="sidebar" class="fixed lg:sticky inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200
@@ -55,38 +70,17 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
         </div>
     </div>
 
+    {{-- Menu --}}
     <nav class="flex flex-col gap-[5px]">
         @foreach ($menus as $menu)
+        @php
+        $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
+        @endphp
+
         <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
                       {{ $activeMenu === $menu['key']
                             ? 'bg-[#36B37E] text-white'
                             : 'text-white/90 hover:bg-[#36B37E]/70' }}">
-                
-                @php 
-                    $iconMap = [
-                        'home' => 'home.svg', 'file-edit' => 'doc-laporan.svg',
-                        'doc-skp' => 'doc-skp.svg', 'map-pin' => 'maps.svg',
-                        'history' => 'history.svg', 'clock' => 'log.svg', 'settings' => 'settings.svg'
-                    ];
-                    $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-                @endphp
-
-            @php
-            $iconMap = [
-            'home' => 'home.svg',
-            'file-edit' => 'doc-laporan.svg',
-            'doc-skp' => 'doc-skp.svg',
-            'map-pin' => 'maps.svg',
-            'history' => 'history.svg',
-            'clock' => 'log.svg',
-            'settings' => 'settings.svg',
-            'announcement' => 'pengumuman.svg',
-            'validation' => 'validation.svg',
-            'skoring' => 'skoring.svg',
-            ];
-            $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-            @endphp
-
             <img src="{{ asset('assets/icon/' . $iconFile) }}" alt="{{ $menu['label'] }}"
                 class="h-5 w-5 {{ $activeMenu === $menu['key'] ? 'filter invert brightness-0' : '' }}" />
             <span>{{ $menu['label'] }}</span>
@@ -96,11 +90,10 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
 
     {{-- Footer Sidebar --}}
     <div class="mt-8 pt-8">
-        {{-- [UBAH] Tambahkan ID "btn-logout" di sini --}}
-        <a href="#" id="btn-logout" class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
+        <a href="#" id="btn-logout"
+            class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
             <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
             <span>Logout</span>
         </a>
-        @endif
     </div>
 </aside>

@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1,
+        "periode": "10/01/2025 - 10/12/2025",
+        "sasaran_kinerja": "Meningkatkan perolehan wajib pajak daerah.",
+        "indikator_kinerja": "Jumlah pajak yang dibayarkan dan dokumen penagihan yang diproses.",
+        "rencana_aksi": "Melakukan entri data wajib pajak setiap hari, menyusun penagihan laporan, rekap pembayaran pajak.",
+        "target_kuantitas": 300,
+        "satuan": "Berkas",
+        "target_kualitas": 100,
+        "atasan_langsung": "Fahrizal S.M.Kom"
+    },
+    {
+        "id": 2,
+        "periode": "10/01/2025 - 10/12/2025",
+        "sasaran_kinerja": "Optimalisasi data piutang pajak.",
+        "indikator_kinerja": "Jumlah data piutang yang tervalidasi.",
+        "rencana_aksi": "Melakukan validasi data piutang lama dan melakukan pembaruan status wajib pajak.",
+        "target_kuantitas": 500,
+        "satuan": "Dokumen",
+        "target_kualitas": 95,
+        "atasan_langsung": "Fahrizal S.M.Kom"
+    }
+]

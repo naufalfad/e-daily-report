@@ -110,9 +110,9 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
     Route::get('/dashboard', fn () => view('penilai.dashboard'))->name('dashboard');
     Route::get('/input-laporan', fn () => view('penilai.input-lkh'))->name('input-laporan');
     Route::get('/validasi-laporan', fn () => view('penilai.validasi-laporan'))->name('validasi-laporan');
-    Route::get('/skoring-kinerja', fn () => 'Skoring Kinerja')->name('skoring-kinerja');
-    Route::get('/peta-aktivitas', fn () => 'Peta Aktivitas')->name('peta-aktivitas');
-    Route::get('/riwayat', fn () => 'Riwayat Penilaian')->name('riwayat');
-    Route::get('/log-aktivitas', fn () => 'Log Aktivitas')->name('log-aktivitas');
-    Route::get('/pengumuman', fn () => 'Pengumuman')->name('pengumuman');
+    Route::get('/skoring-kinerja', fn () => view('penilai.skoring-kinerja'))->name('skoring-kinerja');
+    Route::get('/peta-aktivitas', fn () => view('penilai.peta-aktivitas'))->name('peta-aktivitas');
+    Route::get('/riwayat', fn () => view('penilai.riwayat'))->name('riwayat');
+    Route::get('/log-aktivitas', fn () => view('penilai.log-aktivitas'))->name('log-aktivitas');
+    Route::get('/pengumuman', fn () => view('penilai.pengumuman'))->name('pengumuman');
 });

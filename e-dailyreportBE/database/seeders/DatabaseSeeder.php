@@ -13,7 +13,8 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             BapendaSeeder::class,
-            MasterDataSeeder::class
+            MasterDataSeeder::class,
+            LkhSimulationSeeder::class,
         ]);
     }
 }

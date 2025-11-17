@@ -13,8 +13,7 @@
         rel="stylesheet">
 
     {{-- Vite & Tailwind (v4: pastikan kamu sudah memuat CSS build/tailwind.css di bawah) --}}
-    @vite(['resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('build/tailwind.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
     body {

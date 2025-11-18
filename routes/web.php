@@ -116,14 +116,11 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
     Route::get('/riwayat', fn () => view('penilai.riwayat'))->name('riwayat');
     Route::get('/log-aktivitas', fn () => view('penilai.log-aktivitas'))->name('log-aktivitas');
     Route::get('/pengumuman', fn () => view('penilai.pengumuman'))->name('pengumuman');
-<<<<<<< HEAD
     Route::get('/skoring-kinerja', fn () => view('penilai.skoring-kinerja'))->name('skoring-kinerja');
     Route::get('/peta-aktivitas', fn () => view('penilai.peta-aktivitas'))->name('peta-aktivitas');
     Route::get('/riwayat', fn () => view('penilai.riwayat'))->name('riwayat');
     Route::get('/log-aktivitas', fn () => view('penilai.log-aktivitas'))->name('log-aktivitas');
     Route::get('/pengumuman', fn () => view('penilai.pengumuman'))->name('pengumuman');
-});
-=======
 });
 
 Route::prefix('kadis')->name('kadis.')->group(function () {
@@ -157,4 +154,3 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/log-aktivitas', fn () => view('admin.log-aktivitas'))
         ->name('log-aktivitas');
 });
->>>>>>> origin/jek

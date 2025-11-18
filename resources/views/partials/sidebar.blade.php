@@ -25,24 +25,12 @@ route('penilai.validasi-laporan')],
 ['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
 ],
 
-// ==================== ROLE KEPALA DINAS ====================
-// pakai key 'kadis' sebagai utama
-'kadis' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('kadis.dashboard')],
-[
-'key' => 'validasi',
-'label' => 'Validasi Laporan',
-'icon' => 'validation',
-'route' =>
-route('kadis.validasi-laporan')
-],
-['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('kadis.log-aktivitas')],
-],
-
 // ==================== ROLE ADMIN ====================
 'admin' => [
 ['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
 ['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => '#'],
+['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'settings', 'route' => '#'],
 ],
 ];
 

@@ -13,7 +13,6 @@ class LaporanHarian extends Model
     use HasFactory;
 
     protected $table = 'laporan_harian';
-<<<<<<< HEAD
 
     protected $fillable = [
         'user_id',
@@ -32,10 +31,9 @@ class LaporanHarian extends Model
         'master_kelurahan_id',
         'is_luar_lokasi',
         'lokasi',
-        'validator_id',
+        // 'validator_id' DIHAPUS
         'validated_at',
-        // FIX UTAMA: Menambahkan 'atasan_id' ke fillable untuk Mass Assignment
-        'atasan_id', 
+        'atasan_id', // Tetap menggunakan atasan_id sebagai penilai awal
     ];
 
     protected $casts = [
@@ -45,37 +43,16 @@ class LaporanHarian extends Model
 
     // Hubungan ke Pengguna (Pembuat Laporan)
     public function user(): BelongsTo
-=======
-
-    protected $guarded = ['id'];
-
-    protected $spatialFields = [
-        'lokasi',
-    ];
-
-    // ---------------------------------------------------------------------
-    // Relasi langsung ke pegawai (pembuat laporan)
-    // ---------------------------------------------------------------------
-    public function user()
->>>>>>> 481dcfad944b7faa883dd86b2af594d5749aa9a5
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-<<<<<<< HEAD
     // Hubungan ke SKP (Jika kegiatan terkait SKP)
     public function skp(): BelongsTo
-=======
-    // ---------------------------------------------------------------------
-    // Relasi laporan SKP
-    // ---------------------------------------------------------------------
-    public function skp()
->>>>>>> 481dcfad944b7faa883dd86b2af594d5749aa9a5
     {
         return $this->belongsTo(Skp::class, 'skp_id');
     }
 
-<<<<<<< HEAD
     // Hubungan ke Tupoksi
     public function tupoksi(): BelongsTo
     {
@@ -84,35 +61,18 @@ class LaporanHarian extends Model
 
     // Hubungan ke Bukti LKH
     public function bukti(): HasMany
-=======
-    // ---------------------------------------------------------------------
-    // Relasi bukti laporan (foto, file)
-    // ---------------------------------------------------------------------
-    public function bukti()
->>>>>>> 481dcfad944b7faa883dd86b2af594d5749aa9a5
     {
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
 
-<<<<<<< HEAD
-    // Hubungan ke Atasan (Relasi baru untuk kolom 'atasan_id')
+    // Hubungan ke Atasan (Relasi yang digunakan sebagai penilai/validator di DB)
     public function atasan(): BelongsTo
-=======
-    // ---------------------------------------------------------------------
-    // Relasi ke atasan yang memvalidasi
-    // ---------------------------------------------------------------------
-    public function atasan()
->>>>>>> 481dcfad944b7faa883dd86b2af594d5749aa9a5
     {
         return $this->belongsTo(User::class, 'atasan_id');
     }
-<<<<<<< HEAD
     
-    // Hubungan ke Penilai/Validator (untuk kolom 'validator_id')
-    public function validator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'validator_id');
-    }
+    // RELASI VALIDATOR DIHAPUS KARENA KOLOM TIDAK ADA
+    // public function validator(): BelongsTo { ... }
 
     // Accessor untuk mendapatkan status laporan yang lebih deskriptif
     public function getStatusLabelAttribute(): string
@@ -132,6 +92,3 @@ class LaporanHarian extends Model
         $query->where('status', 'waiting_review');
     }
 }
-=======
-}
->>>>>>> 481dcfad944b7faa883dd86b2af594d5749aa9a5

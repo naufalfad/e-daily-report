@@ -1,0 +1,17 @@
+[
+    {
+        "id": 1,
+        "bidang_id": 10,
+        "uraian_tugas": "Menyusun laporan mingguan"
+    },
+    {
+        "id": 2,
+        "bidang_id": 10,
+        "uraian_tugas": "Rapat koordinasi internal"
+    },
+    {
+        "id": 3,
+        "bidang_id": 20,
+        "uraian_tugas": "Analisis kebutuhan sistem"
+    }
+]

@@ -80,56 +80,72 @@
 
                 {{-- Row 2: Referensi Tupoksi (SUDAH DIPERBAIKI: Dynamic Fetching) --}}
                 <div x-data="{
-                        open: false,
-                        value: '',
-                        label: 'Pilih Referensi Tupoksi',
-                        options: [],
-                        isLoading: false,
-                        async init() {
-                            this.isLoading = true;
-                            try {
-                                const token = localStorage.getItem('token'); 
-                                const response = await fetch('/api/lkh/referensi', {
-                                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                                });
-                                const data = await response.json();
-                                this.options = data.tupoksi.map(item => ({ value: item.id, label: item.uraian_tugas }));
-                            } catch (error) {
-                                console.error(error); this.label = 'Gagal memuat data';
-                            } finally { this.isLoading = false; }
-                        },
-                        select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                    }" x-init="init()">
+                    open: false,
+                    value: '',
+                    label: 'Pilih Referensi Tupoksi',
+                    options: [],
+                    isLoading: false,
+                    async init() {
+                        this.isLoading = true;
+                        try {
+                            const token = localStorage.getItem('auth_token'); 
+                            const response = await fetch('/api/lkh/referensi', {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            if(!response.ok) throw new Error('HTTP error ' + response.status);
+                            const data = await response.json();
 
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
-                    <input type="hidden" name="tupoksi_id" x-model="value">
+                            // Pastikan key sesuai JSON
+                            if(data.tupoksi && Array.isArray(data.tupoksi)) {
+                                this.options = data.tupoksi.map(item => ({
+                                    value: item.id,
+                                    label: item.uraian_tugas
+                                }));
+                                if(this.options.length === 0) this.label = 'Data Tupoksi Kosong';
+                            } else {
+                                this.label = 'Format data tidak valid';
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            this.label = 'Gagal memuat data';
+                        } finally {
+                            this.isLoading = false;
+                        }
+                    },
+                    select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                }" x-init="init()">
 
-                    <div class="relative">
-                        <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                       px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                       focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                            :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
-                            <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
-                            <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                                class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
-                        </button>
+                <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
+                <input type="hidden" name="tupoksi_id" x-model="value">
 
-                        <div x-show="open" @click.outside="open = false" x-transition
-                            class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
-                            <template x-for="opt in options" :key="opt.value">
-                                <button type="button"
-                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
-                                    :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
-                                    @click="select(opt)">
-                                    <span x-text="opt.label" class="line-clamp-2"></span>
-                                    <span x-show="opt.value === value" class="text-xs flex-shrink-0">✓</span>
-                                </button>
-                            </template>
-                            <div x-show="options.length === 0 && !isLoading"
-                                class="px-3.5 py-2 text-sm text-slate-400 italic">Data kosong</div>
-                        </div>
+                <div class="relative">
+                    <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                                px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                        :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                        <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
+                        <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
+                    </button>
+
+                    <div x-show="open" @click.outside="open = false" x-transition
+                        class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
+                        <template x-for="opt in options" :key="opt.value">
+                            <button type="button"
+                                class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
+                                :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                                @click="select(opt)">
+                                <span x-text="opt.label" class="line-clamp-2"></span>
+                                <span x-show="opt.value === value" class="text-xs flex-shrink-0">✓</span>
+                            </button>
+                        </template>
+                        <div x-show="options.length === 0 && !isLoading" class="px-3.5 py-2 text-sm text-slate-400 italic">Data kosong</div>
                     </div>
                 </div>
+            </div>
+
 
                 {{-- Row 3: Uraian Kegiatan --}}
                 <div>
@@ -161,7 +177,7 @@
                     async fetchSkp() {
                         this.skpLoading = true;
                         try {
-                            const token = localStorage.getItem('token');
+                            const token = localStorage.getItem('auth_token');
                             const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
                                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                             });

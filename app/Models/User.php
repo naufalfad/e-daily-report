@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait; 
+use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait;
 use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
@@ -21,7 +21,7 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'username_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -29,31 +29,63 @@ class User extends Authenticatable
 
     protected $appends = ['foto_profil_url'];
 
-    // ======================================================================
-    // ACCESSORS
-    // ======================================================================
+    // Eager load agar otomatis ikut saat query user
+    protected $with = ['atasan', 'jabatan', 'bidang'];
 
+    // ---------------------------------------------------------------------
+    // Accessor foto profil
+    // ---------------------------------------------------------------------
     public function getFotoProfilUrlAttribute()
     {
-        if ($this->foto_profil) {
-            return Storage::disk('minio')->url($this->foto_profil);
-        }
-        return null; 
+        return $this->foto_profil
+            ? Storage::disk('minio')->url($this->foto_profil)
+            : asset('images/default-user.png');
     }
-    
-    public function getTupoksiTersediaAttribute()
+
+    // ---------------------------------------------------------------------
+    // Hierarki organisasi
+    // ---------------------------------------------------------------------
+    public function atasan()
     {
-        // Pastikan relasi bidang ada
-        if ($this->bidang) {
-            return Tupoksi::where('bidang_id', $this->bidang_id)->get();
-        }
-        return collect(); // Kembalikan koleksi kosong jika tidak punya bidang
+        return $this->belongsTo(User::class, 'atasan_id');
     }
 
-    // ======================================================================
-    // RELASI ORGANISASI & HIERARKI
-    // ======================================================================
+    public function bawahan()
+    {
+        return $this->hasMany(User::class, 'atasan_id');
+    }
 
+    public function bawahanRecursif()
+    {
+        return $this->hasMany(User::class, 'atasan_id')
+                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
+    }
+
+    // ---------------------------------------------------------------------
+    // Relasi role
+    // ---------------------------------------------------------------------
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
+    }
+
+    // ---------------------------------------------------------------------
+    // Relasi ke core business
+    // ---------------------------------------------------------------------
+    public function laporanHarian()
+    {
+        return $this->hasMany(LaporanHarian::class, 'user_id');
+    }
+
+    // laporan yang harus divalidasi oleh user sebagai atasan
+    public function laporanValidasi()
+    {
+        return $this->hasMany(LaporanHarian::class, 'atasan_id');
+    }
+
+    // ---------------------------------------------------------------------
+    // Unit kerja / jabatan / bidang
+    // ---------------------------------------------------------------------
     public function unitKerja()
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
@@ -69,55 +101,9 @@ class User extends Authenticatable
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 
-    public function atasan()
-    {
-        return $this->belongsTo(User::class, 'atasan_id');
-    }
-
-    public function bawahan()
-    {
-        return $this->hasMany(User::class, 'atasan_id');
-    }
-    
-    /**
-     * [BARU] Relasi Rekursif (Hierarki Pohon)
-     * Ini akan mengambil semua bawahan, dan juga 'bawahanRecursif' dari bawahan tersebut,
-     * sekaligus memuat data jabatan dan bidang mereka.
-     */
-    public function bawahanRecursif()
-    {
-        return $this->hasMany(User::class, 'atasan_id')
-                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
-    }
-
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
-    }
-
-    // ======================================================================
-    // RELASI CORE BUSINESS
-    // ======================================================================
-
-    public function skp()
-    {
-        return $this->hasMany(Skp::class, 'user_id');
-    }
-
-    public function laporanHarian()
-    {
-        return $this->hasMany(LaporanHarian::class, 'user_id');
-    }
-
-    public function laporanValidasi()
-    {
-        return $this->hasMany(LaporanHarian::class, 'validator_id');
-    }
-
-    // ======================================================================
-    // RELASI PENDUKUNG
-    // ======================================================================
-
+    // ---------------------------------------------------------------------
+    // Relasi lain-lain
+    // ---------------------------------------------------------------------
     public function pengumumanDibuat()
     {
         return $this->hasMany(Pengumuman::class, 'user_id_creator');

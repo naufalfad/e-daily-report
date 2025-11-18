@@ -1,17 +1,16 @@
 @php($title = 'Riwayat Laporan')
+{{-- Asumsi $role tersedia dari @extends dan bernilai 'penilai' atau 'staf' --}}
 @extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'riwayat'])
 
+
 @section('content')
-{{-- 
-    Data di-load dari public/data/riwayat.json via fetch() di Alpine.js
---}}
-<section x-data="riwayatData()" x-init="initPage()">
+<section x-data="riwayatData('{{ $role ?? 'pegawai' }}')" x-init="initPage()">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
         <h2 class="text-[20px] font-normal mb-1">Riwayat Laporan</h2>
 
-        {{-- FILTER TANGGAL --}}
+        {{-- FILTER TANGGAL DAN MODE --}}
         <form class="mt-4" @submit.prevent="filterData()">
             <label class="block text-xs font-normal text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
             <div class="grid md:grid-cols-[1fr_1fr_auto] gap-3">
@@ -19,7 +18,7 @@
                 <div>
                     <label class="sr-only">Dari Tanggal</label>
                     <div class="relative">
-                        <input x-model="filter.from" id="tgl_dari" type="date"
+                        <input x-model="filter.from" id="tgl_dari" type="date" name="from_date"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
                         <button type="button" id="tgl_dari_btn"
                             class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
@@ -31,7 +30,7 @@
                 <div>
                     <label class="sr-only">Sampai Tanggal</label>
                     <div class="relative">
-                        <input x-model="filter.to" id="tgl_sampai" type="date"
+                        <input x-model="filter.to" id="tgl_sampai" type="date" name="to_date"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
                         <button type="button" id="tgl_sampai_btn"
                             class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
@@ -42,20 +41,38 @@
 
                 <div class="flex items-end">
                     <button type="submit"
-                        class="rounded-[10px] bg-[#0E7A4A] px-5 py-2.5 text-sm text-white hover:brightness-95 w-full md:w-auto">
-                        Terapkan
+                        class="rounded-[10px] bg-[#0E7A4A] px-5 py-2.5 text-sm text-white hover:brightness-95 w-full md:w-auto"
+                        :disabled="loading">
+                        <span x-show="!loading">Terapkan</span>
+                        <span x-show="loading">Memuat...</span>
                     </button>
                 </div>
             </div>
+            
+            {{-- FILTER KHUSUS PENILAI: MINE vs BAWAHAN --}}
+            <div x-show="role === 'penilai'" class="grid md:grid-cols-2 gap-3 mt-3">
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-normal text-slate-600 mb-2">Tampilkan Data LKH</label>
+                    <select x-model="filter.mode" @change="filterData()"
+                        class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
+                        <option value="mine">Hanya Laporan Saya</option>
+                        <option value="subordinates">Semua Laporan Bawahan</option>
+                    </select>
+                </div>
+            </div>
+            
         </form>
 
         {{-- TABLE --}}
-        <div class="overflow-x-auto mt-6">
+        <div class="overflow-x-auto mt-6 min-h-[200px]">
             <table class="w-full min-w-[900px] text-sm">
                 <thead>
                     <tr class="text-left text-xs text-slate-500 uppercase bg-slate-50">
                         <th class="px-3 py-2 font-medium">Tanggal Laporan</th>
                         <th class="px-3 py-2 font-medium">Nama Kegiatan</th>
+                        <template x-if="filter.mode === 'subordinates'">
+                            <th class="px-3 py-2 font-medium">Pegawai</th>
+                        </template>
                         <th class="px-3 py-2 font-medium">Tanggal Verifikasi</th>
                         <th class="px-3 py-2 font-medium">Pejabat Penilai</th>
                         <th class="px-3 py-2 font-medium">Status</th>
@@ -63,18 +80,27 @@
                     </tr>
                 </thead>
                 <tbody class="text-slate-700">
-                    <template x-for="item in filteredItems" :key="item.id">
+                    <template x-if="items.length === 0 && !loading">
+                        <tr class="border-t border-slate-100">
+                            <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6" class="px-3 py-4 text-center text-slate-500">Tidak ada data laporan ditemukan.</td>
+                        </tr>
+                    </template>
+                    <template x-if="loading">
+                        <tr class="border-t border-slate-100">
+                            <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6" class="px-3 py-4 text-center text-slate-500">Memuat data...</td>
+                        </tr>
+                    </template>
+                    <template x-for="item in items" :key="item.id">
                         <tr class="border-t border-slate-100 hover:bg-slate-50">
-                            <td class="px-3 py-3 whitespace-nowrap" x-text="item.tanggal_kirim"></td>
-                            <td class="px-3 py-3" x-text="item.nama_kegiatan"></td>
-                            <td class="px-3 py-3 whitespace-nowrap" x-text="item.tanggal_verifikasi"></td>
-                            <td class="px-3 py-3" x-text="item.penilai"></td>
+                            <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.tanggal_laporan)"></td>
+                            <td class="px-3 py-3" x-text="item.deskripsi_aktivitas"></td>
+                             <template x-if="filter.mode === 'subordinates'">
+                                <td class="px-3 py-3 whitespace-nowrap" x-text="item.user.name || '-'"></td>
+                            </template>
+                            <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.validated_at)"></td>
+                            <td class="px-3 py-3" x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')"></td>
                             <td class="px-3 py-3">
-                                <span :class="{
-                                        'rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5': item.status === 'Diterima',
-                                        'rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5': item.status === 'Ditolak',
-                                        'rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5': item.status !== 'Diterima' && item.status !== 'Ditolak'
-                                    }" x-text="item.status"></span>
+                                <span :class="statusBadgeClass(item.status)" x-text="statusText(item.status)"></span>
                             </td>
                             <td class="px-3 py-3">
                                 <button @click="openModal(item)"
@@ -117,27 +143,31 @@
                 <div class="mt-4 space-y-4 text-sm">
                     <div class="space-y-2">
                         <div>
-                            <label class="text-xs text-slate-500">Tanggal:</label>
-                            <p class="text-slate-800" x-text="modalData.tanggal_kirim.split(' | ')[0]"></p>
+                            <label class="text-xs text-slate-500">Tanggal Laporan:</label>
+                            <p class="text-slate-800" x-text="formatDate(modalData.tanggal_laporan)"></p>
+                        </div>
+                        <div x-show="role === 'penilai' && filter.mode === 'subordinates'">
+                            <label class="text-xs text-slate-500">Pegawai:</label>
+                            <p class="text-slate-800 font-medium" x-text="modalData.user.name"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Nama Kegiatan:</label>
-                            <p class="text-slate-800 font-semibold text-base" x-text="modalData.nama_kegiatan"></p>
+                            <p class="text-slate-800 font-semibold text-base" x-text="modalData.jenis_kegiatan"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Uraian Kegiatan:</label>
-                            <p class="text-slate-800" x-text="modalData.uraian"></p>
+                            <p class="text-slate-800" x-text="modalData.deskripsi_aktivitas"></p>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 pt-2">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-xs text-slate-500">Output:</label>
-                            <p class="text-slate-800" x-text="modalData.output"></p>
+                            <p class="text-slate-800" x-text="modalData.output_hasil_kerja"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Jam Mulai:</label>
-                            <p class="text-slate-800" x-text="modalData.jam_mulai"></p>
+                            <p class="text-slate-800" x-text="modalData.waktu_mulai.substring(0, 5)"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Volume:</label>
@@ -145,7 +175,7 @@
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Jam Selesai:</label>
-                            <p class="text-slate-800" x-text="modalData.jam_selesai"></p>
+                            <p class="text-slate-800" x-text="modalData.waktu_selesai.substring(0, 5)"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Satuan:</label>
@@ -153,51 +183,39 @@
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Bukti:</label>
-                            <button
-                                class="rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95">
-                                Lihat Bukti
+                             <button @click="viewBukti(modalData.bukti)" :disabled="modalData.bukti.length === 0"
+                                class="rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95 disabled:opacity-50">
+                                Lihat Bukti (<span x-text="modalData.bukti.length"></span>)
                             </button>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Kategori:</label>
-                            <p class="text-slate-800" x-text="modalData.kategori"></p>
+                            <p class="text-slate-800" x-text="modalData.skp_id ? 'SKP' : 'Non-SKP'"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Lokasi:</label>
-                            <p class="text-slate-800" x-text="modalData.lokasi"></p>
+                            <p class="text-slate-800" x-text="getLokasi(modalData)"></p>
                         </div>
                     </div>
 
                     <div class="border-t border-slate-200 pt-4 space-y-3">
                         <div>
                             <label class="text-xs text-slate-500">Status:</label>
-                            <div>
-                                <span x-show="modalData.status === 'Diterima'" style="display: none;"
-                                    class="rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium px-3 py-0.5">
-                                    Diterima
-                                </span>
-                                <span x-show="modalData.status === 'Ditolak'" style="display: none;"
-                                    class="rounded-full bg-rose-100 text-rose-700 text-xs font-medium px-3 py-0.5">
-                                    Ditolak
-                                </span>
-                                <span x-show="modalData.status !== 'Diterima' && modalData.status !== 'Ditolak'"
-                                    style="display: none;"
-                                    class="rounded-full bg-amber-100 text-amber-700 text-xs font-medium px-3 py-0.5"
-                                    x-text="modalData.status">
-                                </span>
-                            </div>
+                            <div x-html="statusBadgeHtml(modalData.status)"></div>
                         </div>
-                        <div>
-                            <label class="text-xs text-slate-500">Catatan:</label>
-                            <p class="text-slate-800" x-text="modalData.catatan"></p>
+                        
+                        <div x-show="modalData.komentar_validasi">
+                            <label class="text-xs text-slate-500">Catatan Penilai:</label>
+                            <p class="text-slate-800 italic bg-slate-50 p-2 rounded" x-text="modalData.komentar_validasi"></p>
                         </div>
+                        
                         <div>
-                            <label class="text-xs text-slate-500">Nama Pejabat Penilai Kerja:</label>
-                            <p class="text-slate-800 font-medium" x-text="modalData.penilai"></p>
+                            <label class="text-xs text-slate-500">Pejabat Penilai Kerja:</label>
+                            <p class="text-slate-800 font-medium" x-text="modalData.validator ? modalData.validator.name : modalData.atasan.name"></p>
                         </div>
                     </div>
 
-                    <div x-show="modalData.status === 'Ditolak'" style="display: none;" class="flex justify-end pt-2">
+                    <div x-show="modalData.status === 'rejected' && role === 'pegawai'" class="flex justify-end pt-2">
                         <button
                             class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
                             Perbaiki Laporan
@@ -214,80 +232,145 @@
 
 @push('scripts')
 <script>
-function riwayatData() {
-    return {
-        items: [],
-        filteredItems: [],
-        open: false,
-        modalData: null,
-        filter: {
-            from: '',
-            to: ''
-        },
+    function riwayatData(role) {
+        const TOKEN = localStorage.getItem('auth_token');
+        // Endpoint yang sudah diperbaiki untuk menghindari konflik routing
+        const BASE_URL = '/api/lkh/history/riwayat'; 
 
-        async initPage() {
-            await this.loadData();
-            this.initDatePickers();
-        },
+        return {
+            role: role,
+            items: [],
+            loading: false,
+            open: false,
+            modalData: null,
+            filter: {
+                from: '',
+                to: '',
+                // Default: Bawahan untuk Penilai, Milik Sendiri untuk yang lain
+                mode: (role === 'penilai' ? 'subordinates' : 'mine') 
+            },
+            
+            // --- Utils (Tidak Berubah) ---
+            formatDate(isoString) {
+                if (!isoString) return '-';
+                try {
+                    const datePart = isoString.split('T')[0];
+                    return new Date(datePart).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                    });
+                } catch (e) {
+                    return isoString;
+                }
+            },
+            
+            statusText(status) {
+                switch(status) {
+                    case 'approved': return 'Diterima';
+                    case 'rejected': return 'Ditolak';
+                    default: return 'Menunggu';
+                }
+            },
+            
+            statusBadgeClass(status) {
+                switch(status) {
+                    case 'approved': return 'rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5';
+                    case 'rejected': return 'rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5';
+                    default: return 'rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5';
+                }
+            },
 
-        async loadData() {
-            try {
-                const res = await fetch("{{ asset('data/riwayat.json') }}");
-                const json = await res.json();
-                this.items = json;
-                this.filteredItems = json;
-            } catch (e) {
-                console.error('Gagal memuat data riwayat.json', e);
-            }
-        },
+            statusBadgeHtml(status) {
+                const text = this.statusText(status);
+                const className = this.statusBadgeClass(status);
+                return `<span class="${className}">${text}</span>`;
+            },
+            
+            getLokasi(item) {
+                return item.lokasi_manual_text || (item.is_luar_lokasi ? 'Luar Kantor (GPS)' : 'Dalam Kantor (GPS)');
+            },
+            
+            // --- Core Logic ---
+            async initPage() {
+                await this.fetchData();
+                this.initDatePickers();
+            },
 
-        filterData() {
-            const from = this.filter.from ? new Date(this.filter.from) : null;
-            const to = this.filter.to ? new Date(this.filter.to) : null;
+            async fetchData() {
+                this.loading = true;
+                this.items = [];
 
-            this.filteredItems = this.items.filter(item => {
-                let itemDateStr = item.tanggal_kirim.split('|')[0].trim(); // "07 nov 2025"
-                const parts = itemDateStr.split(' '); // ["07","nov","2025"]
+                let url = BASE_URL + `?role=${this.role}`;
+                
+                // LOGIKA FILTER MODE: Hanya kirim mode jika role-nya penilai
+                if (this.role === 'penilai') {
+                    url += `&mode=${this.filter.mode}`;
+                }
+                
+                // LOGIKA FILTER TANGGAL
+                if (this.filter.from) {
+                    url += `&from_date=${this.filter.from}`;
+                }
+                if (this.filter.to) {
+                    url += `&to_date=${this.filter.to}`;
+                }
 
-                const months = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov',
-                    'des'
-                ];
-
-                let day = parts[0];
-                let month = months.indexOf(parts[1].toLowerCase()) + 1;
-                let year = parts[2];
-
-                if (month < 10) month = '0' + month;
-                const parsableDateStr = `${year}-${month}-${day}`;
-                const date = new Date(parsableDateStr);
-
-                if (from && date < from) return false;
-                if (to && date > to) return false;
-                return true;
-            });
-        },
-
-        openModal(item) {
-            this.modalData = item;
-            this.open = true;
-        },
-
-        initDatePickers() {
-            ['tgl_dari', 'tgl_sampai'].forEach(id => {
-                const input = document.getElementById(id);
-                const btn = document.getElementById(id + '_btn');
-                if (!input || !btn) return;
-
-                btn.addEventListener('click', () => {
-                    try {
-                        input.showPicker();
-                    } catch {
-                        input.focus();
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${TOKEN}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Gagal memuat data. Status: ${response.status}. Pesan: ${errorData.message || 'Unknown Error'}`);
                     }
+                    
+                    const data = await response.json();
+                    this.items = data.data || []; 
+
+                } catch (e) {
+                    console.error('Gagal memuat data riwayat LKH:', e);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            filterData() {
+                // Memuat ulang data dengan parameter filter yang baru
+                this.fetchData(); 
+            },
+
+            openModal(item) {
+                this.modalData = item;
+                this.open = true;
+            },
+            
+            viewBukti(buktiArray) {
+                 if (buktiArray && buktiArray.length > 0 && buktiArray[0].file_url) {
+                    window.open(buktiArray[0].file_url, '_blank');
+                 } else {
+                    alert('Tidak ada bukti yang tersedia.');
+                 }
+            },
+
+            initDatePickers() {
+                ['tgl_dari', 'tgl_sampai'].forEach(id => {
+                    const input = document.getElementById(id);
+                    const btn = document.getElementById(id + '_btn');
+                    if (!input || !btn) return;
+
+                    btn.addEventListener('click', () => {
+                        try {
+                            input.showPicker();
+                        } catch {
+                            input.focus();
+                        }
+                    });
                 });
-            });
+            }
         }
     }
-}
 </script>
 @endpush

@@ -144,44 +144,26 @@ $rows = [
         <table class="min-w-full text-sm">
             <thead class="bg-slate-100 text-[13px] text-slate-600">
                 <tr>
-                    <th class="px-4 py-2 text-left font-medium">Tanggal Laporan Dikirim</th>
+                    <th class="px-4 py-2 text-left font-medium">Tanggal Dikirim</th>
                     <th class="px-4 py-2 text-left font-medium">Nama Kegiatan</th>
                     <th class="px-4 py-2 text-left font-medium">Waktu</th>
-                    <th class="px-4 py-2 text-left font-medium">Nama Pegawai</th>
+                    <th class="px-4 py-2 text-left font-medium">Pegawai</th>
                     <th class="px-4 py-2 text-left font-medium">Lokasi</th>
+                    {{-- Kolom Status --}}
+                    <th class="px-4 py-2 text-center font-medium w-[100px]">Status</th> 
                     <th class="px-4 py-2 text-left font-medium w-[120px]">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="text-[13px] text-slate-700">
-                @foreach ($rows as $row)
-                @php($d = $row['detail'])
-                <tr class="border-t border-slate-200">
-                    <td class="px-4 py-2 whitespace-nowrap">{{ $row['tanggal_dikirim'] }}</td>
-                    <td class="px-4 py-2">{{ $row['nama_kegiatan'] }}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">{{ $row['waktu'] }}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">{{ $row['pegawai'] }}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">{{ $row['lokasi'] }}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">
-                        <button type="button"
-                            class="js-open-detail inline-flex items-center justify-center rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none hover:brightness-95"
-                            data-tanggal="{{ $d['tanggal'] }}" data-nama="{{ $d['nama'] }}"
-                            data-uraian="{{ $d['uraian'] }}" data-output="{{ $d['output'] }}"
-                            data-volume="{{ $d['volume'] }}" data-satuan="{{ $d['satuan'] }}"
-                            data-kategori="{{ $d['kategori'] }}" data-jam-mulai="{{ $d['jam_mulai'] }}"
-                            data-jam-selesai="{{ $d['jam_selesai'] }}" data-lokasi="{{ $d['lokasi'] }}"
-                            data-pegawai="{{ $d['pegawai'] }}" data-bukti="{{ $d['bukti'] }}">
-                            Lihat Detail
-                        </button>
-                    </td>
-                </tr>
-                @endforeach
+            {{-- Hook untuk JavaScript --}}
+            <tbody id="lkh-validation-list" class="text-[13px] text-slate-700">
+                <tr><td colspan="7" class="p-4 text-center text-slate-500">Memuat data...</td></tr>
             </tbody>
         </table>
     </div>
 </section>
 
 {{-- ================= MODAL DETAIL LAPORAN ================= --}}
-<div id="modal-detail" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40">
+<div id="modal-detail" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40" data-lkh-id="">
     <div class="bg-white rounded-3xl shadow-xl w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
         {{-- Header --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
@@ -193,79 +175,104 @@ $rows = [
         </div>
 
         {{-- Body --}}
-        <div class="px-6 py-5 text-sm text-slate-800 space-y-3">
-            <div>
-                <div class="text-[12px] text-slate-500 mb-[2px]">Tanggal:</div>
-                <div id="detail-tanggal" class="font-medium">-</div>
+        <div class="px-6 py-5 text-sm text-slate-800 space-y-4">
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {{-- Tanggal --}}
+                <div>
+                    <div class="text-[12px] text-slate-500 mb-[2px]">Tanggal Laporan:</div>
+                    <div id="detail-tanggal" class="font-medium">-</div>
+                </div>
+                 {{-- Nama Pegawai --}}
+                <div class="md:col-span-2">
+                    <div class="text-[12px] text-slate-500 mb-[2px]">Pegawai:</div>
+                    <div id="detail-pegawai" class="font-medium text-slate-900">-</div>
+                </div>
+                 {{-- Status --}}
+                <div id="detail-status-wrapper">
+                    <div class="text-[12px] text-slate-500 mb-[2px]">Status:</div>
+                    <div id="detail-status" class="font-medium">-</div>
+                </div>
             </div>
 
             <div>
-                <div class="text-[12px] text-slate-500 mb-[2px]">Nama Kegiatan:</div>
-                <div id="detail-nama" class="font-medium">-</div>
+                <div class="text-[12px] text-slate-500 mb-[2px]">Kegiatan:</div>
+                <div id="detail-nama" class="font-medium text-base text-[#155FA6]">-</div>
             </div>
 
             <div>
-                <div class="text-[12px] text-slate-500 mb-[2px]">Uraian Kegiatan:</div>
-                <div id="detail-uraian" class="leading-snug">-</div>
+                <div class="text-[12px] text-slate-500 mb-[2px]">Uraian Aktivitas:</div>
+                <div id="detail-uraian" class="leading-snug bg-slate-50 p-3 rounded-lg border border-slate-200">-</div>
             </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+            
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2 border-t border-slate-100">
+                
+                {{-- Output --}}
                 <div>
                     <div class="text-[12px] text-slate-500 mb-[2px]">Output:</div>
                     <div id="detail-output" class="font-medium">-</div>
                 </div>
+                 {{-- Volume --}}
                 <div>
                     <div class="text-[12px] text-slate-500 mb-[2px]">Volume:</div>
-                    <div id="detail-volume">-</div>
+                    <div id="detail-volume" class="font-medium">-</div>
                 </div>
+                 {{-- Satuan --}}
                 <div>
                     <div class="text-[12px] text-slate-500 mb-[2px]">Satuan:</div>
-                    <div id="detail-satuan">-</div>
+                    <div id="detail-satuan" class="font-medium">-</div>
                 </div>
+                 {{-- Kategori --}}
                 <div>
                     <div class="text-[12px] text-slate-500 mb-[2px]">Kategori:</div>
-                    <div id="detail-kategori">-</div>
+                    <div id="detail-kategori" class="font-medium">-</div>
+                </div>
+                 {{-- Lokasi --}}
+                <div>
+                    <div class="text-[12px] text-slate-500 mb-[2px]">Lokasi:</div>
+                    <div id="detail-lokasi" class="font-medium">-</div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
+                {{-- Jam --}}
                 <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Jam Mulai:</div>
-                    <div id="detail-jam-mulai">-</div>
+                    <div class="text-[12px] text-slate-500 mb-[2px]">Waktu Kerja:</div>
+                    <div id="detail-jam" class="font-medium text-slate-800">-</div>
                 </div>
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Jam Selesai:</div>
-                    <div id="detail-jam-selesai">-</div>
-                </div>
+                
+                {{-- Bukti --}}
                 <div>
                     <div class="text-[12px] text-slate-500 mb-[2px]">Bukti:</div>
-                    <button id="detail-bukti-btn"
-                        class="inline-flex items-center justify-center rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none hover:brightness-95">
+                    <button id="detail-bukti-btn" disabled
+                        class="inline-flex items-center justify-center rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none hover:brightness-95 disabled:opacity-50">
                         Lihat Bukti
                     </button>
                 </div>
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Lokasi:</div>
-                    <div id="detail-lokasi">-</div>
+                
+                 {{-- Catatan Penilai Sebelumnya (Hanya Muncul jika ada) --}}
+                <div id="detail-catatan-wrapper" class="md:col-span-3 hidden">
+                    <div class="text-[12px] text-slate-500 mb-[2px]">Catatan Verifikasi Sebelumnya:</div>
+                    <div id="detail-catatan" class="leading-snug italic text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-200"></div>
                 </div>
             </div>
-
-            <div class="pt-2">
-                <div class="text-[12px] text-slate-500 mb-[2px]">Nama Pegawai:</div>
-                <div id="detail-pegawai" class="font-medium">-</div>
-            </div>
+            
         </div>
 
-        {{-- Footer (ikon centang & silang) --}}
-        <div class="flex items-center justify-end gap-4 px-6 py-4 border-t border-slate-200">
+        {{-- Footer (ikon centang & silang) - HANYA UNTUK WAITING_REVIEW --}}
+        <div id="validation-actions" class="flex items-center justify-end gap-4 px-6 py-4 border-t border-slate-200">
+             <span class="text-sm text-slate-600 font-medium mr-2">Tindak Lanjut:</span>
             <button type="button"
-                class="js-open-approve h-8 w-8 flex items-center justify-center rounded-full border border-emerald-500 text-emerald-600 hover:bg-emerald-50">
+                class="js-open-approve h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-lg">
                 ✓
             </button>
             <button type="button"
-                class="js-open-reject h-8 w-8 flex items-center justify-center rounded-full border border-rose-500 text-rose-600 hover:bg-rose-50">
+                class="js-open-reject h-10 w-10 flex items-center justify-center rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-lg">
                 ✕
             </button>
+        </div>
+        <div id="validation-info" class="hidden px-6 py-4 border-t border-slate-200">
+            <span class="text-sm text-slate-500 italic">Laporan ini sudah divalidasi.</span>
         </div>
     </div>
 </div>
@@ -289,7 +296,7 @@ $rows = [
                 class="js-close-approve rounded-[8px] px-3 py-1.5 text-[12px] bg-slate-200 text-slate-700 hover:brightness-95">
                 Batal
             </button>
-            <button type="button"
+            <button type="button" id="btn-submit-approve"
                 class="rounded-[8px] px-3 py-1.5 text-[12px] bg-[#0E7A4A] text-white hover:brightness-95">
                 Terima Laporan
             </button>
@@ -329,3 +336,7 @@ $rows = [
 </div>
 
 @endsection
+
+@push('scripts')
+@vite('resources/js/pages/penilai/validasi-laporan.js') 
+@endpush

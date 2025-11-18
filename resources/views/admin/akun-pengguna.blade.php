@@ -19,11 +19,15 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3 justify-end">
-                {{-- Tambah Akun --}}
                 <button type="button" id="btn-open-add-akun"
-                    class="inline-flex items-center gap-2 rounded-[10px] bg-[#128C60] text-white text-[14px] px-4 py-2 hover:brightness-95 transition">
-                    <span>+ Tambah Akun</span>
+                    class="inline-flex items-center gap-2 rounded-[10px] bg-[#128C60] text-white text-[14px] px-5 py-2.5 hover:brightness-95 transition">
+
+                    <img src="{{ asset('assets/icon/akun-pengguna.svg') }}" alt="Tambah Akun" class="h-4 w-4">
+
+                    <span>Tambah Akun</span>
                 </button>
+
+
             </div>
         </div>
 
@@ -60,17 +64,11 @@
                             Joko Anwar
                         </td>
                         <td class="py-3 px-4 text-center align-top">
-                            <button type="button"
-                                class="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 hover:bg-red-100 transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                    class="h-4 w-4 text-red-600">
-                                    <path fill-rule="evenodd"
-                                        d="M8.75 3a1.5 1.5 0 0 0-1.06.44L7 4.13H4.75a.75.75 0 0 0 0 1.5h.39l.46 8.2A2.25 2.25 0 0 0 7.84 16h4.32a2.25 2.25 0 0 0 2.24-2.17l.46-8.2h.39a.75.75 0 0 0 0-1.5H13l-.69-.69A1.5 1.5 0 0 0 11.25 3h-2.5Zm0 2.25a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Zm2.5 0a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                <span class="sr-only">Hapus akun</span>
+                            <button type="button" class="hover:opacity-80 transition">
+                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
                             </button>
                         </td>
+
                     </tr>
 
                     {{-- Row 2 --}}
@@ -91,15 +89,8 @@
                             Darius Sabon Rain
                         </td>
                         <td class="py-3 px-4 text-center align-top">
-                            <button type="button"
-                                class="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 hover:bg-red-100 transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                    class="h-4 w-4 text-red-600">
-                                    <path fill-rule="evenodd"
-                                        d="M8.75 3a1.5 1.5 0 0 0-1.06.44L7 4.13H4.75a.75.75 0 0 0 0 1.5h.39l.46 8.2A2.25 2.25 0 0 0 7.84 16h4.32a2.25 2.25 0 0 0 2.24-2.17l.46-8.2h.39a.75.75 0 0 0 0-1.5H13l-.69-.69A1.5 1.5 0 0 0 11.25 3h-2.5Zm0 2.25a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Zm2.5 0a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                <span class="sr-only">Hapus akun</span>
+                            <button type="button" class="hover:opacity-80 transition">
+                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
                             </button>
                         </td>
                     </tr>
@@ -122,15 +113,8 @@
                             -
                         </td>
                         <td class="py-3 px-4 text-center align-top">
-                            <button type="button"
-                                class="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 hover:bg-red-100 transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                    class="h-4 w-4 text-red-600">
-                                    <path fill-rule="evenodd"
-                                        d="M8.75 3a1.5 1.5 0 0 0-1.06.44L7 4.13H4.75a.75.75 0 0 0 0 1.5h.39l.46 8.2A2.25 2.25 0 0 0 7.84 16h4.32a2.25 2.25 0 0 0 2.24-2.17l.46-8.2h.39a.75.75 0 0 0 0-1.5H13l-.69-.69A1.5 1.5 0 0 0 11.25 3h-2.5Zm0 2.25a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Zm2.5 0a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                <span class="sr-only">Hapus akun</span>
+                            <button type="button" class="hover:opacity-80 transition">
+                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
                             </button>
                         </td>
                     </tr>
@@ -153,15 +137,8 @@
                             Matthew Siregar
                         </td>
                         <td class="py-3 px-4 text-center align-top">
-                            <button type="button"
-                                class="inline-flex items-center justify-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 hover:bg-red-100 transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                    class="h-4 w-4 text-red-600">
-                                    <path fill-rule="evenodd"
-                                        d="M8.75 3a1.5 1.5 0 0 0-1.06.44L7 4.13H4.75a.75.75 0 0 0 0 1.5h.39l.46 8.2A2.25 2.25 0 0 0 7.84 16h4.32a2.25 2.25 0 0 0 2.24-2.17l.46-8.2h.39a.75.75 0 0 0 0-1.5H13l-.69-.69A1.5 1.5 0 0 0 11.25 3h-2.5Zm0 2.25a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Zm2.5 0a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                <span class="sr-only">Hapus akun</span>
+                            <button type="button" class="hover:opacity-80 transition">
+                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
                             </button>
                         </td>
                     </tr>
@@ -169,6 +146,99 @@
             </table>
         </div>
     </section>
+</div>
+
+{{-- MODAL TAMBAH AKUN PENGGUNA --}}
+<div id="modal-add-akun" class="fixed inset-0 z-[65] hidden items-center justify-center bg-black/60 px-4">
+    <div class="relative w-full max-w-[520px] bg-white rounded-[24px] shadow-xl px-6 md:px-8 py-6 md:py-7">
+
+        {{-- Tombol close (X) --}}
+        <button type="button" id="btn-close-add-akun"
+            class="absolute right-6 top-5 text-slate-400 hover:text-slate-600 text-xl leading-none">
+            &times;
+        </button>
+
+        {{-- Judul modal --}}
+        <h2 class="text-[18px] md:text-[20px] font-semibold text-slate-800 mb-4">
+            Tambah Akun
+        </h2>
+
+        {{-- FORM TAMBAH AKUN (FE only, dummy) --}}
+        <form action="#" method="POST" class="space-y-4">
+            @csrf
+
+            {{-- Pilih Pegawai --}}
+            <div>
+                <label class="block text-[13px] text-slate-600 mb-1">Pilih Pegawai</label>
+                <div class="relative">
+                    <select class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
+                               px-3.5 pr-10 text-sm appearance-none
+                               focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
+                               text-slate-700 placeholder:text-[#9CA3AF]">
+                        <option value="" disabled selected hidden>Pilih Pegawai</option>
+                        <option>Fahrizal Mudzaqi Maulana</option>
+                        <option>Muhammad Naufal</option>
+                        <option>Darius Sabon Rain</option>
+                        <option>Reno Sebastian Nugraha</option>
+                    </select>
+
+                    <img src="{{ asset('assets/icon/chevron-down.svg') }}"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" alt="">
+                </div>
+            </div>
+
+            {{-- Pilih Role --}}
+            <div>
+                <label class="block text-[13px] text-slate-600 mb-1">Pilih Role</label>
+                <div class="relative">
+                    <select class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
+                               px-3.5 pr-10 text-sm appearance-none
+                               focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
+                               text-slate-700 placeholder:text-[#9CA3AF]">
+                        <option value="" disabled selected hidden>Pilih Role</option>
+                        <option>Admin</option>
+                        <option>Kepala Dinas</option>
+                        <option>Kepala Bidang</option>
+                        <option>Staf</option>
+                    </select>
+
+                    <img src="{{ asset('assets/icon/chevron-down.svg') }}"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" alt="">
+                </div>
+            </div>
+
+            {{-- Username --}}
+            <div>
+                <label class="block text-[13px] text-slate-600 mb-1">Username</label>
+                <input type="text" placeholder="Buat Username" class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
+                              px-3.5 text-sm
+                              focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
+                              text-slate-700 placeholder:text-[#9CA3AF]" />
+            </div>
+
+            {{-- Password --}}
+            <div>
+                <label class="block text-[13px] text-slate-600 mb-1">Password</label>
+                <input type="password" placeholder="Buat Password" class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
+                              px-3.5 text-sm
+                              focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
+                              text-slate-700 placeholder:text-[#9CA3AF]" />
+            </div>
+
+            {{-- Tombol aksi --}}
+            <div class="pt-1 flex flex-wrap justify-end gap-3">
+                <button type="submit" class="inline-flex items-center justify-center rounded-[7px] bg-[#128C60]
+                               px-6 py-2 text-[14px] text-white font-normal hover:brightness-95 transition">
+                    Submit
+                </button>
+
+                <button type="button" id="btn-cancel-add-akun" class="inline-flex items-center justify-center rounded-[7px] bg-[#B6241C]
+                               px-6 py-2 text-[14px] text-white font-normal hover:brightness-95 transition">
+                    Batalkan
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 @endsection

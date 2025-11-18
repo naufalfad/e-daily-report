@@ -163,7 +163,7 @@ class TestingSeeder extends Seeder
             );
             $kasubUmum->roles()->sync([$rPenilai->id]);
 
-            $kelurahanId = '9404011001'; // Placeholder ID
+            
 
             // =================================================================
             // 3. SIMULASI SKP (CREATE)
@@ -232,14 +232,14 @@ class TestingSeeder extends Seeder
             $this->createLkh($stafPbbData, $skpStaff, 'waiting_review', $kasubPbbData, 
                 'Melakukan survei lapangan di Distrik Mimika Baru (5 unit)', 
                 '5 Data objek pajak baru',
-                'Survey', $kelurahanId
+                'Survey'
             );
 
             // LKH 2: Rejected (Ditolak Kasubid)
             $this->createLkh($stafPbbData, $skpStaff, 'rejected', $kasubPbbData, 
                 'Menginput data SPPT PBB tahun berjalan', 
                 'Data terinput ke sistem SISMIOP',
-                'Rekapitulasi', $kelurahanId, 
+                'Rekapitulasi',
                 'Data tidak lengkap, mohon lampirkan foto lokasi, koordinat tidak sesuai.'
             );
 
@@ -247,7 +247,7 @@ class TestingSeeder extends Seeder
             $this->createLkh($stafPbbData, $skpStaff, 'approved', $kasubPbbData, 
                 'Mencetak DHKP untuk kelurahan Timika Indah', 
                 'Dokumen DHKP tercetak dan dijilid',
-                'Rutin', $kelurahanId, 
+                'Rutin', 
                 'Kerja bagus, lanjutkan.'
             );
             
@@ -259,14 +259,14 @@ class TestingSeeder extends Seeder
             $this->createLkh($kasubPbbData, $skpKasubid, 'approved', $kabidPbb, 
                 'Memverifikasi hasil pendataan lapangan staf', 
                 '15 Berkas pendataan terverifikasi',
-                'Validasi', $kelurahanId
+                'Validasi',
             );
 
             // LKH Pending untuk Validasi Kabid (Kasubid mengajukan)
             $this->createLkh($kasubPbbData, $skpKasubid, 'waiting_review', $kabidPbb, 
                 'Menyusun jadwal petugas loket pelayanan PBB', 
                 'Jadwal piket bulan depan tersedia',
-                'Rutin', $kelurahanId
+                'Rutin',
             );
 
             // -------------------------------------------------------------
@@ -277,7 +277,7 @@ class TestingSeeder extends Seeder
             $this->createLkh($kabidPbb, $skpKabid, 'approved', $kaban, 
                 'Rapat Pimpinan evaluasi PAD Sektor PBB', 
                 'Notulen rapat dan strategi percepatan realisasi',
-                'Rapat', $kelurahanId
+                'Rapat',
             );
             
             // -------------------------------------------------------------
@@ -288,7 +288,7 @@ class TestingSeeder extends Seeder
             $lkhKasubagRejected = $this->createLkh($kasubUmum, $skpKasubag, 'waiting_review', $sekban,
                 'Pengecekan aset kendaraan dinas',
                 'Daftar kondisi kendaraan terkini',
-                'Inspeksi', $kelurahanId
+                'Inspeksi',
             );
             
             // Sekban Reject
@@ -327,7 +327,7 @@ class TestingSeeder extends Seeder
     /**
      * Helper untuk membuat LKH.
      */
-    private function createLkh($user, $skp, $status, $validator = null, $deskripsi, $output, $jenisKegiatan, $kelurahanId = null, $komentar = null)
+    private function createLkh($user, $skp, $status, $validator = null, $deskripsi, $output, $jenisKegiatan, $komentar = null)
     {
         $isLuarLokasi = in_array($jenisKegiatan, ['Survey', 'Inspeksi', 'Kunjungan']);
 
@@ -342,8 +342,6 @@ class TestingSeeder extends Seeder
             'jenis_kegiatan'      => $jenisKegiatan,
             'status'              => $status,
             
-            'master_kelurahan_id' => $kelurahanId,
-            'lokasi_manual_text'  => $kelurahanId ? 'Kantor Kelurahan ' . $kelurahanId : 'Kantor Bapenda',
             'lokasi'              => DB::raw("ST_GeomFromText('POINT(136.8851 -4.5461)')"),
             'is_luar_lokasi'      => $isLuarLokasi,
             

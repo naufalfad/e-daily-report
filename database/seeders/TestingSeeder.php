@@ -25,12 +25,21 @@ class TestingSeeder  extends Seeder
             // 0. LOAD ACTORS & RESET CREDENTIALS (NIP AS USERNAME & PASSWORD)
             // =================================================================
             
-            // 1. STAFF
-            $staff = User::where('email', 'staf.pbb.data@bapenda.go.id')->firstOrFail();
-            $staff->update([
-                'nip' => '199501012020011001', // Username Login
-                'password' => Hash::make('password123')
-            ]);
+            // --- LEVEL 1: KABAN ---
+            $kaban = User::firstOrCreate(
+                ['username' => 'kaban'], // ganti email jadi username
+                [
+                    'name' => 'Kepala Badan',
+                    'nip' => '197001011995011001',
+                    'password' => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id' => $jKaban->id,
+                    'bidang_id' => $bPimpinan->id,
+                    'atasan_id' => null,
+                    'email' => null
+                ]
+            );
+            $kaban->roles()->sync([$rKadis->id, $rPenilai->id]);
 
             // 2. KASUBID (Penilai)
             $kasubid = User::where('email', 'kasub.pbb.data@bapenda.go.id')->firstOrFail();

@@ -4,43 +4,95 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class LaporanHarian extends Model
 {
-    use HasFactory, SpatialTrait;
+    use HasFactory;
 
     protected $table = 'laporan_harian';
-    protected $guarded = ['id'];
 
-    // Konfigurasi PostGIS (Nama kolom yang tipe datanya GEOMETRY/GEOGRAPHY)
-    protected $spatialFields = [
-        'lokasi', 
+    protected $fillable = [
+        'user_id',
+        'skp_id',
+        'tupoksi_id',
+        'jenis_kegiatan',
+        'tanggal_laporan',
+        'waktu_mulai',
+        'waktu_selesai',
+        'deskripsi_aktivitas',
+        'output_hasil_kerja',
+        'volume',
+        'satuan',
+        'status',
+        'catatan_penilai',
+        'master_kelurahan_id',
+        'is_luar_lokasi',
+        'lokasi',
+        'validator_id',
+        'validated_at',
+        // FIX UTAMA: Menambahkan 'atasan_id' ke fillable untuk Mass Assignment
+        'atasan_id', 
     ];
 
-    // Relasi ke User
-    public function user()
+    protected $casts = [
+        'tanggal_laporan' => 'date',
+        'validated_at' => 'datetime',
+    ];
+
+    // Hubungan ke Pengguna (Pembuat Laporan)
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke SKP (Bisa Null jika Non-SKP)
-    public function skp()
+    // Hubungan ke SKP (Jika kegiatan terkait SKP)
+    public function skp(): BelongsTo
     {
-        return $this->belongsTo(Skp::class)->withDefault([
-            'nama_skp' => 'Non-SKP / Tugas Tambahan'
-        ]);
+        return $this->belongsTo(Skp::class, 'skp_id');
     }
 
-    // Relasi ke Bukti (Foto/PDF)
-    public function bukti()
+    // Hubungan ke Tupoksi
+    public function tupoksi(): BelongsTo
+    {
+        return $this->belongsTo(Tupoksi::class, 'tupoksi_id');
+    }
+
+    // Hubungan ke Bukti LKH
+    public function bukti(): HasMany
     {
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
-    
-    // Relasi ke Validator (Atasan)
-    public function validator()
+
+    // Hubungan ke Atasan (Relasi baru untuk kolom 'atasan_id')
+    public function atasan(): BelongsTo
     {
         return $this->belongsTo(User::class, 'validator_id');
+    }
+    
+    // Hubungan ke Penilai/Validator (untuk kolom 'validator_id')
+    public function validator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validator_id');
+    }
+
+    // Accessor untuk mendapatkan status laporan yang lebih deskriptif
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'waiting_review' => 'Menunggu Review',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+            'draft' => 'Draft',
+            default => 'Unknown',
+        };
+    }
+
+    // Query Scope untuk memfilter yang menunggu review
+    public function scopeWaitingReview(Builder $query): void
+    {
+        $query->where('status', 'waiting_review');
     }
 }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Core;
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use App\Models\LkhBukti;
-use App\Models\Tupoksi; // [BARU] Import Tupoksi
+use App\Models\Tupoksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -78,6 +78,11 @@ class LkhController extends Controller
     {
         // Daftar aktivitas yang valid (Whitelist)
         $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
+        $user = Auth::user(); // Ambil data user yang login
+
+        if (!$user) {
+            return response()->json(['message' => 'User belum login / token invalid'], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'tupoksi_id'        => 'required|exists:tupoksi,id',
@@ -147,9 +152,9 @@ class LkhController extends Controller
                 }
             }
 
-            // Simpan LKH [UPDATE UTAMA DI SINI]
+            // Simpan LKH [DITAMBAHKAN atasan_id]
             $lkh = LaporanHarian::create([
-                'user_id'            => Auth::id(),
+                'user_id'            => $user->id,
                 'skp_id'             => $request->skp_id,
                 'tupoksi_id'         => $request->tupoksi_id,
                 'jenis_kegiatan'     => $request->jenis_kegiatan,
@@ -166,6 +171,8 @@ class LkhController extends Controller
                 'status'             => 'waiting_review',
                 'master_kelurahan_id'=> $request->master_kelurahan_id,
                 'is_luar_lokasi'     => $isLuarLokasi,
+                // FIX UTAMA: Menyimpan ID Atasan sebagai validator awal
+                'atasan_id'          => $user->atasan_id,
                 'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
@@ -184,12 +191,12 @@ class LkhController extends Controller
 
             DB::commit();
 
-            // Kirim Notif (TETAP SAMA)
-            if ($request->user()->atasan_id) {
+            // Kirim Notif (Menggunakan atasan_id yang sudah diambil)
+            if ($user->atasan_id) {
                 NotificationService::send(
-                    $request->user()->atasan_id,
+                    $user->atasan_id,
                     'lkh_new_submission',
-                    'Pegawai ' . $request->user()->name . ' mengirim laporan: ' . $request->jenis_kegiatan,
+                    'Pegawai ' . $user->name . ' mengirim laporan: ' . $request->jenis_kegiatan,
                     $lkh->id
                 );
             }

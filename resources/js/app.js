@@ -3,6 +3,8 @@ import './pages/login.js';
 import './pages/staf/input-lkh.js';
 import './pages/penilai/validasi-laporan.js';
 import './pages/penilai/pengumuman.js';
+import './pages/admin/manajemen-pegawai.js';
+import './pages/admin/akun-pengguna.js';
 
 // Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {

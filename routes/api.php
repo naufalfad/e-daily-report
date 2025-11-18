@@ -98,7 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // 1. Spesifik / Utility Routes (Ditaruh di atas)
         Route::get('/history/riwayat', [LkhController::class, 'getRiwayat']); // FIX: Rute Riwayat
-        Route::get('/utility/referensi', [LkhController::class, 'getReferensi']); // FIX: Rute Referensi
+        Route::get('/referensi', [LkhController::class, 'getReferensi']); // FIX: Rute Referensi
         
         // 2. Resource Routes (API Resource diganti manual)
         Route::get('/', [LkhController::class, 'index']); // GET /lkh -> List

@@ -14,11 +14,20 @@ $menusByRole = [
 // ==================== ROLE PENILAI ====================
 'penilai' => [
 ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('penilai.dashboard')],
-['key' => 'input-laporan', 'label' => 'Input Laporan', 'icon' => 'file-edit', 'route' =>
-route('penilai.input-laporan')],
-['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('penilai.input-skp')],
-['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' =>
-route('penilai.validasi-laporan')],
+[
+'key' => 'input-laporan',
+'label' => 'Input Laporan',
+'icon' => 'file-edit',
+'route' =>
+route('penilai.input-laporan')
+],
+[
+'key' => 'validasi',
+'label' => 'Validasi Laporan',
+'icon' => 'validation',
+'route' =>
+route('penilai.validasi-laporan')
+],
 ['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => route('penilai.skoring-kinerja')],
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
@@ -26,10 +35,39 @@ route('penilai.validasi-laporan')],
 ['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
 ],
 
+// ==================== ROLE KEPALA DINAS ====================
+// pakai key 'kadis' sebagai utama
+'kadis' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('kadis.dashboard')],
+[
+'key' => 'validasi',
+'label' => 'Validasi Laporan',
+'icon' => 'validation',
+'route' =>
+route('kadis.validasi-laporan')
+],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('kadis.log-aktivitas')],
+],
+
 // ==================== ROLE ADMIN ====================
 'admin' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => '#'],
-['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'settings', 'route' => '#'],
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('admin.dashboard')],
+[
+'key' => 'manajemen-pegawai',
+'label' => 'Manajemen Pegawai',
+'icon' => 'manajemen-pegawai',
+'route' =>
+route('admin.manajemen-pegawai')
+],
+['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => route('admin.akun-pengguna')],
+[
+'key' => 'pengaturan',
+'label' => 'Pengaturan Sistem',
+'icon' => 'setting',
+'route' =>
+route('admin.pengaturan-sistem')
+],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('admin.log-aktivitas')],
 ],
 ];
 

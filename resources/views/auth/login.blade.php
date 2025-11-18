@@ -26,8 +26,10 @@
 
         {{-- Left Panel --}}
         <section class="relative hidden lg:block overflow-hidden">
-            <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover" alt="Latar Mimika" />
-            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]"></div>
+            <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
+                alt="Latar Mimika" />
+            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]">
+            </div>
 
             <div class="relative z-10 h-full pb-[12px] lg:pb-[15px]">
                 <div class="flex justify-center pt-10">
@@ -37,9 +39,59 @@
 
                 <div class="mx-auto mt-4 max-w-2xl px-10 text-center text-white">
                     <p class="text-[30px] font-normal">Selamat Datang di</p>
-                    <h1 class="mt-1 text-[40px] font-semibold tracking-tight">Aplikasi E-Daily Report</h1>
-                    <p class="mt-3 text-[20px] font-normal">Badan Pendapatan Daerah <br /> Kabupaten Mimika</p>
+                    <h1 class="mt-1 text-[40px] font-semibold tracking-tight">
+                        Aplikasi E-Daily Report</span>
+                    </h1>
+                    <p class="mt-3 text-[20px] font-normal">
+                        Badan Pendapatan Daerah <br /> Kabupaten Mimika
+                    </p>
                 </div>
+
+                <div class="mx-auto mt-10 w-fit">
+                    <div class="grid grid-cols-2 gap-[10px] justify-items-center">
+
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <img src="{{ asset('assets/icon/monitoring-icon.svg') }}" alt="Monitoring Real-Time"
+                                    class="mb-3 h-12 w-12">
+                                <h3 class="text-[15px] font-semibold">Monitoring Real-Time</h3>
+                                <p class="mt-1 text-sm/6 opacity-90">Pantau kinerja harian pegawai secara langsung</p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <img src="{{ asset('assets/icon/tracking-icon.svg') }}" alt="Tracking Lokasi"
+                                    class="mb-3 h-12 w-12 text-white">
+                                <h3 class="text-[15px] font-semibold">Tracking Lokasi</h3>
+                                <p class="mt-1 text-sm/6 opacity-90">Lacak aktivitas lapangan dengan integrasi GPS</p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <img src="{{ asset('assets/icon/validasi-icon.svg') }}" alt="Validasi Digital"
+                                    class="mb-3 h-12 w-12 text-white">
+                                <h3 class="text-[15px] font-semibold">Validasi Digital</h3>
+                                <p class="mt-1 text-sm/6 opacity-90">Proses persetujuan laporan cepat dan akurat</p>
+                            </div>
+                        </div>
+
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                            <div class="flex flex-col items-center text-center text-white">
+                                <img src="{{ asset('assets/icon/proteksi-icon.svg') }}" alt="Data Terproteksi"
+                                    class="mb-3 h-12 w-12 text-white">
+                                <h3 class="text-[15px] font-semibold">Data Terproteksi</h3>
+                                <p class="mt-1 text-sm/6 opacity-90">Keamanan data terjamin dengan enkripsi</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -48,6 +100,11 @@
             <div class="w-full max-w-md">
                 <h2 class="text-3xl font-semibold text-[#1C7C54]">Login Aplikasi</h2>
                 <p class="mt-2 text-slate-500">Silahkan masuk menggunakan akun anda</p>
+
+                {{-- Alert Sukses Logout (TAMBAHAN UNTUK MENAMPILKAN PESAN) --}}
+                <div id="success-alert" class="hidden mt-4 p-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200" role="alert">
+                    <span class="font-bold">Berhasil!</span> <span id="success-message"></span>
+                </div>
 
                 {{-- Alert Error --}}
                 <div id="error-alert" class="hidden mt-4 p-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200" role="alert">
@@ -103,8 +160,30 @@
         </section>
     </main>
 
-    {{-- JS --}}
+    {{-- JS - Skrip di halaman Login --}}
     <script>
+        // --- LOGIKA PENAMPILAN PESAN SUKSES LOGOUT ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutMessage = sessionStorage.getItem('logout_message');
+            const successAlert = document.getElementById('success-alert');
+            const successMsg = document.getElementById('success-message');
+            
+            if (logoutMessage && successAlert && successMsg) {
+                successMsg.innerText = logoutMessage;
+                successAlert.classList.remove('hidden'); 
+                
+                // Opsional: Sembunyikan pesan setelah 7 detik
+                setTimeout(() => {
+                    successAlert.classList.add('hidden');
+                }, 7000); 
+
+                // Hapus pesan dari storage setelah ditampilkan
+                sessionStorage.removeItem('logout_message');
+            }
+        });
+
+
+        // --- LOGIKA FORM LOGIN (EXISTING) ---
         // Toggle Password
         const pwdInput = document.getElementById('password');
         const toggleBtn = document.getElementById('togglePassword');
@@ -134,6 +213,8 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorAlert.classList.add('hidden');
+            // Pastikan pesan sukses logout tersembunyi jika user mencoba login lagi
+            document.getElementById('success-alert').classList.add('hidden'); 
 
             const payload = {
                 username: document.getElementById('username').value,
@@ -154,7 +235,12 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    window.location.href = '/staf/dashboard';
+                    // Penanganan token di sini (diasumsikan sudah ada di resources/js/app.js atau login.js)
+                    localStorage.setItem('auth_token', data.token); // Contoh asumsi
+                    localStorage.setItem('user_data', JSON.stringify(data.user)); // Contoh asumsi
+
+                    // Redirect ke dashboard staf setelah login sukses
+                    window.location.href = '/staf/dashboard'; 
                 } else {
                     errorMsg.innerText = data.message || 'Kredensial tidak valid.';
                     errorAlert.classList.remove('hidden');

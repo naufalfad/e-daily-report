@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 1. Toggle Password Logic ---
+  // --- Toggle Password ---
   const pwd = document.getElementById("password");
   const btnToggle = document.getElementById("togglePassword");
   const eyeOpen = document.getElementById("eyeOpen");
@@ -9,14 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
     btnToggle.addEventListener("click", () => {
       const showing = pwd.type === "password";
       pwd.type = showing ? "text" : "password";
-
       eyeOpen.classList.toggle("hidden", showing);
       eyeClosed.classList.toggle("hidden", !showing);
       btnToggle.setAttribute("aria-pressed", String(showing));
     });
   }
 
-  // --- 2. Login API Logic ---
+  // --- Login Form ---
   const loginForm = document.getElementById('loginForm');
   const errorAlert = document.getElementById('error-alert');
   const errorMessage = document.getElementById('error-message');
@@ -28,18 +27,16 @@ document.addEventListener("DOMContentLoaded", () => {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Reset State
-      errorAlert.classList.add('hidden');
+      // Reset state UI
+      if (errorAlert) errorAlert.classList.add('hidden');
       btnSubmit.disabled = true;
       btnText.classList.add('hidden');
       btnLoader.classList.remove('hidden');
 
-      // Ambil data
       const formData = new FormData(loginForm);
       const payload = Object.fromEntries(formData.entries());
 
       try {
-        // Panggil API
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
@@ -52,35 +49,53 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.message || 'Terjadi kesalahan saat login');
+          // Handle error dari backend
+          let errorText = result.message || 'Terjadi kesalahan saat login.';
+          if (response.status === 422 && result.errors) {
+            const firstField = Object.keys(result.errors)[0];
+            errorText = result.errors[firstField][0];
+          } else if (response.status === 401) {
+            errorText = result.message || 'Username atau password salah.';
+          }
+          throw new Error(errorText);
         }
 
-        // Login Sukses
-        // 1. Simpan Token & Data User
         localStorage.setItem('auth_token', result.access_token);
         localStorage.setItem('user_data', JSON.stringify(result.data));
 
-        // 2. Redirect Sesuai Role
-        // Asumsi struktur: result.data.roles = [{name: 'admin'}, ...]
         const roles = result.data.roles || [];
-        const roleName = roles.length > 0 ? roles[0].name.toLowerCase() : 'staf';
+        
+        // --- PERBAIKAN KRITIS ---
+        // 1. Ganti .name menjadi .nama_role
+        // 2. Pastikan perbandingan menggunakan lowercase yang konsisten
+        const roleName = roles.length > 0 ? (roles[0].nama_role || 'staf').toLowerCase() : 'staf';
 
-        if (roleName.includes('admin')) {
-          window.location.href = '/admin/dashboard'; // Sesuaikan route admin Paduka
+        // Ganti 'Penilai' menjadi 'penilai' agar konsisten dengan .toLowerCase()
+        if (roleName.includes('penilai')) {
+          window.location.href = '/penilai/dashboard';
         } else {
-          window.location.href = '/staf/dashboard';  // Sesuaikan route staf Paduka
+          // Akan menjadi default jika role bukan 'penilai' atau role tidak teridentifikasi
+          window.location.href = '/staf/dashboard';
         }
 
       } catch (error) {
-        // Tampilkan Error
-        errorMessage.textContent = error.message;
-        errorAlert.classList.remove('hidden');
-        
-        // Reset Button
+        // --- Error Handling ---
+        if (errorMessage) errorMessage.textContent = error.message;
+        if (errorAlert) errorAlert.classList.remove('hidden');
+
         btnSubmit.disabled = false;
         btnText.classList.remove('hidden');
         btnLoader.classList.add('hidden');
       }
     });
   }
+
+  // --- Global helper: fetch API dengan token ---
+  window.authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem('auth_token');
+    if (!options.headers) options.headers = {};
+    options.headers['Authorization'] = token ? `Bearer ${token}` : '';
+    options.headers['Accept'] = 'application/json';
+    return fetch(url, options);
+  };
 });

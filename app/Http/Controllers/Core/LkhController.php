@@ -22,6 +22,10 @@ class LkhController extends Controller
     public function getReferensi(Request $request)
     {
         $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'User belum login / token invalid'], 401);
+        }
+
 
         // 1. Ambil Tupoksi hanya milik Bidang user tersebut
         $listTupoksi = [];

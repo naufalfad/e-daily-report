@@ -16,20 +16,21 @@ $menusByRole = [
 ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('penilai.dashboard')],
 ['key' => 'input-laporan', 'label' => 'Input Laporan', 'icon' => 'file-edit', 'route' =>
 route('penilai.input-laporan')],
+['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('penilai.input-skp')],
 ['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' =>
 route('penilai.validasi-laporan')],
 ['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => route('penilai.skoring-kinerja')],
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
-['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement','route' => route('penilai.pengumuman')],
+['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
 ],
 
 'kepala-bagian' => [],
 'kepala-dinas' => [],
 'admin' => [
-['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
-['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => '#'],
+['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'settings', 'route' => '#'],
 ],
 ];
 

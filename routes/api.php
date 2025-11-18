@@ -93,10 +93,23 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- D. CORE: SKP ---
     Route::apiResource('skp', SkpController::class);
 
-    // --- E. CORE: LKH ---
-    // [BARU] Endpoint untuk ambil referensi Tupoksi & Jenis Kegiatan saat buat LKH
-    Route::get('/lkh/referensi', [LkhController::class, 'getReferensi']);
-    Route::apiResource('lkh', LkhController::class);
+    // --- E. CORE: LKH (FIXED ROUTING ORDER) ---
+    Route::prefix('lkh')->group(function () {
+        
+        // 1. Spesifik / Utility Routes (Ditaruh di atas)
+        Route::get('/history/riwayat', [LkhController::class, 'getRiwayat']); // FIX: Rute Riwayat
+        Route::get('/utility/referensi', [LkhController::class, 'getReferensi']); // FIX: Rute Referensi
+        
+        // 2. Resource Routes (API Resource diganti manual)
+        Route::get('/', [LkhController::class, 'index']); // GET /lkh -> List
+        Route::post('/', [LkhController::class, 'store']); // POST /lkh -> Create
+        
+        // Rute yang menggunakan {id} (Harus DITARUH PALING BAWAH)
+        Route::get('/{id}', [LkhController::class, 'show']); // GET /lkh/{id} -> Show
+        Route::put('/{id}', [LkhController::class, 'update']); // PUT /lkh/{id} -> Update
+        Route::delete('/{id}', [LkhController::class, 'destroy']); // DELETE /lkh/{id} -> Delete
+    });
+    // Route::get('/lkh/riwayat', [LkhController::class, 'getRiwayat']); // HAPUS RUTE INI
 
     // --- F. CORE: VALIDATOR ---
     Route::prefix('validator')->group(function () {

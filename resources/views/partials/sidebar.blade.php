@@ -22,18 +22,17 @@ route('penilai.validasi-laporan')],
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
-['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
+['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement','route' => route('penilai.pengumuman')],
 ],
 
 'kepala-bagian' => [],
 'kepala-dinas' => [],
 'admin' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => '#'],
-['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'settings', 'route' => '#'],
+['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
+['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
 ],
 ];
 
-// Gunakan $active dan $role dari @extends()
 $activeMenu = $active ?? 'dashboard';
 $menus = $menusByRole[$role] ?? $menusByRole['staf'];
 @endphp
@@ -56,26 +55,13 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
         </div>
     </div>
 
-    {{-- Menu --}}
-    <nav class="flex flex-col gap-[5px]">
+    <!-- Menu Navigasi (scrollable tapi scrollbar disembunyikan) -->
+    <nav class="flex-1 flex flex-col gap-[5px] overflow-y-auto pr-1 no-scrollbar">
         @foreach ($menus as $menu)
-        @php
-        $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-        @endphp
-
         <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
                       {{ $activeMenu === $menu['key']
                             ? 'bg-[#36B37E] text-white'
                             : 'text-white/90 hover:bg-[#36B37E]/70' }}">
-
-            @php
-            $iconMap = [
-            'home' => 'home.svg', 'file-edit' => 'doc-laporan.svg',
-            'doc-skp' => 'doc-skp.svg', 'map-pin' => 'maps.svg',
-            'history' => 'history.svg', 'clock' => 'log.svg', 'settings' => 'settings.svg'
-            ];
-            $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-            @endphp
 
             @php
             $iconMap = [
@@ -100,13 +86,23 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
         @endforeach
     </nav>
 
-    {{-- Footer Sidebar --}}
-    <div class="mt-8 pt-8">
-        {{-- [UBAH] Tambahkan ID "btn-logout" di sini --}}
-        <a href="#" id="btn-logout"
-            class="flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
+    {{-- Footer Sidebar (tanpa garis/border) --}}
+    <div class="mt-6 pt-4 shrink-0">
+        @if (Route::has('logout'))
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit"
+                class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
+                <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
+                <span>Logout</span>
+            </button>
+        </form>
+        @else
+        <a href="#"
+            class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
             <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
             <span>Logout</span>
         </a>
+        @endif
     </div>
 </aside>

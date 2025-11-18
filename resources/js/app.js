@@ -1,6 +1,8 @@
 import '../css/app.css';
 import './pages/login.js';
 import './pages/staf/input-lkh.js';
+import './pages/penilai/validasi-laporan.js';
+import './pages/penilai/pengumuman.js';
 
 // Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {

@@ -176,8 +176,8 @@
 {{-- Grafik + Aktivitas terkini + Draft Laporan --}}
 <section class="mt-4 grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-4">
 
-    {{-- GRAFIK (kartu tinggi, span 2 baris) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 lg:row-span-2 flex flex-col">
+    {{-- GRAFIK (kartu tinggi tetap, span 2 baris) --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 lg:row-span-2">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Grafik Kinerja Bulanan</h3>
             <button
@@ -190,8 +190,7 @@
             </button>
         </div>
 
-        {{-- Area chart fleksibel + canvas --}}
-        <div class="mt-1 flex-1">
+        <div class="mt-4 h-[380px] md:h-[420px] lg:h-[450px]">
             <canvas id="kinerjaBulananChart" class="w-full h-full"></canvas>
         </div>
     </div>
@@ -232,21 +231,14 @@
             ],
             ] as $activity)
             <li class="flex items-start gap-3">
-
-                {{-- ICON DI KOTAK, GAYA SAMA DENGAN STATISTIK RINGKAS --}}
-                <div class="h-10 w-10 rounded-[10px] flex items-center justify-center 
-                    {{ $activity['tone'] }} ">
+                <div class="h-10 w-10 rounded-[10px] flex items-center justify-center {{ $activity['tone'] }}">
                     <img src="{{ asset('assets/icon/' . $activity['icon']) }}" class="h-5 w-5 opacity-90" alt="">
                 </div>
 
-                {{-- TEKS --}}
                 <div class="flex-1">
-                    {{-- Judul --}}
                     <div class="text-[15px] font-medium leading-snug">
                         {{ $activity['title'] }}
                     </div>
-
-                    {{-- Status + Tanggal sejajar --}}
                     <div class="flex justify-between mt-[2px]">
                         <span class="text-xs text-slate-500 leading-snug">
                             {{ $activity['status'] }}
@@ -256,14 +248,12 @@
                         </span>
                     </div>
                 </div>
-
             </li>
             @endforeach
         </ul>
     </div>
 
-
-    {{-- DRAFT LAPORAN (kanan bawah, sejajar bawah dengan grafik) --}}
+    {{-- DRAFT LAPORAN (kanan bawah) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Draft Laporan</h3>
@@ -273,13 +263,10 @@
         <div class="space-y-2">
             @foreach ([1, 2] as $i)
             <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
-
-                {{-- Judul + Tanggal --}}
                 <div>
                     <div class="font-medium leading-tight text-[15px]">
                         Rapat Koordinasi Pendapatan
                     </div>
-
                     <div class="text-xs text-slate-500 mt-[2px] leading-tight">
                         Disimpan: {{ now()->translatedFormat('d F Y | H:i') }}
                     </div>
@@ -291,11 +278,10 @@
                         Lanjutkan
                     </button>
                     <button
-                        class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/15">
+                        class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/80">
                         Hapus
                     </button>
                 </div>
-
             </div>
             @endforeach
         </div>

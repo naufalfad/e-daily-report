@@ -14,27 +14,88 @@ $menusByRole = [
 // ==================== ROLE PENILAI ====================
 'penilai' => [
 ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('penilai.dashboard')],
-['key' => 'input-laporan', 'label' => 'Input Laporan', 'icon' => 'file-edit', 'route' =>
-route('penilai.input-laporan')],
-['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' =>
-route('penilai.validasi-laporan')],
+[
+'key' => 'input-laporan',
+'label' => 'Input Laporan',
+'icon' => 'file-edit',
+'route' =>
+route('penilai.input-laporan')
+],
+[
+'key' => 'validasi',
+'label' => 'Validasi Laporan',
+'icon' => 'validation',
+'route' =>
+route('penilai.validasi-laporan')
+],
 ['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => route('penilai.skoring-kinerja')],
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
-['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement','route' => route('penilai.pengumuman')],
+['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
 ],
 
-'kepala-bagian' => [],
-'kepala-dinas' => [],
+// ==================== ROLE KEPALA DINAS ====================
+// pakai key 'kadis' sebagai utama
+'kadis' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('kadis.dashboard')],
+[
+'key' => 'validasi',
+'label' => 'Validasi Laporan',
+'icon' => 'validation',
+'route' =>
+route('kadis.validasi-laporan')
+],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('kadis.log-aktivitas')],
+],
+
+// ==================== ROLE ADMIN ====================
 'admin' => [
-['key'=>'dashboard','label'=>'Dashboard','icon'=>'home','route'=>'#'],
-['key'=>'pengaturan','label'=>'Pengaturan Sistem','icon'=>'settings','route'=>'#'],
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('admin.dashboard')],
+[
+'key' => 'manajemen-pegawai',
+'label' => 'Manajemen Pegawai',
+'icon' => 'manajemen-pegawai',
+'route' =>
+route('admin.manajemen-pegawai')
+],
+['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => route('admin.akun-pengguna')],
+[
+'key' => 'pengaturan',
+'label' => 'Pengaturan Sistem',
+'icon' => 'setting',
+'route' =>
+route('admin.pengaturan-sistem')
+],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('admin.log-aktivitas')],
 ],
 ];
 
+// Mapping alias role kalau dari DB/Auth lu namanya beda
+$roleKey = $role ?? 'staf';
+if ($roleKey === 'kepala-dinas') {
+$roleKey = 'kadis';
+}
+
 $activeMenu = $active ?? 'dashboard';
-$menus = $menusByRole[$role] ?? $menusByRole['staf'];
+$menus = $menusByRole[$roleKey] ?? $menusByRole['staf'];
+
+// Icon map cukup didefinisikan sekali
+$iconMap = [
+'home' => 'home.svg',
+'file-edit' => 'doc-laporan.svg',
+'doc-skp' => 'doc-skp.svg',
+'map-pin' => 'maps.svg',
+'history' => 'history.svg',
+'clock' => 'log.svg',
+'settings' => 'settings.svg',
+'announcement' => 'pengumuman.svg',
+'validation' => 'validation.svg',
+'skoring' => 'skoring.svg',
+'manajemen-pegawai' => 'manajemen-pegawai.svg',
+'akun' => 'akun.svg',
+'setting' => 'setting.svg',
+];
 @endphp
 
 <aside id="sidebar" class="fixed lg:sticky inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200
@@ -55,38 +116,25 @@ $menus = $menusByRole[$role] ?? $menusByRole['staf'];
         </div>
     </div>
 
-    <!-- Menu Navigasi (scrollable tapi scrollbar disembunyikan) -->
+    <!-- Menu Navigasi -->
     <nav class="flex-1 flex flex-col gap-[5px] overflow-y-auto pr-1 no-scrollbar">
         @foreach ($menus as $menu)
-        <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
-                      {{ $activeMenu === $menu['key']
-                            ? 'bg-[#36B37E] text-white'
-                            : 'text-white/90 hover:bg-[#36B37E]/70' }}">
+        @php
+        $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
+        $isActive = $activeMenu === $menu['key'];
+        @endphp
 
-            @php
-            $iconMap = [
-            'home' => 'home.svg',
-            'file-edit' => 'doc-laporan.svg',
-            'doc-skp' => 'doc-skp.svg',
-            'map-pin' => 'maps.svg',
-            'history' => 'history.svg',
-            'clock' => 'log.svg',
-            'settings' => 'settings.svg',
-            'announcement' => 'pengumuman.svg',
-            'validation' => 'validation.svg',
-            'skoring' => 'skoring.svg',
-            ];
-            $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-            @endphp
+        <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
+                              {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
 
             <img src="{{ asset('assets/icon/' . $iconFile) }}" alt="{{ $menu['label'] }}"
-                class="h-5 w-5 {{ $activeMenu === $menu['key'] ? 'filter invert brightness-0' : '' }}" />
+                class="h-5 w-5 {{ $isActive ? 'filter invert brightness-0' : '' }}" />
             <span>{{ $menu['label'] }}</span>
         </a>
         @endforeach
     </nav>
 
-    {{-- Footer Sidebar (tanpa garis/border) --}}
+    {{-- Footer Sidebar --}}
     <div class="mt-6 pt-4 shrink-0">
         @if (Route::has('logout'))
         <form action="{{ route('logout') }}" method="POST">

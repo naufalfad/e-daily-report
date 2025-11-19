@@ -36,12 +36,7 @@
 
     {{-- CARD PROFIL SAYA --}}
     <aside class="rounded-[15px] bg-white ring-1 ring-slate-200 shadow-[0_6px_18px_rgba(15,23,42,0.06)]
-               overflow-hidden -mt-[50px]">
-
-        {{-- HEADER HIJAU --}}
-        <div class="bg-[#1C7C54] text-white px-5 py-4 text-[15px] font-semibold leading-tight">
-            Profil Saya
-        </div>
+               overflow-hidden mt-0">
 
         {{-- BODY --}}
         <div class="px-5 pt-4 pb-5">

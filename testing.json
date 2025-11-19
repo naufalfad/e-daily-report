@@ -1,0 +1,164 @@
+{
+  "master_data": {
+    "unit_kerja": [
+      {
+        "id": 1,
+        "nama": "SEKRETARIAT",
+        "kode": "SEK"
+      }
+    ],
+    "jabatan": [
+      {
+        "id": 1,
+        "nama": "Kepala Sub Bagian Umum"
+      },
+      {
+        "id": 2,
+        "nama": "Analis Kepegawaian Ahli Muda"
+      }
+    ],
+    "roles": [
+      {
+        "id": 1,
+        "name": "admin"
+      },
+      {
+        "id": 2,
+        "name": "validator"
+      },
+      {
+        "id": 3,
+        "name": "staf"
+      }
+    ]
+  },
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin Sistem",
+      "nip": "123456789012345678",
+      "email": "admin@example.com",
+      "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "unit_kerja_id": null,
+      "jabatan_id": null,
+      "atasan_id": null,
+      "foto_profil": null
+    },
+    {
+      "id": 2,
+      "name": "Bambang Validator",
+      "nip": "198001012000011001",
+      "email": "bambang.validator@example.com",
+      "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "unit_kerja_id": 1,
+      "jabatan_id": 1,
+      "atasan_id": 1,
+      "foto_profil": null
+    },
+    {
+      "id": 3,
+      "name": "Siti Staf Pelaksana",
+      "nip": "199505052020052002",
+      "email": "siti.staf@example.com",
+      "password": "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "unit_kerja_id": 1,
+      "jabatan_id": 2,
+      "atasan_id": 2,
+      "foto_profil": null
+    }
+  ],
+  "user_roles": [
+    {
+      "user_id": 1,
+      "role_id": 1
+    },
+    {
+      "user_id": 2,
+      "role_id": 2
+    },
+    {
+      "user_id": 3,
+      "role_id": 3
+    }
+  ],
+  "skp": [
+    {
+      "id": 1,
+      "user_id": 3,
+      "nama_skp": "Penyelesaian Dokumen Administrasi Kepegawaian",
+      "periode_mulai": "2025-01-01",
+      "periode_selesai": "2025-12-31",
+      "rencana_aksi": "Melakukan verifikasi kelengkapan dokumen staf.",
+      "indikator": "Persentase dokumen yang diverifikasi",
+      "target": 100,
+      "satuan": "%"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "nama_skp": "Pengarsipan Surat Masuk",
+      "periode_mulai": "2025-01-01",
+      "periode_selesai": "2025-12-31",
+      "rencana_aksi": "Mengarsipkan surat-surat masuk harian.",
+      "indikator": "Jumlah surat yang terarsipkan",
+      "target": 500,
+      "satuan": "Surat"
+    }
+  ],
+  "laporan_harian": [
+    {
+      "id": 1,
+      "user_id": 3,
+      "skp_id": 1,
+      "tanggal_laporan": "2025-11-17",
+      "waktu_mulai": "08:00:00",
+      "waktu_selesai": "12:00:00",
+      "deskripsi_aktivitas": "Melakukan verifikasi 50 dokumen kelengkapan administrasi kepegawaian staf di Bidang A.",
+      "output_hasil_kerja": "50 dokumen terverifikasi dengan hasil 100% lengkap.",
+      "status": "approved",
+      "lokasi": "POINT(106.8271 6.1751)",
+      "lokasi_manual_text": "Kantor BAPENDA Pusat",
+      "validator_id": 2,
+      "waktu_validasi": "2025-11-17 14:30:00",
+      "komentar_validasi": "Selesai. Mohon dilanjutkan ke Bidang B.",
+      "volume": 50,
+      "satuan": "Dokumen"
+    },
+    {
+      "id": 2,
+      "user_id": 3,
+      "skp_id": 2,
+      "tanggal_laporan": "2025-11-17",
+      "waktu_mulai": "13:00:00",
+      "waktu_selesai": "16:00:00",
+      "deskripsi_aktivitas": "Mengarsipkan 15 surat masuk hari ini ke dalam sistem E-Arsip.",
+      "output_hasil_kerja": "15 surat masuk berhasil diarsipkan dan dicatat.",
+      "status": "submitted",
+      "lokasi": "POINT(106.8271 6.1751)",
+      "lokasi_manual_text": "Kantor BAPENDA Pusat",
+      "validator_id": 2,
+      "waktu_validasi": null,
+      "komentar_validasi": null,
+      "volume": 15,
+      "satuan": "Surat"
+    },
+    {
+      "id": 3,
+      "user_id": 3,
+      "skp_id": null,
+      "tanggal_laporan": "2025-11-17",
+      "waktu_mulai": "16:00:00",
+      "waktu_selesai": "17:00:00",
+      "deskripsi_aktivitas": "Mengikuti rapat koordinasi persiapan kegiatan akhir tahun.",
+      "output_hasil_kerja": "Notulensi rapat dan daftar tugas terdistribusi.",
+      "status": "draft",
+      "lokasi": "POINT(106.8271 6.1751)",
+      "lokasi_manual_text": "Ruang Rapat Utama",
+      "validator_id": null,
+      "waktu_validasi": null,
+      "komentar_validasi": null,
+      "volume": 1,
+      "satuan": "Kegiatan"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+[
+    {
+        "id": 1,
+        "username": "staff",
+        "password": "123456",
+        "nama": "Staff Contoh",
+        "nip": "198765001",
+        "email": "staff@example.com",
+        "role": "staff",
+        "unitKerja": {
+            "id": 10,
+            "nama": "Unit Kerja Staff"
+        },
+        "jabatan": {
+            "id": 3,
+            "nama": "Staff Pelaksana"
+        }
+    },
+    {
+        "id": 2,
+        "username": "penilai",
+        "password": "123456",
+        "nama": "Penilai Contoh",
+        "nip": "198765002",
+        "email": "penilai@example.com",
+        "role": "penilai",
+        "unitKerja": {
+            "id": 11,
+            "nama": "Unit Kerja Penilai"
+        },
+        "jabatan": {
+            "id": 4,
+            "nama": "Penilai Senior"
+        }
+    }
+]

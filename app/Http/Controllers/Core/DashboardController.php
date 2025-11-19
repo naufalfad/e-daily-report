@@ -110,6 +110,8 @@ class DashboardController extends Controller
         return response()->json([
             'user_info' => [
                 'name' => $user->name,
+                'nip' => $user->nip,
+                'email' => $user->email,
                 'jabatan' => $user->jabatan->nama_jabatan ?? '-',
                 'unit' => $user->unitKerja->nama_unit ?? '-'
             ],
@@ -120,6 +122,8 @@ class DashboardController extends Controller
             ],
             'statistik_skp' => [
                 'total_diajukan' => $totalLkhSkp,
+                'total_diterima' => $lkhSkpApproved,
+                'total_ditolak' => $lkhSkpRejected,
                 'persen_diterima' => $persenSkpDiterima,
                 'persen_ditolak' => $persenSkpDitolak,
             ],

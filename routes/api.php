@@ -37,6 +37,9 @@ Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
 // 2. PROTECTED ROUTES (Wajib Login / Bearer Token)
 // ======================================================
 Route::middleware('auth:sanctum')->group(function () {
+
+    // --- G. CORE: DASHBOARD ---
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
     
     // --- A. AUTH & PROFIL MODULE ---
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -104,9 +107,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/lkh/{id}', [ValidatorController::class, 'show']); 
         Route::post('/lkh/{id}/validate', [ValidatorController::class, 'validateLkh']); 
     });
-
-    // --- G. CORE: DASHBOARD ---
-    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
 
     // --- H. CORE: EXPORT ---
     Route::get('/export/excel', [ExportController::class, 'exportExcel']);

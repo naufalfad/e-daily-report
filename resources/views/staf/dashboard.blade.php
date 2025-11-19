@@ -253,8 +253,7 @@
             <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua</a>
         </div>
         <div class="space-y-2">
-            <<<<<<< HEAD @foreach ([1, 2] as $i) <div
-                class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
+            @foreach ([1, 2] as $i) <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
                 <div>
                     <div class="font-medium leading-tight text-[15px]">
                         Rapat Koordinasi Pendapatan
@@ -274,12 +273,10 @@
                         Hapus
                     </button>
                 </div>
+            </div>
+            @endforeach
+            <div class="text-xs text-slate-400 text-center py-4">Fitur draft akan segera hadir</div>
         </div>
-        @endforeach
-        =======
-        <div class="text-xs text-slate-400 text-center py-4">Fitur draft akan segera hadir</div>
-        >>>>>>> d32d87034f696939db594942e0659778cb3ef3c3
-    </div>
     </div>
 </section>
 
@@ -378,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async function() {
 
         if (aktivitas.length === 0) {
             listContainer.innerHTML =
-            '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
+                '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
         } else {
             aktivitas.forEach(item => {
                 const dateObj = new Date(item.tanggal_laporan);

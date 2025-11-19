@@ -295,6 +295,12 @@ document.addEventListener("DOMContentLoaded", async function () {
             listContainer.innerHTML = '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
         } else {
             aktivitas.forEach(item => {
+                const dateObj = new Date(item.tanggal_laporan);
+                const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long', // Ganti 'numeric' jika ingin angka bulan (11), 'long' jika nama bulan (November)
+                    year: 'numeric'
+                });
                 // Tentukan warna/icon berdasarkan status text
                 let tone = 'bg-slate-200';
                 let iconName = 'pending.svg'; // default
@@ -327,7 +333,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         </div>
                         <div class="flex justify-between mt-[2px]">
                             <span class="text-xs text-slate-500 capitalize">${statusLabel}</span>
-                            <span class="text-xs text-slate-500 whitespace-nowrap">${item.tanggal_laporan}</span>
+                            <span class="text-xs text-slate-500 whitespace-nowrap">${tanggalFormatted}</span>
                         </div>
                     </div>
                 </li>`;

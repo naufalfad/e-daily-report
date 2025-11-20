@@ -7,6 +7,17 @@
 
     <title>{{ $title ?? 'E-Daily Report' }}</title>
 
+    {{-- Anti-FOUC: sembunyikan body sebelum CSS & asset siap --}}
+    <style>
+    html.loading body {
+        visibility: hidden;
+    }
+    </style>
+
+    <script>
+    document.documentElement.classList.add("loading");
+    </script>
+
     {{-- Favicon --}}
     <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
@@ -35,10 +46,40 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
+
+    /* Loader Spin */
+    .loader-spin {
+        animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
     </style>
+
+    {{-- Setelah semua CSS / asset siap → tampilkan halaman --}}
+    <script>
+    window.addEventListener("load", () => {
+        document.documentElement.classList.remove("loading");
+    });
+    </script>
+
 </head>
 
 <body class="h-dvh bg-[#EFF0F5] text-slate-800">
+
+    {{-- ===================== GLOBAL PAGE LOADING OVERLAY ===================== --}}
+    <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
+        <div class="loader-spin w-12 h-12 border-4 border-[#1C7C54] border-t-transparent rounded-full"></div>
+    </div>
+    {{-- ======================================================================= --}}
+
     <div class="h-full p-5">
         <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
 
@@ -70,8 +111,8 @@
                             {{-- SEARCH --}}
                             <div class="relative flex-1 max-w-[500px]">
                                 <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
-                                           text-sm shadow-sm placeholder:text-slate-400
-                                           focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
+                                    text-sm shadow-sm placeholder:text-slate-400
+                                    focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
                                 <span
                                     class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 pointer-events-none">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
@@ -86,7 +127,6 @@
                             <button class="h-10 w-10 flex items-center justify-center ml-6">
                                 <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
                             </button>
-
                         </div>
                     </div>
                 </header>

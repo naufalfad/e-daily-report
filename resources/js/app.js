@@ -5,6 +5,7 @@ import './pages/penilai/validasi-laporan.js';
 import './pages/penilai/pengumuman.js';
 import './pages/admin/manajemen-pegawai.js';
 import './pages/admin/akun-pengguna.js';
+import './global/loader.js';
 
 // Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {

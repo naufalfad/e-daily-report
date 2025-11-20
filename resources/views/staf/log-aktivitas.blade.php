@@ -34,7 +34,8 @@
                 </div>
                 {{-- Tombol --}}
                 <div>
-                    <button type="submit" class="w-full md:w-auto rounded-[10px] bg-[#0E7A4A] px-6 py-2.5 text-sm text-white hover:brightness-95">
+                    <button type="submit"
+                        class="w-full md:w-auto rounded-[10px] bg-[#0E7A4A] px-6 py-2.5 text-sm text-white hover:brightness-95">
                         Terapkan
                     </button>
                 </div>
@@ -48,12 +49,12 @@
                datanya banyak, bukan seluruh halaman. Footer tetap di bawah.
         --}}
         <div class="relative pl-4 md:pl-8 border-l-2 border-slate-200 space-y-8 ml-2 md:ml-4 flex-1 overflow-y-auto">
-            
+
             <template x-for="item in filteredItems" :key="item.id">
                 <div class="relative">
                     {{-- Dot Indikator --}}
                     <div class="absolute -left-[25px] md:-left-[41px] top-1.5 h-4 w-4 rounded-full border-2 border-white shadow-sm"
-                         :class="{
+                        :class="{
                             'bg-[#155FA6]': item.tipe === 'system',
                             'bg-[#0E7A4A]': item.tipe === 'create',
                             'bg-[#F59E0B]': item.tipe === 'update'
@@ -69,7 +70,8 @@
                         </div>
 
                         {{-- Detail Aktivitas (Kanan/Bawah) --}}
-                        <div class="flex-grow bg-slate-50 rounded-xl p-4 ring-1 ring-slate-200 hover:ring-[#1C7C54]/50 transition-all">
+                        <div
+                            class="flex-grow bg-slate-50 rounded-xl p-4 ring-1 ring-slate-200 hover:ring-[#1C7C54]/50 transition-all">
                             <h4 class="font-medium text-slate-900 text-sm mb-1" x-text="item.aktivitas"></h4>
                             <p class="text-xs text-slate-600 leading-relaxed" x-text="item.deskripsi"></p>
                         </div>
@@ -86,54 +88,5 @@
     </div>
 
 </section>
+
 @endsection
-
-@push('scripts')
-<script src="//unpkg.com/alpinejs" defer></script>
-
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('logActivityData', () => ({
-            allItems: [],
-            filteredItems: [],
-            filter: { from: '', to: '' },
-
-            initLog() {
-                // Fetch data dari file JSON terpisah
-                fetch('/data/log-aktivitas.json')
-                    .then(res => res.json())
-                    .then(data => {
-                        // Sort by date descending (terbaru di atas)
-                        this.allItems = data.sort((a, b) => {
-                            return new Date(b.tanggal + ' ' + b.waktu) - new Date(a.tanggal + ' ' + a.waktu);
-                        });
-                        this.filteredItems = this.allItems;
-                    })
-                    .catch(err => console.error('Gagal memuat log:', err));
-            },
-
-            filterData() {
-                const from = this.filter.from ? new Date(this.filter.from) : null;
-                const to = this.filter.to ? new Date(this.filter.to) : null;
-
-                if (from) from.setHours(0, 0, 0, 0);
-                if (to) to.setHours(23, 59, 59, 999);
-
-                this.filteredItems = this.allItems.filter(item => {
-                    const itemDate = new Date(item.tanggal);
-                    if (from && itemDate < from) return false;
-                    if (to && itemDate > to) return false;
-                    return true;
-                });
-            },
-
-            formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('id-ID', { 
-                    day: 'numeric', month: 'short', year: 'numeric' 
-                });
-            }
-        }));
-    });
-</script>
-@endpush

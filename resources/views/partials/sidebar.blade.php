@@ -21,6 +21,7 @@ $menusByRole = [
 'route' =>
 route('penilai.input-laporan')
 ],
+['key' => 'input-skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('penilai.input-skp')],
 [
 'key' => 'validasi',
 'label' => 'Validasi Laporan',

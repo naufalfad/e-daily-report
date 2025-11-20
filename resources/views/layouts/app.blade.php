@@ -74,11 +74,15 @@
 
 <body class="h-dvh bg-[#EFF0F5] text-slate-800">
 
-    {{-- ===================== GLOBAL PAGE LOADING OVERLAY ===================== --}}
     <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
-        <div class="loader-spin w-12 h-12 border-4 border-[#1C7C54] border-t-transparent rounded-full"></div>
+
+        <div class="flex flex-row gap-2">
+            <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce"></div>
+            <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce [animation-delay:-.3s]"></div>
+            <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce [animation-delay:-.5s]"></div>
+        </div>
+
     </div>
-    {{-- ======================================================================= --}}
 
     <div class="h-full p-5">
         <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
@@ -113,13 +117,9 @@
                                 <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm shadow-sm placeholder:text-slate-400
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
-                                <span
-                                    class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                        stroke="currentColor">
-                                        <circle cx="11" cy="11" r="6" stroke-width="1.8" />
-                                        <path d="m16 16 3 3" stroke-width="1.8" stroke-linecap="round" />
-                                    </svg>
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                    <img src="{{ asset('assets/icon/search.svg') }}"
+                                        class="h-[18px] w-[18px] opacity-70" />
                                 </span>
                             </div>
 

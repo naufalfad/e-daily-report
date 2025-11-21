@@ -49,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await response.json();
 
         if (!response.ok) {
-          // Handle error dari backend
           let errorText = result.message || 'Terjadi kesalahan saat login.';
           if (response.status === 422 && result.errors) {
             const firstField = Object.keys(result.errors)[0];
@@ -60,29 +59,26 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(errorText);
         }
 
+        // Simpan token & data user
         localStorage.setItem('auth_token', result.access_token);
         localStorage.setItem('user_data', JSON.stringify(result.data));
 
+        // --- Redirect berdasarkan role ---
         const roles = result.data.roles || [];
-        
-        // --- PERBAIKAN KRITIS ---
-        // 1. Ganti .name menjadi .nama_role
-        // 2. Pastikan perbandingan menggunakan lowercase yang konsisten
         const roleName = roles.length > 0 ? (roles[0].nama_role || 'staf').toLowerCase() : 'staf';
 
-        // Ganti 'Penilai' menjadi 'penilai' agar konsisten dengan .toLowerCase()
         if (roleName.includes('penilai')) {
           window.location.href = '/penilai/dashboard';
+        } else if (roleName.includes('admin')) {
+          window.location.href = '/admin/dashboard';
         } else {
-          // Akan menjadi default jika role bukan 'penilai' atau role tidak teridentifikasi
           window.location.href = '/staf/dashboard';
         }
 
       } catch (error) {
-        // --- Error Handling ---
         if (errorMessage) errorMessage.textContent = error.message;
         if (errorAlert) errorAlert.classList.remove('hidden');
-
+      } finally {
         btnSubmit.disabled = false;
         btnText.classList.remove('hidden');
         btnLoader.classList.add('hidden');

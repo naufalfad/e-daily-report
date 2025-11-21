@@ -21,8 +21,8 @@
 
             {{-- Teks utama --}}
             <p class="text-[20px] md:text-[28px] font-bold leading-tight">Selamat Datang,</p>
-            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap" id="banner-nama">
-                User...
+            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap">
+                Fahrizal Mudzaqi Maulana!
             </h1>
             <p class="mt-3 text-white/90 text-[16px]">Semoga harimu menyenangkan!</p>
         </div>
@@ -36,7 +36,12 @@
 
     {{-- CARD PROFIL SAYA --}}
     <aside class="rounded-[15px] bg-white ring-1 ring-slate-200 shadow-[0_6px_18px_rgba(15,23,42,0.06)]
-               overflow-hidden mt-0">
+               overflow-hidden -mt-[50px]">
+
+        {{-- HEADER HIJAU --}}
+        <div class="bg-[#1C7C54] text-white px-5 py-4 text-[15px] font-semibold leading-tight">
+            Profil Saya
+        </div>
 
         {{-- BODY --}}
         <div class="px-5 pt-4 pb-5">
@@ -54,17 +59,17 @@
 
                 {{-- Info teks utama --}}
                 <div class="min-w-0 flex flex-col">
-                    <h3 class="text-[17px] font-semibold text-slate-900 leading-snug" id="profile-nama">
-                        -
+                    <h3 class="text-[17px] font-semibold text-slate-900 leading-snug">
+                        Fahrizal Mudzaqi Maulana
                     </h3>
-                    <p class="mt-[2px] text-[13px] text-slate-500 leading-snug" id="profile-nip">
-                        -
+                    <p class="mt-[2px] text-[13px] text-slate-500 leading-snug">
+                        196703101988030109
                     </p>
 
                     {{-- Lokasi --}}
                     <div class="mt-1.5 flex items-center gap-1.5 text-[13px] text-slate-500">
                         <img src="{{ asset('assets/icon/location.svg') }}" class="h-4 w-4" alt="Lokasi" />
-                        <span class="truncate" id="profile-lokasi">-</span>
+                        <span class="truncate">Mimika, Papua Tengah</span>
                     </div>
                 </div>
             </div>
@@ -73,11 +78,11 @@
             <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] text-slate-600">
                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
                     <img src="{{ asset('assets/icon/email.svg') }}" class="h-3.5 w-3.5" alt="Email" />
-                    <span class="truncate" id="profile-email">-</span>
+                    <span class="truncate">sari.dewi@bapendamimika.go.id</span>
                 </div>
                 <div class="flex items-center gap-1.5 whitespace-nowrap">
                     <img src="{{ asset('assets/icon/telpon.svg') }}" class="h-3.5 w-3.5" alt="Telepon" />
-                    <span id="profile-telepon">-</span>
+                    <span>081234567891</span>
                 </div>
             </div>
 
@@ -86,22 +91,22 @@
                 {{-- Jabatan --}}
                 <div class="pr-3">
                     <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Jabatan</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-jabatan">-</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug">Staf BAPENDA</p>
                 </div>
 
                 {{-- Dinas --}}
                 <div class="px-3 border-l border-slate-200">
-                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Unit Kerja</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-dinas">
-                        -
+                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Dinas</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug">
+                        Badan Pendapatan<br>Daerah
                     </p>
                 </div>
 
                 {{-- Alamat --}}
                 <div class="pl-3 border-l border-slate-200">
-                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Target</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-target">
-                        -
+                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Alamat</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug">
+                        Jl. Cenderawasih,<br>Mimika Baru
                     </p>
                 </div>
             </div>
@@ -112,70 +117,86 @@
 
 {{-- Statistik ringkas --}}
 <section class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4">
-    {{-- Card 1: Total Laporan (Mapping ke SKP Diajukan) --}}
+
+    @foreach ([
+    [
+    'val' => '10',
+    'label' => 'Total Laporan Terkirim Hari ini',
+    'tone' => 'bg-[#155FA6]/50',
+    'icon' => 'send'
+    ],
+    [
+    'val' => '4',
+    'label' => 'Menunggu Verifikasi',
+    'tone' => 'bg-[#D8A106]/50',
+    'icon' => 'pending'
+    ],
+    [
+    'val' => '2',
+    'label' => 'Disetujui',
+    'tone' => 'bg-[#128C60]/50',
+    'icon' => 'approve'
+    ],
+    [
+    'val' => '4',
+    'label' => 'Ditolak',
+    'tone' => 'bg-[#B6241C]/50',
+    'icon' => 'reject'
+    ],
+    ] as $stat)
+
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
+        {{-- NILAI + ICON --}}
         <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-1">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#155FA6]/50">
-                <img src="{{ asset('assets/icon/send.svg') }}" class="h-5 w-5 object-contain">
+            {{-- Angka --}}
+            <div class="text-4xl font-semibold tracking-tight">
+                {{ $stat['val'] }}
+            </div>
+
+            {{-- Icon Wrapper --}}
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] {{ $stat['tone'] }}">
+                <img src="{{ asset('assets/icon/' . $stat['icon'] . '.svg') }}" alt="{{ $stat['icon'] }}"
+                    class="h-5 w-5 object-contain">
             </div>
         </div>
-        <div class="text-xs text-slate-500">Total Laporan SKP</div>
-        <div class="text-xs text-slate-400 font-medium">Total diajukan</div>
+
+        {{-- Label --}}
+        <div class="text-xs text-slate-500">{{ $stat['label'] }}</div>
+
+        {{-- Additional Info --}}
+        @if ($stat['icon'] === 'approve')
+        <div class="text-xs text-emerald-600 font-medium">↑ 85% Approval Rate</div>
+        @elseif ($stat['icon'] === 'reject')
+        <div class="text-xs text-rose-600 font-medium">↓ 5% Rejection Rate</div>
+        @elseif ($stat['icon'] === 'send')
+        <div class="text-xs text-emerald-600 font-medium">↑ 12% dari kemarin</div>
+        @else
+        <div class="text-xs text-amber-600 font-medium">⚠ Perlu perhatian</div>
+        @endif
     </div>
 
-    {{-- Card 2: Menunggu Verifikasi (Mapping ke Realisasi Tahunan / Waiting) --}}
-    {{-- Karena JSON tidak punya count 'Waiting', kita pakai Realisasi Tahunan sebagai pengganti --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-2">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#D8A106]/50">
-                <img src="{{ asset('assets/icon/pending.svg') }}" class="h-5 w-5 object-contain">
-            </div>
-        </div>
-        <div class="text-xs text-slate-500">Realisasi Tahunan</div>
-        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-2">0% Capaian</div>
-    </div>
-
-    {{-- Card 3: Disetujui (Mapping ke Persen Diterima) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-3">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#128C60]/50">
-                <img src="{{ asset('assets/icon/approve.svg') }}" class="h-5 w-5 object-contain">
-            </div>
-        </div>
-        <div class="text-xs text-slate-500">Rate Disetujui</div>
-        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-3">0% Dari total laporan</div>
-    </div>
-
-    {{-- Card 4: Ditolak (Mapping ke Persen Ditolak) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-4">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#B6241C]/50">
-                <img src="{{ asset('assets/icon/reject.svg') }}" class="h-5 w-5 object-contain">
-            </div>
-        </div>
-        <div class="text-xs text-slate-500">Rate Ditolak</div>
-        <div class="text-xs text-rose-600 font-medium" id="stat-desc-4">0% Dari total laporan</div>
-    </div>
+    @endforeach
 </section>
 
 {{-- Grafik + Aktivitas terkini + Draft Laporan --}}
 <section class="mt-4 grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-4">
 
-    {{-- GRAFIK (kartu tinggi tetap, span 2 baris) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 lg:row-span-2">
+    {{-- GRAFIK (kartu tinggi, span 2 baris) --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 lg:row-span-2 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Grafik Kinerja Bulanan</h3>
             <button
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50">
-                {{ date('Y') }}
+                Pilih Tahun
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor">
+                    <path stroke-width="1.6" stroke-linecap="round" d="m6 9 6 6 6-6" />
+                </svg>
             </button>
         </div>
 
-        <div class="mt-4 h-[380px] md:h-[420px] lg:h-[450px]">
+        {{-- Area chart fleksibel + canvas --}}
+        <div class="mt-1 flex-1">
             <canvas id="kinerjaBulananChart" class="w-full h-full"></canvas>
         </div>
     </div>
@@ -216,14 +237,21 @@
             ],
             ] as $activity)
             <li class="flex items-start gap-3">
-                <div class="h-10 w-10 rounded-[10px] flex items-center justify-center {{ $activity['tone'] }}">
+
+                {{-- ICON DI KOTAK, GAYA SAMA DENGAN STATISTIK RINGKAS --}}
+                <div class="h-10 w-10 rounded-[10px] flex items-center justify-center 
+                    {{ $activity['tone'] }} ">
                     <img src="{{ asset('assets/icon/' . $activity['icon']) }}" class="h-5 w-5 opacity-90" alt="">
                 </div>
 
+                {{-- TEKS --}}
                 <div class="flex-1">
+                    {{-- Judul --}}
                     <div class="text-[15px] font-medium leading-snug">
                         {{ $activity['title'] }}
                     </div>
+
+                    {{-- Status + Tanggal sejajar --}}
                     <div class="flex justify-between mt-[2px]">
                         <span class="text-xs text-slate-500 leading-snug">
                             {{ $activity['status'] }}
@@ -233,31 +261,30 @@
                         </span>
                     </div>
                 </div>
+
             </li>
             @endforeach
         </ul>
     </div>
 
-    {{-- DRAFT LAPORAN (kanan bawah) --}}
-    <ul class="space-y-3" id="aktivitas-list">
-        {{-- Diisi via JS --}}
-        <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
-    </ul>
-    </div>
 
-
-    {{-- DRAFT LAPORAN --}}
+    {{-- DRAFT LAPORAN (kanan bawah, sejajar bawah dengan grafik) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Draft Laporan</h3>
-            <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua</a>
+            <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua Draft</a>
         </div>
+
         <div class="space-y-2">
-            @foreach ([1, 2] as $i) <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
+            @foreach ([1, 2] as $i)
+            <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
+
+                {{-- Judul + Tanggal --}}
                 <div>
                     <div class="font-medium leading-tight text-[15px]">
                         Rapat Koordinasi Pendapatan
                     </div>
+
                     <div class="text-xs text-slate-500 mt-[2px] leading-tight">
                         Disimpan: {{ now()->translatedFormat('d F Y | H:i') }}
                     </div>
@@ -269,13 +296,13 @@
                         Lanjutkan
                     </button>
                     <button
-                        class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/80">
+                        class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/15">
                         Hapus
                     </button>
                 </div>
+
             </div>
             @endforeach
-            <div class="text-xs text-slate-400 text-center py-4">Fitur draft akan segera hadir</div>
         </div>
     </div>
 </section>
@@ -283,202 +310,125 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", async function() {
-    // Ubah token retrieval sesuai metode auth Anda.
-    // Jika tes di browser yang sudah login via session, tidak perlu header Authorization
-    const token = localStorage.getItem("auth_token");
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('kinerjaBulananChart');
+    if (!canvas) return;
 
-    const headers = {
-        "Accept": "application/json"
-    };
-    if (token) {
-        headers["Authorization"] = "Bearer " + token;
-    }
+    const ctx = canvas.getContext('2d');
 
-    try {
-        // Panggil API
-        const response = await fetch("http://127.0.0.1:8000/api/dashboard/stats", {
-            method: "GET",
-            headers: headers
-        });
+    const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    // Data dummy – nanti bisa diganti dari database
+    const dataTotal = [78, 38, 18, 68, 32, 12, 44, 96, 82, 15, 44, 88];
+    const dataDiterima = [30, 98, 48, 68, 94, 36, 84, 60, 59, 38, 62, 94];
+    const dataDitolak = [86, 40, 92, 20, 68, 84, 88, 78, 92, 20, 78, 65];
 
-        const data = await response.json();
+    const gradientTotal = ctx.createLinearGradient(0, 0, 0, 260);
+    gradientTotal.addColorStop(0, 'rgba(30, 64, 175, 0.25)');
+    gradientTotal.addColorStop(1, 'rgba(30, 64, 175, 0.00)');
 
-        // Debugging: lihat apa yang diterima
-        console.log("Data JSON:", data);
+    const gradientDiterima = ctx.createLinearGradient(0, 0, 0, 260);
+    gradientDiterima.addColorStop(0, 'rgba(28, 124, 84, 0.25)');
+    gradientDiterima.addColorStop(1, 'rgba(28, 124, 84, 0.00)');
 
-        /* =======================================================
-         * 1. BANNER + PROFIL
-         * =======================================================*/
-        // JSON: user_info -> {name, jabatan, unit}
-        // Tidak ada: nip, email, telepon, alamat
+    const gradientDitolak = ctx.createLinearGradient(0, 0, 0, 260);
+    gradientDitolak.addColorStop(0, 'rgba(182, 36, 28, 0.25)');
+    gradientDitolak.addColorStop(1, 'rgba(182, 36, 28, 0.00)');
 
-        const uInfo = data.user_info || {};
-
-        // Set Nama
-        document.getElementById("banner-nama").innerText = uInfo.name || "User";
-        document.getElementById("profile-nama").innerText = uInfo.name || "-";
-
-        // Set Jabatan & Unit
-        document.getElementById("profile-jabatan").innerText = uInfo.jabatan || "-";
-        document.getElementById("profile-dinas").innerText = uInfo.unit || "-";
-
-        // Set Placeholder untuk data yang tidak ada di JSON
-        document.getElementById("profile-nip").innerText = uInfo.nip || "-"; // Tidak ada di JSON
-        document.getElementById("profile-lokasi").innerText = "-"; // Tidak ada di JSON
-        document.getElementById("profile-email").innerText = uInfo.email || "-"; // Tidak ada di JSON
-        document.getElementById("profile-telepon").innerText = "-"; // Tidak ada di JSON
-
-        // Menggunakan kolom "Alamat" di UI untuk menampilkan "Target Tahunan" dari skor
-        if (data.skoring_utama) {
-            document.getElementById("profile-target").innerText = data.skoring_utama.target_tahunan +
-                " Dokumen";
-        }
-
-        /* =======================================================
-         * 2. STATISTIK RINGKAS
-         * =======================================================*/
-
-        // Card 1: Total Laporan SKP (Dari statistik_skp.total_diajukan)
-        if (data.statistik_skp) {
-            document.getElementById("stat-val-1").innerText = data.statistik_skp.total_diajukan;
-
-            // Card 3: Persen Diterima
-            document.getElementById("stat-val-3").innerText = data.statistik_skp.total_diterima;
-            document.getElementById("stat-desc-3").innerText = data.statistik_skp.persen_diterima +
-                "% Dari total diterima";
-
-            // Card 4: Persen Ditolak
-            document.getElementById("stat-val-4").innerText = data.statistik_skp.total_ditolak;
-            document.getElementById("stat-desc-4").innerText = data.statistik_skp.persen_ditolak +
-                "% Dari total ditolak";
-        }
-
-        // Card 2: Realisasi Tahunan (Dari skoring_utama)
-        if (data.skoring_utama) {
-            document.getElementById("stat-val-2").innerText = data.skoring_utama.realisasi_tahunan;
-            document.getElementById("stat-desc-2").innerText = data.skoring_utama.persen_capaian +
-                "% Capaian";
-        }
-
-        /* =======================================================
-         * 3. AKTIVITAS TERKINI
-         * =======================================================*/
-        const listContainer = document.getElementById("aktivitas-list");
-        listContainer.innerHTML = ""; // Clear loading text
-
-        const aktivitas = data.aktivitas_terbaru || [];
-
-        if (aktivitas.length === 0) {
-            listContainer.innerHTML =
-                '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
-        } else {
-            aktivitas.forEach(item => {
-                const dateObj = new Date(item.tanggal_laporan);
-                const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
-                    day: 'numeric',
-                    month: 'long', // Ganti 'numeric' jika ingin angka bulan (11), 'long' jika nama bulan (November)
-                    year: 'numeric'
-                });
-                // Tentukan warna/icon berdasarkan status text
-                let tone = 'bg-slate-200';
-                let iconName = 'pending.svg'; // default
-                let statusLabel = item.status;
-
-                if (item.status === 'approved') {
-                    tone = 'bg-[#128C60]/50'; // Hijau
-                    iconName = 'approve.svg';
-                    statusLabel = 'Disetujui';
-                } else if (item.status === 'rejected' || item.status.includes('reject')) {
-                    tone = 'bg-[#B6241C]/50'; // Merah
-                    iconName = 'reject.svg';
-                    statusLabel = 'Ditolak';
-                } else if (item.status === 'waiting_review') {
-                    tone = 'bg-[#D8A106]/50'; // Kuning
-                    iconName = 'pending.svg';
-                    statusLabel = 'Menunggu Review';
-                }
-
-                const htmlItem = `
-                <li class="flex items-start gap-3">
-                    <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                        <img src="/assets/icon/${iconName}" class="h-5 w-5 opacity-90" alt="">
-                    </div>
-                    <div class="flex-1">
-                        <div class="text-[13px] font-medium leading-snug truncate overflow-hidden text-ellipsis whitespace-nowrap" 
-                            style="max-width: 250px;"
-                            title="${item.deskripsi_aktivitas}">
-                            ${item.deskripsi_aktivitas}
-                        </div>
-                        <div class="flex justify-between mt-[2px]">
-                            <span class="text-xs text-slate-500 capitalize">${statusLabel}</span>
-                            <span class="text-xs text-slate-500 whitespace-nowrap">${tanggalFormatted}</span>
-                        </div>
-                    </div>
-                </li>`;
-
-                listContainer.insertAdjacentHTML('beforeend', htmlItem);
-            });
-        }
-
-        /* =======================================================
-         * 4. GRAFIK KINERJA BULANAN
-         * =======================================================*/
-        // JSON 'grafik_kinerja' hanya array [0,0,0...].
-        // Kita asumsikan itu data "Total". 
-        // Karena tidak ada breakdown accepted/rejected bulanan di JSON, kita sembunyikan dataset lain atau set 0.
-
-        const rawData = data.grafik_kinerja || [];
-        const labels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-
-        const ctx = document.getElementById('kinerjaBulananChart').getContext('2d');
-
-        // Gradient
-        const gradientTotal = ctx.createLinearGradient(0, 0, 0, 260);
-        gradientTotal.addColorStop(0, 'rgba(30, 64, 175, 0.25)');
-        gradientTotal.addColorStop(1, 'rgba(30, 64, 175, 0.00)');
-
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Kinerja Bulanan",
-                    data: rawData,
-                    borderColor: "#1E40AF",
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                    label: 'Total Laporan',
+                    data: dataTotal,
+                    borderColor: '#1E40AF',
                     backgroundColor: gradientTotal,
-                    pointBackgroundColor: "#1E40AF",
-                    fill: true,
-                    tension: 0.3,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'bottom'
-                    }
+                    pointBackgroundColor: '#1E40AF',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    tension: 0,
+                    fill: true
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-
-    } catch (err) {
-        console.error("Gagal mengambil data API:", err);
-    }
+                {
+                    label: 'Laporan Diterima',
+                    data: dataDiterima,
+                    borderColor: '#1C7C54',
+                    backgroundColor: gradientDiterima,
+                    pointBackgroundColor: '#1C7C54',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    tension: 0,
+                    fill: true,
+                },
+                {
+                    label: 'Laporan Ditolak',
+                    data: dataDitolak,
+                    borderColor: '#B6241C',
+                    backgroundColor: gradientDitolak,
+                    pointBackgroundColor: '#B6241C',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    tension: 0,
+                    fill: true,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        boxWidth: 10,
+                        font: {
+                            size: 11
+                        },
+                    },
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                },
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(148, 163, 184, 0.2)',
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                    },
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.25)',
+                    },
+                    ticks: {
+                        stepSize: 20,
+                        font: {
+                            size: 11
+                        },
+                    },
+                },
+            },
+        },
+    });
 });
 </script>
 @endpush

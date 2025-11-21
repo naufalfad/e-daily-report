@@ -122,3 +122,35 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
     Route::get('/log-aktivitas', fn () => view('penilai.log-aktivitas'))->name('log-aktivitas');
     Route::get('/pengumuman', fn () => view('penilai.pengumuman'))->name('pengumuman');
 });
+
+Route::prefix('kadis')->name('kadis.')->group(function () {
+
+    // Dashboard Kepala Dinas
+    Route::get('/dashboard', fn () => view('kadis.dashboard'))
+        ->name('dashboard');
+
+    // Validasi Laporan
+    Route::get('/validasi-laporan', fn () => view('kadis.validasi-laporan'))
+        ->name('validasi-laporan');
+
+    // Log Aktivitas
+    Route::get('/log-aktivitas', fn () => view('kadis.log-aktivitas'))
+        ->name('log-aktivitas');
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', fn () => view('admin.dashboard'))
+        ->name('dashboard');
+
+    Route::get('/manajemen-pegawai', fn () => view('admin.manajemen-pegawai'))
+        ->name('manajemen-pegawai');
+
+    Route::get('/akun-pengguna', fn () => view('admin.akun-pengguna'))
+        ->name('akun-pengguna');
+
+    Route::get('/pengaturan-sistem', fn () => view('admin.pengaturan-sistem'))
+        ->name('pengaturan-sistem');
+
+    Route::get('/log-aktivitas', fn () => view('admin.log-aktivitas'))
+        ->name('log-aktivitas');
+});

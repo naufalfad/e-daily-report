@@ -3,6 +3,8 @@ import './pages/login.js';
 import './pages/staf/input-lkh.js';
 import './pages/penilai/validasi-laporan.js';
 import './pages/penilai/pengumuman.js';
+import './pages/admin/manajemen-pegawai.js';
+import './pages/admin/akun-pengguna.js';
 
 // Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {
@@ -73,4 +75,64 @@ document.addEventListener('DOMContentLoaded', function() {
         // Hapus pesan dari storage setelah ditampilkan
         sessionStorage.removeItem('logout_message');
     }
+});
+
+// ==================== TAMBAHAN: Sidebar toggle + Modal Profil ====================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Sidebar toggle (mobile)
+    const sidebarToggle = document.getElementById('sb-toggle');
+    const sidebar = document.getElementById('sidebar');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+    }
+
+    // Modal Profil
+    const openProfileBtn = document.getElementById('btn-open-profile-modal');
+    const closeProfileBtn = document.getElementById('btn-close-profile-modal');
+    const profileModal = document.getElementById('profile-modal');
+
+    const openProfileModal = () => {
+        if (!profileModal) return;
+        profileModal.classList.remove('hidden');
+        profileModal.classList.add('flex');
+    };
+
+    const closeProfileModal = () => {
+        if (!profileModal) return;
+        profileModal.classList.add('hidden');
+        profileModal.classList.remove('flex');
+    };
+
+    if (openProfileBtn && profileModal) {
+        openProfileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openProfileModal();
+        });
+    }
+
+    if (closeProfileBtn && profileModal) {
+        closeProfileBtn.addEventListener('click', () => {
+            closeProfileModal();
+        });
+    }
+
+    // Klik area gelap di luar card => tutup
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
+                closeProfileModal();
+            }
+        });
+    }
+
+    // Tekan ESC => tutup
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && profileModal && !profileModal.classList.contains('hidden')) {
+            closeProfileModal();
+        }
+    });
 });

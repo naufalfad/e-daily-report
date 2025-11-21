@@ -25,20 +25,30 @@ $menusByRole = [
     ],
 ];
 
-$activeMenu = $active ?? 'dashboard';
-$menus = $menusByRole[$role] ?? $menusByRole['staf'];
+// Mapping alias role kalau dari DB/Auth lu namanya beda
+$roleKey = $role ?? 'staf';
+if ($roleKey === 'kepala-dinas') {
+$roleKey = 'kadis';
+}
 
+$activeMenu = $active ?? 'dashboard';
+$menus = $menusByRole[$roleKey] ?? $menusByRole['staf'];
+
+// Icon map cukup didefinisikan sekali
 $iconMap = [
-    'home' => 'home.svg',
-    'file-edit' => 'doc-laporan.svg',
-    'doc-skp' => 'doc-skp.svg',
-    'map-pin' => 'maps.svg',
-    'history' => 'history.svg',
-    'clock' => 'log.svg',
-    'settings' => 'settings.svg',
-    'announcement' => 'pengumuman.svg',
-    'validation' => 'validation.svg',
-    'skoring' => 'skoring.svg',
+'home' => 'home.svg',
+'file-edit' => 'doc-laporan.svg',
+'doc-skp' => 'doc-skp.svg',
+'map-pin' => 'maps.svg',
+'history' => 'history.svg',
+'clock' => 'log.svg',
+'settings' => 'settings.svg',
+'announcement' => 'pengumuman.svg',
+'validation' => 'validation.svg',
+'skoring' => 'skoring.svg',
+'manajemen-pegawai' => 'manajemen-pegawai.svg',
+'akun' => 'akun.svg',
+'setting' => 'setting.svg',
 ];
 @endphp
 
@@ -60,28 +70,38 @@ $iconMap = [
         </div>
     </div>
 
-    {{-- Menu --}}
+    <!-- Menu Navigasi -->
     <nav class="flex-1 flex flex-col gap-[5px] overflow-y-auto pr-1 no-scrollbar">
         @foreach ($menus as $menu)
         @php
         $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
         $isActive = $activeMenu === $menu['key'];
         @endphp
+
         <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
-                             {{ $isActive
-                                    ? 'bg-[#36B37E] text-white'
-                                    : 'text-white/90 hover:bg-[#36B37E]/70' }}">
+                              {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
+
             <img src="{{ asset('assets/icon/' . $iconFile) }}" alt="{{ $menu['label'] }}"
-                class="h-5 w-5 @if($isActive) filter invert brightness-0 @endif" />
+                class="h-5 w-5 {{ $isActive ? 'filter invert brightness-0' : '' }}" />
             <span>{{ $menu['label'] }}</span>
         </a>
         @endforeach
     </nav>
 
-    {{-- Logout --}}
-    <div class="mt-6 pt-4 shrink-0 border-t border-white/20"> 
-        <button id="btn-logout"
-            class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition text-white/90">
+    {{-- Footer Sidebar --}}
+    <div class="mt-6 pt-4 shrink-0">
+        @if (Route::has('logout'))
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit"
+                class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
+                <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
+                <span>Logout</span>
+            </button>
+        </form>
+        @else
+        <a href="#"
+            class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
             <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
             <span>Logout</span>
         </button>

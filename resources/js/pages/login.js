@@ -1,4 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // --- 1. Ambil Token CSRF dari Meta Tag (PENTING) ---
+  const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
   // --- Toggle Password ---
   const pwd = document.getElementById("password");
   const btnToggle = document.getElementById("togglePassword");
@@ -29,9 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Reset state UI
       if (errorAlert) errorAlert.classList.add('hidden');
-      btnSubmit.disabled = true;
-      btnText.classList.add('hidden');
-      btnLoader.classList.remove('hidden');
+      if (btnSubmit) btnSubmit.disabled = true;
+      if (btnText) btnText.classList.add('hidden');
+      if (btnLoader) btnLoader.classList.remove('hidden');
 
       const formData = new FormData(loginForm);
       const payload = Object.fromEntries(formData.entries());
@@ -41,7 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken // [PERBAIKAN] Sertakan token di sini
           },
           body: JSON.stringify(payload)
         });
@@ -50,16 +55,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!response.ok) {
           let errorText = result.message || 'Terjadi kesalahan saat login.';
+          
+          // Handle Validasi (422)
           if (response.status === 422 && result.errors) {
             const firstField = Object.keys(result.errors)[0];
             errorText = result.errors[firstField][0];
-          } else if (response.status === 401) {
+          } 
+          // Handle Unauthorized (401)
+          else if (response.status === 401) {
             errorText = result.message || 'Username atau password salah.';
           }
+          // Handle CSRF (419) - Jika token expired/hilang
+          else if (response.status === 419) {
+            errorText = "Sesi kadaluarsa. Silakan refresh halaman dan coba lagi.";
+          }
+
           throw new Error(errorText);
         }
 
-        // Simpan token & data user
+        // Simpan token & data user jika sukses
         localStorage.setItem('auth_token', result.access_token);
         localStorage.setItem('user_data', JSON.stringify(result.data));
 
@@ -76,12 +90,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
       } catch (error) {
+        console.error("Login Error:", error);
         if (errorMessage) errorMessage.textContent = error.message;
         if (errorAlert) errorAlert.classList.remove('hidden');
       } finally {
-        btnSubmit.disabled = false;
-        btnText.classList.remove('hidden');
-        btnLoader.classList.add('hidden');
+        if (btnSubmit) btnSubmit.disabled = false;
+        if (btnText) btnText.classList.remove('hidden');
+        if (btnLoader) btnLoader.classList.add('hidden');
       }
     });
   }
@@ -89,9 +104,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Global helper: fetch API dengan token ---
   window.authFetch = async (url, options = {}) => {
     const token = localStorage.getItem('auth_token');
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
     if (!options.headers) options.headers = {};
+    
     options.headers['Authorization'] = token ? `Bearer ${token}` : '';
     options.headers['Accept'] = 'application/json';
+    if (csrf) options.headers['X-CSRF-TOKEN'] = csrf; // Tambahan safety
+
     return fetch(url, options);
   };
 });

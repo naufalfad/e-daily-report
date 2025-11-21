@@ -1,9 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 1. Ambil Token CSRF dari Meta Tag (PENTING) ---
-  const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-  const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
-
-  // --- Toggle Password ---
+  // --- 1. Toggle Password UI ---
   const pwd = document.getElementById("password");
   const btnToggle = document.getElementById("togglePassword");
   const eyeOpen = document.getElementById("eyeOpen");
@@ -19,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Login Form ---
+  // --- 2. Login Form Logic (Murni Local Storage) ---
   const loginForm = document.getElementById('loginForm');
   const errorAlert = document.getElementById('error-alert');
   const errorMessage = document.getElementById('error-message');
@@ -33,20 +29,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Reset state UI
       if (errorAlert) errorAlert.classList.add('hidden');
-      if (btnSubmit) btnSubmit.disabled = true;
-      if (btnText) btnText.classList.add('hidden');
-      if (btnLoader) btnLoader.classList.remove('hidden');
+      btnSubmit.disabled = true;
+      btnText.classList.add('hidden');
+      btnLoader.classList.remove('hidden');
 
       const formData = new FormData(loginForm);
       const payload = Object.fromEntries(formData.entries());
 
       try {
+        // Fetch Murni tanpa 'credentials: include'
+        // Ini mencegah browser mengirim cookie session yang bikin bentrok CSRF
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken // [PERBAIKAN] Sertakan token di sini
+            'Accept': 'application/json'
+            // Kita hapus header X-CSRF-TOKEN karena kita pakai mode stateless
           },
           body: JSON.stringify(payload)
         });
@@ -56,28 +54,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!response.ok) {
           let errorText = result.message || 'Terjadi kesalahan saat login.';
           
-          // Handle Validasi (422)
           if (response.status === 422 && result.errors) {
             const firstField = Object.keys(result.errors)[0];
             errorText = result.errors[firstField][0];
-          } 
-          // Handle Unauthorized (401)
-          else if (response.status === 401) {
+          } else if (response.status === 401) {
             errorText = result.message || 'Username atau password salah.';
+          } else if (response.status === 419) {
+            errorText = "Terjadi konflik sesi. Mohon refresh halaman atau clear cache browser.";
           }
-          // Handle CSRF (419) - Jika token expired/hilang
-          else if (response.status === 419) {
-            errorText = "Sesi kadaluarsa. Silakan refresh halaman dan coba lagi.";
-          }
-
+          
           throw new Error(errorText);
         }
 
-        // Simpan token & data user jika sukses
+        // --- SUKSES: Simpan Token di Local Storage ---
         localStorage.setItem('auth_token', result.access_token);
         localStorage.setItem('user_data', JSON.stringify(result.data));
 
-        // --- Redirect berdasarkan role ---
+        // --- Logic Redirect (Dikembalikan Lengkap) ---
         const roles = result.data.roles || [];
         const roleName = roles.length > 0 ? (roles[0].nama_role || 'staf').toLowerCase() : 'staf';
 
@@ -85,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.href = '/penilai/dashboard';
         } else if (roleName.includes('admin')) {
           window.location.href = '/admin/dashboard';
+        } else if (roleName.includes('kadis')) {
+          window.location.href = '/kadis/dashboard';
         } else {
           window.location.href = '/staf/dashboard';
         }
@@ -94,24 +89,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if (errorMessage) errorMessage.textContent = error.message;
         if (errorAlert) errorAlert.classList.remove('hidden');
       } finally {
-        if (btnSubmit) btnSubmit.disabled = false;
-        if (btnText) btnText.classList.remove('hidden');
-        if (btnLoader) btnLoader.classList.add('hidden');
+        btnSubmit.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoader.classList.add('hidden');
       }
     });
   }
 
-  // --- Global helper: fetch API dengan token ---
+  // --- 3. Global Helper: authFetch (Bearer Token Mode) ---
+  // Helper ini memastikan semua request berikutnya membawa token dari Local Storage
   window.authFetch = async (url, options = {}) => {
     const token = localStorage.getItem('auth_token');
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
     if (!options.headers) options.headers = {};
     
     options.headers['Authorization'] = token ? `Bearer ${token}` : '';
     options.headers['Accept'] = 'application/json';
-    if (csrf) options.headers['X-CSRF-TOKEN'] = csrf; // Tambahan safety
-
-    return fetch(url, options);
+    
+    // Handle response global (misal token expired)
+    const response = await fetch(url, options);
+    if (response.status === 401) {
+       localStorage.removeItem('auth_token');
+       window.location.href = '/login';
+    }
+    
+    return response;
   };
 });

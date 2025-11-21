@@ -39,14 +39,15 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Kredensial tidak valid (Password salah)'], 401);
             }
 
-            // 4. Login manual (untuk session, optional)
+            // 4. Login manual
             Auth::login($user);
 
-            // 5. Buat token API (Sanctum)
+            // 5. Muat relasi dan buat token
+            $user->load(['roles', 'unitKerja', 'jabatan', 'atasan']);
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // 6. Muat relasi yang dibutuhkan
-            $user->load(['roles', 'unitKerja', 'jabatan', 'atasan']);
+            // 6. Respon sukses
+
 
             return response()->json([
                 'message' => 'Login berhasil',
@@ -67,22 +68,22 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Hapus token saat ini
+
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout berhasil']);
     }
 
-    public function me(Request $request)
-    {
-        // Kembalikan user dengan relasi
-        $user = $request->user()->load(['roles', 'unitKerja', 'jabatan', 'atasan']);
-        return response()->json($user);
-    }
-
-    // Optional: alias untuk /me
     public function user(Request $request)
     {
-        return $this->me($request);
+        return response()->json(
+            $request->user()->load(['roles', 'unitKerja', 'jabatan', 'atasan'])
+        );
+    }
+
+    public function me(Request $request)
+
+    {
+        return response()->json($request->user());
     }
 }

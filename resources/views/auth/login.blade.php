@@ -13,7 +13,7 @@
         rel="stylesheet">
 
     {{-- Vite & Tailwind --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/pages/login.js'])
 
     <style>
     body {
@@ -112,7 +112,8 @@
                     <span class="font-bold">Gagal!</span> <span id="error-message">Kredensial tidak valid.</span>
                 </div>
 
-                <form id="loginForm" class="mt-8 space-y-5">
+                <form id="loginForm" onsubmit="return false;" class="mt-8 space-y-5">
+
                 @csrf
                 <div>
                     <label class="mb-1 block text-sm font-medium text-slate-700">Username (NIP / Email)</label>
@@ -168,102 +169,3 @@
         </section>
     </main>
 
-    {{-- JS - Skrip di halaman Login --}}
-    <script>
-        // --- LOGIKA PENAMPILAN PESAN SUKSES LOGOUT ---
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutMessage = sessionStorage.getItem('logout_message');
-            const successAlert = document.getElementById('success-alert');
-            const successMsg = document.getElementById('success-message');
-            
-            if (logoutMessage && successAlert && successMsg) {
-                successMsg.innerText = logoutMessage;
-                successAlert.classList.remove('hidden'); 
-                
-                // Opsional: Sembunyikan pesan setelah 7 detik
-                setTimeout(() => {
-                    successAlert.classList.add('hidden');
-                }, 7000); 
-
-                // Hapus pesan dari storage setelah ditampilkan
-                sessionStorage.removeItem('logout_message');
-            }
-        });
-
-
-        // --- LOGIKA FORM LOGIN (EXISTING) ---
-        // Toggle Password
-        const pwdInput = document.getElementById('password');
-        const toggleBtn = document.getElementById('togglePassword');
-        const eyeOpen = document.getElementById('eyeOpen');
-        const eyeClosed = document.getElementById('eyeClosed');
-
-        toggleBtn.addEventListener('click', () => {
-            if (pwdInput.type === 'password') {
-                pwdInput.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
-            } else {
-                pwdInput.type = 'password';
-                eyeOpen.classList.remove('hidden');
-                eyeClosed.classList.add('hidden');
-            }
-        });
-
-        // Form Submit
-        const form = document.getElementById('loginForm');
-        const btnSubmit = document.getElementById('btn-submit');
-        const btnLoader = document.getElementById('btn-loader');
-        const btnText = document.getElementById('btn-text');
-        const errorAlert = document.getElementById('error-alert');
-        const errorMsg = document.getElementById('error-message');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            errorAlert.classList.add('hidden');
-            // Pastikan pesan sukses logout tersembunyi jika user mencoba login lagi
-            document.getElementById('success-alert').classList.add('hidden'); 
-
-            const payload = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
-            };
-
-            btnLoader.classList.remove('hidden');
-            btnText.classList.add('hidden');
-            btnSubmit.disabled = true;
-
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    // Penanganan token di sini (diasumsikan sudah ada di resources/js/app.js atau login.js)
-                    localStorage.setItem('auth_token', data.token); // Contoh asumsi
-                    localStorage.setItem('user_data', JSON.stringify(data.user)); // Contoh asumsi
-
-                    // Redirect ke dashboard staf setelah login sukses
-                    window.location.href = '/staf/dashboard'; 
-                } else {
-                    errorMsg.innerText = data.message || 'Kredensial tidak valid.';
-                    errorAlert.classList.remove('hidden');
-                }
-            } catch (err) {
-                console.error(err);
-                errorMsg.innerText = 'Terjadi kesalahan, silahkan coba lagi.';
-                errorAlert.classList.remove('hidden');
-            } finally {
-                btnLoader.classList.add('hidden');
-                btnText.classList.remove('hidden');
-                btnSubmit.disabled = false;
-            }
-        });
-    </script>
-</body>
-
-</html>

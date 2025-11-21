@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Core\ActivityLogController;
+// [BARU] Import Controller Pengumuman agar bisa dipanggil di route
+use App\Http\Controllers\Core\PengumumanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -52,8 +54,15 @@ Route::prefix('staf')->name('staf.')->group(function () {
     Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
     Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
 
-    // Log Aktivitas Staf (pakai view)
+    // Log Aktivitas Staf
     Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
+
+    // [PERBAIKAN 1] Route Pengumuman untuk Staf
+    // ---------------------------------------------------------
+    // View untuk halaman (pastikan nanti file view staf.pengumuman dibuat/dicopy)
+    Route::view('/pengumuman', 'staf.pengumuman')->name('pengumuman');
+    // API untuk mengambil data list pengumuman (AJAX)
+    Route::get('/pengumuman/list', [PengumumanController::class, 'index'])->name('pengumuman.list');
 });
 
 
@@ -72,10 +81,21 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
     Route::view('/skoring-kinerja', 'penilai.skoring-kinerja')->name('skoring-kinerja');
     Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
     Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
-    Route::view('/pengumuman', 'penilai.pengumuman')->name('pengumuman');
-
-    // Log Aktivitas Penilai (pakai view)
+    
+    // Log Aktivitas Penilai
     Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');
+
+    // [PERBAIKAN 2] Route Pengumuman Lengkap untuk Penilai (CRUD)
+    // ---------------------------------------------------------
+    Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
+        // Halaman Utama (View)
+        Route::view('/', 'penilai.pengumuman')->name('index');
+        
+        // API endpoints (dipanggil via fetch/axios di JS)
+        Route::get('/list', [PengumumanController::class, 'index'])->name('list');   // Ambil Data
+        Route::post('/store', [PengumumanController::class, 'store'])->name('store'); // Simpan Baru
+        Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); // Hapus
+    });
 });
 
 
@@ -105,7 +125,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
     Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
 
-    // Log Aktivitas Admin (pakai view)
+    // Log Aktivitas Admin
     Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
 });
-

@@ -4,6 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    {{-- [CRITICAL FIX] Token Keamanan CSRF --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'E-Daily Report' }}</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
@@ -163,6 +166,7 @@
         use Illuminate\Support\Facades\Auth;
 
         $user = Auth::user();
+        // Gunakan operator null safe atau default value untuk mencegah error jika user belum login/null
         $userName = $user->name ?? 'Nama Pengguna';
         $userEmail = $user->email ?? 'email@example.com';
         $userNip = $user->nip ?? '196703101988030109';

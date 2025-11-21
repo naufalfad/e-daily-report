@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Services\NotificationService; 
+use App\Enums\NotificationType; // IMPORT ENUM WAJIB
 
 class LkhController extends Controller
 {
@@ -54,7 +55,7 @@ class LkhController extends Controller
     {
         $userId = Auth::id();
         
-        // FIX: Hapus eager loading 'validator'
+        // Optimization: Hapus eager load 'validator' yang mungkin tidak ada relasinya
         $query = LaporanHarian::with(['tupoksi', 'skp', 'bukti'])
             ->where('user_id', $userId);
 
@@ -127,8 +128,7 @@ class LkhController extends Controller
                 }
             }
 
-
-            // Simpan LKH [FIX: Menyimpan atasan_id]
+            // Simpan LKH
             $lkh = LaporanHarian::create([
                 'user_id'            => $user->id,
                 'skp_id'             => $request->skp_id,
@@ -163,12 +163,14 @@ class LkhController extends Controller
 
             DB::commit();
 
+            // --- IMPLEMENTASI NOTIFIKASI CERDAS ---
+            // Logika: Kirim notif hanya jika user memiliki atasan
             if ($user->atasan_id) {
                 NotificationService::send(
                     $user->atasan_id,
-                    'lkh_new_submission',
+                    NotificationType::LKH_NEW_SUBMISSION, // Menggunakan Enum yang aman
                     'Pegawai ' . $user->name . ' mengirim laporan: ' . $request->jenis_kegiatan,
-                    $lkh->id
+                    $lkh // Polymorph: Kirim objek utuh agar redirect bisa otomatis ke detail LKH ini
                 );
             }
 
@@ -191,12 +193,11 @@ class LkhController extends Controller
     {
         $user = Auth::user();
         
-        // FIX: Defensive check for routing crash (riwayat string)
+        // Defensive check agar tidak crash jika ID bukan angka (misal 'riwayat')
         if (!is_numeric($id)) {
              return response()->json(['message' => 'ID Laporan tidak valid atau URL salah.'], 400);
         }
 
-        // FIX: Hapus eager loading 'validator'
         $lkh = LaporanHarian::with(['tupoksi', 'skp', 'bukti', 'user.bidang', 'user.jabatan', 'atasan']) 
             ->where(function($query) use ($user) {
                 $query->where('user_id', $user->id) // Laporan miliknya
@@ -220,17 +221,14 @@ class LkhController extends Controller
             return response()->json(['message' => 'User belum login / token invalid'], 401);
         }
         
-        // FIX: Hapus eager loading 'validator'
         $query = LaporanHarian::with([
             'tupoksi', 
             'user:id,name', 
-            'atasan:id,name', // Hanya relasi 'atasan' yang digunakan sebagai penilai
+            'atasan:id,name',
             'bukti'
         ]);
         
         $mode = $request->input('mode', 'mine'); 
-        
-        // FIX UTAMA: Mengganti $user->hasRole() dengan cek relasi roles() bawaan
         $isPenilai = $user->roles()->pluck('nama_role')->contains('Penilai'); 
 
         // --- LOGIKA FILTER MODE BERDASARKAN ROLE ---
@@ -240,7 +238,7 @@ class LkhController extends Controller
             $query->where('user_id', $user->id);
         }
         
-        // --- LOGIKA FILTER TANGGAL (Selalu Aktif) ---
+        // --- LOGIKA FILTER TANGGAL ---
         if ($request->filled('from_date')) {
             $query->whereDate('tanggal_laporan', '>=', $request->from_date);
         }

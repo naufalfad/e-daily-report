@@ -1,40 +1,102 @@
 @php
-    // Semua menu berdasarkan role
-    $menusByRole = [
-        'staf' => [
-            ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('staf.dashboard')],
-            ['key' => 'lkh', 'label' => 'Input LKH', 'icon' => 'file-edit', 'route' => route('staf.input-lkh')],
-            ['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('staf.input-skp')],
-            ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('staf.peta-aktivitas')],
-            ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('staf.riwayat-lkh')],
-            ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('staf.log-aktivitas')],
-        ],
+  // Definisi menu per role (global)
+$menusByRole = [
+// ==================== ROLE STAF ====================
+'staf' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('staf.dashboard')],
+['key' => 'lkh', 'label' => 'Input LKH', 'icon' => 'file-edit', 'route' => route('staf.input-lkh')],
+['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('staf.input-skp')],
+['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('staf.peta-aktivitas')],
+['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('staf.riwayat-lkh')],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('staf.log-aktivitas')],
+],
 
-        'penilai' => [
-            ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('penilai.dashboard')],
-            ['key' => 'input-laporan', 'label' => 'Input Laporan', 'icon' => 'file-edit', 'route' => route('penilai.input-laporan')],
-            ['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('penilai.input-skp')],
-            ['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => route('penilai.validasi-laporan')],
-            ['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => route('penilai.skoring-kinerja')],
-            ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
-            ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
-            ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
-            ['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
-        ],
+// ==================== ROLE PENILAI ====================
+'penilai' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('penilai.dashboard')],
+[
+'key' => 'input-laporan',
+'label' => 'Input Laporan',
+'icon' => 'file-edit',
+'route' =>
+route('penilai.input-laporan')
+],
+['key' => 'input-skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => route('penilai.input-skp')],
+[
+'key' => 'validasi',
+'label' => 'Validasi Laporan',
+'icon' => 'validation',
+'route' =>
+route('penilai.validasi-laporan')
+],
+['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => route('penilai.skoring-kinerja')],
+['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
+['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
+['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
+],
 
-        'admin' => [
-            ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('admin.dashboard')],
-            ['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'settings', 'route' => route('admin.pengaturan-sistem')],
-        ],
-    ];
+// ==================== ROLE KEPALA DINAS ====================
+// pakai key 'kadis' sebagai utama
+'kadis' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('kadis.dashboard')],
+[
+'key' => 'validasi',
+'label' => 'Validasi Laporan',
+'icon' => 'validation',
+'route' =>
+route('kadis.validasi-laporan')
+],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('kadis.log-aktivitas')],
+],
 
-    // role dari layout
-    $roleKey = $role ?? 'staf';
+// ==================== ROLE ADMIN ====================
+'admin' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => route('admin.dashboard')],
+[
+'key' => 'manajemen-pegawai',
+'label' => 'Manajemen Pegawai',
+'icon' => 'manajemen-pegawai',
+'route' =>
+route('admin.manajemen-pegawai')
+],
+['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => route('admin.akun-pengguna')],
+[
+'key' => 'pengaturan',
+'label' => 'Pengaturan Sistem',
+'icon' => 'setting',
+'route' =>
+route('admin.pengaturan-sistem')
+],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('admin.log-aktivitas')],
+],
+];
 
-    // buat safety kalau role tidak ada
-    $menus = $menusByRole[$roleKey] ?? $menusByRole['staf'];
+// Mapping alias role kalau dari DB/Auth lu namanya beda
+$roleKey = $role ?? 'staf';
+if ($roleKey === 'kepala-dinas') {
+$roleKey = 'kadis';
+}
 
-    $activeMenu = $active ?? '';
+$activeMenu = $active ?? 'dashboard';
+$menus = $menusByRole[$roleKey] ?? $menusByRole['staf'];
+
+// Icon map cukup didefinisikan sekali
+$iconMap = [
+'home' => 'home.svg',
+'file-edit' => 'doc-laporan.svg',
+'doc-skp' => 'doc-skp.svg',
+'map-pin' => 'maps.svg',
+'history' => 'history.svg',
+'clock' => 'log.svg',
+'settings' => 'settings.svg',
+'announcement' => 'pengumuman.svg',
+'validation' => 'validation.svg',
+'skoring' => 'skoring.svg',
+'manajemen-pegawai' => 'manajemen-pegawai.svg',
+'akun' => 'akun.svg',
+'setting' => 'setting.svg',
+];
 @endphp
 
 

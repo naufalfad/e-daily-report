@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use App\Services\NotificationService;
+use App\Enums\NotificationType; // IMPORT ENUM WAJIB
 
 class ValidatorController extends Controller
 {
@@ -85,23 +86,34 @@ class ValidatorController extends Controller
         // Update LKH
         $lkh->update([
             'status' => $request->status,
-            'atasan_id' => $atasanId, // pastikan atasan_id terisi (op)
+            'atasan_id' => $atasanId,
             'waktu_validasi' => now(),
             'komentar_validasi' => $request->komentar_validasi
         ]);
 
-        // Kirim Notifikasi
-        $type = $request->status == 'approved' ? 'lkh_approved' : 'lkh_rejected';
+        // --- REFACTOR NOTIFIKASI DIMULAI ---
+        
+        // 1. Gunakan Enum untuk Type Safety
+        $type = $request->status == 'approved' 
+            ? NotificationType::LKH_APPROVED 
+            : NotificationType::LKH_REJECTED;
+
         $msg  = $request->status == 'approved'
                 ? 'Selamat! LKH tanggal ' . $lkh->tanggal_laporan . ' disetujui.'
                 : 'LKH tanggal ' . $lkh->tanggal_laporan . ' ditolak. Cek komentar atasan.';
 
+        // 2. Pass Object Model ($lkh) langsung, BUKAN ID-nya ($lkh->id)
+        // Service akan otomatis mendeteksi:
+        // related_id   = $lkh->id
+        // related_type = 'App\Models\LaporanHarian'
         NotificationService::send(
             $lkh->user_id,
             $type,
             $msg,
-            $lkh->id
+            $lkh // <-- CRITICAL CHANGE: Pass Object, not Integer
         );
+
+        // --- REFACTOR SELESAI ---
 
         return response()->json([
             'message' => $request->status == 'approved' ? 'Laporan diterima' : 'Laporan ditolak',

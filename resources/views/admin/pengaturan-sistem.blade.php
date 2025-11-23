@@ -8,7 +8,7 @@
 
 @section('content')
 
-<section class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 min-h-[520px]">
+<section class="rounded-2xl flex flex-1 flex-col min-h-0 bg-white ring-1 ring-slate-200 px-6 py-5 min-h-[520px]">
 
     {{-- FLEX UTAMA: KIRI (MENU) & KANAN (ISI) --}}
     <div class="flex flex-col lg:flex-row gap-10 items-start">

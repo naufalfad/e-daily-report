@@ -294,7 +294,7 @@ class TestingSeeder extends Seeder
             // Sekban Reject
             $lkhKasubagRejected->update([
                 'status' => 'rejected',
-                'validator_id' => $sekban->id,
+                'atasan_id' => $sekban->id,
                 'waktu_validasi' => Carbon::now(),
                 'komentar_validasi' => 'Cek ulang kendaraan nomor PA 1234 MM, sepertinya salah catat.'
             ]);
@@ -345,7 +345,7 @@ class TestingSeeder extends Seeder
             'lokasi'              => DB::raw("ST_GeomFromText('POINT(136.8851 -4.5461)')"),
             'is_luar_lokasi'      => $isLuarLokasi,
             
-            'validator_id'        => ($status !== 'waiting_review' && $validator) ? $validator->id : null,
+            'atasan_id'        => ($status !== 'waiting_review' && $validator) ? $validator->id : null,
             'waktu_validasi'      => ($status !== 'waiting_review') ? Carbon::now() : null,
             'komentar_validasi'   => $komentar,
         ]);

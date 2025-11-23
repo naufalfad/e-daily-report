@@ -20,7 +20,7 @@ class ValidatorController extends Controller
         $atasanId = Auth::id();
 
         $query = LaporanHarian::with(['user', 'skp', 'bukti'])
-            ->where('atasan_id', $atasanId);
+            ->where('user_id', $atasanId);
 
         // Filter status
         if ($request->has('status')) {

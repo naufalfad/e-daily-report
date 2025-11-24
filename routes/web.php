@@ -74,11 +74,6 @@ Route::prefix('staf')->name('staf.')->group(function () {
 | PENILAI ROUTES
 |--------------------------------------------------------------------------
 */
-
-Route::get('/staf/input-lkh/{id?}', function ($id = null) {
-    return view('staf.input-lkh', ['id' => $id]);
-})->name('staf.input-lkh');
-
 Route::prefix('penilai')->name('penilai.')->group(function () {
 
     Route::get('/input-laporan/{id?}', function ($id = null) {

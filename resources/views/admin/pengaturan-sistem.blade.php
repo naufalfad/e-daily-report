@@ -82,14 +82,14 @@
                         </div>
 
                         <!-- KANAN: TOGGLE -->
-                        <label class="inline-flex items-center cursor-pointer">
+                        <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-[#CBD6E0] peer-checked:bg-[#128C60] rounded-full px-[3px] flex items-center transition-all duration-200">
-                                <div
-                                    class="w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 peer-checked:translate-x-5">
-                                </div>
-                            </div>
+
+                            <div class="w-11 h-6 bg-[#CBD6E0] rounded-full peer-checked:bg-[#128C60] 
+                            transition-colors duration-200"></div>
+
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm 
+                            transition-all duration-200 peer-checked:translate-x-5"></div>
                         </label>
                     </div>
 
@@ -418,13 +418,17 @@
                         </div>
 
                         <!-- Toggle merah -->
-                        <label class="inline-flex items-center cursor-pointer">
+                        <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-[#F4D4D4] peer-checked:bg-[#B6241C] rounded-full px-[3px] flex items-center transition-all duration-200">
-                                <div
-                                    class="w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 peer-checked:translate-x-5">
-                                </div>
+
+                            <!-- Track -->
+                            <div class="w-11 h-6 rounded-full bg-[#F4D4D4] 
+                            peer-checked:bg-[#B6241C] transition-colors duration-200">
+                            </div>
+
+                            <!-- Knob -->
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm
+                            transition-all duration-200 peer-checked:translate-x-5">
                             </div>
                         </label>
                     </div>

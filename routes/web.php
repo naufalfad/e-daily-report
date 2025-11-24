@@ -50,6 +50,9 @@ Route::prefix('staf')->name('staf.')->group(function () {
 
     Route::view('/dashboard', 'staf.dashboard')->name('dashboard');
     Route::view('/input-lkh', 'staf.input-lkh')->name('input-lkh');
+    Route::get('/input-lkh/{id?}', function ($id = null) {
+        return view('staf.input-lkh', ['id' => $id]);
+    })->name('input-lkh');
     Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
     Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
     Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');

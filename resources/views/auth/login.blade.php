@@ -13,7 +13,7 @@
         rel="stylesheet">
 
     {{-- Vite & Tailwind --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/pages/login.js'])
 
     <style>
     body {
@@ -25,6 +25,10 @@
 <body class="min-h-dvh bg-slate-100 text-slate-800">
     <main class="grid min-h-dvh lg:grid-cols-[60%_40%]">
         <section class="relative hidden lg:block overflow-hidden">
+            <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
+                alt="Latar Mimika" />
+            <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]">
+            </div>
             <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
                 alt="Latar Mimika" />
             <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]">
@@ -89,15 +93,17 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-            </div>
         </section>
 
         <section class="flex items-center justify-center bg-slate-100 px-6 py-10">
             <div class="w-full max-w-md">
                 <h2 class="text-3xl font-semibold text-[#1C7C54]">Login Aplikasi</h2>
                 <p class="mt-2 text-slate-500">Silahkan masuk menggunakan akun anda</p>
+
+                {{-- Alert Sukses Logout (TAMBAHAN UNTUK MENAMPILKAN PESAN) --}}
+                <div id="success-alert" class="hidden mt-4 p-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200" role="alert">
+                    <span class="font-bold">Berhasil!</span> <span id="success-message"></span>
+                </div>
 
                 {{-- Alert Error --}}
                 <div id="error-alert"
@@ -106,66 +112,60 @@
                     <span class="font-bold">Gagal!</span> <span id="error-message">Kredensial tidak valid.</span>
                 </div>
 
-                <form id="loginForm" class="mt-8 space-y-5">
-                    @csrf
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Username (NIP / Email)</label>
-                        <input type="text" name="username" id="username" placeholder="Masukkan NIP atau Email" required
-                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20">
-                    </div>
+                <form id="loginForm" onsubmit="return false;" class="mt-8 space-y-5">
 
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
-                        <div class="relative">
-                            <input id="password" type="password" name="password" placeholder="Masukkan Password"
-                                required
-                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20">
-                            <button type="button" id="togglePassword"
-                                class="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100"
-                                aria-label="Tampilkan password" aria-pressed="false">
-                                <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-width="1.8" d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12Z" />
-                                    <circle cx="12" cy="12" r="3.2" stroke-width="1.8" />
-                                </svg>
-                                <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg"
-                                    class="hidden h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor">
-                                    <path stroke-width="1.8" d="M3 3l18 18" />
-                                    <path stroke-width="1.8"
-                                        d="M2.5 10s3.8 7 9.5 7c1.6 0 3.1-.3 4.4-.9M21.5 10S17.7 3 12 3c-.9 0-1.7.07-2.4.2" />
-                                    <path stroke-width="1.8" d="M9.5 10.5a3.5 3.5 0 0 0 4 4" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+                @csrf
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Username (NIP / Email)</label>
+                    <input type="text" name="username" id="username" placeholder="Masukkan NIP atau Email" required
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20">
+                </div>
 
-                    <button type="submit" id="btn-submit"
-                        class="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1C7C54] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm ring-1 ring-inset ring-[#1C7C54]/30 hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40 disabled:opacity-70 disabled:cursor-not-allowed">
-
-                        {{-- Loading Spinner --}}
-                        <svg id="btn-loader" class="hidden animate-spin h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-
-                        <span id="btn-text" class="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -ml-1 opacity-95" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor">
-                                <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
+                    <div class="relative">
+                        <input id="password" type="password" name="password" placeholder="Masukkan Password" required
+                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20">
+                        <button type="button" id="togglePassword"
+                            class="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100"
+                            aria-label="Tampilkan password" aria-pressed="false">
+                            <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-width="1.8" d="M2 12s3.8-7 10-7 10 7 10 7-3.8 7-10 7S2 12 2 12Z" />
+                                <circle cx="12" cy="12" r="3.2" stroke-width="1.8" />
                             </svg>
-                            Masuk
-                        </span>
-                    </button>
-                </form>
+                            <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg"
+                                class="hidden h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path stroke-width="1.8" d="M3 3l18 18" />
+                                <path stroke-width="1.8"
+                                    d="M2.5 10s3.8 7 9.5 7c1.6 0 3.1-.3 4.4-.9M21.5 10S17.7 3 12 3c-.9 0-1.7.07-2.4.2" />
+                                <path stroke-width="1.8" d="M9.5 10.5a3.5 3.5 0 0 0 4 4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit"
+                    class="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1C7C54] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm ring-1 ring-inset ring-[#1C7C54]/30 hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <svg id="btn-loader" class="hidden animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <span id="btn-text" class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -ml-1 opacity-95" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor">
+                            <path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                                d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                        </svg>
+                        Masuk
+                    </span>
+                </button>
+            </form>
+
             </div>
         </section>
     </main>
-</body>
 
-</html>

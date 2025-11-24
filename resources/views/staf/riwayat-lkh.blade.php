@@ -1,6 +1,6 @@
 @php($title = 'Riwayat Laporan')
 {{-- Asumsi $role tersedia dari @extends dan bernilai 'penilai' atau 'staf' --}}
-@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'riwayat'])
+@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'riwayat'])
 
 
 @section('content')
@@ -235,7 +235,7 @@
     function riwayatData(role) {
         const TOKEN = localStorage.getItem('auth_token');
         // Endpoint yang sudah diperbaiki untuk menghindari konflik routing
-        const BASE_URL = '/api/lkh/history/riwayat'; 
+        const BASE_URL = '/api/lkh/riwayat'; 
 
         return {
             role: role,

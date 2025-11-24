@@ -10,18 +10,24 @@ use Illuminate\Support\Facades\Auth;
 class NotifikasiController extends Controller
 {
     /**
-     * 1. LIST NOTIFIKASI (Inbox User)
+     * 1. LIST NOTIFIKASI (Inbox User) - REFACTORED FOR POLYMORPH
+     * Mengembalikan daftar notifikasi beserta URL redirect dinamis.
      */
     public function index()
     {
         $userId = Auth::id();
 
-        $notif = Notifikasi::where('user_id_recipient', $userId)
+        // Eager Load 'related' agar tidak N+1 Query saat meloop data polymorphic
+        $notif = Notifikasi::with('related') 
+            ->where('user_id_recipient', $userId)
             ->latest()
-            ->limit(20) // Ambil 20 terakhir saja agar ringan
-            ->get();
+            ->limit(20) 
+            ->get()
+            ->map(function ($item) {
+                // Transformasi Data: Menambahkan 'redirect_url' dinamis
+                return $this->formatNotification($item);
+            });
             
-        // Hitung jumlah yang belum dibaca (untuk badge merah di UI)
         $unreadCount = Notifikasi::where('user_id_recipient', $userId)
             ->where('is_read', false)
             ->count();
@@ -33,8 +39,46 @@ class NotifikasiController extends Controller
     }
 
     /**
+     * Helper Logic untuk menentukan URL Redirect berdasarkan Tipe Model
+     * Ini adalah penerapan Pattern Strategy sederhana.
+     */
+    private function formatNotification($item)
+    {
+        $redirectUrl = '#'; // Default jika tidak ada relasi
+
+        if ($item->related_type && $item->related_id) {
+            // Logika Routing Dinamis
+            // Sesuaikan path ini dengan route frontend Yang Mulia
+            switch ($item->related_type) {
+                case 'App\Models\LaporanHarian':
+                    // Jika user adalah Penilai/Atasan, mungkin redirect ke halaman validasi
+                    // Jika user adalah Pegawai, redirect ke halaman detail riwayat
+                    $redirectUrl = Auth::user()->hasRole('Atasan') 
+                        ? "/penilai/validasi-lkh/{$item->related_id}" 
+                        : "/pegawai/riwayat-lkh/{$item->related_id}";
+                    break;
+
+                case 'App\Models\Pengumuman':
+                    $redirectUrl = "/dashboard/pengumuman/{$item->related_id}";
+                    break;
+                
+                case 'App\Models\Skp':
+                    $redirectUrl = "/pegawai/skp/{$item->related_id}";
+                    break;
+            }
+        }
+
+        // Kembalikan object notifikasi asli + field baru
+        $item->redirect_url = $redirectUrl;
+        
+        // Opsional: Bersihkan nama class agar lebih cantik di JSON (misal: "LaporanHarian" saja)
+        $item->related_model = class_basename($item->related_type);
+
+        return $item;
+    }
+
+    /**
      * 2. MARK AS READ (Tandai Sudah Dibaca)
-     * Dipanggil saat user mengklik salah satu notif
      */
     public function markAsRead($id)
     {

@@ -21,8 +21,8 @@
 
             {{-- Teks utama --}}
             <p class="text-[20px] md:text-[28px] font-bold leading-tight">Selamat Datang,</p>
-            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap" id="banner-nama">
-                User...
+            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap">
+                Fahrizal Mudzaqi Maulana!
             </h1>
             <p class="mt-3 text-white/90 text-[16px]">Semoga harimu menyenangkan!</p>
         </div>
@@ -36,7 +36,12 @@
 
     {{-- CARD PROFIL SAYA --}}
     <aside class="rounded-[15px] bg-white ring-1 ring-slate-200 shadow-[0_6px_18px_rgba(15,23,42,0.06)]
-               overflow-hidden mt-0">
+               overflow-hidden -mt-[50px]">
+
+        {{-- HEADER HIJAU --}}
+        <div class="bg-[#1C7C54] text-white px-5 py-4 text-[15px] font-semibold leading-tight">
+            Profil Saya
+        </div>
 
         {{-- BODY --}}
         <div class="px-5 pt-4 pb-5">
@@ -54,11 +59,11 @@
 
                 {{-- Info teks utama --}}
                 <div class="min-w-0 flex flex-col">
-                    <h3 class="text-[17px] font-semibold text-slate-900 leading-snug" id="profile-nama">
-                        -
+                    <h3 class="text-[17px] font-semibold text-slate-900 leading-snug">
+                        Fahrizal Mudzaqi Maulana
                     </h3>
-                    <p class="mt-[2px] text-[13px] text-slate-500 leading-snug" id="profile-nip">
-                        -
+                    <p class="mt-[2px] text-[13px] text-slate-500 leading-snug">
+                        196703101988030109
                     </p>
 
                     {{-- Lokasi --}}
@@ -73,11 +78,11 @@
             <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] text-slate-600">
                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
                     <img src="{{ asset('assets/icon/email.svg') }}" class="h-3.5 w-3.5" alt="Email" />
-                    <span class="truncate" id="profile-email">-</span>
+                    <span class="truncate">sari.dewi@bapendamimika.go.id</span>
                 </div>
                 <div class="flex items-center gap-1.5 whitespace-nowrap">
                     <img src="{{ asset('assets/icon/telpon.svg') }}" class="h-3.5 w-3.5" alt="Telepon" />
-                    <span id="profile-telepon">-</span>
+                    <span>081234567891</span>
                 </div>
             </div>
 
@@ -86,22 +91,22 @@
                 {{-- Jabatan --}}
                 <div class="pr-3">
                     <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Jabatan</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-jabatan">-</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug">Staf BAPENDA</p>
                 </div>
 
                 {{-- Dinas --}}
                 <div class="px-3 border-l border-slate-200">
-                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Unit Kerja</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-dinas">
-                        -
+                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Dinas</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug">
+                        Badan Pendapatan<br>Daerah
                     </p>
                 </div>
 
                 {{-- Alamat --}}
                 <div class="pl-3 border-l border-slate-200">
-                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Target</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-target">
-                        -
+                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Alamat</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug">
+                        Jl. Cenderawasih,<br>Mimika Baru
                     </p>
                 </div>
             </div>
@@ -112,54 +117,65 @@
 
 {{-- Statistik ringkas --}}
 <section class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4">
-    {{-- Card 1: Total Laporan (Mapping ke SKP Diajukan) --}}
+
+    @foreach ([
+    [
+    'val' => '10',
+    'label' => 'Total Laporan Terkirim Hari ini',
+    'tone' => 'bg-[#155FA6]/50',
+    'icon' => 'send'
+    ],
+    [
+    'val' => '4',
+    'label' => 'Menunggu Verifikasi',
+    'tone' => 'bg-[#D8A106]/50',
+    'icon' => 'pending'
+    ],
+    [
+    'val' => '2',
+    'label' => 'Disetujui',
+    'tone' => 'bg-[#128C60]/50',
+    'icon' => 'approve'
+    ],
+    [
+    'val' => '4',
+    'label' => 'Ditolak',
+    'tone' => 'bg-[#B6241C]/50',
+    'icon' => 'reject'
+    ],
+    ] as $stat)
+
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
+        {{-- NILAI + ICON --}}
         <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-1">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#155FA6]/50">
-                <img src="{{ asset('assets/icon/send.svg') }}" class="h-5 w-5 object-contain">
+            {{-- Angka --}}
+            <div class="text-4xl font-semibold tracking-tight">
+                {{ $stat['val'] }}
+            </div>
+
+            {{-- Icon Wrapper --}}
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] {{ $stat['tone'] }}">
+                <img src="{{ asset('assets/icon/' . $stat['icon'] . '.svg') }}" alt="{{ $stat['icon'] }}"
+                    class="h-5 w-5 object-contain">
             </div>
         </div>
-        <div class="text-xs text-slate-500">Total Laporan SKP</div>
-        <div class="text-xs text-slate-400 font-medium">Total diajukan</div>
+
+        {{-- Label --}}
+        <div class="text-xs text-slate-500">{{ $stat['label'] }}</div>
+
+        {{-- Additional Info --}}
+        @if ($stat['icon'] === 'approve')
+        <div class="text-xs text-emerald-600 font-medium">↑ 85% Approval Rate</div>
+        @elseif ($stat['icon'] === 'reject')
+        <div class="text-xs text-rose-600 font-medium">↓ 5% Rejection Rate</div>
+        @elseif ($stat['icon'] === 'send')
+        <div class="text-xs text-emerald-600 font-medium">↑ 12% dari kemarin</div>
+        @else
+        <div class="text-xs text-amber-600 font-medium">⚠ Perlu perhatian</div>
+        @endif
     </div>
 
-    {{-- Card 2: Menunggu Verifikasi (Mapping ke Realisasi Tahunan / Waiting) --}}
-    {{-- Karena JSON tidak punya count 'Waiting', kita pakai Realisasi Tahunan sebagai pengganti --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-2">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#D8A106]/50">
-                <img src="{{ asset('assets/icon/pending.svg') }}" class="h-5 w-5 object-contain">
-            </div>
-        </div>
-        <div class="text-xs text-slate-500">Realisasi Tahunan</div>
-        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-2">0% Capaian</div>
-    </div>
-
-    {{-- Card 3: Disetujui (Mapping ke Persen Diterima) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-3">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#128C60]/50">
-                <img src="{{ asset('assets/icon/approve.svg') }}" class="h-5 w-5 object-contain">
-            </div>
-        </div>
-        <div class="text-xs text-slate-500">Rate Disetujui</div>
-        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-3">0% Dari total laporan</div>
-    </div>
-
-    {{-- Card 4: Ditolak (Mapping ke Persen Ditolak) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        <div class="flex items-start justify-between">
-            <div class="text-4xl font-semibold tracking-tight" id="stat-val-4">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#B6241C]/50">
-                <img src="{{ asset('assets/icon/reject.svg') }}" class="h-5 w-5 object-contain">
-            </div>
-        </div>
-        <div class="text-xs text-slate-500">Rate Ditolak</div>
-        <div class="text-xs text-rose-600 font-medium" id="stat-desc-4">0% Dari total laporan</div>
-    </div>
+    @endforeach
 </section>
 
 {{-- Grafik + Aktivitas terkini + Draft Laporan --}}
@@ -174,6 +190,8 @@
             </button>
         </div>
 
+        {{-- Area chart fleksibel + canvas --}}
+        <div class="mt-1 flex-1">
         {{-- Area chart fleksibel + canvas --}}
         <div class="mt-1 flex-1">
             <canvas id="kinerjaBulananChart" class="w-full h-full"></canvas>

@@ -24,58 +24,64 @@
 
 @push('scripts')
 <script>
-    // Inline Script Sederhana Khusus Staf
-    // (Bisa dipindah ke file JS terpisah jika ingin lebih rapi)
     document.addEventListener("DOMContentLoaded", async () => {
+
         const listEl = document.getElementById("staf-list");
         const emptyEl = document.getElementById("staf-empty");
-        
-        if(!listEl) return;
 
         try {
-            // Panggil API khusus Staf yang kita buat di Route langkah 1
-            const response = await fetch('/staf/pengumuman/list'); 
+
+            const response = await fetch("/staf/pengumuman/list", {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                credentials: "include"
+            });
+
+            if (!response.ok) {
+                console.error("API error:", response.status);
+                emptyEl.classList.remove("hidden");
+                return;
+            }
+
             const result = await response.json();
-            const data = result.data || []; // Handle pagination structure
+            const data = result.data ?? [];
 
             if (data.length === 0) {
-                listEl.classList.add("hidden");
                 emptyEl.classList.remove("hidden");
-            } else {
-                emptyEl.classList.add("hidden");
-                listEl.classList.remove("hidden");
-                
-                // Render Card
-                listEl.innerHTML = data.map(item => {
-                     // Format Tanggal
-                    const dateObj = new Date(item.created_at);
-                    const dateStr = new Intl.DateTimeFormat("id-ID", {
-                        day: "numeric", month: "long", year: "numeric"
-                    }).format(dateObj);
-                    
-                    return `
-                    <article class="rounded-[18px] border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm hover:shadow-md transition-shadow hover:border-[#1C7C54]/50">
-                        <h3 class="text-[14px] font-bold text-slate-800 mb-2 line-clamp-2">
-                            ${item.judul}
-                        </h3>
-                        <p class="text-[12px] text-slate-600 leading-relaxed mb-4 line-clamp-4 whitespace-pre-line">
-                            ${item.isi_pengumuman}
-                        </p>
-                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-                             <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
-                                📅 ${dateStr}
-                             </span>
-                             <span class="text-[10px] text-slate-400">
-                                • Oleh ${item.creator?.name ?? 'Admin'}
-                             </span>
-                        </div>
-                    </article>
-                    `;
-                }).join('');
+                return;
             }
-        } catch (e) {
-            console.error("Gagal memuat pengumuman staf", e);
+
+            emptyEl.classList.add("hidden");
+            listEl.classList.remove("hidden");
+
+            listEl.innerHTML = data.map(item => {
+                const date = new Date(item.created_at);
+                const dateStr = new Intl.DateTimeFormat("id-ID", {
+                    day: "numeric", month: "long", year: "numeric"
+                }).format(date);
+
+                return `
+                <article class="rounded-[18px] border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm hover:shadow-md transition-shadow hover:border-[#1C7C54]/50">
+                    <h3 class="text-[14px] font-bold text-slate-800 mb-2">${item.judul}</h3>
+                    <p class="text-[12px] text-slate-600 mb-4 whitespace-pre-line">
+                        ${item.isi_pengumuman}
+                    </p>
+                    <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                            📅 ${dateStr}
+                        </span>
+                        <span class="text-[10px] text-slate-400">
+                            • Oleh ${item.creator?.name ?? 'Admin'}
+                        </span>
+                    </div>
+                </article>
+                `;
+            }).join("");
+
+        } catch (err) {
+            console.error(err);
+            emptyEl.classList.remove("hidden");
         }
     });
 </script>
+
 @endpush

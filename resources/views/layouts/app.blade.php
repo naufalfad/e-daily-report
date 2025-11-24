@@ -98,35 +98,95 @@
 
                 {{-- TOPBAR: hanya muncul di dashboard --}}
                 @if (($active ?? null) === 'dashboard')
-                <header class="sticky top-0 z-40">
+                <header 
+                    x-data="{ 
+                        notifOpen:false, 
+                        notifList: [
+                            {
+                                id: 1,
+                                type: 'success',
+                                title: 'Laporan Telah Diterima!',
+                                message: 'Laporan kamu telah diterima pada pukul 14.32 WIT.',
+                                icon: '/assets/icon/success.png',
+                                time: '24 November 2025'
+                            },
+                            {
+                                id: 2,
+                                type: 'error',
+                                title: 'Laporan Ditolak!',
+                                message: 'Perbaiki laporan yang dikirim pada 22 November.',
+                                icon: '/assets/icon/error.png',
+                                time: '23 November 2025'
+                            },
+                            {
+                                id: 3,
+                                type: 'warning',
+                                title: 'Validasi Terlambat!',
+                                message: 'Beberapa laporan membutuhkan perhatian segera.',
+                                icon: '/assets/icon/warning.png',
+                                time: '22 November 2025'
+                            }
+                        ] 
+                    }"
+                    x-init="
+                        window.addEventListener('global-notif', e => {
+                            notifList.unshift(e.detail);
+                        });
+                    "
+                    class="sticky top-0 z-40"
+                >
                     <div class="relative flex items-center gap-35 py-1">
-
-                        {{-- Burger (mobile) --}}
-                        <button id="sb-toggle"
-                            class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-slate-200/60">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor">
-                                <path stroke-width="1.7" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
 
                         {{-- SEARCH + NOTIF --}}
                         <div class="flex-1 flex items-center justify-between">
 
                             {{-- SEARCH --}}
                             <div class="relative flex-1 max-w-[500px]">
-                                <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
+                                <input type="text" placeholder="Cari" 
+                                    class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm shadow-sm placeholder:text-slate-400
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
+
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                    <img src="{{ asset('assets/icon/search.svg') }}"
-                                        class="h-[18px] w-[18px] opacity-70" />
+                                    <img src="{{ asset('assets/icon/search.svg') }}" class="h-[18px] w-[18px] opacity-70" />
                                 </span>
                             </div>
 
-                            {{-- NOTIF --}}
-                            <button class="h-10 w-10 flex items-center justify-center ml-6">
-                                <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
-                            </button>
+                            <div class="relative">
+    
+                                {{-- NOTIF BUTTON --}}
+                                <button @click="notifOpen = !notifOpen"
+                                    class="relative h-10 w-10 flex items-center justify-center ml-6">
+                                    
+                                    <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
+
+                                    <span 
+                                        x-show="notifList.length > 0"
+                                        class="absolute -top-1 -right-1 
+                                            h-4 min-w-[16px] px-[4px]
+                                            bg-red-500 text-white text-[10px] font-semibold
+                                            flex items-center justify-center
+                                            rounded-full"
+                                    >
+                                        <span x-text="notifList.length"></span>
+                                    </span>
+                                </button>
+
+                                {{-- DROPDOWN NOTIF --}}
+                                <div 
+                                    x-show="notifOpen"
+                                    @click.outside="notifOpen = false"
+                                    x-transition
+                                    class="absolute right-0 top-[115%]
+                                        w-[380px] bg-white shadow-lg 
+                                        ring-1 ring-slate-200 rounded-lg 
+                                        p-4 space-y-3 z-[999]"
+                                >
+                                    {{-- daftar notifikasi... --}}
+                                </div>
+
+                            </div>
+
                         </div>
                     </div>
                 </header>

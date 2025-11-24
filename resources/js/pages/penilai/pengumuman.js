@@ -1,5 +1,3 @@
-// resources/js/pages/penilai/pengumuman.js
-
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("pengumuman-root");
     if (!root) return;
@@ -20,130 +18,191 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewBody = document.getElementById("preview-body");
     const previewDate = document.getElementById("preview-date");
 
-    const initialData = (window.PENILAI_PENGUMUMAN_DATA || []).slice();
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    function syncVisibility() {
-        if (!listEl || !emptyEl) return;
+    // ========================================
+    // 1. LOAD LIST PENGUMUMAN
+    // ========================================
+    async function fetchPengumuman() {
+        try {
+            const response = await fetch('/penilai/pengumuman/list', {
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
 
-        if (listEl.children.length === 0) {
-            listEl.classList.add("hidden");
-            emptyEl.classList.remove("hidden");
-        } else {
-            listEl.classList.remove("hidden");
-            emptyEl.classList.add("hidden");
+            if (!response.ok) throw new Error("Gagal memuat data");
+
+            const result = await response.json();
+            renderList(result.data);
+
+        } catch (err) {
+            console.error(err);
+            alert("Terjadi kesalahan saat memuat pengumuman.");
         }
     }
 
+    // ========================================
+    // 2. RENDER LIST
+    // ========================================
+    function renderList(data) {
+        listEl.innerHTML = "";
+
+        if (!data || data.length === 0) {
+            listEl.classList.add("hidden");
+            emptyEl.classList.remove("hidden");
+            return;
+        }
+
+        listEl.classList.remove("hidden");
+        emptyEl.classList.add("hidden");
+
+        data.forEach(item => {
+            listEl.appendChild(createCard(item));
+        });
+    }
+
+    // CARD UI
+    function createCard(item) {
+        const article = document.createElement("article");
+        article.className =
+            "rounded-[18px] border border-[#BFD4FF] bg-[#F4F8FF] px-5 py-4 shadow-sm relative group hover:shadow-md transition-all";
+
+        const dateStr = new Date(item.created_at).toLocaleDateString("id-ID");
+
+        article.innerHTML = `
+            <div class="flex justify-between items-start gap-4">
+                <div>
+                    <h3 class="text-[14px] font-semibold text-slate-800 mb-1">${item.judul}</h3>
+                    <p class="text-[12px] text-slate-700 leading-snug mb-4 whitespace-pre-line">${item.isi_pengumuman}</p>
+                    <p class="text-[11px] text-slate-400">
+                        Diumumkan ${dateStr}
+                        <span class="ml-1 text-slate-300">• Oleh ${item.creator?.name || "Admin"}</span>
+                    </p>
+                </div>
+
+                <button class="btn-delete hidden group-hover:flex items-center justify-center w-8 h-8 rounded-full bg-white text-red-500 shadow-sm hover:bg-red-50"
+                        data-id="${item.id}">
+                    🗑
+                </button>
+            </div>
+        `;
+
+        article.querySelector(".btn-delete").addEventListener("click", (e) => {
+            e.stopPropagation();
+            deletePengumuman(item.id);
+        });
+
+        return article;
+    }
+
+    // ========================================
+    // 3. STORE / CREATE
+    // ========================================
+    async function storePengumuman() {
+        if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
+            alert("Judul dan isi wajib diisi.");
+            return;
+        }
+
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Menyimpan...";
+
+        try {
+            const res = await fetch('/penilai/pengumuman/store', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: JSON.stringify({
+                    judul: inputJudul.value,
+                    isi_pengumuman: inputIsi.value,
+                    unit_kerja_id: null
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Gagal menyimpan");
+
+            closeModal();
+            inputJudul.value = "";
+            inputIsi.value = "";
+
+            alert("Pengumuman berhasil dibuat!");
+
+            fetchPengumuman();
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "🚀 Terbitkan";
+        }
+    }
+
+    // ========================================
+    // 4. DELETE
+    // ========================================
+    async function deletePengumuman(id) {
+        if (!confirm("Hapus pengumuman ini?")) return;
+
+        try {
+            const res = await fetch(`/penilai/pengumuman/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Accept": "application/json",
+                    "X-CSRF-TOKEN": csrfToken
+                }
+            });
+
+            if (!res.ok) throw new Error("Gagal menghapus");
+
+            fetchPengumuman();
+
+        } catch (err) {
+            alert(err.message);
+        }
+    }
+
+    // ========================================
+    // 5. MODAL + PREVIEW
+    // ========================================
     function openModal() {
-        if (!modal) return;
         modal.classList.remove("hidden");
         modal.classList.add("flex");
-        inputJudul && inputJudul.focus();
+        inputJudul.focus();
     }
 
     function closeModal() {
-        if (!modal) return;
         modal.classList.add("hidden");
         modal.classList.remove("flex");
     }
 
-    function formatToday() {
-        const now = new Date();
-        const formatter = new Intl.DateTimeFormat("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-        return "Diumumkan pada tanggal " + formatter.format(now);
-    }
-
     function updatePreview() {
-        if (previewTitle) {
-            previewTitle.textContent =
-                (inputJudul && inputJudul.value.trim()) || "Judul akan tampil di sini";
-        }
-        if (previewBody) {
-            previewBody.textContent =
-                (inputIsi && inputIsi.value.trim()) || "Isi pengumuman";
-        }
-        if (previewDate && !previewDate.dataset.fixed) {
-            previewDate.textContent = formatToday();
-        }
+        previewTitle.textContent = inputJudul.value || "Judul...";
+        previewBody.textContent = inputIsi.value || "Isi pengumuman...";
     }
 
-    function createCard(item) {
-        const article = document.createElement("article");
-        article.className =
-            "rounded-[18px] border border-[#BFD4FF] bg-[#F4F8FF] px-5 py-4 shadow-sm";
+    // BIND EVENTS
+    btnOpen.addEventListener("click", openModal);
+    btnClose.addEventListener("click", closeModal);
+    btnCancel.addEventListener("click", closeModal);
 
-        article.innerHTML = `
-            <h3 class="text-[14px] font-semibold text-slate-800 mb-1">
-                ${item.judul}
-            </h3>
-            <p class="text-[12px] text-slate-700 leading-snug mb-4">
-                ${item.isi}
-            </p>
-            <p class="text-[11px] text-slate-400">
-                ${item.tanggal}
-            </p>
-        `;
-        return article;
-    }
-
-    // ==== Event binding ====
-    btnOpen && btnOpen.addEventListener("click", openModal);
-
-    [btnClose, btnCancel].forEach((btn) => {
-        btn &&
-            btn.addEventListener("click", (e) => {
-                e.preventDefault();
-                closeModal();
-            });
+    btnSubmit.addEventListener("click", (e) => {
+        e.preventDefault();
+        storePengumuman();
     });
 
-    // klik di luar panel -> tutup
-    modal &&
-        modal.addEventListener("click", (e) => {
-            if (e.target === modal) closeModal();
-        });
+    inputJudul.addEventListener("input", updatePreview);
+    inputIsi.addEventListener("input", updatePreview);
 
-    inputJudul && inputJudul.addEventListener("input", updatePreview);
-    inputIsi && inputIsi.addEventListener("input", updatePreview);
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+    });
 
-    btnSubmit &&
-        btnSubmit.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (!inputJudul || !inputIsi || !listEl) return;
-
-            const judul = inputJudul.value.trim();
-            const isi = inputIsi.value.trim();
-
-            if (!judul || !isi) {
-                alert("Judul dan isi pengumuman wajib diisi.");
-                return;
-            }
-
-            const item = {
-                judul,
-                isi,
-                tanggal: formatToday(),
-            };
-
-            const card = createCard(item);
-            listEl.prepend(card);
-
-            inputJudul.value = "";
-            inputIsi.value = "";
-            updatePreview();
-            closeModal();
-            syncVisibility();
-        });
-
-    // Inisialisasi awal
-    if (initialData.length === 0 && listEl && listEl.children.length === 0) {
-        syncVisibility();
-    } else {
-        syncVisibility();
-    }
+    // INITIAL
+    fetchPengumuman();
     updatePreview();
 });

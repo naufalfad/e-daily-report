@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Services\NotificationService; 
-use App\Enums\NotificationType; // IMPORT ENUM WAJIB
+use App\Enums\NotificationType; 
+use Carbon\Carbon; // Tambahan untuk formatting tanggal di pesan
 
 class LkhController extends Controller
 {
@@ -55,7 +56,6 @@ class LkhController extends Controller
     {
         $userId = Auth::id();
         
-        // Optimization: Hapus eager load 'validator' yang mungkin tidak ada relasinya
         $query = LaporanHarian::with(['tupoksi', 'skp', 'bukti'])
             ->where('user_id', $userId);
 
@@ -73,7 +73,7 @@ class LkhController extends Controller
     }
 
     /**
-     * 2. CREATE LKH
+     * 2. CREATE LKH (BEST PRACTICE VERSION)
      */
     public function store(Request $request)
     {
@@ -84,6 +84,7 @@ class LkhController extends Controller
             return response()->json(['message' => 'User belum login / token invalid'], 401);
         }
 
+        // 1. Validasi Input
         $validator = Validator::make($request->all(), [
             'tupoksi_id'        => 'required|exists:tupoksi,id',
             'jenis_kegiatan'    => 'required|in:' . $validAktivitas, 
@@ -104,6 +105,7 @@ class LkhController extends Controller
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
         try {
+            // 2. Mulai Transaksi Database (Atomic Operation)
             DB::beginTransaction();
 
             $finalLat = $request->latitude;
@@ -128,7 +130,7 @@ class LkhController extends Controller
                 }
             }
 
-            // Simpan LKH
+            // 3. Simpan Data LKH Utama
             $lkh = LaporanHarian::create([
                 'user_id'            => $user->id,
                 'skp_id'             => $request->skp_id,
@@ -148,7 +150,7 @@ class LkhController extends Controller
                 'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
-            // --- UPLOAD KE MINIO ---
+            // 4. Upload Bukti ke MinIO
             if ($request->hasFile('bukti')) {
                 foreach ($request->file('bukti') as $file) {
                     $path = $file->store('lkh_bukti', 'minio'); 
@@ -161,18 +163,22 @@ class LkhController extends Controller
                 }
             }
 
-            DB::commit();
-
-            // --- IMPLEMENTASI NOTIFIKASI CERDAS ---
-            // Logika: Kirim notif hanya jika user memiliki atasan
+            // 5. Kirim Notifikasi (DI DALAM TRANSAKSI)
+            // Jika ini error, maka create LKH di atas ikut ter-rollback otomatis
             if ($user->atasan_id) {
+                // Formatting tanggal agar lebih humanis
+                $tglIndo = Carbon::parse($request->tanggal_laporan)->format('d/m/Y');
+                
                 NotificationService::send(
                     $user->atasan_id,
-                    NotificationType::LKH_NEW_SUBMISSION, // Menggunakan Enum yang aman
-                    'Pegawai ' . $user->name . ' mengirim laporan: ' . $request->jenis_kegiatan,
-                    $lkh // Polymorph: Kirim objek utuh agar redirect bisa otomatis ke detail LKH ini
+                    NotificationType::LKH_NEW_SUBMISSION->value, 
+                    "Pegawai {$user->name} mengajukan LKH baru kegiatan '{$request->jenis_kegiatan}' untuk tanggal {$tglIndo}.",
+                    $lkh // Object untuk Polymorphic Redirect
                 );
             }
+
+            // 6. Commit Transaksi (Simpan Permanen)
+            DB::commit();
 
             return response()->json([
                 'message' => 'Laporan Harian berhasil dikirim',
@@ -181,27 +187,31 @@ class LkhController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            // 7. Rollback jika ada error apapun (DB atau Notif)
             DB::rollBack();
+            
+            // Opsional: Clean up file MinIO jika sudah terlanjur terupload (Advanced)
+            // if (isset($path)) Storage::disk('minio')->delete($path);
+
             return response()->json(['message' => 'Gagal mengirim laporan', 'error' => $e->getMessage()], 500);
         }
     }
     
     /**
-     * 3. SHOW DETAIL LKH (Akses dengan ID laporan)
+     * 3. SHOW DETAIL LKH
      */
     public function show($id)
     {
         $user = Auth::user();
         
-        // Defensive check agar tidak crash jika ID bukan angka (misal 'riwayat')
         if (!is_numeric($id)) {
-             return response()->json(['message' => 'ID Laporan tidak valid atau URL salah.'], 400);
+             return response()->json(['message' => 'ID Laporan tidak valid.'], 400);
         }
 
         $lkh = LaporanHarian::with(['tupoksi', 'skp', 'bukti', 'user.bidang', 'user.jabatan', 'atasan']) 
             ->where(function($query) use ($user) {
                 $query->where('user_id', $user->id) // Laporan miliknya
-                      ->orWhere('atasan_id', $user->id); // Laporan yang ditujukan kepadanya
+                      ->orWhere('atasan_id', $user->id); // Laporan bawahan
             })
             ->find($id);
 
@@ -212,13 +222,13 @@ class LkhController extends Controller
 
 
     /**
-     * Mengambil Riwayat LKH berdasarkan Role dan Filter (Untuk Halaman Riwayat)
+     * Mengambil Riwayat LKH
      */
     public function getRiwayat(Request $request)
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['message' => 'User belum login / token invalid'], 401);
+            return response()->json(['message' => 'User belum login'], 401);
         }
         
         $query = LaporanHarian::with([
@@ -231,14 +241,14 @@ class LkhController extends Controller
         $mode = $request->input('mode', 'mine'); 
         $isPenilai = $user->roles()->pluck('nama_role')->contains('Penilai'); 
 
-        // --- LOGIKA FILTER MODE BERDASARKAN ROLE ---
+        // Filter Mode
         if ($isPenilai && $mode === 'subordinates') {
             $query->where('atasan_id', $user->id);
         } else {
             $query->where('user_id', $user->id);
         }
         
-        // --- LOGIKA FILTER TANGGAL ---
+        // Filter Tanggal
         if ($request->filled('from_date')) {
             $query->whereDate('tanggal_laporan', '>=', $request->from_date);
         }
@@ -264,6 +274,7 @@ class LkhController extends Controller
             return response()->json(['message' => 'Laporan yang sudah disetujui tidak bisa dihapus'], 403);
         }
 
+        // Hapus file fisik di MinIO
         foreach ($lkh->bukti as $file) {
             Storage::disk('minio')->delete($file->file_path);
         }

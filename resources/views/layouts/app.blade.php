@@ -135,11 +135,174 @@
                             </div>
 
                             {{-- ICON NOTIF (profile dihapus) --}}
-                            <div class="flex items-center gap-[2px] ml-6">
-                                <button class="h-10 w-10 flex items-center justify-center">
-                                    <img src="{{ asset('assets/icon/notification.svg') }}" alt="Notifikasi"
-                                        class="h-5 w-5">
+                            <div class="relative ml-6" 
+                                x-data="{ 
+                                    open: false, 
+                                    unreadCount: 0, 
+                                    notifications: [],
+                                    isLoading: false,
+
+                                    init() {
+                                        this.fetchNotifications();
+                                        
+                                        // [BEST PRACTICE] Smart Polling
+                                        // Hanya refresh otomatis jika tab sedang aktif dibuka oleh user
+                                        setInterval(() => {
+                                            if (document.visibilityState === 'visible') {
+                                                this.fetchNotifications();
+                                            }
+                                        }, 60000); // Cek setiap 1 menit
+                                    },
+
+                                    async fetchNotifications() {
+                                        try {
+                                            // Tidak perlu loading spinner untuk background fetch agar tidak mengganggu UI
+                                            const response = await fetch('{{ route('notifikasi.index') }}');
+                                            
+                                            if (!response.ok) throw new Error('Network response was not ok');
+                                            
+                                            const data = await response.json();
+                                            this.notifications = data.data;
+                                            this.unreadCount = data.unread_count;
+                                        } catch (error) {
+                                            console.error('Silent Error: Gagal memuat notifikasi', error);
+                                        }
+                                    },
+
+                                    async markRead(id, url) {
+                                        // Optimistic UI Update: Langsung tandai 'read' di tampilan sebelum request selesai
+                                        // Agar UI terasa sangat cepat (Snappy)
+                                        const targetIndex = this.notifications.findIndex(n => n.id === id);
+                                        if (targetIndex !== -1) {
+                                            if(this.notifications[targetIndex].is_read == 0) {
+                                                this.notifications[targetIndex].is_read = 1;
+                                                this.unreadCount = Math.max(0, this.unreadCount - 1);
+                                            }
+                                        }
+
+                                        // Background Process
+                                        fetch(`/core/notifikasi/${id}/read`, {
+                                            method: 'PATCH',
+                                            headers: {
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                'Content-Type': 'application/json'
+                                            }
+                                        });
+
+                                        // Redirect Logic
+                                        if (url && url !== '#' && url !== null) {
+                                            window.location.href = url;
+                                        }
+                                    },
+
+                                    async markAllRead() {
+                                        this.isLoading = true;
+                                        // Optimistic Update
+                                        this.unreadCount = 0;
+                                        this.notifications.forEach(n => n.is_read = 1);
+
+                                        try {
+                                            await fetch('{{ route('notifikasi.markAll') }}', {
+                                                method: 'PATCH',
+                                                headers: {
+                                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                                    'Content-Type': 'application/json'
+                                                }
+                                            });
+                                        } catch (e) {
+                                            console.error(e);
+                                            // Revert jika gagal (jarang terjadi)
+                                            this.fetchNotifications(); 
+                                        }
+                                        this.isLoading = false;
+                                    },
+
+                                    // [Helper] Mempercantik Tampilan Tipe Notifikasi
+                                    formatType(type) {
+                                        if (!type) return 'INFO';
+                                        // Ubah 'LKH_APPROVED' menjadi 'LKH Disetujui'
+                                        // Ubah 'App\Models\LaporanHarian' menjadi 'Laporan Harian'
+                                        return type.replace(/_/g, ' ')
+                                                .replace('App\\Models\\', '')
+                                                .replace(/([A-Z])/g, ' $1') // Tambah spasi sebelum huruf besar
+                                                .trim(); 
+                                    }
+                                }"
+                                @click.outside="open = false"
+                            >
+                                {{-- TOMBOL PEMICU --}}
+                                <button @click="open = !open" class="relative h-10 w-10 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors">
+                                    <img src="{{ asset('assets/icon/notification.svg') }}" alt="Notifikasi" class="h-5 w-5">
+                                    
+                                    {{-- BADGE COUNTER --}}
+                                    <span x-show="unreadCount > 0" 
+                                        x-transition.scale
+                                        class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white"
+                                        x-text="unreadCount > 9 ? '9+' : unreadCount">
+                                    </span>
                                 </button>
+
+                                {{-- DROPDOWN CONTENT --}}
+                                <div x-show="open" 
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 translate-y-2"
+                                    style="display: none;"
+                                    class="absolute right-0 mt-2 w-80 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden">
+                                    
+                                    {{-- HEADER DROPDOWN --}}
+                                    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-slate-50/50">
+                                        <h3 class="text-sm font-semibold text-slate-800">Notifikasi</h3>
+                                        <button @click="markAllRead" class="text-xs text-emerald-600 hover:text-emerald-700 font-medium hover:underline disabled:opacity-50" :disabled="isLoading || unreadCount === 0">
+                                            Tandai semua dibaca
+                                        </button>
+                                    </div>
+
+                                    {{-- LIST NOTIFIKASI --}}
+                                    <div class="max-h-[400px] overflow-y-auto no-scrollbar">
+                                        
+                                        {{-- JIKA KOSONG --}}
+                                        <div x-show="notifications.length === 0" class="py-8 text-center">
+                                            <p class="text-sm text-slate-400">Tidak ada notifikasi baru</p>
+                                        </div>
+
+                                        {{-- LOOP DATA --}}
+                                        <template x-for="notif in notifications" :key="notif.id">
+                                            <div @click="markRead(notif.id, notif.redirect_url)" 
+                                                class="cursor-pointer px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 group">
+                                                <div class="flex gap-3">
+                                                    
+                                                    {{-- Icon Indikator (Belum dibaca = Dot Merah, Sudah = Icon Abu) --}}
+                                                    <div class="flex-shrink-0 mt-1">
+                                                        <template x-if="notif.is_read == 0">
+                                                            <div class="h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-red-100"></div>
+                                                        </template>
+                                                        <template x-if="notif.is_read == 1">
+                                                            <div class="h-2.5 w-2.5 rounded-full bg-slate-300"></div>
+                                                        </template>
+                                                    </div>
+
+                                                    {{-- Konten Teks --}}
+                                                    <div class="flex-1 space-y-1">
+                                                        <p class="text-xs font-medium text-slate-500 uppercase" x-text="notif.tipe_notifikasi"></p>
+                                                        <p class="text-sm text-slate-800 leading-snug" 
+                                                        :class="{ 'font-semibold': notif.is_read == 0 }"
+                                                        x-text="notif.pesan"></p>
+                                                        <p class="text-[11px] text-slate-400 pt-1" x-text="new Date(notif.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })"></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    {{-- FOOTER DROPDOWN --}}
+                                    <div class="bg-slate-50 px-4 py-2 text-center border-t border-slate-100">
+                                        <a href="#" class="text-xs text-slate-500 hover:text-emerald-600">Lihat Semua Riwayat</a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

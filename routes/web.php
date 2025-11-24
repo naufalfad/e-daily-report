@@ -127,4 +127,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Log Aktivitas Admin
     Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
+    
+});
+
+Route::middleware(['auth'])->group(function () {
+    // Notifikasi Endpoints
+    Route::get('/core/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+    Route::patch('/core/notifikasi/mark-all', [NotifikasiController::class, 'markAllRead'])->name('notifikasi.markAll');
+    Route::patch('/core/notifikasi/{id}/read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.markRead');
 });

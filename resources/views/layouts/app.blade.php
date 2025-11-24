@@ -22,11 +22,12 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     {{-- App utama --}}
     @vite(['resources/js/app.js'])
 
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <link rel="stylesheet" href="{{ asset('build/tailwind.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -134,10 +135,9 @@
                         });
                     "
                     class="sticky top-0 z-40"
-                >
+                    >
                     <div class="relative flex items-center gap-35 py-1">
 
-                        {{-- SEARCH + NOTIF --}}
                         <div class="flex-1 flex items-center justify-between">
 
                             {{-- SEARCH --}}
@@ -152,37 +152,58 @@
                                 </span>
                             </div>
 
+                            {{-- NOTIF --}}
                             <div class="relative">
-    
-                                {{-- NOTIF BUTTON --}}
-                                <button @click="notifOpen = !notifOpen"
-                                    class="relative h-10 w-10 flex items-center justify-center ml-6">
-                                    
-                                    <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
 
-                                    <span 
-                                        x-show="notifList.length > 0"
-                                        class="absolute -top-1 -right-1 
-                                            h-4 min-w-[16px] px-[4px]
-                                            bg-red-500 text-white text-[10px] font-semibold
-                                            flex items-center justify-center
-                                            rounded-full"
+                                <button 
+                                    @click="notifOpen = !notifOpen" 
+                                    class="h-10 w-10 flex items-center justify-center ml-3 transition-transform active:scale-95"
                                     >
-                                        <span x-text="notifList.length"></span>
-                                    </span>
+                                    <div class="relative">
+                                        
+                                        <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
+
+                                        <span 
+                                            x-show="notifList.length > 0"
+                                            class="absolute -top-1.5 -right-1.5
+                                                h-4 min-w-[16px] px-[4px]
+                                                bg-red-500 text-white text-[10px] font-semibold
+                                                flex items-center justify-center
+                                                rounded-full
+                                                border-1 border-[#EFF0F5] shadow-sm" 
+                                        >
+                                            <span x-text="notifList.length"></span>
+                                        </span>
+                                    </div>
                                 </button>
 
-                                {{-- DROPDOWN NOTIF --}}
+                                {{-- DROPDOWN --}}
+                                {{-- DROPDOWN CONTAINER --}}
                                 <div 
                                     x-show="notifOpen"
                                     @click.outside="notifOpen = false"
-                                    x-transition
-                                    class="absolute right-0 top-[115%]
-                                        w-[380px] bg-white shadow-lg 
-                                        ring-1 ring-slate-200 rounded-lg 
-                                        p-4 space-y-3 z-[999]"
-                                >
-                                    {{-- daftar notifikasi... --}}
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-y-1"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 translate-y-1"
+                                    class="absolute right-0 top-full mt-2 
+                                        w-[380px] bg-white shadow-xl 
+                                        ring-1 ring-slate-900/5 rounded-xl 
+                                        p-2 space-y-1 z-[999] origin-top-right"
+                                    >
+                                    <template x-for="item in notifList" :key="item.id">
+                                        <div class="flex items-start gap-3 rounded-lg bg-white shadow-sm p-3">
+                                            <img :src="item.icon" class="h-6 w-6 object-contain">
+
+                                            <div class="flex-1">
+                                                <p class="font-semibold text-[14px] text-slate-800" x-text="item.title"></p>
+                                                <p class="text-[12px] text-slate-600 leading-relaxed" x-text="item.message"></p>
+                                                <p class="text-[10px] text-slate-400 mt-1" x-text="item.time"></p>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
 
                             </div>

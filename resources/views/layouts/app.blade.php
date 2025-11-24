@@ -177,7 +177,6 @@
                                     </div>
                                 </button>
 
-                                {{-- DROPDOWN --}}
                                 {{-- DROPDOWN CONTAINER --}}
                                 <div 
                                     x-show="notifOpen"
@@ -188,7 +187,7 @@
                                     x-transition:leave="transition ease-in duration-150"
                                     x-transition:leave-start="opacity-100 translate-y-0"
                                     x-transition:leave-end="opacity-0 translate-y-1"
-                                    class="absolute right-0 top-full mt-2 
+                                    class="absolute right-0 top-9
                                         w-[380px] bg-white shadow-xl 
                                         ring-1 ring-slate-900/5 rounded-xl 
                                         p-2 space-y-1 z-[999] origin-top-right"

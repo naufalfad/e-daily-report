@@ -64,7 +64,7 @@
                     {{-- Lokasi --}}
                     <div class="mt-1.5 flex items-center gap-1.5 text-[13px] text-slate-500">
                         <img src="{{ asset('assets/icon/location.svg') }}" class="h-4 w-4" alt="Lokasi" />
-                        <span class="truncate" id="profile-lokasi">-</span>
+                        <span class="truncate" id="profile-alamat">-</span>
                     </div>
                 </div>
             </div>
@@ -165,17 +165,17 @@
 {{-- Grafik + Aktivitas terkini + Draft Laporan --}}
 <section class="mt-4 grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-4">
 
-    {{-- GRAFIK (kartu tinggi tetap, span 2 baris) --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 lg:row-span-2">
+    {{-- GRAFIK (kartu tinggi, span 2 baris) --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 lg:row-span-2 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Grafik Kinerja Bulanan</h3>
-            <button
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50">
+            <button class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50">
                 {{ date('Y') }}
             </button>
         </div>
 
-        <div class="mt-4 h-[380px] md:h-[420px] lg:h-[450px]">
+        {{-- Area chart fleksibel + canvas --}}
+        <div class="mt-1 flex-1">
             <canvas id="kinerjaBulananChart" class="w-full h-full"></canvas>
         </div>
     </div>
@@ -183,66 +183,10 @@
     {{-- AKTIVITAS TERKINI (kanan atas) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4">
         <h3 class="font-semibold mb-3">Aktivitas Terkini</h3>
-
-        <ul class="space-y-3">
-            @foreach ([
-            [
-            'title' => 'Rapat Koordinasi Pendapatan',
-            'status' => 'Menunggu Validasi Laporan',
-            'date' => '07 Nov 2025',
-            'tone' => 'bg-[#D8A106]/50',
-            'icon' => 'pending.svg',
-            ],
-            [
-            'title' => 'Rapat Kerja Pajak',
-            'status' => 'Laporan Disetujui',
-            'date' => '09 Nov 2025',
-            'tone' => 'bg-[#128C60]/50',
-            'icon' => 'approve.svg',
-            ],
-            [
-            'title' => 'Perjalanan Dinas',
-            'status' => 'Laporan Ditolak',
-            'date' => '13 Nov 2025',
-            'tone' => 'bg-[#B6241C]/50',
-            'icon' => 'reject.svg',
-            ],
-            [
-            'title' => 'Kunjungan Lapangan',
-            'status' => 'Laporan Disetujui',
-            'date' => '15 Nov 2025',
-            'tone' => 'bg-[#128C60]/50',
-            'icon' => 'approve.svg',
-            ],
-            ] as $activity)
-            <li class="flex items-start gap-3">
-                <div class="h-10 w-10 rounded-[10px] flex items-center justify-center {{ $activity['tone'] }}">
-                    <img src="{{ asset('assets/icon/' . $activity['icon']) }}" class="h-5 w-5 opacity-90" alt="">
-                </div>
-
-                <div class="flex-1">
-                    <div class="text-[15px] font-medium leading-snug">
-                        {{ $activity['title'] }}
-                    </div>
-                    <div class="flex justify-between mt-[2px]">
-                        <span class="text-xs text-slate-500 leading-snug">
-                            {{ $activity['status'] }}
-                        </span>
-                        <span class="text-xs text-slate-500 whitespace-nowrap leading-snug">
-                            {{ $activity['date'] }}
-                        </span>
-                    </div>
-                </div>
-            </li>
-            @endforeach
+        <ul class="space-y-3" id="aktivitas-list">
+            {{-- Diisi via JS --}}
+            <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
         </ul>
-    </div>
-
-    {{-- DRAFT LAPORAN (kanan bawah) --}}
-    <ul class="space-y-3" id="aktivitas-list">
-        {{-- Diisi via JS --}}
-        <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
-    </ul>
     </div>
 
 
@@ -252,31 +196,11 @@
             <h3 class="font-semibold">Draft Laporan</h3>
             <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua</a>
         </div>
-        <div class="space-y-2">
-            @foreach ([1, 2] as $i) <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
-                <div>
-                    <div class="font-medium leading-tight text-[15px]">
-                        Rapat Koordinasi Pendapatan
-                    </div>
-                    <div class="text-xs text-slate-500 mt-[2px] leading-tight">
-                        Disimpan: {{ now()->translatedFormat('d F Y | H:i') }}
-                    </div>
-                </div>
 
-                <div class="flex items-center gap-2 ml-2">
-                    <button
-                        class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95">
-                        Lanjutkan
-                    </button>
-                    <button
-                        class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/80">
-                        Hapus
-                    </button>
-                </div>
-            </div>
-            @endforeach
-            <div class="text-xs text-slate-400 text-center py-4">Fitur draft akan segera hadir</div>
-        </div>
+        {{-- LIST DRAFT DINAMIS --}}
+        <ul id="draft-list" class="space-y-2">
+            <li class="text-sm text-slate-500">Memuat...</li> {{-- default loading --}}
+        </ul>
     </div>
 </section>
 
@@ -329,9 +253,9 @@ document.addEventListener("DOMContentLoaded", async function() {
 
         // Set Placeholder untuk data yang tidak ada di JSON
         document.getElementById("profile-nip").innerText = uInfo.nip || "-"; // Tidak ada di JSON
-        document.getElementById("profile-lokasi").innerText = "-"; // Tidak ada di JSON
+        document.getElementById("profile-alamat").innerText = uInfo.alamat || "-"; // Tidak ada di JSON
         document.getElementById("profile-email").innerText = uInfo.email || "-"; // Tidak ada di JSON
-        document.getElementById("profile-telepon").innerText = "-"; // Tidak ada di JSON
+        document.getElementById("profile-telepon").innerText = uInfo.no_telp || "-"; // Tidak ada di JSON
 
         // Menggunakan kolom "Alamat" di UI untuk menampilkan "Target Tahunan" dari skor
         if (data.skoring_utama) {
@@ -426,51 +350,143 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
 
         /* =======================================================
-         * 4. GRAFIK KINERJA BULANAN
-         * =======================================================*/
-        // JSON 'grafik_kinerja' hanya array [0,0,0...].
-        // Kita asumsikan itu data "Total". 
-        // Karena tidak ada breakdown accepted/rejected bulanan di JSON, kita sembunyikan dataset lain atau set 0.
+        * 4. DAFTAR DRAFT
+        * =======================================================*/
+        const draftContainer = document.getElementById("draft-list");
+        draftContainer.innerHTML = ""; // Clear loading
 
-        const rawData = data.grafik_kinerja || [];
-        const labels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        const draft = data.draft_terbaru || [];
 
-        const ctx = document.getElementById('kinerjaBulananChart').getContext('2d');
+        if (draft.length === 0) {
+            draftContainer.innerHTML =
+                '<li class="text-sm text-slate-500">Belum ada draft.</li>';
+        } else {
+            draft.forEach(item => {
 
-        // Gradient
+                // Format tanggal
+                const dateObj = new Date(item.updated_at);
+                const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+
+                const htmlItem = `
+                <li class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-start justify-between gap-4">
+                    
+                    <!-- BAGIAN TEKS -->
+                    <div class="flex-1 min-w-0"> 
+                        <div class="font-medium leading-tight text-[15px] truncate"
+                            title="${item.deskripsi_aktivitas}">
+                            ${item.deskripsi_aktivitas}
+                        </div>
+                        <div class="text-xs text-slate-500 mt-[2px] leading-tight">
+                            Disimpan: ${tanggalFormatted}
+                        </div>
+                    </div>
+
+                    <!-- BAGIAN TOMBOL -->
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button 
+                            onclick="window.location.href='/penilai/input-laporan/${item.id}'"
+                            class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95">
+                            Lanjutkan
+                        </button>
+                        <button type="button" onclick="deleteDraft('${item.id}')"
+                            class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/80">
+                            Hapus
+                        </button>
+                    </div>
+                </li>
+                `;
+                draftContainer.insertAdjacentHTML('beforeend', htmlItem);
+            });
+        }
+
+        /* =======================================================
+        * 5. GRAFIK KINERJA BULANAN (Dari aktivitas_terbaru)
+        * =======================================================*/
+        // Ambil aktivitas terbaru
+        const aktivitasAll = data.grafik_aktivitas || [];
+
+        // Siapkan array 12 bulan, default 0
+        let monthlyTotal = Array(12).fill(0);
+        let monthlyApproved = Array(12).fill(0);
+        let monthlyRejected = Array(12).fill(0);
+
+        // Loop aktivitas dan kelompokkan ke bulan
+        aktivitasAll.forEach(item => {
+            const dateObj = new Date(item.tanggal_laporan);
+            const month = dateObj.getMonth(); // 0-11
+
+            monthlyTotal[month]++;
+
+            if (item.status === "approved") {
+                monthlyApproved[month]++;
+            } 
+            else if (item.status === "rejected" || item.status.includes("reject")) {
+                monthlyRejected[month]++;
+            }
+            else if (item.status === "draft") {
+                monthlyTotal[month]--;
+            }
+        });
+
+        // Label bulan
+        const labels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul",
+                        "Agu", "Sep", "Okt", "Nov", "Des"];
+
+        // Render Chart
+        const ctx = document.getElementById("kinerjaBulananChart").getContext("2d");
+
+        // Gradient Total
         const gradientTotal = ctx.createLinearGradient(0, 0, 0, 260);
-        gradientTotal.addColorStop(0, 'rgba(30, 64, 175, 0.25)');
-        gradientTotal.addColorStop(1, 'rgba(30, 64, 175, 0.00)');
+        gradientTotal.addColorStop(0, "rgba(30, 64, 175, 0.25)");
+        gradientTotal.addColorStop(1, "rgba(30, 64, 175, 0.00)");
 
         new Chart(ctx, {
             type: "line",
             data: {
                 labels: labels,
-                datasets: [{
-                    label: "Kinerja Bulanan",
-                    data: rawData,
-                    borderColor: "#1E40AF",
-                    backgroundColor: gradientTotal,
-                    pointBackgroundColor: "#1E40AF",
-                    fill: true,
-                    tension: 0.3,
-                }]
+                datasets: [
+                    {
+                        label: "Total Laporan",
+                        data: monthlyTotal,
+                        borderColor: "#1E40AF",
+                        backgroundColor: gradientTotal,
+                        pointBackgroundColor: "#1E40AF",
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: "Laporan Diterima",
+                        data: monthlyApproved,
+                        borderColor: "#128C60",
+                        pointBackgroundColor: "#128C60",
+                        fill: false,
+                        tension: 0.3
+                    },
+                    {
+                        label: "Laporan Ditolak",
+                        data: monthlyRejected,
+                        borderColor: "#B6241C",
+                        pointBackgroundColor: "#B6241C",
+                        fill: false,
+                        tension: 0.3
+                    },
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: true,
-                        position: 'bottom'
+                        position: "bottom"
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
+                        beginAtZero: true
                     }
                 }
             }
@@ -480,6 +496,39 @@ document.addEventListener("DOMContentLoaded", async function() {
         console.error("Gagal mengambil data API:", err);
     }
 });
+// Fungsi Hapus Laporan Global
+window.deleteDraft = async function(id) {
+    // 1. Konfirmasi User
+    if(!confirm('Apakah Anda yakin ingin menghapus draft laporan ini?')) {
+        return;
+    }
+
+    const token = localStorage.getItem("auth_token");
+
+    try {
+        // 2. Kirim Request DELETE
+        const response = await fetch(`/api/lkh/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json'
+            }
+        });
+
+        // 3. Cek Response
+        if (response.ok) {
+            alert('Draft berhasil dihapus!');
+            window.location.reload(); 
+        } else {
+            const res = await response.json();
+            alert('Gagal menghapus: ' + (res.message || 'Terjadi kesalahan'));
+        }
+
+    } catch (error) {
+        console.error('Error saat menghapus:', error);
+        alert('Terjadi kesalahan koneksi.');
+    }
+}
 </script>
 @endpush
 

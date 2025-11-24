@@ -106,10 +106,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // 2. Resource Routes (API Resource diganti manual)
         Route::get('/', [LkhController::class, 'index']); // GET /lkh -> List
         Route::post('/', [LkhController::class, 'store']); // POST /lkh -> Create
+        Route::post('/update/{id}', [LkhController::class, 'update']); // PUT /lkh -> Create
         
         // Rute yang menggunakan {id} (Harus DITARUH PALING BAWAH)
         Route::get('/{id}', [LkhController::class, 'show']); // GET /lkh/{id} -> Show
-        Route::put('/{id}', [LkhController::class, 'update']); // PUT /lkh/{id} -> Update
         Route::delete('/{id}', [LkhController::class, 'destroy']); // DELETE /lkh/{id} -> Delete
     });
     // Route::get('/lkh/riwayat', [LkhController::class, 'getRiwayat']); // HAPUS RUTE INI

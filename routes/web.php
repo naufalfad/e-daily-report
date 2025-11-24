@@ -106,9 +106,16 @@ Route::get('/staf/log-aktivitas', function () {
     return view('staf.log-aktivitas');
 })->name('staf.log-aktivitas');
 
+Route::get('/staf/input-lkh/{id?}', function ($id = null) {
+    return view('staf.input-lkh', ['id' => $id]);
+})->name('staf.input-lkh');
+
 Route::prefix('penilai')->name('penilai.')->group(function () {
     Route::get('/dashboard', fn () => view('penilai.dashboard'))->name('dashboard');
-    Route::get('/input-laporan', fn () => view('penilai.input-lkh'))->name('input-laporan');
+    //Route::get('/input-laporan', fn () => view('penilai.input-lkh'))->name('input-laporan');
+    Route::get('/input-laporan/{id?}', function ($id = null) {
+        return view('penilai.input-lkh', ['id' => $id]);
+    })->name('input-laporan');
     Route::get('/input-skp', fn () => view('penilai.input-skp'))->name('input-skp');
     Route::get('/validasi-laporan', fn () => view('penilai.validasi-laporan'))->name('validasi-laporan');
     Route::get('/skoring-kinerja', fn () => view('penilai.skoring-kinerja'))->name('skoring-kinerja');

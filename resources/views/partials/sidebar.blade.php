@@ -129,7 +129,7 @@ $iconMap = [
     <div class="mt-6">
         <form action="{{ route('logout') }}" method="POST">
             @csrf
-            <button class="flex w-full items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#36B37E]/70">
+            <button id="btn-logout" class="flex w-full items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#36B37E]/70">
                 <img src="{{ asset('/assets/icon/logout.svg') }}" class="h-5 w-5" />
                 <span>Logout</span>
             </button>

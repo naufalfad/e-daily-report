@@ -31,41 +31,64 @@ window.Chart = Chart;
 
 // Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {
-    const logoutBtn = document.getElementById('btn-logout');
+       const logoutBtn = document.getElementById('btn-logout');
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async function(e) {
-            e.preventDefault(); // Cegah link default
+            e.preventDefault();
 
-            // Konfirmasi (Opsional)
-            if(!confirm('Apakah Paduka yakin ingin keluar?')) return;
+            Swal.fire({
+                title: 'Yakin ingin keluar?',
+                text: 'Sesi Anda akan diakhiri.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, keluar',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
 
-            // Ambil token dari storage
-            const token = localStorage.getItem('auth_token');
+                    const token = localStorage.getItem('auth_token');
 
-            try {
-                // Panggil API Logout untuk invalidasi token di server
-                if (token) {
-                    await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json'
+                    try {
+                        // API logout
+                        if (token) {
+                            await fetch('/api/logout', {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Accept': 'application/json'
+                                }
+                            });
                         }
-                    });
+                    } catch (error) {
+                        console.warn('Gagal logout server, lanjut logout lokal.');
+                    } finally {
+                        // Hapus sesi lokal
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('user_data');
+
+                        // SweetAlert success
+                        Swal.fire({
+                            title: 'Berhasil Logout',
+                            text: 'Anda telah keluar dari aplikasi.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        // Delay sedikit biar alert sempet tampil
+                        setTimeout(() => {
+                            window.location.href = '/login';
+                        }, 900);
+                    }
                 }
-            } catch (error) {
-                console.warn('Gagal logout di server, tetap lakukan logout lokal.', error);
-            } finally {
-                // Hapus sesi lokal & Redirect
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user_data');
-                window.location.href = '/login';
-            }
+            });
         });
     }
 
-        const notifBadge = document.getElementById("notif-badge");
+    const notifBadge = document.getElementById("notif-badge");
     const notifList = document.getElementById("notif-list");
 
     if (!notifBadge || !notifList) return;

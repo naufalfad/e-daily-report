@@ -145,17 +145,16 @@
                             <div x-data="{ openNotif:false }" class="relative ml-6">
 
                                 {{-- BUTTON --}}
-                                <button @click="openNotif = !openNotif" 
+                                <button @click="openNotif = !openNotif"
                                     class="h-10 w-10 flex items-center justify-center transition-transform active:scale-95">
-                                    
+
                                     {{-- WRAPPER BARU: Agar badge nempel ke icon (bukan ke tombol) --}}
                                     <div class="relative">
                                         <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
 
                                         {{-- BADGE --}}
                                         {{-- Posisi diubah jadi negatif (-top-1.5) biar naik nempel icon --}}
-                                        <span id="notif-badge"
-                                            class="absolute -top-1.5 -right-1.5
+                                        <span id="notif-badge" class="absolute -top-1.5 -right-1.5
                                                 w-4 h-4 min-w-[16px] px-[4px]
                                                 bg-[#B6241C] text-white text-[10px] font-semibold 
                                                 rounded-full flex items-center justify-center shadow-md
@@ -167,14 +166,13 @@
 
                                 {{-- DROPDOWN --}}
                                 {{-- UBAH DISINI: 'mt-2' dihapus, diganti 'top-9' biar naik --}}
-                                <div x-show="openNotif" 
-                                        @click.outside="openNotif = false" 
-                                        x-transition 
-                                        class="absolute right-0 top-9 w-[340px] rounded-[15px] bg-white shadow-xl ring-1 ring-slate-200 p-4 z-50 origin-top-right">
+                                <div x-show="openNotif" @click.outside="openNotif = false" x-transition
+                                    class="absolute right-0 top-9 w-[340px] rounded-[15px] bg-white shadow-xl ring-1 ring-slate-200 p-4 z-50 origin-top-right">
 
                                     <h3 class="text-[14px] font-semibold text-slate-700 mb-3">Pemberitahuan</h3>
 
-                                    <div id="notif-list" class="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
+                                    <div id="notif-list"
+                                        class="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
                                         {{-- List akan diisi oleh JS --}}
                                     </div>
                                 </div>
@@ -201,6 +199,8 @@
     </div>
 
     @stack('scripts')
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

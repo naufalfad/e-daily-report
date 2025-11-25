@@ -1,134 +1,36 @@
 @php
 $title = 'Validasi Laporan';
 
-// DATA DUMMY LAPORAN UNTUK PENILAI
+// DATA DUMMY (Tetap dipertahankan untuk display)
 $rows = [
-[
-'tanggal_dikirim' => '07 Nov 2025 | 12:30',
-'nama_kegiatan' => 'Rapat Koordinasi Internal',
-'waktu' => '13:00 – 15:30',
-'pegawai' => 'Muhammad Naufal',
-'lokasi' => 'Distrik Mimika',
-'detail' => [
-'tanggal' => '07 Nov 2025',
-'nama' => 'Rapat Koordinasi Internal',
-'uraian' => 'Rapat koordinasi rutin membahas progres penerimaan pajak daerah.',
-'output' => 'Notulen Rapat',
-'volume' => '1',
-'satuan' => 'Dokumen',
-'kategori' => 'SKP',
-'jam_mulai' => '13:00',
-'jam_selesai' => '15:30',
-'lokasi' => 'Kantor Bapenda Mimika',
-'pegawai' => 'Muhammad Naufal',
-'bukti' => 'notulen-rapat.pdf',
-],
-],
-[
-'tanggal_dikirim' => '08 Nov 2025 | 14:10',
-'nama_kegiatan' => 'Rapat Koordinasi Pendapatan',
-'waktu' => '14:00 – 17:00',
-'pegawai' => 'Fahrizal Mudzaqi Maulana',
-'lokasi' => 'Kantor Pusat',
-'detail' => [
-'tanggal' => '08 Nov 2025',
-'nama' => 'Rapat Koordinasi Pendapatan',
-'uraian' => 'Pembahasan strategi peningkatan pendapatan asli daerah.',
-'output' => 'Ringkasan Strategi',
-'volume' => '1',
-'satuan' => 'Dokumen',
-'kategori' => 'SKP',
-'jam_mulai' => '14:00',
-'jam_selesai' => '17:00',
-'lokasi' => 'Kantor Pusat Bapenda',
-'pegawai' => 'Fahrizal Mudzaqi Maulana',
-'bukti' => 'ringkasan-strategi.pdf',
-],
-],
-[
-'tanggal_dikirim' => '10 Nov 2025 | 10:10',
-'nama_kegiatan' => 'Perjalanan Dinas',
-'waktu' => '13:00 – 15:00',
-'pegawai' => 'Reno Sebastian',
-'lokasi' => 'Distrik Mimika Baru',
-'detail' => [
-'tanggal' => '10 Nov 2025',
-'nama' => 'Kunjungan Lapangan',
-'uraian' => 'Melakukan kunjungan lapangan untuk proyek jalan.',
-'output' => 'Hasil Kunjungan',
-'volume' => '3',
-'satuan' => 'Jam',
-'kategori' => 'Non - SKP',
-'jam_mulai' => '13:00',
-'jam_selesai' => '16:00',
-'lokasi' => 'Jalan Mimika',
-'pegawai' => 'Reno Sebastian',
-'bukti' => 'foto-kunjungan.zip',
-],
-],
-[
-'tanggal_dikirim' => '11 Nov 2025 | 09:00',
-'nama_kegiatan' => 'Sosialisasi Pajak Daerah',
-'waktu' => '09:00 – 12:00',
-'pegawai' => 'Silvia Lestari',
-'lokasi' => 'Kelurahan Timika',
-'detail' => [
-'tanggal' => '11 Nov 2025',
-'nama' => 'Sosialisasi Pajak Daerah',
-'uraian' => 'Memberikan sosialisasi kewajiban pajak kepada pelaku usaha.',
-'output' => 'Form Daftar Peserta',
-'volume' => '25',
-'satuan' => 'Peserta',
-'kategori' => 'SKP',
-'jam_mulai' => '09:00',
-'jam_selesai' => '12:00',
-'lokasi' => 'Aula Kelurahan Timika',
-'pegawai' => 'Silvia Lestari',
-'bukti' => 'dokumentasi-sosialisasi.pdf',
-],
-],
-[
-'tanggal_dikirim' => '12 Nov 2025 | 16:20',
-'nama_kegiatan' => 'Entry Data Pajak',
-'waktu' => '13:00 – 16:00',
-'pegawai' => 'Agus Prasetyo',
-'lokasi' => 'Kantor Layanan',
-'detail' => [
-'tanggal' => '12 Nov 2025',
-'nama' => 'Entry Data Pajak',
-'uraian' => 'Menginput data wajib pajak ke sistem informasi.',
-'output' => 'Data Wajib Pajak Terupdate',
-'volume' => '50',
-'satuan' => 'Data',
-'kategori' => 'SKP',
-'jam_mulai' => '13:00',
-'jam_selesai' => '16:00',
-'lokasi' => 'Kantor Layanan Bapenda',
-'pegawai' => 'Agus Prasetyo',
-'bukti' => 'log-entry-system.pdf',
-],
-],
-[
-'tanggal_dikirim' => '13 Nov 2025 | 11:45',
-'nama_kegiatan' => 'Monitoring Lapangan',
-'waktu' => '08:00 – 11:30',
-'pegawai' => 'Intan Permata',
-'lokasi' => 'Distrik Kuala Kencana',
-'detail' => [
-'tanggal' => '13 Nov 2025',
-'nama' => 'Monitoring Lapangan',
-'uraian' => 'Monitoring kios pajak di wilayah Kuala Kencana.',
-'output' => 'Laporan Monitoring',
-'volume' => '1',
-'satuan' => 'Laporan',
-'kategori' => 'SKP',
-'jam_mulai' => '08:00',
-'jam_selesai' => '11:30',
-'lokasi' => 'Distrik Kuala Kencana',
-'pegawai' => 'Intan Permata',
-'bukti' => 'laporan-monitoring.pdf',
-],
-],
+    [
+        'tanggal_dikirim' => '07 Nov 2025 | 12:30',
+        'nama_kegiatan' => 'Rapat Koordinasi Internal',
+        'waktu' => '13:00 – 15:30',
+        'pegawai' => 'Muhammad Naufal',
+        'lokasi' => 'Distrik Mimika',
+        'status' => 'waiting_review',
+        'detail' => [], // (Data detail disederhanakan di view ini karena diload via JS/API aslinya)
+    ],
+    [
+        'tanggal_dikirim' => '08 Nov 2025 | 14:10',
+        'nama_kegiatan' => 'Rapat Koordinasi Pendapatan',
+        'waktu' => '14:00 – 17:00',
+        'pegawai' => 'Fahrizal Mudzaqi Maulana',
+        'lokasi' => 'Kantor Pusat',
+        'status' => 'waiting_review', // Disamakan pending sesuai gambar figma
+        'detail' => [],
+    ],
+    [
+        'tanggal_dikirim' => '10 Nov 2025 | 10:10',
+        'nama_kegiatan' => 'Perjalanan Dinas',
+        'waktu' => '13:00 – 15:00',
+        'pegawai' => 'Reno Sebastian',
+        'lokasi' => 'Distrik Mimika Baru',
+        'status' => 'waiting_review',
+        'detail' => [],
+    ],
+    // ... sisa data
 ];
 @endphp
 
@@ -136,216 +38,293 @@ $rows = [
 
 @section('content')
 
-<section class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 flex flex-col h-full">
-    <h2 class="text-[18px] font-normal mb-4">Validasi Laporan</h2>
+{{-- Main Container --}}
+<div class="flex flex-col h-full space-y-6">
+    
+    {{-- Header Section --}}
+    <div class="flex items-end justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Validasi Laporan</h2>
+            <p class="text-sm text-slate-500 mt-1">Tinjau dan validasi laporan kinerja harian pegawai.</p>
+        </div>
+        
+        {{-- Filter/Search Placeholder (Sesuai style Figma biasanya ada di kanan atas) --}}
+        <div class="relative group">
+            <input type="text" placeholder="Cari pegawai..." 
+                class="pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all w-64 shadow-sm">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3 group-focus-within:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+    </div>
 
-    {{-- Tabel daftar laporan --}}
-    <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-full text-sm">
-            <thead class="bg-slate-100 text-[13px] text-slate-600">
-                <tr>
-                    <th class="px-4 py-2 text-left font-medium">Tanggal Dikirim</th>
-                    <th class="px-4 py-2 text-left font-medium">Nama Kegiatan</th>
-                    <th class="px-4 py-2 text-left font-medium">Waktu</th>
-                    <th class="px-4 py-2 text-left font-medium">Pegawai</th>
-                    <th class="px-4 py-2 text-left font-medium">Lokasi</th>
-                    {{-- Kolom Status --}}
-                    <th class="px-4 py-2 text-center font-medium w-[100px]">Status</th> 
-                    <th class="px-4 py-2 text-left font-medium w-[120px]">Aksi</th>
-                </tr>
-            </thead>
-            {{-- Hook untuk JavaScript --}}
-            <tbody class="text-[13px] text-slate-700">
-                @foreach($rows as $row)
-                    <tr class="border-b">
-                        <td class="px-4 py-2">{{ $row['tanggal_dikirim'] }}</td>
-                        <td class="px-4 py-2">{{ $row['nama_kegiatan'] }}</td>
-                        <td class="px-4 py-2">{{ $row['waktu'] }}</td>
-                        <td class="px-4 py-2">{{ $row['pegawai'] }}</td>
-                        <td class="px-4 py-2">{{ $row['lokasi'] }}</td>
-                        <td class="px-4 py-2 text-center">
-                            <span class="text-amber-600 font-medium text-xs">Pending</span>
+    {{-- Table Card --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex-1 flex flex-col">
+        <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                        <th class="px-6 py-5">Tanggal Dikirim</th>
+                        <th class="px-6 py-5">Kegiatan</th>
+                        <th class="px-6 py-5">Waktu</th>
+                        <th class="px-6 py-5">Pegawai</th>
+                        <th class="px-6 py-5">Lokasi</th>
+                        <th class="px-6 py-5 text-center">Status</th>
+                        <th class="px-6 py-5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white" id="lkh-validation-list">
+                    {{-- 
+                        NOTE: ID 'lkh-validation-list' ini penting karena JS Paduka me-render ulang table di sini. 
+                        Namun, untuk tampilan awal (SSR) atau jika JS belum load, kita render dummy data di bawah ini 
+                        agar Paduka bisa melihat hasil styling-nya langsung.
+                    --}}
+                    @foreach($rows as $row)
+                    <tr class="hover:bg-slate-50/80 transition-colors group">
+                        {{-- Tanggal --}}
+                        <td class="px-6 py-4 align-top">
+                            <div class="text-sm font-semibold text-slate-700">{{ explode('|', $row['tanggal_dikirim'])[0] }}</div>
+                            <div class="text-xs text-slate-400 mt-1 font-medium">{{ explode('|', $row['tanggal_dikirim'])[1] ?? '' }}</div>
                         </td>
-                        <td class="px-4 py-2">
-                            <button class="text-blue-600 hover:underline js-open-detail">Detail</button>
+
+                        {{-- Kegiatan --}}
+                        <td class="px-6 py-4 align-top">
+                            <div class="text-sm font-medium text-slate-900">{{ $row['nama_kegiatan'] }}</div>
+                        </td>
+
+                        {{-- Waktu --}}
+                        <td class="px-6 py-4 align-top">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                                {{ $row['waktu'] }}
+                            </span>
+                        </td>
+
+                        {{-- Pegawai --}}
+                        <td class="px-6 py-4 align-top">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold shrink-0">
+                                    {{ substr($row['pegawai'], 0, 1) }}
+                                </div>
+                                <span class="text-sm text-slate-700 font-medium truncate max-w-[150px]">{{ $row['pegawai'] }}</span>
+                            </div>
+                        </td>
+
+                        {{-- Lokasi --}}
+                        <td class="px-6 py-4 align-top">
+                            <div class="text-sm text-slate-500 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                {{ $row['lokasi'] }}
+                            </div>
+                        </td>
+
+                        {{-- Status --}}
+                        <td class="px-6 py-4 align-top text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100">
+                                Pending
+                            </span>
+                        </td>
+
+                        {{-- Aksi --}}
+                        <td class="px-6 py-4 align-top text-right">
+                            <button class="js-open-detail text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline decoration-blue-600/30 underline-offset-4 transition-all">
+                                Lihat Detail
+                            </button>
                         </td>
                     </tr>
-                @endforeach
-            </tbody>
-
-        </table>
-    </div>
-</section>
-
-{{-- ================= MODAL DETAIL LAPORAN ================= --}}
-<div id="modal-detail" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/40" data-lkh-id="">
-    <div class="bg-white rounded-3xl shadow-xl w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
-        {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <h3 class="text-base md:text-lg font-semibold text-slate-800">Detail Laporan</h3>
-            <button type="button"
-                class="js-close-detail h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100">
-                <span class="text-slate-400 text-lg">&times;</span>
-            </button>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-
-        {{-- Body --}}
-        <div class="px-6 py-5 text-sm text-slate-800 space-y-4">
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {{-- Tanggal --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Tanggal Laporan:</div>
-                    <div id="detail-tanggal" class="font-medium">-</div>
-                </div>
-                 {{-- Nama Pegawai --}}
-                <div class="md:col-span-2">
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Pegawai:</div>
-                    <div id="detail-pegawai" class="font-medium text-slate-900">-</div>
-                </div>
-                 {{-- Status --}}
-                <div id="detail-status-wrapper">
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Status:</div>
-                    <div id="detail-status" class="font-medium">-</div>
-                </div>
+        
+        {{-- Footer Table (Pagination Placeholder) --}}
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between">
+            <span class="text-xs text-slate-500">Menampilkan 1-6 dari 120 data</span>
+            <div class="flex gap-2">
+                <button class="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30" disabled><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                <button class="p-1 text-slate-600 hover:text-slate-800"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
             </div>
+        </div>
+    </div>
+</div>
 
-            <div>
-                <div class="text-[12px] text-slate-500 mb-[2px]">Kegiatan:</div>
-                <div id="detail-nama" class="font-medium text-base text-[#155FA6]">-</div>
-            </div>
+{{-- ================= MODAL DETAIL (REVAMPED) ================= --}}
+<div id="modal-detail" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" data-lkh-id="">
+    {{-- Backdrop --}}
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity js-close-detail"></div>
 
-            <div>
-                <div class="text-[12px] text-slate-500 mb-[2px]">Uraian Aktivitas:</div>
-                <div id="detail-uraian" class="leading-snug bg-slate-50 p-3 rounded-lg border border-slate-200">-</div>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2 border-t border-slate-100">
+    {{-- Modal Panel --}}
+    <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-100">
                 
-                {{-- Output --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Output:</div>
-                    <div id="detail-output" class="font-medium">-</div>
-                </div>
-                 {{-- Volume --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Volume:</div>
-                    <div id="detail-volume" class="font-medium">-</div>
-                </div>
-                 {{-- Satuan --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Satuan:</div>
-                    <div id="detail-satuan" class="font-medium">-</div>
-                </div>
-                 {{-- Kategori --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Kategori:</div>
-                    <div id="detail-kategori" class="font-medium">-</div>
-                </div>
-                 {{-- Lokasi --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Lokasi:</div>
-                    <div id="detail-lokasi" class="font-medium">-</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
-                {{-- Jam --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Waktu Kerja:</div>
-                    <div id="detail-jam" class="font-medium text-slate-800">-</div>
-                </div>
-                
-                {{-- Bukti --}}
-                <div>
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Bukti:</div>
-                    <button id="detail-bukti-btn" disabled
-                        class="inline-flex items-center justify-center rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none hover:brightness-95 disabled:opacity-50">
-                        Lihat Bukti
+                {{-- Header Modal --}}
+                <div class="bg-white px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Detail Laporan</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Tinjau detail aktivitas pegawai di bawah ini.</p>
+                    </div>
+                    <button type="button" class="js-close-detail rounded-full p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                
-                 {{-- Catatan Penilai Sebelumnya (Hanya Muncul jika ada) --}}
-                <div id="detail-catatan-wrapper" class="md:col-span-3 hidden">
-                    <div class="text-[12px] text-slate-500 mb-[2px]">Catatan Verifikasi Sebelumnya:</div>
-                    <div id="detail-catatan" class="leading-snug italic text-rose-600 bg-rose-50 p-3 rounded-lg border border-rose-200"></div>
+
+                {{-- Body Modal --}}
+                <div class="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                    
+                    {{-- Informasi Utama (Grid) --}}
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Tanggal</label>
+                            <div id="detail-tanggal" class="text-sm font-medium text-slate-800">-</div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Status</label>
+                            <div id="detail-status">-</div>
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pegawai</label>
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </div>
+                                <div id="detail-pegawai" class="text-sm font-bold text-slate-800">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="h-px bg-slate-100 w-full"></div>
+
+                    {{-- Detail Kegiatan --}}
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Nama Kegiatan</label>
+                            <div id="detail-nama" class="text-base font-bold text-slate-900">-</div>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Uraian Aktivitas</label>
+                            <p id="detail-uraian" class="text-sm text-slate-600 leading-relaxed">-</p>
+                        </div>
+                    </div>
+
+                    {{-- Meta Data (Output, Volume, dll) --}}
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white">
+                        <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
+                            <label class="block text-[10px] text-slate-400 mb-1">Output</label>
+                            <div id="detail-output" class="text-sm font-semibold text-slate-700">-</div>
+                        </div>
+                        <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
+                            <label class="block text-[10px] text-slate-400 mb-1">Volume</label>
+                            <div class="text-sm font-semibold text-slate-700"><span id="detail-volume">-</span> <span id="detail-satuan" class="text-xs font-normal text-slate-500"></span></div>
+                        </div>
+                        <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
+                            <label class="block text-[10px] text-slate-400 mb-1">Kategori</label>
+                            <div id="detail-kategori" class="text-sm font-semibold text-slate-700">-</div>
+                        </div>
+                        <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
+                            <label class="block text-[10px] text-slate-400 mb-1">Waktu</label>
+                            <div id="detail-jam" class="text-sm font-semibold text-slate-700">-</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Lokasi</label>
+                            <div id="detail-lokasi" class="text-sm text-slate-700 font-medium flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                -
+                            </div>
+                        </div>
+                        <div>
+                            <button id="detail-bukti-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                Lihat Bukti
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Catatan Validator (Hidden by default) --}}
+                    <div id="detail-catatan-wrapper" class="hidden mt-4 bg-rose-50 border border-rose-100 rounded-lg p-4">
+                        <div class="flex gap-3">
+                            <div class="shrink-0 text-rose-500">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-rose-800">Catatan Revisi</h4>
+                                <p id="detail-catatan" class="mt-1 text-sm text-rose-700 italic"></p>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
+                {{-- Footer Modal (Actions) --}}
+                <div class="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-200">
+                    <div id="validation-info" class="hidden text-sm text-slate-500 italic flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Laporan ini telah divalidasi.
+                    </div>
+                    
+                    <div id="validation-actions" class="flex items-center gap-3 w-full justify-end">
+                        <button type="button" class="js-open-reject px-4 py-2 bg-white text-rose-600 text-sm font-medium rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition-all focus:ring-2 focus:ring-rose-500/20">
+                            Tolak
+                        </button>
+                        <button type="button" class="js-open-approve px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-emerald-700 transition-all focus:ring-2 focus:ring-emerald-500/30 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Terima Laporan
+                        </button>
+                    </div>
+                </div>
+
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- ================= MODAL APPROVE ================= --}}
+<div id="modal-approve" class="fixed inset-0 z-[60] hidden items-center justify-center" role="dialog">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px]"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+        <div class="p-6">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-4">
+                <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+            </div>
+            <h3 class="text-lg font-bold text-center text-slate-900">Terima Laporan?</h3>
+            <p class="text-sm text-center text-slate-500 mt-2">Laporan yang diterima akan masuk ke rekap kinerja pegawai.</p>
             
+            <div class="mt-4">
+                <label class="block text-xs font-medium text-slate-700 mb-1 ml-1">Catatan Opsional</label>
+                <textarea id="approve-note" rows="3" class="w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Berikan apresiasi atau catatan..."></textarea>
+            </div>
         </div>
-
-        {{-- Footer (ikon centang & silang) - HANYA UNTUK WAITING_REVIEW --}}
-        <div id="validation-actions" class="flex items-center justify-end gap-4 px-6 py-4 border-t border-slate-200">
-             <span class="text-sm text-slate-600 font-medium mr-2">Tindak Lanjut:</span>
-            <button type="button"
-                class="js-open-approve h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500 text-white hover:bg-emerald-600 transition-colors shadow-lg">
-                ✓
-            </button>
-            <button type="button"
-                class="js-open-reject h-10 w-10 flex items-center justify-center rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow-lg">
-                ✕
-            </button>
-        </div>
-        <div id="validation-info" class="hidden px-6 py-4 border-t border-slate-200">
-            <span class="text-sm text-slate-500 italic">Laporan ini sudah divalidasi.</span>
+        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
+            <button type="button" class="js-close-approve w-full inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Batal</button>
+            <button type="button" id="btn-submit-approve" class="w-full inline-flex justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">Ya, Terima</button>
         </div>
     </div>
 </div>
 
-{{-- ================ MODAL TERIMA LAPORAN ================= --}}
-<div id="modal-approve" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
-    <div class="bg-white rounded-2xl shadow-xl w-[95vw] max-w-md">
-        <div class="px-6 py-4 border-b border-slate-200">
-            <h3 class="text-base font-semibold text-slate-800">Terima Laporan</h3>
+{{-- ================= MODAL REJECT ================= --}}
+<div id="modal-reject" class="fixed inset-0 z-[60] hidden items-center justify-center" role="dialog">
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px]"></div>
+    <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
+        <div class="p-6">
+            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 mb-4">
+                <svg class="h-6 w-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </div>
+            <h3 class="text-lg font-bold text-center text-slate-900">Tolak Laporan?</h3>
+            <p class="text-sm text-center text-slate-500 mt-2">Pegawai harus memperbaiki laporan ini. Wajib sertakan alasan.</p>
+            
+            <div class="mt-4">
+                <label class="block text-xs font-medium text-slate-700 mb-1 ml-1">Alasan Penolakan <span class="text-rose-500">*</span></label>
+                <textarea id="reject-note" rows="3" class="w-full rounded-xl border-slate-200 text-sm focus:border-rose-500 focus:ring-rose-500/20" placeholder="Contoh: Bukti foto kurang jelas..."></textarea>
+                <p id="reject-error" class="hidden mt-1 text-xs text-rose-600 font-medium flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    Alasan wajib diisi.
+                </p>
+            </div>
         </div>
-
-        <div class="px-6 py-4 text-sm">
-            <p class="text-[12px] text-slate-500 mb-2">Tambahkan Catatan (Opsional):</p>
-            <textarea id="approve-note" rows="4"
-                class="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                placeholder="Contoh: Kerja bagus! Tingkatkan lagi."></textarea>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-slate-200">
-            <button type="button"
-                class="js-close-approve rounded-[8px] px-3 py-1.5 text-[12px] bg-slate-200 text-slate-700 hover:brightness-95">
-                Batal
-            </button>
-            <button type="button" id="btn-submit-approve"
-                class="rounded-[8px] px-3 py-1.5 text-[12px] bg-[#0E7A4A] text-white hover:brightness-95">
-                Terima Laporan
-            </button>
-        </div>
-    </div>
-</div>
-
-{{-- ================ MODAL TOLAK LAPORAN ================= --}}
-<div id="modal-reject" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/40">
-    <div class="bg-white rounded-2xl shadow-xl w-[95vw] max-w-md">
-        <div class="px-6 py-4 border-b border-slate-200">
-            <h3 class="text-base font-semibold text-slate-800">Tolak Laporan</h3>
-        </div>
-
-        <div class="px-6 py-4 text-sm">
-            <p class="text-[12px] text-slate-500 mb-2">Tambahkan Catatan (Wajib):</p>
-            <textarea id="reject-note" rows="4"
-                class="w-full rounded-[10px] border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-400"
-                placeholder="Contoh: Laporan kurang sesuai, perbaiki lagi!"></textarea>
-
-            <p id="reject-error" class="hidden mt-1 text-[11px] text-rose-600">
-                Catatan wajib diisi sebelum menolak laporan.
-            </p>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 px-6 py-3 border-t border-slate-200">
-            <button type="button"
-                class="js-close-reject rounded-[8px] px-3 py-1.5 text-[12px] bg-slate-200 text-slate-700 hover:brightness-95">
-                Batal
-            </button>
-            <button type="button" id="btn-submit-reject"
-                class="rounded-[8px] px-3 py-1.5 text-[12px] bg-[#B6241C] text-white hover:brightness-95">
-                Tolak Laporan
-            </button>
+        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
+            <button type="button" class="js-close-reject w-full inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Batal</button>
+            <button type="button" id="btn-submit-reject" class="w-full inline-flex justify-center rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">Tolak Laporan</button>
         </div>
     </div>
 </div>
@@ -353,5 +332,5 @@ $rows = [
 @endsection
 
 @push('scripts')
-@vite('resources/js/pages/penilai/validasi-laporan.js') 
+@vite('resources/js/pages/penilai/validasi-laporan.js')
 @endpush

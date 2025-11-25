@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Reset state UI
       if (errorAlert) errorAlert.classList.add('hidden');
       btnSubmit.disabled = true;
       btnText.classList.add('hidden');
@@ -37,14 +36,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const payload = Object.fromEntries(formData.entries());
 
       try {
-        // Fetch Murni tanpa 'credentials: include'
-        // Ini mencegah browser mengirim cookie session yang bikin bentrok CSRF
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-            // Kita hapus header X-CSRF-TOKEN karena kita pakai mode stateless
           },
           body: JSON.stringify(payload)
         });
@@ -66,11 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(errorText);
         }
 
-        // --- SUKSES: Simpan Token di Local Storage ---
         localStorage.setItem('auth_token', result.access_token);
         localStorage.setItem('user_data', JSON.stringify(result.data));
 
-        // --- Logic Redirect (Dikembalikan Lengkap) ---
         const roles = result.data.roles || [];
         const roleName = roles.length > 0 ? (roles[0].nama_role || 'staf').toLowerCase() : 'staf';
 
@@ -95,24 +89,4 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
-  // --- 3. Global Helper: authFetch (Bearer Token Mode) ---
-  // Helper ini memastikan semua request berikutnya membawa token dari Local Storage
-  window.authFetch = async (url, options = {}) => {
-    const token = localStorage.getItem('auth_token');
-    
-    if (!options.headers) options.headers = {};
-    
-    options.headers['Authorization'] = token ? `Bearer ${token}` : '';
-    options.headers['Accept'] = 'application/json';
-    
-    // Handle response global (misal token expired)
-    const response = await fetch(url, options);
-    if (response.status === 401) {
-       localStorage.removeItem('auth_token');
-       window.location.href = '/login';
-    }
-    
-    return response;
-  };
 });

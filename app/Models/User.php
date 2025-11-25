@@ -118,4 +118,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(ActivityLog::class, 'user_id');
     }
+
+    public function hasRole($roleName)
+    {
+        return $this->roles()->where('nama_role', $roleName)->exists();
+    }
+
 }

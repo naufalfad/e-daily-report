@@ -1,3 +1,5 @@
+import { authFetch } from "../../utils/auth-fetch";
+
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("pengumuman-root");
     if (!root) return;
@@ -16,25 +18,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const previewTitle = document.getElementById("preview-title");
     const previewBody = document.getElementById("preview-body");
-    const previewDate = document.getElementById("preview-date");
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    // ========================================
-    // 1. LOAD LIST PENGUMUMAN
-    // ========================================
+    // ======================================================
+    // 1. LOAD LIST PENGUMUMAN (API TOKEN)
+    // ======================================================
     async function fetchPengumuman() {
         try {
-            const response = await fetch('/penilai/pengumuman/list', {
-                headers: {
-                    "Accept": "application/json"
-                }
+            const response = await authFetch("/api/pengumuman", {
+                method: "GET"
             });
 
             if (!response.ok) throw new Error("Gagal memuat data");
 
             const result = await response.json();
-            renderList(result.data);
+            const data = result.data ?? result; // paginate vs non paginate
+
+            renderList(data);
 
         } catch (err) {
             console.error(err);
@@ -42,9 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ========================================
+    // ======================================================
     // 2. RENDER LIST
-    // ========================================
+    // ======================================================
     function renderList(data) {
         listEl.innerHTML = "";
 
@@ -62,7 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // CARD UI
     function createCard(item) {
         const article = document.createElement("article");
         article.className =
@@ -81,24 +79,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     </p>
                 </div>
 
-                <button class="btn-delete hidden group-hover:flex items-center justify-center w-8 h-8 rounded-full bg-white text-red-500 shadow-sm hover:bg-red-50"
+                <button class="btn-delete hidden group-hover:flex items-center justify-center 
+                        w-8 h-8 rounded-full bg-white text-red-500 shadow-sm hover:bg-red-50"
                         data-id="${item.id}">
                     🗑
                 </button>
             </div>
         `;
 
-        article.querySelector(".btn-delete").addEventListener("click", (e) => {
-            e.stopPropagation();
+        article.querySelector(".btn-delete").addEventListener("click", () => {
             deletePengumuman(item.id);
         });
 
         return article;
     }
 
-    // ========================================
-    // 3. STORE / CREATE
-    // ========================================
+    // ======================================================
+    // 3. CREATE / STORE
+    // ======================================================
     async function storePengumuman() {
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
             alert("Judul dan isi wajib diisi.");
@@ -109,12 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
         btnSubmit.textContent = "Menyimpan...";
 
         try {
-            const res = await fetch('/penilai/pengumuman/store', {
+            const res = await authFetch("/api/pengumuman", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "X-CSRF-TOKEN": csrfToken
                 },
                 body: JSON.stringify({
                     judul: inputJudul.value,
@@ -131,7 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
             inputIsi.value = "";
 
             alert("Pengumuman berhasil dibuat!");
-
             fetchPengumuman();
 
         } catch (err) {
@@ -142,19 +137,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ========================================
+    // ======================================================
     // 4. DELETE
-    // ========================================
+    // ======================================================
     async function deletePengumuman(id) {
         if (!confirm("Hapus pengumuman ini?")) return;
 
         try {
-            const res = await fetch(`/penilai/pengumuman/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Accept": "application/json",
-                    "X-CSRF-TOKEN": csrfToken
-                }
+            const res = await authFetch(`/api/pengumuman/${id}`, {
+                method: "DELETE"
             });
 
             if (!res.ok) throw new Error("Gagal menghapus");
@@ -166,9 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ========================================
+    // ======================================================
     // 5. MODAL + PREVIEW
-    // ========================================
+    // ======================================================
     function openModal() {
         modal.classList.remove("hidden");
         modal.classList.add("flex");
@@ -185,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
         previewBody.textContent = inputIsi.value || "Isi pengumuman...";
     }
 
-    // BIND EVENTS
     btnOpen.addEventListener("click", openModal);
     btnClose.addEventListener("click", closeModal);
     btnCancel.addEventListener("click", closeModal);
@@ -202,7 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target === modal) closeModal();
     });
 
-    // INITIAL
     fetchPengumuman();
     updatePreview();
 });

@@ -119,7 +119,6 @@
                             <th class="px-3 py-3 font-medium">Periode</th>
                             <th class="px-3 py-3 font-medium">Sasaran Kinerja</th>
                             <th class="px-3 py-3 font-medium">Indikator</th>
-                            <th class="px-3 py-3 font-medium text-center">Target</th>
                             <th class="px-3 py-3 font-medium text-center">Aksi</th>
                         </tr>
                     </thead>

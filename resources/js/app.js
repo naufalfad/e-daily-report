@@ -11,7 +11,8 @@ import './pages/penilai/input-lkh.js';
 import './pages/penilai/input-skp.js';
 import './pages/penilai/log-aktivitas.js';
 import './pages/penilai/peta-aktivitas.js';
-import './pages/penilai/riwayat.js';
+import { riwayatData } from './pages/penilai/riwayat.js';
+window.riwayatData = riwayatData;
 import './pages/penilai/validasi-laporan.js';
 import './pages/penilai/pengumuman.js';
 import './pages/admin/dashboard.js';
@@ -24,87 +25,26 @@ import './pages/kadis/log-aktivitas.js';
 import './pages/kadis/validasi-laporan.js';
 import './global/loader.js';
 import './global/notification.js';
+import './utils/auth-fetch';
+import Chart from 'chart.js/auto';
+window.Chart = Chart;
 
-
-// =============================================================================
-// GLOBAL LOGIC (Berjalan di semua halaman)
-// =============================================================================
-
-// 1. Logika Sidebar & Modal Profil
-document.addEventListener('DOMContentLoaded', () => {
-    // Sidebar toggle (mobile)
-    const sidebarToggle = document.getElementById('sb-toggle');
-    const sidebar = document.getElementById('sidebar');
-
-    if (sidebarToggle && sidebar) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('-translate-x-full');
-        });
-    }
-
-    // Modal Profil
-    const openProfileBtn = document.getElementById('btn-open-profile-modal');
-    const closeProfileBtn = document.getElementById('btn-close-profile-modal');
-    const profileModal = document.getElementById('profile-modal');
-
-    const openProfileModal = () => {
-        if (!profileModal) return;
-        profileModal.classList.remove('hidden');
-        profileModal.classList.add('flex');
-    };
-
-    const closeProfileModal = () => {
-        if (!profileModal) return;
-        profileModal.classList.add('hidden');
-        profileModal.classList.remove('flex');
-    };
-
-    if (openProfileBtn && profileModal) {
-        openProfileBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            openProfileModal();
-        });
-    }
-
-    if (closeProfileBtn && profileModal) {
-        closeProfileBtn.addEventListener('click', () => {
-            closeProfileModal();
-        });
-    }
-
-    // Klik area gelap di luar card -> tutup
-    if (profileModal) {
-        profileModal.addEventListener('click', (e) => {
-            if (e.target === profileModal) {
-                closeProfileModal();
-            }
-        });
-    }
-
-    // Tekan ESC -> tutup
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && profileModal && !profileModal.classList.contains('hidden')) {
-            closeProfileModal();
-        }
-    });
-});
-
-// 2. Logika Global Logout
+// Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {
-    // Pastikan ID tombol logout di sidebar sesuai ('btn-logout' atau di dalam form)
-    // Jika menggunakan form submit biasa (seperti di kode sidebar sebelumnya),
-    // kode di bawah ini mungkin tidak terpakai, tapi disiapkan untuk AJAX logout.
-    const logoutBtn = document.getElementById('btn-logout'); 
+    const logoutBtn = document.getElementById('btn-logout');
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async function(e) {
-            e.preventDefault(); 
+            e.preventDefault(); // Cegah link default
 
+            // Konfirmasi (Opsional)
             if(!confirm('Apakah Paduka yakin ingin keluar?')) return;
 
+            // Ambil token dari storage
             const token = localStorage.getItem('auth_token');
 
             try {
+                // Panggil API Logout untuk invalidasi token di server
                 if (token) {
                     await fetch('/api/logout', {
                         method: 'POST',
@@ -117,19 +57,15 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.warn('Gagal logout di server, tetap lakukan logout lokal.', error);
             } finally {
-                sessionStorage.setItem('logout_message', 'Anda berhasil logout, silakan login ulang.');
+                // Hapus sesi lokal & Redirect
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user_data');
-                
-                // Redirect via Javascript window location (bukan fetch)
-                // Pastikan route logout di web.php menangani session destroy juga
-                document.getElementById('logout-form').submit(); 
-                // Atau jika full AJAX: window.location.href = '/login';
+                window.location.href = '/login';
             }
         });
     }
 
-    const notifBadge = document.getElementById("notif-badge");
+        const notifBadge = document.getElementById("notif-badge");
     const notifList = document.getElementById("notif-list");
 
     if (!notifBadge || !notifList) return;

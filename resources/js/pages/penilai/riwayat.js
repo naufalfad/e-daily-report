@@ -2,10 +2,12 @@
 //   RIWAYAT LKH — PENILAI (SCRIPT TERPISAH)
 // =====================================================
 
+import { authFetch } from "../../utils/auth-fetch";
+
 export function riwayatData(role) {
 
     const TOKEN = localStorage.getItem('auth_token');
-    const BASE_URL = '/api/lkh/history/riwayat';
+    const BASE_URL = '/api/lkh/riwayat';
 
     return {
         role: role,

@@ -184,12 +184,68 @@
     {{-- AKTIVITAS TERKINI (kanan atas) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4">
         <h3 class="font-semibold mb-3">Aktivitas Terkini</h3>
-        <ul class="space-y-3" id="aktivitas-list">
-            {{-- Diisi via JS --}}
-            <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
+
+        <ul class="space-y-3">
+            @foreach ([
+            [
+            'title' => 'Rapat Koordinasi Pendapatan',
+            'status' => 'Menunggu Validasi Laporan',
+            'date' => '07 Nov 2025',
+            'tone' => 'bg-[#D8A106]/50',
+            'icon' => 'pending.svg',
+            ],
+            [
+            'title' => 'Rapat Kerja Pajak',
+            'status' => 'Laporan Disetujui',
+            'date' => '09 Nov 2025',
+            'tone' => 'bg-[#128C60]/50',
+            'icon' => 'approve.svg',
+            ],
+            [
+            'title' => 'Perjalanan Dinas',
+            'status' => 'Laporan Ditolak',
+            'date' => '13 Nov 2025',
+            'tone' => 'bg-[#B6241C]/50',
+            'icon' => 'reject.svg',
+            ],
+            [
+            'title' => 'Kunjungan Lapangan',
+            'status' => 'Laporan Disetujui',
+            'date' => '15 Nov 2025',
+            'tone' => 'bg-[#128C60]/50',
+            'icon' => 'approve.svg',
+            ],
+            ] as $activity)
+            <li class="flex items-start gap-3">
+
+                {{-- ICON DI KOTAK, GAYA SAMA DENGAN STATISTIK RINGKAS --}}
+                <div class="h-10 w-10 rounded-[10px] flex items-center justify-center 
+                    {{ $activity['tone'] }} ">
+                    <img src="{{ asset('assets/icon/' . $activity['icon']) }}" class="h-5 w-5 opacity-90" alt="">
+                </div>
+
+                {{-- TEKS --}}
+                <div class="flex-1">
+                    {{-- Judul --}}
+                    <div class="text-[15px] font-medium leading-snug">
+                        {{ $activity['title'] }}
+                    </div>
+
+                    {{-- Status + Tanggal sejajar --}}
+                    <div class="flex justify-between mt-[2px]">
+                        <span class="text-xs text-slate-500 leading-snug">
+                            {{ $activity['status'] }}
+                        </span>
+                        <span class="text-xs text-slate-500 whitespace-nowrap leading-snug">
+                            {{ $activity['date'] }}
+                        </span>
+                    </div>
+                </div>
+
+            </li>
+            @endforeach
         </ul>
     </div>
-
 
     {{-- DRAFT LAPORAN --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">

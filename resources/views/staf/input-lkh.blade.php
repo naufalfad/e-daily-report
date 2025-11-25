@@ -842,6 +842,39 @@
             alert('Terjadi kesalahan koneksi.');
         }
     }
+
+     // === TOMBOL DATE ===
+    const btnTanggal = document.getElementById("tanggal_lkh_btn");
+    const inputTanggal = document.getElementById("tanggal_lkh");
+
+    if (btnTanggal && inputTanggal) {
+        btnTanggal.addEventListener("click", (e) => {
+            e.preventDefault();
+            inputTanggal.showPicker ? inputTanggal.showPicker() : inputTanggal.click();
+        });
+    }
+
+    // === TOMBOL JAM MULAI ===
+    const btnJamMulai = document.getElementById("jam_mulai_btn");
+    const inputJamMulai = document.getElementById("jam_mulai");
+
+    if (btnJamMulai && inputJamMulai) {
+        btnJamMulai.addEventListener("click", (e) => {
+            e.preventDefault();
+            inputJamMulai.showPicker ? inputJamMulai.showPicker() : inputJamMulai.click();
+        });
+    }
+
+    // === TOMBOL JAM SELESAI ===
+    const btnJamSelesai = document.getElementById("jam_selesai_btn");
+    const inputJamSelesai = document.getElementById("jam_selesai");
+
+    if (btnJamSelesai && inputJamSelesai) {
+        btnJamSelesai.addEventListener("click", (e) => {
+            e.preventDefault();
+            inputJamSelesai.showPicker ? inputJamSelesai.showPicker() : inputJamSelesai.click();
+        });
+    }
 </script>
 @endpush
 

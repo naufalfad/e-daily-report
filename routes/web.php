@@ -77,9 +77,6 @@ Route::prefix('staf')->name('staf.')->group(function () {
 
 Route::prefix('penilai')->name('penilai.')->group(function () {
 
-    Route::get('/input-laporan/{id?}', function ($id = null) {
-        return view('penilai.input-lkh', ['id' => $id]);
-    })->name('input-laporan');
     Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
     Route::view('/input-laporan', 'penilai.input-lkh')->name('input-laporan');
     Route::get('/input-laporan/{id?}', function ($id = null) {

@@ -23,6 +23,7 @@ import './pages/kadis/dashboard.js';
 import './pages/kadis/log-aktivitas.js';
 import './pages/kadis/validasi-laporan.js';
 import './global/loader.js';
+import './global/notification.js';
 
 // Logika Global untuk Logout
 document.addEventListener('DOMContentLoaded', function() {

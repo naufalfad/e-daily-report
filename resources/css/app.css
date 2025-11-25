@@ -14,3 +14,14 @@
 .tanggal-placeholder:not(:placeholder-shown) {
     color: #374151; /* slate-700 */
 }
+
+/* HIDE SCROLLBAR (Cross‑Browser) */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE & Edge */
+    scrollbar-width: none;     /* Firefox */
+    scroll-behavior: smooth;
+}

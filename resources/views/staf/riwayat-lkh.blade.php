@@ -48,7 +48,7 @@
                     </button>
                 </div>
             </div>
-            
+
             {{-- FILTER KHUSUS PENILAI: MINE vs BAWAHAN --}}
             <div x-show="role === 'penilai'" class="grid md:grid-cols-2 gap-3 mt-3">
                 <div class="md:col-span-1">
@@ -60,7 +60,7 @@
                     </select>
                 </div>
             </div>
-            
+
         </form>
 
         {{-- TABLE --}}
@@ -82,23 +82,27 @@
                 <tbody class="text-slate-700">
                     <template x-if="items.length === 0 && !loading">
                         <tr class="border-t border-slate-100">
-                            <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6" class="px-3 py-4 text-center text-slate-500">Tidak ada data laporan ditemukan.</td>
+                            <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
+                                class="px-3 py-4 text-center text-slate-500">Tidak ada data laporan ditemukan.</td>
                         </tr>
                     </template>
                     <template x-if="loading">
                         <tr class="border-t border-slate-100">
-                            <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6" class="px-3 py-4 text-center text-slate-500">Memuat data...</td>
+                            <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
+                                class="px-3 py-4 text-center text-slate-500">Memuat data...</td>
                         </tr>
                     </template>
                     <template x-for="item in items" :key="item.id">
                         <tr class="border-t border-slate-100 hover:bg-slate-50">
                             <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.tanggal_laporan)"></td>
                             <td class="px-3 py-3" x-text="item.deskripsi_aktivitas"></td>
-                             <template x-if="filter.mode === 'subordinates'">
+                            <template x-if="filter.mode === 'subordinates'">
                                 <td class="px-3 py-3 whitespace-nowrap" x-text="item.user.name || '-'"></td>
                             </template>
                             <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.validated_at)"></td>
-                            <td class="px-3 py-3" x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')"></td>
+                            <td class="px-3 py-3"
+                                x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')">
+                            </td>
                             <td class="px-3 py-3">
                                 <span :class="statusBadgeClass(item.status)" x-text="statusText(item.status)"></span>
                             </td>
@@ -183,7 +187,7 @@
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Bukti:</label>
-                             <button @click="viewBukti(modalData.bukti)" :disabled="modalData.bukti.length === 0"
+                            <button @click="viewBukti(modalData.bukti)" :disabled="modalData.bukti.length === 0"
                                 class="rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95 disabled:opacity-50">
                                 Lihat Bukti (<span x-text="modalData.bukti.length"></span>)
                             </button>
@@ -203,15 +207,17 @@
                             <label class="text-xs text-slate-500">Status:</label>
                             <div x-html="statusBadgeHtml(modalData.status)"></div>
                         </div>
-                        
+
                         <div x-show="modalData.komentar_validasi">
                             <label class="text-xs text-slate-500">Catatan Penilai:</label>
-                            <p class="text-slate-800 italic bg-slate-50 p-2 rounded" x-text="modalData.komentar_validasi"></p>
+                            <p class="text-slate-800 italic bg-slate-50 p-2 rounded"
+                                x-text="modalData.komentar_validasi"></p>
                         </div>
-                        
+
                         <div>
                             <label class="text-xs text-slate-500">Pejabat Penilai Kerja:</label>
-                            <p class="text-slate-800 font-medium" x-text="modalData.validator ? modalData.validator.name : modalData.atasan.name"></p>
+                            <p class="text-slate-800 font-medium"
+                                x-text="modalData.validator ? modalData.validator.name : modalData.atasan.name"></p>
                         </div>
                     </div>
 
@@ -228,149 +234,5 @@
     {{-- END MODAL --}}
 
 </section>
+
 @endsection
-
-@push('scripts')
-<script>
-    function riwayatData(role) {
-        const TOKEN = localStorage.getItem('auth_token');
-        // Endpoint yang sudah diperbaiki untuk menghindari konflik routing
-        const BASE_URL = '/api/lkh/riwayat'; 
-
-        return {
-            role: role,
-            items: [],
-            loading: false,
-            open: false,
-            modalData: null,
-            filter: {
-                from: '',
-                to: '',
-                // Default: Bawahan untuk Penilai, Milik Sendiri untuk yang lain
-                mode: (role === 'penilai' ? 'subordinates' : 'mine') 
-            },
-            
-            // --- Utils (Tidak Berubah) ---
-            formatDate(isoString) {
-                if (!isoString) return '-';
-                try {
-                    const datePart = isoString.split('T')[0];
-                    return new Date(datePart).toLocaleDateString('id-ID', {
-                        day: '2-digit', month: 'long', year: 'numeric'
-                    });
-                } catch (e) {
-                    return isoString;
-                }
-            },
-            
-            statusText(status) {
-                switch(status) {
-                    case 'approved': return 'Diterima';
-                    case 'rejected': return 'Ditolak';
-                    default: return 'Menunggu';
-                }
-            },
-            
-            statusBadgeClass(status) {
-                switch(status) {
-                    case 'approved': return 'rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5';
-                    case 'rejected': return 'rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5';
-                    default: return 'rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5';
-                }
-            },
-
-            statusBadgeHtml(status) {
-                const text = this.statusText(status);
-                const className = this.statusBadgeClass(status);
-                return `<span class="${className}">${text}</span>`;
-            },
-            
-            getLokasi(item) {
-                return item.lokasi_manual_text || (item.is_luar_lokasi ? 'Luar Kantor (GPS)' : 'Dalam Kantor (GPS)');
-            },
-            
-            // --- Core Logic ---
-            async initPage() {
-                await this.fetchData();
-                this.initDatePickers();
-            },
-
-            async fetchData() {
-                this.loading = true;
-                this.items = [];
-
-                let url = BASE_URL + `?role=${this.role}`;
-                
-                // LOGIKA FILTER MODE: Hanya kirim mode jika role-nya penilai
-                if (this.role === 'penilai') {
-                    url += `&mode=${this.filter.mode}`;
-                }
-                
-                // LOGIKA FILTER TANGGAL
-                if (this.filter.from) {
-                    url += `&from_date=${this.filter.from}`;
-                }
-                if (this.filter.to) {
-                    url += `&to_date=${this.filter.to}`;
-                }
-
-                try {
-                    const response = await fetch(url, {
-                        headers: {
-                            'Authorization': `Bearer ${TOKEN}`,
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`Gagal memuat data. Status: ${response.status}. Pesan: ${errorData.message || 'Unknown Error'}`);
-                    }
-                    
-                    const data = await response.json();
-                    this.items = data.data || []; 
-
-                } catch (e) {
-                    console.error('Gagal memuat data riwayat LKH:', e);
-                } finally {
-                    this.loading = false;
-                }
-            },
-
-            filterData() {
-                // Memuat ulang data dengan parameter filter yang baru
-                this.fetchData(); 
-            },
-
-            openModal(item) {
-                this.modalData = item;
-                this.open = true;
-            },
-            
-            viewBukti(buktiArray) {
-                 if (buktiArray && buktiArray.length > 0 && buktiArray[0].file_url) {
-                    window.open(buktiArray[0].file_url, '_blank');
-                 } else {
-                    alert('Tidak ada bukti yang tersedia.');
-                 }
-            },
-
-            initDatePickers() {
-                ['tgl_dari', 'tgl_sampai'].forEach(id => {
-                    const input = document.getElementById(id);
-                    const btn = document.getElementById(id + '_btn');
-                    if (!input || !btn) return;
-
-                    btn.addEventListener('click', () => {
-                        try {
-                            input.showPicker();
-                        } catch {
-                            input.focus();
-                        }
-                    });
-                });
-            }
-        }
-    }
-</script>
-@endpush

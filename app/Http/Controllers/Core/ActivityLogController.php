@@ -24,35 +24,35 @@ class ActivityLogController extends Controller
             'user.roles:id,nama_role'
         ]);
 
-        // Check if Super Admin
+        // Super Admin bisa lihat semua
         $isSuperAdmin = $user->roles()->where('nama_role', 'Super Admin')->exists();
 
         if (!$isSuperAdmin) {
-            // User biasa → lihat log sendiri + log system
+            // User biasa: hanya lihat log miliknya & log system
             $query->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
                   ->orWhereNull('user_id'); // log system
             });
         }
 
-        // ==================================================
+        // ==========================
         // PENCARIAN
-        // ==================================================
+        // ==========================
         if ($request->filled('search')) {
             $search = $request->search;
             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
 
             $query->where(function ($q) use ($search, $like) {
                 $q->where('deskripsi_aktivitas', $like, "%{$search}%")
-                  ->orWhereHas('user', function ($subQ) use ($search, $like) {
-                      $subQ->where('name', $like, "%{$search}%");
+                  ->orWhereHas('user', function ($sub) use ($search, $like) {
+                      $sub->where('name', $like, "%{$search}%");
                   });
             });
         }
 
-        // ==================================================
+        // ==========================
         // FILTER TANGGAL
-        // ==================================================
+        // ==========================
         if ($request->filled('date')) {
             $query->whereDate('timestamp', $request->date);
         }
@@ -63,31 +63,25 @@ class ActivityLogController extends Controller
             $query->whereDate('timestamp', '<=', $request->date_to);
         }
 
-        // ==================================================
-        // SORTING & PAGINATION
-        // ==================================================
+        // ==========================
+        // SORTING + PAGINATION
+        // ==========================
         $logs = $query->orderBy('timestamp', 'desc')->paginate(15);
 
-        // ==================================================
-        // TRANSFORM OUTPUT (AMAN DARI NULL)
-        // ==================================================
+        // ==========================
+        // TRANSFORM OUTPUT
+        // ==========================
         $logs->getCollection()->transform(function ($log) {
+
             $user = $log->user;
             $role = $user ? optional($user->roles->first())->nama_role ?? '-' : '-';
             $timestamp = $log->timestamp ? Carbon::parse($log->timestamp) : null;
-
-            // Tentukan tipe log: create / update / system
-            $tipe =
-                $log->action === 'create' ? 'create' :
-                ($log->action === 'update' ? 'update' : 'system');
 
             return [
                 'id' => $log->id,
                 'user_name' => $user->name ?? 'SYSTEM',
                 'user_role' => $role,
-                'deskripsi_aktivitas' => $log->deskripsi_aktivitas ?? $log->description ?? '',
-                'action' => $log->action,
-                'tipe' => $tipe,
+                'deskripsi_aktivitas' => $log->deskripsi_aktivitas,
                 'timestamp' => $timestamp ? $timestamp->format('Y-m-d H:i:s') : null,
                 'time_ago' => $timestamp ? $timestamp->diffForHumans() : '-',
             ];

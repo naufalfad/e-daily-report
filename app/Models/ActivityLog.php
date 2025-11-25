@@ -15,12 +15,11 @@ class ActivityLog extends Model
     public $timestamps = false; // karena tabel tidak pakai created_at / updated_at
 
     protected $fillable = [
-        'user_id',
-        'action',
-        'description',
-        'ip_address',
-        'user_agent',
+    'user_id',
+    'deskripsi_aktivitas',
+    'timestamp',
     ];
+
 
     protected $casts = [
         'timestamp' => 'datetime',

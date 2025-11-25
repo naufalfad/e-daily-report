@@ -131,6 +131,31 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
     Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
 
-    // Log Aktivitas Admin
-    Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
+    Route::get('/akun-pengguna', fn () => view('admin.akun-pengguna'))
+        ->name('akun-pengguna');
+
+    Route::get('/pengaturan-sistem', fn () => view('admin.pengaturan-sistem'))
+        ->name('pengaturan-sistem');
+
+    Route::get('/log-aktivitas', fn () => view('admin.log-aktivitas'))
+        ->name('log-aktivitas');
+});
+
+// === ROUTE TESTING HALAMAN ERROR & MAINTENANCE ===
+
+// Test generic error page (error.blade.php)
+Route::get('/error', function () {
+    return view('errors.error', [
+        'message' => 'Contoh pesan error dari sistem.'
+    ]);
+});
+
+// Test halaman maintenance (maintenance.blade.php)
+Route::get('/maintenance', function () {
+    return view('errors.maintenance');
+});
+
+// Test halaman 503 (503.blade.php)
+Route::get('/503', function () {
+    return view('errors.503');
 });

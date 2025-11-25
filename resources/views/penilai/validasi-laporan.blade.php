@@ -155,9 +155,24 @@ $rows = [
                 </tr>
             </thead>
             {{-- Hook untuk JavaScript --}}
-            <tbody id="lkh-validation-list" class="text-[13px] text-slate-700">
-                <tr><td colspan="7" class="p-4 text-center text-slate-500">Memuat data...</td></tr>
+            <tbody class="text-[13px] text-slate-700">
+                @foreach($rows as $row)
+                    <tr class="border-b">
+                        <td class="px-4 py-2">{{ $row['tanggal_dikirim'] }}</td>
+                        <td class="px-4 py-2">{{ $row['nama_kegiatan'] }}</td>
+                        <td class="px-4 py-2">{{ $row['waktu'] }}</td>
+                        <td class="px-4 py-2">{{ $row['pegawai'] }}</td>
+                        <td class="px-4 py-2">{{ $row['lokasi'] }}</td>
+                        <td class="px-4 py-2 text-center">
+                            <span class="text-amber-600 font-medium text-xs">Pending</span>
+                        </td>
+                        <td class="px-4 py-2">
+                            <button class="text-blue-600 hover:underline js-open-detail">Detail</button>
+                        </td>
+                    </tr>
+                @endforeach
             </tbody>
+
         </table>
     </div>
 </section>

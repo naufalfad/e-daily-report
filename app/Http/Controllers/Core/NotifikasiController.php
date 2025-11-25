@@ -4,102 +4,87 @@ namespace App\Http\Controllers\Core;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notifikasi;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\NotificationType;
 
 class NotifikasiController extends Controller
 {
-    /**
-     * 1. LIST NOTIFIKASI (Inbox User) - REFACTORED FOR POLYMORPH
-     * Mengembalikan daftar notifikasi beserta URL redirect dinamis.
-     */
     public function index()
     {
         $userId = Auth::id();
 
-        // Eager Load 'related' agar tidak N+1 Query saat meloop data polymorphic
-        $notif = Notifikasi::with('related') 
+        // Ambil mentah dulu
+        $notifRaw = Notifikasi::with('related')
             ->where('user_id_recipient', $userId)
             ->latest()
-            ->limit(20) 
-            ->get()
-            ->map(function ($item) {
-                // Transformasi Data: Menambahkan 'redirect_url' dinamis
-                return $this->formatNotification($item);
-            });
-            
-        $unreadCount = Notifikasi::where('user_id_recipient', $userId)
-            ->where('is_read', false)
-            ->count();
+            ->limit(50)
+            ->get();
 
-        return response()->json([
-            'unread_count' => $unreadCount,
-            'data' => $notif
-        ]);
-    }
+        // =============================
+        // GROUPING AKUMULASI LKH BARU
+        // =============================
+        $grouped = $notifRaw->groupBy(fn($n) => $n->tipe_notifikasi);
 
-    /**
-     * Helper Logic untuk menentukan URL Redirect berdasarkan Tipe Model
-     * Ini adalah penerapan Pattern Strategy sederhana.
-     */
-    private function formatNotification($item)
-    {
-        $redirectUrl = '#'; // Default jika tidak ada relasi
+        $finalList = collect();
 
-        if ($item->related_type && $item->related_id) {
-            // Logika Routing Dinamis
-            // Sesuaikan path ini dengan route frontend Yang Mulia
-            switch ($item->related_type) {
-                case 'App\Models\LaporanHarian':
-                    // Jika user adalah Penilai/Atasan, mungkin redirect ke halaman validasi
-                    // Jika user adalah Pegawai, redirect ke halaman detail riwayat
-                    $redirectUrl = Auth::user()->hasRole('Atasan') 
-                        ? "/penilai/validasi-lkh/{$item->related_id}" 
-                        : "/pegawai/riwayat-lkh/{$item->related_id}";
-                    break;
+        foreach ($grouped as $type => $items) {
 
-                case 'App\Models\Pengumuman':
-                    $redirectUrl = "/dashboard/pengumuman/{$item->related_id}";
-                    break;
-                
-                case 'App\Models\Skp':
-                    $redirectUrl = "/pegawai/skp/{$item->related_id}";
-                    break;
+            $enumType = NotificationType::tryFrom($type);
+
+            // Jika enum tidak dikenal → skip
+            if (!$enumType) continue;
+
+            // === CASE 1: AKUMULASI LKH MASUK ===
+            if ($type === NotificationType::LKH_NEW_SUBMISSION->value) {
+
+                $total = $items->count();
+                $latest = $items->first();
+
+                $finalList->push([
+                    'id'            => $latest->id,
+                    'tipe'          => $type,
+                    'title'         => "Ada $total Laporan Menunggu Validasi",
+                    'pesan'         => "Terdapat $total laporan yang baru diajukan bawahan Anda dan menunggu untuk divalidasi.",
+                    'created_at'    => $latest->created_at,
+                    'redirect_url'  => "/penilai/validasi-lkh",
+                ]);
+
+                continue;
+            }
+
+            // === CASE 2: BUKAN AKUMULASI ===
+            foreach ($items as $item) {
+
+                $finalList->push([
+                    'id'            => $item->id,
+                    'tipe'          => $type,
+                    'title'         => $enumType->title(),
+                    'pesan'         => $item->pesan ?: $enumType->defaultMessage(),
+                    'created_at'    => $item->created_at,
+                    'redirect_url'  => $this->resolveRedirect($item),
+                ]);
             }
         }
 
-        // Kembalikan object notifikasi asli + field baru
-        $item->redirect_url = $redirectUrl;
-        
-        // Opsional: Bersihkan nama class agar lebih cantik di JSON (misal: "LaporanHarian" saja)
-        $item->related_model = class_basename($item->related_type);
-
-        return $item;
+        return response()->json([
+            'unread_count' => Notifikasi::where('user_id_recipient', $userId)->where('is_read', false)->count(),
+            'data'         => $finalList->sortByDesc('created_at')->values()
+        ]);
     }
 
-    /**
-     * 2. MARK AS READ (Tandai Sudah Dibaca)
-     */
-    public function markAsRead($id)
+    private function resolveRedirect($item)
     {
-        $notif = Notifikasi::where('user_id_recipient', Auth::id())->find($id);
+        if (!$item->related_type) return "#";
 
-        if ($notif) {
-            $notif->update(['is_read' => true]);
-        }
+        return match ($item->related_type) {
+            'App\Models\LaporanHarian' =>
+                Auth::user()->hasRole('Atasan')
+                    ? "/penilai/validasi-lkh/{$item->related_id}"
+                    : "/pegawai/riwayat-lkh/{$item->related_id}",
 
-        return response()->json(['message' => 'Notifikasi ditandai sudah dibaca']);
-    }
-
-    /**
-     * 3. MARK ALL READ (Tandai Semua Dibaca)
-     */
-    public function markAllRead()
-    {
-        Notifikasi::where('user_id_recipient', Auth::id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
-
-        return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca']);
+            'App\Models\Pengumuman' => "/dashboard/pengumuman/{$item->related_id}",
+            'App\Models\Skp' => "/pegawai/skp/{$item->related_id}",
+            default => "#",
+        };
     }
 }

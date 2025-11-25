@@ -91,13 +91,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // LKH
     Route::prefix('lkh')->group(function () {
+        // 1. Spesifik / Utility Routes (Ditaruh di atas)
         Route::get('riwayat', [LkhController::class, 'getRiwayat']);
         Route::get('referensi', [LkhController::class, 'getReferensi']);
-        Route::get('/', [LkhController::class, 'index']);
-        Route::post('/', [LkhController::class, 'store']);
-        Route::get('{id}', [LkhController::class, 'show']);
-        Route::put('{id}', [LkhController::class, 'update']);
-        Route::delete('{id}', [LkhController::class, 'destroy']);
+                
+        // 2. Resource Routes (API Resource diganti manual)
+        Route::get('/', [LkhController::class, 'index']); // GET /lkh -> List
+        Route::post('/', [LkhController::class, 'store']); // POST /lkh -> Create
+        Route::post('/update/{id}', [LkhController::class, 'update']); // PUT /lkh -> Create
+        
+        // Rute yang menggunakan {id} (Harus DITARUH PALING BAWAH)
+        Route::get('/{id}', [LkhController::class, 'show']); // GET /lkh/{id} -> Show
+        Route::delete('/{id}', [LkhController::class, 'destroy']); // DELETE /lkh/{id} -> Delete
     });
 
     // Validator

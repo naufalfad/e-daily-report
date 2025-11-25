@@ -50,6 +50,9 @@ Route::prefix('staf')->name('staf.')->group(function () {
 
     Route::view('/dashboard', 'staf.dashboard')->name('dashboard');
     Route::view('/input-lkh', 'staf.input-lkh')->name('input-lkh');
+    Route::get('/input-lkh/{id?}', function ($id = null) {
+        return view('staf.input-lkh', ['id' => $id]);
+    })->name('input-lkh');
     Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
     Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
     Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
@@ -76,6 +79,9 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
 
     Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
     Route::view('/input-laporan', 'penilai.input-lkh')->name('input-laporan');
+    Route::get('/input-laporan/{id?}', function ($id = null) {
+        return view('penilai.input-lkh', ['id' => $id]);
+    })->name('input-laporan');
     Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
     Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
     Route::view('/skoring-kinerja', 'penilai.skoring-kinerja')->name('skoring-kinerja');

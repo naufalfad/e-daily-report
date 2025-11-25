@@ -36,6 +36,7 @@ class TestingSeeder extends Seeder
             
             $globalPassword = Hash::make('password123');
             $this->command->warn('Semua password diatur menjadi: password123');
+            $globalAlamat = 'Jl. Yos Sudarso, Nawaripi, Kec. Mimika Baru, Kabupaten Mimika, Papua Tengah 99971';
 
             // =================================================================
             // 1. MASTER DATA
@@ -78,7 +79,8 @@ class TestingSeeder extends Seeder
                     'jabatan_id' => $jKaban->id,
                     'bidang_id' => $bPimpinan->id,
                     'atasan_id' => null,
-                    'email' => null
+                    'email' => null,
+                    'alamat' => $globalAlamat
                 ]
             );
             $kaban->roles()->sync([$rKadis->id, $rPenilai->id]);
@@ -94,7 +96,8 @@ class TestingSeeder extends Seeder
                     'jabatan_id' => $jSekban->id,
                     'bidang_id' => $bSekretariat->id,
                     'atasan_id' => $kaban->id,
-                    'email' => null
+                    'email' => null,
+                    'alamat' => $globalAlamat
                 ]
             );
             $sekban->roles()->sync([$rPenilai->id]);
@@ -110,7 +113,8 @@ class TestingSeeder extends Seeder
                     'jabatan_id' => $jKabid->id,
                     'bidang_id' => $bPbb->id,
                     'atasan_id' => $kaban->id,
-                    'email' => null
+                    'email' => null,
+                    'alamat' => $globalAlamat
                 ]
             );
             $kabidPbb->roles()->sync([$rPenilai->id]);
@@ -126,7 +130,8 @@ class TestingSeeder extends Seeder
                     'jabatan_id' => $jKasub->id,
                     'bidang_id' => $bPbb->id,
                     'atasan_id' => $kabidPbb->id,
-                    'email' => null
+                    'email' => null,
+                    'alamat' => $globalAlamat
                 ]
             );
             $kasubPbbData->roles()->sync([$rPenilai->id]);
@@ -142,7 +147,8 @@ class TestingSeeder extends Seeder
                     'jabatan_id' => $jStaf->id,
                     'bidang_id' => $bPbb->id,
                     'atasan_id' => $kasubPbbData->id,
-                    'email' => null
+                    'email' => null,
+                    'alamat' => $globalAlamat
                 ]
             );
             $stafPbbData->roles()->sync([$rPegawai->id]);
@@ -158,7 +164,8 @@ class TestingSeeder extends Seeder
                     'jabatan_id' => $jKasub->id,
                     'bidang_id' => $bSekretariat->id,
                     'atasan_id' => $sekban->id,
-                    'email' => null
+                    'email' => null,
+                    'alamat' => $globalAlamat
                 ]
             );
             $kasubUmum->roles()->sync([$rPenilai->id]);

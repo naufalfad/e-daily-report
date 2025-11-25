@@ -79,6 +79,7 @@ class LkhController extends Controller
     {
         $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
         $user = Auth::user();
+        $status = $request->status;
 
         if (!$user) {
             return response()->json(['message' => 'User belum login / token invalid'], 401);
@@ -143,7 +144,7 @@ class LkhController extends Controller
                 'output_hasil_kerja' => $request->output_hasil_kerja,
                 'volume'             => $request->volume,
                 'satuan'             => $request->satuan,
-                'status'             => 'waiting_review',
+                'status'             => $status,
                 'master_kelurahan_id'=> $request->master_kelurahan_id,
                 'is_luar_lokasi'     => $isLuarLokasi,
                 'atasan_id'          => $user->atasan_id,
@@ -282,5 +283,151 @@ class LkhController extends Controller
         $lkh->delete(); 
 
         return response()->json(['message' => 'Laporan berhasil dihapus']);
+    }
+
+    /**
+     * 5. UPDATE LKH
+     */
+    public function update(Request $request, $id)
+    {
+        $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json(['message' => 'User belum login / token invalid'], 401);
+        }
+
+        $lkh = LaporanHarian::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+
+        // VALIDASI — semua optional kecuali yang wajib
+        $validator = Validator::make($request->all(), [
+            'tupoksi_id'        => 'sometimes|required|exists:tupoksi,id',
+            'jenis_kegiatan'    => 'sometimes|required|in:' . $validAktivitas,
+            'skp_id'            => 'nullable|exists:skp,id',
+            'tanggal_laporan'   => 'sometimes|required|date',
+            'waktu_mulai'       => 'sometimes|required',
+            'waktu_selesai'     => 'sometimes|required|after:waktu_mulai',
+            'deskripsi_aktivitas'=> 'sometimes|required|string',
+            'output_hasil_kerja'=> 'sometimes|required|string',
+            'volume'            => 'sometimes|required|integer|min:1',
+            'satuan'            => 'sometimes|required|string|max:50',
+            'latitude'          => 'nullable|numeric',
+            'longitude'         => 'nullable|numeric',
+            'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id',
+
+            // upload optional
+            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+
+            // jika ingin hapus bukti tertentu
+            'hapus_bukti'       => 'array',
+            'hapus_bukti.*'     => 'integer|exists:lkh_bukti,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Lokasi
+            $finalLat = $request->latitude ?? $lkh->latitude;
+            $finalLng = $request->longitude ?? $lkh->longitude;
+
+            // === GEOFENCING ===
+            $officeLat = config('services.office.lat');
+            $officeLng = config('services.office.lng');
+            $radius    = config('services.office.radius');
+            $isLuarLokasi = true;
+
+            if ($officeLat && $officeLng && $finalLat && $finalLng) {
+                $distanceQuery = DB::selectOne("
+                    SELECT ST_DistanceSphere(
+                        ST_Point(?, ?),
+                        ST_Point(?, ?)
+                    ) as distance
+                ", [$finalLng, $finalLat, $officeLng, $officeLat]);
+
+                if ($distanceQuery->distance <= $radius) {
+                    $isLuarLokasi = false;
+                }
+            }
+
+            // === UPDATE LKH ===
+            $lkh->update([
+                'skp_id'             => $request->skp_id ?? $lkh->skp_id,
+                'tupoksi_id'         => $request->tupoksi_id ?? $lkh->tupoksi_id,
+                'jenis_kegiatan'     => $request->jenis_kegiatan ?? $lkh->jenis_kegiatan,
+                'tanggal_laporan'    => $request->tanggal_laporan ?? $lkh->tanggal_laporan,
+                'waktu_mulai'        => $request->waktu_mulai ?? $lkh->waktu_mulai,
+                'waktu_selesai'      => $request->waktu_selesai ?? $lkh->waktu_selesai,
+                'deskripsi_aktivitas'=> $request->deskripsi_aktivitas ?? $lkh->deskripsi_aktivitas,
+                'output_hasil_kerja' => $request->output_hasil_kerja ?? $lkh->output_hasil_kerja,
+                'volume'             => $request->volume ?? $lkh->volume,
+                'satuan'             => $request->satuan ?? $lkh->satuan,
+                'status'             => $request->status ?? $lkh->status,
+                'master_kelurahan_id'=> $request->master_kelurahan_id ?? $lkh->master_kelurahan_id,
+                'is_luar_lokasi'     => $isLuarLokasi,
+                'lokasi' => ($finalLat && $finalLng)
+                            ? DB::raw("ST_SetSRID(ST_MakePoint($finalLng, $finalLat), 4326)")
+                            : $lkh->lokasi
+            ]);
+
+            // === HAPUS BUKTI ===
+            if ($request->hapus_bukti) {
+                foreach ($request->hapus_bukti as $buktiId) {
+                    $bukti = LkhBukti::where('id', $buktiId)
+                                ->where('laporan_id', $lkh->id)
+                                ->first();
+                    if ($bukti) {
+                        Storage::disk('minio')->delete($bukti->file_path);
+                        $bukti->delete();
+                    }
+                }
+            }
+
+            // === TAMBAH BUKTI BARU ===
+            if ($request->hasFile('bukti')) {
+                foreach ($request->file('bukti') as $file) {
+                    $path = $file->store('lkh_bukti', 'minio');
+
+                    LkhBukti::create([
+                        'laporan_id'         => $lkh->id,
+                        'file_path'          => $path,
+                        'file_name_original' => $file->getClientOriginalName(),
+                        'file_type'          => $file->getClientOriginalExtension(),
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            // Kirim notifikasi jika status berubah (misal dari draft ke dikirim)
+            if ($user->atasan_id && $request->status) {
+                NotificationService::send(
+                    $user->atasan_id,
+                    'lkh_update_submission',
+                    'Pegawai ' . $user->name . ' memperbarui laporan: ' . $lkh->jenis_kegiatan,
+                    $lkh->id
+                );
+            }
+
+            return response()->json([
+                'message' => 'Laporan Harian berhasil diperbarui',
+                'is_luar_lokasi' => $isLuarLokasi,
+                'data' => $lkh->load(['bukti', 'tupoksi'])
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Gagal memperbarui laporan',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

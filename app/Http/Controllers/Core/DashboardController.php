@@ -50,7 +50,7 @@ class DashboardController extends Controller
              $queryLkhSkp->whereMonth('tanggal_laporan', $month);
         }
 
-        $totalLkhSkp = $queryLkhSkp->count();
+        $totalLkhSkp = $queryLkhSkp->whereNot('status', 'draft')->count();
         $lkhSkpApproved = (clone $queryLkhSkp)->where('status', 'approved')->count();
         $lkhSkpRejected = (clone $queryLkhSkp)->where('status', 'rejected')->count();
 
@@ -69,7 +69,7 @@ class DashboardController extends Controller
              $queryNonSkp->whereMonth('tanggal_laporan', $month);
         }
 
-        $totalNonSkp = $queryNonSkp->count();
+        $totalNonSkp = $queryNonSkp->whereNot('status', 'draft')->count();
         $nonSkpApproved = (clone $queryNonSkp)->where('status', 'approved')->count();
         $nonSkpRejected = (clone $queryNonSkp)->where('status', 'rejected')->count();
 
@@ -79,23 +79,23 @@ class DashboardController extends Controller
         // 4. GRAFIK KINERJA BULANAN
         // ==========================================
 
-        $chartData = LaporanHarian::select(
-                DB::raw('COUNT(id) as count'), 
-                DB::raw('EXTRACT(MONTH FROM tanggal_laporan) AS month')
-            )
-            ->where('user_id', $userId)
-            ->where('status', 'approved')
-            ->whereYear('tanggal_laporan', $year)
-            ->groupBy('month')
-            ->orderBy('month')
-            ->pluck('count', 'month')
-            ->toArray();
+        // $chartData = LaporanHarian::select(
+        //         DB::raw('COUNT(id) as count'), 
+        //         DB::raw('EXTRACT(MONTH FROM tanggal_laporan) AS month')
+        //     )
+        //     ->where('user_id', $userId)
+        //     ->where('status', 'approved')
+        //     ->whereYear('tanggal_laporan', $year)
+        //     ->groupBy('month')
+        //     ->orderBy('month')
+        //     ->pluck('count', 'month')
+        //     ->toArray();
 
-        // Mapping ke array 1-12
-        $monthlyChart = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $monthlyChart[] = isset($chartData[$i]) ? (int) $chartData[$i] : 0;
-        }
+        // // Mapping ke array 1-12
+        // $monthlyChart = [];
+        // for ($i = 1; $i <= 12; $i++) {
+        //     $monthlyChart[] = isset($chartData[$i]) ? (int) $chartData[$i] : 0;
+        // }
 
         // ==========================================
         // 5. AKTIVITAS TERBARU
@@ -107,11 +107,26 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $graphActivities = LaporanHarian::with('skp')
+            ->where('user_id', $userId)
+            ->whereNotNull('skp_id')
+            ->latest('created_at')
+            ->get();
+
+        $recentDrafts = LaporanHarian::with('skp')
+            ->where('user_id', $userId)
+            ->where('status', 'draft')
+            ->latest('created_at')
+            ->limit(5)
+            ->get();
+
         return response()->json([
             'user_info' => [
                 'name' => $user->name,
                 'nip' => $user->nip,
                 'email' => $user->email,
+                'no_telp' => $user->no_telp,
+                'alamat' => $user->alamat,
                 'jabatan' => $user->jabatan->nama_jabatan ?? '-',
                 'unit' => $user->unitKerja->nama_unit ?? '-'
             ],
@@ -131,8 +146,10 @@ class DashboardController extends Controller
                 'total_diajukan' => $totalNonSkp,
                 'persen_diterima' => $persenNonSkpDiterima,
             ],
-            'grafik_kinerja' => $monthlyChart,
-            'aktivitas_terbaru' => $recentActivities
+            //'grafik_kinerja' => $monthlyChart,
+            'grafik_aktivitas' => $graphActivities,
+            'aktivitas_terbaru' => $recentActivities,
+            'draft_terbaru' => $recentDrafts,
         ]);
     }
 }

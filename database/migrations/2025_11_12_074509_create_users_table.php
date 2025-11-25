@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('foto_profil')->nullable();
             $table->string('no_telp', 50)->nullable();
+            $table->string('alamat', 100)->nullable();
             
             $table->foreignId('unit_kerja_id')->nullable()->constrained('unit_kerja')->onDelete('set null');
             $table->foreignId('jabatan_id')->nullable()->constrained('jabatan')->onDelete('set null');

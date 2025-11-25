@@ -235,7 +235,7 @@
     function riwayatData(role) {
         const TOKEN = localStorage.getItem('auth_token');
         // Endpoint yang sudah diperbaiki untuk menghindari konflik routing
-        const BASE_URL = '/api/lkh/history/riwayat'; 
+        const BASE_URL = '/api/lkh/riwayat'; 
 
         return {
             role: role,

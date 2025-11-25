@@ -75,7 +75,7 @@ class ValidatorController extends Controller
         // 1. Validasi Input
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected',
-            'komentar_validasi' => 'required_if:status,rejected|nullable|string|max:255'
+            'komentar_validasi' => 'required_if:status,rejected|string|max:255'
         ]);
 
         if ($validator->fails()) {

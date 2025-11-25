@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB; // [FIX] Import DB Facade
 
 // Import Service & Enum untuk Notifikasi
 use App\Services\NotificationService;
@@ -23,7 +24,6 @@ class PengumumanController extends Controller
         $user = Auth::user();
 
         // [FIX CRITICAL] Cek apakah user login. Jika sesi habis, return 401.
-        // Ini mencegah error "Attempt to read property on null"
         if (!$user) {
             return response()->json(['message' => 'Unauthorized - Sesi Habis'], 401);
         }
@@ -51,7 +51,7 @@ class PengumumanController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Validasi Akses (Contoh logic)
+        // Validasi Akses
         if ($user->roles->contains('nama_role', 'Pegawai') && count($user->roles) == 1) {
             return response()->json(['message' => 'Anda tidak memiliki akses membuat pengumuman'], 403);
         }
@@ -67,21 +67,35 @@ class PengumumanController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // 1. Simpan ke Database
-        $pengumuman = Pengumuman::create([
-            'user_id_creator' => $user->id,
-            'judul' => $request->judul,
-            'isi_pengumuman' => $request->isi_pengumuman,
-            'unit_kerja_id' => $request->unit_kerja_id,
-        ]);
-        
-        // 2. Trigger Notifikasi
-        $this->dispatchNotification($pengumuman, $user);
+        try {
+            // [FIX] Mulai Transaksi Database
+            // Menjamin create data dan notifikasi berjalan atomik (sukses semua atau gagal semua)
+            DB::beginTransaction();
 
-        return response()->json([
-            'message' => 'Pengumuman berhasil dibuat dan disebarkan',
-            'data' => $pengumuman
-        ], 201);
+            // 1. Simpan ke Database
+            $pengumuman = Pengumuman::create([
+                'user_id_creator' => $user->id,
+                'judul' => $request->judul,
+                'isi_pengumuman' => $request->isi_pengumuman,
+                'unit_kerja_id' => $request->unit_kerja_id,
+            ]);
+            
+            // 2. Trigger Notifikasi (Hanya dieksekusi sekali di sini)
+            $this->dispatchNotification($pengumuman, $user);
+
+            // [FIX] Commit Transaksi
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Pengumuman berhasil dibuat dan disebarkan',
+                'data' => $pengumuman
+            ], 201);
+
+        } catch (\Exception $e) {
+            // [FIX] Rollback jika ada error
+            DB::rollBack();
+            return response()->json(['message' => 'Gagal membuat pengumuman', 'error' => $e->getMessage()], 500);
+        }
     }
 
     /**

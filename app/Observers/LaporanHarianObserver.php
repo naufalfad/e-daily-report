@@ -4,8 +4,8 @@ namespace App\Observers;
 
 use App\Models\LaporanHarian;
 use App\Models\ActivityLog;
-use App\Services\NotificationService; // Import Service
-use App\Enums\NotificationType;       // Import Enum
+// use App\Services\NotificationService; // Import Service
+// use App\Enums\NotificationType;       // Import Enum
 use Illuminate\Support\Facades\Auth;
 
 class LaporanHarianObserver
@@ -26,14 +26,14 @@ class LaporanHarianObserver
 
         // 2. Kirim Notifikasi ke Atasan (Validator)
         // Pastikan model LaporanHarian memiliki kolom 'atasan_id' sesuai migrasi terakhir
-        if ($laporanHarian->atasan_id) {
-            NotificationService::send(
-                $laporanHarian->atasan_id,
-                NotificationType::LKH_NEW_SUBMISSION->value,
-                "Bawahan Anda (" . $laporanHarian->user->name . ") mengajukan LKH baru.",
-                $laporanHarian // Polymorphic related object
-            );
-        }
+        // if ($laporanHarian->atasan_id) {
+        //     NotificationService::send(
+        //         $laporanHarian->atasan_id,
+        //         NotificationType::LKH_NEW_SUBMISSION->value,
+        //         "Bawahan Anda (" . $laporanHarian->user->name . ") mengajukan LKH baru.",
+        //         $laporanHarian // Polymorphic related object
+        //     );
+        // }
     }
 
     /**
@@ -57,39 +57,39 @@ class LaporanHarianObserver
             if ($newStatus == 'approved') {
                 $deskripsiLog = "Menyetujui (ACC) LKH milik {$ownerName}.";
                 
-                // Notifikasi ke Pemilik LKH (Pegawai)
-                NotificationService::send(
-                    $laporanHarian->user_id,
-                    NotificationType::LKH_APPROVED->value,
-                    "Selamat! LKH tanggal " . $laporanHarian->tanggal . " telah disetujui.",
-                    $laporanHarian
-                );
+                // // Notifikasi ke Pemilik LKH (Pegawai)
+                // NotificationService::send(
+                //     $laporanHarian->user_id,
+                //     NotificationType::LKH_APPROVED->value,
+                //     "Selamat! LKH tanggal " . $laporanHarian->tanggal . " telah disetujui.",
+                //     $laporanHarian
+                // );
 
             } elseif ($newStatus == 'rejected') {
                 $deskripsiLog = "Menolak LKH milik {$ownerName}.";
 
-                // Notifikasi ke Pemilik LKH (Pegawai)
-                NotificationService::send(
-                    $laporanHarian->user_id,
-                    NotificationType::LKH_REJECTED->value,
-                    "LKH Anda ditolak. Alasan: " . ($laporanHarian->komentar_validasi ?? '-'),
-                    $laporanHarian
-                );
+                // // Notifikasi ke Pemilik LKH (Pegawai)
+                // NotificationService::send(
+                //     $laporanHarian->user_id,
+                //     NotificationType::LKH_REJECTED->value,
+                //     "LKH Anda ditolak. Alasan: " . ($laporanHarian->komentar_validasi ?? '-'),
+                //     $laporanHarian
+                // );
             
             // --- LOGIKA REVISI PEGAWAI (Flow Upstream) ---
             } elseif ($oldStatus == 'rejected' && ($newStatus == 'pending' || $newStatus == 'draft')) {
                 $deskripsiLog = "Mengajukan ulang LKH yang ditolak.";
                 $actorId = $laporanHarian->user_id; // Actor adalah pegawai
 
-                // Notifikasi ke Atasan bahwa ada revisi masuk
-                if ($laporanHarian->atasan_id) {
-                    NotificationService::send(
-                        $laporanHarian->atasan_id,
-                        NotificationType::LKH_UPDATE_SUBMISSION->value,
-                        "{$ownerName} telah memperbaiki LKH yang sebelumnya ditolak.",
-                        $laporanHarian
-                    );
-                }
+                // // Notifikasi ke Atasan bahwa ada revisi masuk
+                // if ($laporanHarian->atasan_id) {
+                //     NotificationService::send(
+                //         $laporanHarian->atasan_id,
+                //         NotificationType::LKH_UPDATE_SUBMISSION->value,
+                //         "{$ownerName} telah memperbaiki LKH yang sebelumnya ditolak.",
+                //         $laporanHarian
+                //     );
+                // }
             } else {
                 $deskripsiLog = "Mengubah status LKH dari '{$oldStatus}' menjadi '{$newStatus}'.";
             }

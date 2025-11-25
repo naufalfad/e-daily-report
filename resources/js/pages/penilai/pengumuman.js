@@ -103,7 +103,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // [FIX] Kunci tombol secara visual dan logic
         btnSubmit.disabled = true;
+        btnSubmit.dataset.processing = "true"; 
         btnSubmit.textContent = "Menyimpan...";
 
         try {
@@ -132,7 +134,9 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
             alert(err.message);
         } finally {
+            // [FIX] Buka kunci tombol
             btnSubmit.disabled = false;
+            btnSubmit.dataset.processing = "false";
             btnSubmit.textContent = "🚀 Terbitkan";
         }
     }
@@ -180,10 +184,19 @@ document.addEventListener("DOMContentLoaded", () => {
     btnClose.addEventListener("click", closeModal);
     btnCancel.addEventListener("click", closeModal);
 
-    btnSubmit.addEventListener("click", (e) => {
+    // [FIX CRITICAL] Ganti addEventListener dengan onclick untuk mencegah multiple binding
+    // Tambahkan Guard Clause: Jika sedang processing, tolak klik berikutnya.
+    btnSubmit.onclick = (e) => {
         e.preventDefault();
+        e.stopImmediatePropagation(); // Hentikan event bubbling liar
+
+        // Cek apakah tombol sedang dikunci?
+        if (btnSubmit.disabled || btnSubmit.dataset.processing === "true") {
+            return; // Abaikan klik
+        }
+
         storePengumuman();
-    });
+    };
 
     inputJudul.addEventListener("input", updatePreview);
     inputIsi.addEventListener("input", updatePreview);

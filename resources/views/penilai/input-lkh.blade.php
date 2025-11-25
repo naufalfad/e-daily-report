@@ -215,10 +215,9 @@
                         {{-- Volume --}}
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
-                            <input type="number" name="volume"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                placeholder="0">
+                            <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                            px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                            focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
                         </div>
 
                         {{-- Satuan --}}

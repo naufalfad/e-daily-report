@@ -1,5 +1,5 @@
 @php($title = 'Input LKH')
-@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'input-lkh'])
+@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'input-lkh'])
 
 @section('content')
 
@@ -445,19 +445,15 @@
     <div x-data="{ 
             openDraftModal: false, 
             drafts: [] 
-        }" 
-        @update-drafts.window="drafts = $event.detail"
-        x-cloak 
+        }" @update-drafts.window="drafts = $event.detail" x-cloak
         class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
-        
+
         {{-- HEADER CARD --}}
         <div class="flex items-center justify-between mb-3 shrink-0">
             <h3 class="text-[15px] font-medium text-slate-800">Draft LKH</h3>
             {{-- Tombol hanya muncul jika ada draft --}}
-            <button type="button" 
-                x-show="drafts.length > 0"
-                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" 
-                @click="openDraftModal = true">
+            <button type="button" x-show="drafts.length > 0"
+                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
                 Lihat Semua (<span x-text="drafts.length"></span>)
             </button>
         </div>
@@ -468,16 +464,15 @@
         </div>
 
         {{-- MODAL DRAFT LENGKAP --}}
-        <div x-show="openDraftModal" x-transition.opacity 
-            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style="display: none;">
-            
+        <div x-show="openDraftModal" x-transition.opacity
+            class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+
             {{-- Background gelap --}}
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openDraftModal = false"></div>
 
             {{-- Card modal --}}
             <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
-                
+
                 {{-- Header Modal --}}
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
                     <h2 class="text-lg font-semibold text-slate-800">
@@ -494,18 +489,18 @@
                 <div class="overflow-y-auto p-6 space-y-3">
                     <template x-for="item in drafts" :key="item.id">
                         <!-- TAMPILAN SAMA PERSIS DENGAN YANG DILUAR -->
-                        <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
+                        <div
+                            class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
                             <div>
                                 <h4 class="text-[12px] font-medium text-slate-900" x-text="item.deskripsi"></h4>
                                 <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <a :href="'input-lkh/' + item.id" 
-                                   class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition text-center">
+                                <a :href="'input-lkh/' + item.id"
+                                    class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition text-center">
                                     Lanjutkan
                                 </a>
-                                <button type="button" 
-                                    @click="deleteDraft(item.id)" 
+                                <button type="button" @click="deleteDraft(item.id)"
                                     class="bg-[#B6241C] hover:bg-[#8f1e17] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition">
                                     Hapus
                                 </button>
@@ -518,10 +513,11 @@
                         Tidak ada draft tersimpan saat ini.
                     </div>
                 </div>
-                
+
                 {{-- Footer Modal --}}
                 <div class="px-6 py-3 bg-slate-50 rounded-b-2xl border-t border-slate-100 text-right shrink-0">
-                    <button @click="openDraftModal = false" class="text-xs text-slate-500 hover:text-slate-700 font-medium">
+                    <button @click="openDraftModal = false"
+                        class="text-xs text-slate-500 hover:text-slate-700 font-medium">
                         Tutup
                     </button>
                 </div>
@@ -531,9 +527,9 @@
 
     {{-- KANAN BAWAH: STATUS LAPORAN TERAKHIR --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
-            <h3 class="text-[18px] font-medium text-slate-800 mb-5">
-                Status Laporan Terakhir
-            </h3>
+        <h3 class="text-[18px] font-medium text-slate-800 mb-5">
+            Status Laporan Terakhir
+        </h3>
 
         <ul class="space-y-3" id="aktivitas-list">
             {{-- Diisi via JS --}}
@@ -544,59 +540,72 @@
 
 @push('scripts')
 <script>
-    // Variabel Global untuk menyimpan ID jika sedang mode edit
-    const lkhIdToEdit = "{{ $id ?? '' }}"; 
+// Variabel Global untuk menyimpan ID jika sedang mode edit
+const lkhIdToEdit = "{{ $id ?? '' }}";
 
-    document.addEventListener("DOMContentLoaded", async function() {
-        const token = localStorage.getItem("auth_token");
-        
-        // Headers dasar
-        const headers = { "Accept": "application/json" };
-        if (token) headers["Authorization"] = "Bearer " + token;
+document.addEventListener("DOMContentLoaded", async function() {
+    const token = localStorage.getItem("auth_token");
 
-        // ==========================================
-        // 1. LOGIKA DASHBOARD & DRAFT (Existing)
-        // ==========================================
-        try {
-            const response = await fetch("http://127.0.0.1:8000/api/dashboard/stats", {
-                method: "GET",
-                headers: headers
-            });
+    // Headers dasar
+    const headers = {
+        "Accept": "application/json"
+    };
+    if (token) headers["Authorization"] = "Bearer " + token;
 
-            if (response.ok) {
-                const data = await response.json();
+    // ==========================================
+    // 1. LOGIKA DASHBOARD & DRAFT (Existing)
+    // ==========================================
+    try {
+        const response = await fetch("http://127.0.0.1:8000/api/dashboard/stats", {
+            method: "GET",
+            headers: headers
+        });
 
-                // A. RENDER AKTIVITAS TERKINI
-                const listContainer = document.getElementById("aktivitas-list");
-                listContainer.innerHTML = ""; 
-                const aktivitas = data.aktivitas_terbaru || [];
+        if (response.ok) {
+            const data = await response.json();
 
-                const iconPaths = {
-                    pending: "{{ asset('assets/icon/pending.svg') }}",
-                    approve: "{{ asset('assets/icon/approve.svg') }}",
-                    reject:  "{{ asset('assets/icon/reject.svg') }}"
-                };
+            // A. RENDER AKTIVITAS TERKINI
+            const listContainer = document.getElementById("aktivitas-list");
+            listContainer.innerHTML = "";
+            const aktivitas = data.aktivitas_terbaru || [];
 
-                if (aktivitas.length === 0) {
-                    listContainer.innerHTML = '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
-                } else {
-                    aktivitas.forEach(item => {
-                        const dateObj = new Date(item.tanggal_laporan);
-                        const tanggalFormatted = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-                        
-                        let tone = 'bg-slate-200';
-                        let iconUrl = iconPaths.pending;
-                        let statusLabel = item.status;
+            const iconPaths = {
+                pending: "{{ asset('assets/icon/pending.svg') }}",
+                approve: "{{ asset('assets/icon/approve.svg') }}",
+                reject: "{{ asset('assets/icon/reject.svg') }}"
+            };
 
-                        if (item.status === 'approved') {
-                            tone = 'bg-[#128C60]/50'; iconUrl = iconPaths.approve; statusLabel = 'Disetujui';
-                        } else if (item.status === 'rejected' || item.status.includes('reject')) {
-                            tone = 'bg-[#B6241C]/50'; iconUrl = iconPaths.reject; statusLabel = 'Ditolak';
-                        } else if (item.status === 'waiting_review') {
-                            tone = 'bg-[#D8A106]/50'; iconUrl = iconPaths.pending; statusLabel = 'Menunggu Review';
-                        }
+            if (aktivitas.length === 0) {
+                listContainer.innerHTML =
+                    '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
+            } else {
+                aktivitas.forEach(item => {
+                    const dateObj = new Date(item.tanggal_laporan);
+                    const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    });
 
-                        const htmlItem = `
+                    let tone = 'bg-slate-200';
+                    let iconUrl = iconPaths.pending;
+                    let statusLabel = item.status;
+
+                    if (item.status === 'approved') {
+                        tone = 'bg-[#128C60]/50';
+                        iconUrl = iconPaths.approve;
+                        statusLabel = 'Disetujui';
+                    } else if (item.status === 'rejected' || item.status.includes('reject')) {
+                        tone = 'bg-[#B6241C]/50';
+                        iconUrl = iconPaths.reject;
+                        statusLabel = 'Ditolak';
+                    } else if (item.status === 'waiting_review') {
+                        tone = 'bg-[#D8A106]/50';
+                        iconUrl = iconPaths.pending;
+                        statusLabel = 'Menunggu Review';
+                    }
+
+                    const htmlItem = `
                         <li class="flex items-start gap-3">
                             <div class="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0 ${tone}">
                                 <img src="${iconUrl}" class="h-5 w-5 opacity-90" alt="${statusLabel}">
@@ -611,270 +620,344 @@
                                 </div>
                             </div>
                         </li>`;
-                        listContainer.insertAdjacentHTML('beforeend', htmlItem);
-                    });
-                }
-
-                // B. RENDER DRAFT (SIDEBAR & MODAL)
-                const draftContainer = document.getElementById("draft-list");
-                draftContainer.innerHTML = "";
-                const rawDrafts = data.draft_terbaru || [];
-                
-                const processedDrafts = rawDrafts.map(item => {
-                    const d = new Date(item.updated_at);
-                    return {
-                        id: item.id,
-                        deskripsi: item.deskripsi_aktivitas || 'Draft tanpa judul',
-                        waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
-                    };
+                    listContainer.insertAdjacentHTML('beforeend', htmlItem);
                 });
+            }
 
-                if (processedDrafts.length === 0) {
-                    draftContainer.innerHTML = '<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>';
-                } else {
-                    processedDrafts.slice(0, 3).forEach(item => {
-                        const html = `
+            // B. RENDER DRAFT (SIDEBAR & MODAL)
+            const draftContainer = document.getElementById("draft-list");
+            draftContainer.innerHTML = "";
+            const rawDrafts = data.draft_terbaru || [];
+
+            const processedDrafts = rawDrafts.map(item => {
+                const d = new Date(item.updated_at);
+                return {
+                    id: item.id,
+                    deskripsi: item.deskripsi_aktivitas || 'Draft tanpa judul',
+                    waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
+                };
+            });
+
+            if (processedDrafts.length === 0) {
+                draftContainer.innerHTML =
+                    '<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>';
+            } else {
+                processedDrafts.slice(0, 3).forEach(item => {
+                    const html = `
                         <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-[12px] font-medium text-slate-900 truncate" title="${item.deskripsi}">${item.deskripsi}</h4>
                                 <p class="text-[10px] text-slate-500 mt-1">${item.waktu_simpan}</p>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <a href="/penilai/input-laporan/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition">Lanjutkan</a>
+                                <a href="/staf/input-lkh/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition">Lanjutkan</a>
                             </div>
                             <button type="button" onclick="deleteDraft('${item.id}')"
                             class="bg-[#B6241C] hover:bg-[#8f1e17] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition">
                                 Hapus
                             </button>
                         </div>`;
-                        draftContainer.insertAdjacentHTML('beforeend', html);
-                    });
-                }
-
-                // Kirim data ke Alpine Modal
-                window.dispatchEvent(new CustomEvent('update-drafts', { detail: processedDrafts }));
-            }
-        } catch (err) {
-            console.error("Gagal load dashboard stats:", err);
-        }
-
-        // ==========================================
-        // 2. LOGIKA EDIT (Load Data ke Form)
-        // ==========================================
-        if (lkhIdToEdit) {
-            console.log("Mode Edit ID:", lkhIdToEdit);
-            document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
-
-            try {
-                const resEdit = await fetch(`/api/lkh/${lkhIdToEdit}`, {
-                    method: "GET",
-                    headers: headers
+                    draftContainer.insertAdjacentHTML('beforeend', html);
                 });
-                
-                if (!resEdit.ok) throw new Error("Gagal ambil detail LKH");
-                
-                const json = await resEdit.json();
-                const data = json.data;
-
-                // A. Isi Input Biasa
-                const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
-                setVal('tanggal_lkh', data.tanggal_laporan);
-                setVal('jam_mulai', data.waktu_mulai);
-                setVal('jam_selesai', data.waktu_selesai);
-                document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas;
-                document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja;
-                document.querySelector('input[name="volume"]').value = data.volume;
-
-                // B. Isi Koordinat (Hidden)
-                if(data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
-                if(data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
-
-                // C. Update Dropdown Alpine
-                updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-                updateAlpineDropdown('satuan', data.satuan);
-                updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label || 'Tupoksi Terpilih');
-
-                // D. Update Kategori & SKP
-                const skpEl = document.querySelector('input[name="skp_id"]');
-                if(skpEl) {
-                    const wrapper = skpEl.closest('[x-data]');
-                    if(wrapper) {
-                        const scope = Alpine.$data(wrapper);
-                        if(data.skp_id) {
-                            scope.setKategori('skp');
-                            scope.skpId = data.skp_id;
-                            scope.skpLabel = data.skp_label || 'SKP Terpilih';
-                        } else {
-                            scope.setKategori('non-skp');
-                        }
-                    }
-                }
-
-                document.querySelector('h2').innerText = "Edit LKH";
-
-                } catch (e) {
-                    console.error(e);
-                    alert("Gagal memuat data edit.");
-                }
             }
-        });
 
-        // ==========================================
-        // 3. FUNGSI HELPER
-        // ==========================================
-        
-        // Helper untuk update dropdown Alpine sederhana
-        function updateAlpineDropdown(inputName, value, label = null) {
-            const el = document.querySelector(`input[name="${inputName}"]`);
-            if(el) {
-                const wrapper = el.closest('[x-data]');
-                if(wrapper) {
-                    const scope = Alpine.$data(wrapper);
-                    scope.value = value;
-                    scope.label = label || value;
-                }
-            }
+            // Kirim data ke Alpine Modal
+            window.dispatchEvent(new CustomEvent('update-drafts', {
+                detail: processedDrafts
+            }));
         }
+    } catch (err) {
+        console.error("Gagal load dashboard stats:", err);
+    }
 
-        // Helper khusus untuk koordinat
-        function setAlpineValue(selector, key, value) {
-            const el = document.querySelector(selector);
-            if(el && el.closest('[x-data]')) {
-                Alpine.$data(el.closest('[x-data]'))[key] = value;
-            }
-        }
+    // ==========================================
+    // 2. LOGIKA EDIT (Load Data ke Form)
+    // ==========================================
+    if (lkhIdToEdit) {
+        console.log("Mode Edit ID:", lkhIdToEdit);
+        document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
 
-        // ==========================================
-        // 4. FUNGSI SUBMIT (Global & Dinamis)
-        // ==========================================
-        // Panggil fungsi ini di onclick tombol HTML: onclick="submitForm('draft')"
-        async function submitForm(statusType) {
-        // Pengaman: Cegah form submit bawaan browser jika event terbawa
-        if(event) event.preventDefault();
-
-        const token = localStorage.getItem("auth_token");
-        const form = document.getElementById('form-lkh');
-        
-        // 1. Set Status ke Input Hidden
-        const statusInput = document.getElementById('status_input');
-        if(statusInput) statusInput.value = statusType;
-
-        const formData = new FormData(form);
-        let url = '/api/lkh'; // Default: CREATE
-
-        // 2. Cek Mode Edit atau Create
-        if (typeof lkhIdToEdit !== 'undefined' && lkhIdToEdit) {
-            url = `/api/lkh/update/${lkhIdToEdit}`; 
-        }
-
-        // 3. Kirim Request
         try {
-            // Tampilkan loading visual sederhana (Opsional)
-            const originalBtnText = event.target.innerText;
-            event.target.innerText = 'Memproses...';
-            event.target.disabled = true;
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                },
-                body: formData
+            const resEdit = await fetch(`/api/lkh/${lkhIdToEdit}`, {
+                method: "GET",
+                headers: headers
             });
 
-            const res = await response.json();
+            if (!resEdit.ok) throw new Error("Gagal ambil detail LKH");
 
-            if (response.ok) {
-                alert('Berhasil disimpan!');
-                // Redirect ke dashboard atau halaman list
-                window.location.href = '/penilai/dashboard';
-            } else {
-                // Reset tombol jika gagal
-                event.target.innerText = originalBtnText;
-                event.target.disabled = false;
-                
-                console.error(res);
-                alert('Gagal: ' + (res.message || 'Periksa kelengkapan data.'));
+            const json = await resEdit.json();
+            const data = json.data;
+
+            // A. Isi Input Biasa
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            };
+            setVal('tanggal_lkh', data.tanggal_laporan);
+            setVal('jam_mulai', data.waktu_mulai);
+            setVal('jam_selesai', data.waktu_selesai);
+            document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas;
+            document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja;
+            document.querySelector('input[name="volume"]').value = data.volume;
+
+            // B. Isi Koordinat (Hidden)
+            if (data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
+            if (data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
+
+            // C. Update Dropdown Alpine
+            updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
+            updateAlpineDropdown('satuan', data.satuan);
+            updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label || 'Tupoksi Terpilih');
+
+            // D. Update Kategori & SKP
+            const skpEl = document.querySelector('input[name="skp_id"]');
+            if (skpEl) {
+                const wrapper = skpEl.closest('[x-data]');
+                if (wrapper) {
+                    const scope = Alpine.$data(wrapper);
+                    if (data.skp_id) {
+                        scope.setKategori('skp');
+                        scope.skpId = data.skp_id;
+                        scope.skpLabel = data.skp_label || 'SKP Terpilih';
+                    } else {
+                        scope.setKategori('non-skp');
+                    }
+                }
             }
 
-        } catch (error) {
-            console.error(error);
-            alert('Terjadi kesalahan koneksi.');
-            
-            // Reset tombol jika error
-            if(event && event.target) {
-                event.target.disabled = false;
-                event.target.innerText = "Coba Lagi";
-            }
+            document.querySelector('h2').innerText = "Edit LKH";
+
+        } catch (e) {
+            console.error(e);
+            alert("Gagal memuat data edit.");
         }
     }
-    // Fungsi Hapus Laporan Global
-    window.deleteDraft = async function(id) {
-        // 1. Konfirmasi User
-        if(!confirm('Apakah Anda yakin ingin menghapus draft laporan ini?')) {
+});
+
+// ==========================================
+// 3. FUNGSI HELPER
+// ==========================================
+
+// Helper untuk update dropdown Alpine sederhana
+function updateAlpineDropdown(inputName, value, label = null) {
+    const el = document.querySelector(`input[name="${inputName}"]`);
+    if (el) {
+        const wrapper = el.closest('[x-data]');
+        if (wrapper) {
+            const scope = Alpine.$data(wrapper);
+            scope.value = value;
+            scope.label = label || value;
+        }
+    }
+}
+
+// Helper khusus untuk koordinat
+function setAlpineValue(selector, key, value) {
+    const el = document.querySelector(selector);
+    if (el && el.closest('[x-data]')) {
+        Alpine.$data(el.closest('[x-data]'))[key] = value;
+    }
+}
+
+// ==========================================
+// 4. FUNGSI SUBMIT (Global & Dinamis)
+// ==========================================
+// Panggil fungsi ini di onclick tombol HTML: onclick="submitForm('draft')"
+async function submitForm(statusType) {
+    if (event) event.preventDefault();
+
+    const token = localStorage.getItem("auth_token");
+    const form = document.getElementById('form-lkh');
+    const formData = new FormData(form);
+
+    // SET STATUS
+    formData.set("status", statusType);
+
+    // ====================================================
+    // 🔥 VALIDASI FORM KOSONG (Hanya untuk "Kirim LKH")
+    // ====================================================
+    if (statusType === "waiting_review") {
+
+        const requiredFields = [
+            "tanggal_laporan",
+            "jenis_kegiatan",
+            "tupoksi_id",
+            "deskripsi_aktivitas",
+            "output_hasil_kerja",
+            "volume",
+            "satuan",
+            "waktu_mulai",
+            "waktu_selesai"
+        ];
+
+        let missing = [];
+
+        requiredFields.forEach(name => {
+            const val = formData.get(name);
+            if (!val || val.trim() === "") missing.push(name);
+        });
+
+        if (missing.length > 0) {
+            return Swal.fire({
+                icon: "warning",
+                title: "Form Belum Lengkap",
+                text: "Masih ada beberapa field yang harus diisi sebelum mengirim LKH.",
+                confirmButtonText: "Mengerti",
+                confirmButtonColor: "#155FA6"
+            });
+        }
+    }
+
+    // ====================================================
+    // 🔥 VALIDASI DRAFT (Minimal 1 field terisi)
+    // ====================================================
+    if (statusType === "draft") {
+        const minimalField = [
+            "deskripsi_aktivitas",
+            "output_hasil_kerja",
+            "tanggal_laporan"
+        ];
+
+        const isEmpty = minimalField.every(name => {
+            const val = formData.get(name);
+            return !val || val.trim() === "";
+        });
+
+        if (isEmpty) {
+            return Swal.fire({
+                icon: "info",
+                title: "Tidak Ada Data",
+                text: "Tidak ada data yang diisi. Isi minimal satu field untuk menyimpan draft.",
+                confirmButtonText: "Oke",
+                confirmButtonColor: "#155FA6"
+            });
+        }
+    }
+
+    // ====================================================
+    // 🔥 MODE: CREATE / UPDATE
+    // ====================================================
+    let url = '/api/lkh';
+
+    if (typeof lkhIdToEdit !== 'undefined' && lkhIdToEdit) {
+        url = `/api/lkh/update/${lkhIdToEdit}`;
+    }
+
+    // ====================================================
+    // 🔥 KIRIM KE BACKEND
+    // ====================================================
+    try {
+        const btn = event.target;
+        const oldText = btn.innerText;
+        btn.innerText = "Memproses...";
+        btn.disabled = true;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/json"
+            },
+            body: formData
+        });
+
+        const json = await response.json();
+
+        // ==========================
+        // 🔥 RESPONSE BERHASIL
+        // ==========================
+        if (response.ok) {
+            if (statusType === "draft") {
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Draft Disimpan",
+                    text: "Draft LKH berhasil disimpan.",
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+
+            } else if (statusType === "waiting_review") {
+
+                Swal.fire({
+                    icon: "success",
+                    title: "LKH Terkirim!",
+                    text: "LKH berhasil dikirim ke Penilai.",
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+            }
+
+            setTimeout(() => window.location.href = "/staf/dashboard", 1200);
             return;
         }
 
-        const token = localStorage.getItem("auth_token");
+        // ==========================
+        // 🔥 RESPONSE GAGAL
+        // ==========================
+        Swal.fire({
+            icon: "error",
+            title: "Gagal Menyimpan",
+            text: json.message || "Terjadi kesalahan saat menyimpan data.",
+            confirmButtonText: "Coba Lagi",
+            confirmButtonColor: "#B6241C"
+        });
 
-        try {
-            // 2. Kirim Request DELETE
-            const response = await fetch(`/api/lkh/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                }
-            });
+        btn.disabled = false;
+        btn.innerText = oldText;
 
-            // 3. Cek Response
-            if (response.ok) {
-                alert('Draft berhasil dihapus!');
-                window.location.reload(); 
-            } else {
-                const res = await response.json();
-                alert('Gagal menghapus: ' + (res.message || 'Terjadi kesalahan'));
-            }
+    } catch (err) {
+        console.error(err);
 
-        } catch (error) {
-            console.error('Error saat menghapus:', error);
-            alert('Terjadi kesalahan koneksi.');
+        Swal.fire({
+            icon: "error",
+            title: "Kesalahan Koneksi",
+            text: "Periksa koneksi internet Anda.",
+            confirmButtonText: "Mengerti"
+        });
+
+        if (event && event.target) {
+            const btn = event.target;
+            btn.disabled = false;
+            btn.innerText = "Coba Lagi";
         }
     }
+}
 
-     // === TOMBOL DATE ===
-    const btnTanggal = document.getElementById("tanggal_lkh_btn");
-    const inputTanggal = document.getElementById("tanggal_lkh");
 
-    if (btnTanggal && inputTanggal) {
-        btnTanggal.addEventListener("click", (e) => {
-            e.preventDefault();
-            inputTanggal.showPicker ? inputTanggal.showPicker() : inputTanggal.click();
-        });
-    }
+// === TOMBOL DATE ===
+const btnTanggal = document.getElementById("tanggal_lkh_btn");
+const inputTanggal = document.getElementById("tanggal_lkh");
 
-    // === TOMBOL JAM MULAI ===
-    const btnJamMulai = document.getElementById("jam_mulai_btn");
-    const inputJamMulai = document.getElementById("jam_mulai");
+if (btnTanggal && inputTanggal) {
+    btnTanggal.addEventListener("click", (e) => {
+        e.preventDefault();
+        inputTanggal.showPicker ? inputTanggal.showPicker() : inputTanggal.click();
+    });
+}
 
-    if (btnJamMulai && inputJamMulai) {
-        btnJamMulai.addEventListener("click", (e) => {
-            e.preventDefault();
-            inputJamMulai.showPicker ? inputJamMulai.showPicker() : inputJamMulai.click();
-        });
-    }
+// === TOMBOL JAM MULAI ===
+const btnJamMulai = document.getElementById("jam_mulai_btn");
+const inputJamMulai = document.getElementById("jam_mulai");
 
-    // === TOMBOL JAM SELESAI ===
-    const btnJamSelesai = document.getElementById("jam_selesai_btn");
-    const inputJamSelesai = document.getElementById("jam_selesai");
+if (btnJamMulai && inputJamMulai) {
+    btnJamMulai.addEventListener("click", (e) => {
+        e.preventDefault();
+        inputJamMulai.showPicker ? inputJamMulai.showPicker() : inputJamMulai.click();
+    });
+}
 
-    if (btnJamSelesai && inputJamSelesai) {
-        btnJamSelesai.addEventListener("click", (e) => {
-            e.preventDefault();
-            inputJamSelesai.showPicker ? inputJamSelesai.showPicker() : inputJamSelesai.click();
-        });
-    }
+// === TOMBOL JAM SELESAI ===
+const btnJamSelesai = document.getElementById("jam_selesai_btn");
+const inputJamSelesai = document.getElementById("jam_selesai");
+
+if (btnJamSelesai && inputJamSelesai) {
+    btnJamSelesai.addEventListener("click", (e) => {
+        e.preventDefault();
+        inputJamSelesai.showPicker ? inputJamSelesai.showPicker() : inputJamSelesai.click();
+    });
+}
 </script>
 @endpush
 

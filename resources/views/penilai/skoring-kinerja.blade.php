@@ -1,127 +1,179 @@
-@php
-$title = 'Skoring Kinerja Pegawai';
-
-// Data dummy skoring – bisa kamu ganti dengan data dari DB nanti
-$rows = [
+@extends('layouts.app',
 [
-'nama' => 'Fahrizal Mudzaqi Maulana',
-'unit' => 'Unit Pajak',
-'total' => 45,
-'accepted' => '95%',
-'avg_hours' => '7,5 jam/hari',
-],
-[
-'nama' => 'Muhammad Naufal',
-'unit' => 'Unit Pajak',
-'total' => 48,
-'accepted' => '94%',
-'avg_hours' => '7,8 jam/hari',
-],
-[
-'nama' => 'Reno Sebastian',
-'unit' => 'Unit Pajak',
-'total' => 44,
-'accepted' => '93%',
-'avg_hours' => '7,4 jam/hari',
-],
-[
-'nama' => 'Silvia Lestari',
-'unit' => 'Unit Pendataan',
-'total' => 42,
-'accepted' => '92%',
-'avg_hours' => '7,2 jam/hari',
-],
-[
-'nama' => 'Agus Prasetyo',
-'unit' => 'Unit Penagihan',
-'total' => 40,
-'accepted' => '90%',
-'avg_hours' => '7,0 jam/hari',
-],
-[
-'nama' => 'Intan Permata',
-'unit' => 'Unit Pengawasan',
-'total' => 39,
-'accepted' => '89%',
-'avg_hours' => '6,9 jam/hari',
-],
-[
-'nama' => 'Rai Fazri',
-'unit' => 'Unit Pajak',
-'total' => 38,
-'accepted' => '88%',
-'avg_hours' => '6,8 jam/hari',
-],
-[
-'nama' => 'Anna Septiani',
-'unit' => 'Unit Pendataan',
-'total' => 37,
-'accepted' => '87%',
-'avg_hours' => '6,7 jam/hari',
-],
-[
-'nama' => 'Bima Pratama',
-'unit' => 'Unit Penagihan',
-'total' => 35,
-'accepted' => '85%',
-'avg_hours' => '6,5 jam/hari',
-],
-[
-'nama' => 'Dewi Rahma',
-'unit' => 'Unit Pengawasan',
-'total' => 34,
-'accepted' => '84%',
-'avg_hours' => '6,4 jam/hari',
-],
-];
-@endphp
-
-@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'skoring'])
+    'role' => 'penilai'
+    ])
 
 @section('content')
-<section class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 flex flex-col h-full">
-    <h2 class="text-[18px] font-normal mb-4">Skoring Kinerja Pegawai</h2>
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Skoring Kinerja Pegawai</h1>
+            <p class="text-gray-500 mt-1">Monitor dan evaluasi performa pegawai serta unit kerja.</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-download"></i> Export Laporan
+            </button>
+        </div>
+    </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-full text-sm">
-            <thead class="bg-slate-100 text-[13px] text-slate-600">
-                <tr>
-                    <th class="px-4 py-2 text-left font-medium w-[120px]">Peringkat</th>
-                    <th class="px-4 py-2 text-left font-medium">Nama Pegawai</th>
-                    <th class="px-4 py-2 text-left font-medium">Unit</th>
-                    <th class="px-4 py-2 text-left font-medium">Total Laporan</th>
-                    <th class="px-4 py-2 text-left font-medium">Persentase Diterima</th>
-                    <th class="px-4 py-2 text-left font-medium">Rata-rata Waktu Kerja</th>
-                </tr>
-            </thead>
-            <tbody class="text-[13px] text-slate-700">
-                @foreach ($rows as $row)
-                @php
-                $rank = $loop->iteration;
-                @endphp
-                <tr class="border-t border-slate-200">
-                    <td class="px-4 py-2 whitespace-nowrap">
-                        @if ($rank <= 3) {{-- Icon medal untuk peringkat 1, 2, 3 --}} <div
-                            class="flex items-center gap-2">
-                            <img src="{{ asset('assets/icon/rank-' . $rank . '.svg') }}" alt="Peringkat {{ $rank }}"
-                                class="h-5 w-5">
-                            <span>{{ $rank }}</span>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm font-medium">Total Pegawai Dinilai</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2">{{ $totalPegawai ?? 0 }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+            <p class="text-gray-500 text-sm font-medium">Rata-rata Skor</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2">{{ number_format($avgScore ?? 0, 2) }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+            <p class="text-gray-500 text-sm font-medium">Predikat Sangat Baik</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2">{{ $countSangatBaik ?? 0 }}</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+            <p class="text-gray-500 text-sm font-medium">Perlu Pembinaan</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2">{{ $countPerluPembinaan ?? 0 }}</p>
+        </div>
     </div>
-    @else
-    <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[12px]">
-        {{ $rank }}
-    </span>
-    @endif
-    </td>
-    <td class="px-4 py-2">{{ $row['nama'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['unit'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['total'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['accepted'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['avg_hours'] }}</td>
-    </tr>
-    @endforeach
-    </tbody>
-    </table>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Sebaran Predikat Kinerja</h3>
+            <div class="relative h-64 w-full flex justify-center">
+                <canvas id="performancePieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Rata-rata Kinerja Unit Kerja</h3>
+            <div class="relative h-64 w-full">
+                <canvas id="unitStatsChart"></canvas>
+            </div>
+        </div>
     </div>
-</section>
+
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-800">Detail Kinerja Pegawai</h3>
+            <input type="text" placeholder="Cari pegawai..." class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Nama Pegawai</th>
+                        <th class="py-3 px-6 text-left">Unit Kerja</th>
+                        <th class="py-3 px-6 text-center">Skor SKP</th>
+                        <th class="py-3 px-6 text-center">Skor LKH</th>
+                        <th class="py-3 px-6 text-center">Total Nilai</th>
+                        <th class="py-3 px-6 text-center">Predikat</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 text-sm font-light">
+                    {{-- Loop data pegawai disini --}}
+                    @forelse($dataPegawai ?? [] as $pegawai)
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                        <td class="py-3 px-6 text-left whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="font-medium">{{ $pegawai->name }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            <span>{{ $pegawai->unit_kerja }}</span>
+                        </td>
+                        <td class="py-3 px-6 text-center">{{ $pegawai->skor_skp }}</td>
+                        <td class="py-3 px-6 text-center">{{ $pegawai->skor_lkh }}</td>
+                        <td class="py-3 px-6 text-center font-bold text-blue-600">{{ $pegawai->total_nilai }}</td>
+                        <td class="py-3 px-6 text-center">
+                            @php
+                                $badgeColor = match($pegawai->predikat) {
+                                    'Sangat Baik' => 'bg-green-100 text-green-700',
+                                    'Baik' => 'bg-blue-100 text-blue-700',
+                                    'Cukup' => 'bg-yellow-100 text-yellow-700',
+                                    default => 'bg-red-100 text-red-700',
+                                };
+                            @endphp
+                            <span class="{{ $badgeColor }} py-1 px-3 rounded-full text-xs font-semibold">
+                                {{ $pegawai->predikat }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="py-4 text-center text-gray-500">Belum ada data skoring.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-100">
+            {{-- Pagination Links --}}
+            {{-- {{ $dataPegawai->links() }} --}}
+        </div>
+    </div>
+</div>
+
+{{-- Load Chart.js --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data dari Controller (Dipassing sebagai JSON)
+        const pieData = @json($chartData['predikat'] ?? ['labels' => [], 'data' => []]);
+        const barData = @json($chartData['unit'] ?? ['labels' => [], 'data' => []]);
+
+        // 1. Pie Chart Configuration
+        const ctxPie = document.getElementById('performancePieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'doughnut',
+            data: {
+                labels: pieData.labels.length ? pieData.labels : ['Sangat Baik', 'Baik', 'Cukup', 'Kurang'],
+                datasets: [{
+                    data: pieData.data.length ? pieData.data : [10, 25, 5, 2], // Dummy data fallback
+                    backgroundColor: [
+                        '#10B981', // Emerald 500
+                        '#3B82F6', // Blue 500
+                        '#F59E0B', // Amber 500
+                        '#EF4444'  // Red 500
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    }
+                }
+            }
+        });
+
+        // 2. Bar Chart Configuration
+        const ctxBar = document.getElementById('unitStatsChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: barData.labels.length ? barData.labels : ['Sekretariat', 'Bidang A', 'Bidang B'],
+                datasets: [{
+                    label: 'Rata-rata Skor',
+                    data: barData.data.length ? barData.data : [85, 92, 78], // Dummy data fallback
+                    backgroundColor: '#6366F1', // Indigo 500
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    });
+</script>
 @endsection

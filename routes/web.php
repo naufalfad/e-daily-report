@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Core\ActivityLogController;
 // [BARU] Import Controller Pengumuman agar bisa dipanggil di route
 use App\Http\Controllers\Core\PengumumanController;
+use App\Http\Controllers\Core\SkpController;
 
 /*
 |--------------------------------------------------------------------------
@@ -77,7 +78,7 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
     })->name('input-laporan');
     Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
     Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
-    Route::view('/skoring-kinerja', 'penilai.skoring-kinerja')->name('skoring-kinerja');
+    Route::get('/skoring-kinerja', [SkpController::class, 'skoringKinerja'])->name('skoring-kinerja');
     Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
     Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
     

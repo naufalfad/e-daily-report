@@ -21,11 +21,14 @@ class ValidatorController extends Controller
     {
         $atasanId = Auth::id();
 
+        // PERBAIKAN: Ubah 'user_id' menjadi 'atasan_id'
+        // Logic: Tampilkan laporan yang 'atasan_id'-nya adalah Saya (User yang login)
         $query = LaporanHarian::with(['user', 'skp', 'bukti'])
-            ->where('user_id', $atasanId);
+            ->where('atasan_id', $atasanId) 
+            ->where('status', '!=', 'draft'); // SARAN TAMBAHAN: Jangan tampilkan status Draft
 
         // Filter status
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status != 'all') {
             $query->where('status', $request->status);
         } else {
             // Prioritaskan yang 'waiting_review' agar muncul paling atas

@@ -9,8 +9,6 @@ $menusByRole = [
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('staf.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('staf.riwayat-lkh')],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('staf.log-aktivitas')],
-// [BARU] Menu Pengumuman untuk Staf
-['key' => 'pengumuman', 'label' => 'Info & Pengumuman', 'icon' => 'announcement', 'route' => route('staf.pengumuman')],
 ],
 
 // ==================== ROLE PENILAI ====================

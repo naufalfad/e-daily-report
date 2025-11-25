@@ -59,13 +59,6 @@ Route::prefix('staf')->name('staf.')->group(function () {
 
     // Log Aktivitas Staf
     Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
-
-    // [PERBAIKAN 1] Route Pengumuman untuk Staf
-    // ---------------------------------------------------------
-    // View untuk halaman (pastikan nanti file view staf.pengumuman dibuat/dicopy)
-    Route::view('/pengumuman', 'staf.pengumuman')->name('pengumuman');
-    // API untuk mengambil data list pengumuman (AJAX)
-    Route::get('/pengumuman/list', [PengumumanController::class, 'index'])->name('pengumuman.list');
 });
 
 

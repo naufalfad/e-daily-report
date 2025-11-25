@@ -1,15 +1,13 @@
-// ===============================
-//  SKP PAGE — SCRIPT TERPISAH
-// ===============================
+// resources/js/pages/staf/skp.js
 
-export function skpPageData() {
+// AlpineJS global (jika dipakai via CDN tetap aman)
+window.skpPageData = function () {
     return {
         // Data
         skpList: [],
         atasanName: 'Memuat...',
         isLoading: false,
 
-        // Form Create Model
         formData: {
             nama_skp: '',
             periode_mulai: '',
@@ -19,13 +17,12 @@ export function skpPageData() {
             target: ''
         },
 
-        // Modal State
         openDetail: false,
         openEdit: false,
         detailData: null,
         editData: null,
 
-        // Init
+        // Init halaman
         initPage() {
             if (!localStorage.getItem('auth_token')) {
                 window.location.href = '/login';
@@ -36,9 +33,12 @@ export function skpPageData() {
             this.initDatePickers();
         },
 
-        // Fetch Profile
+        // ============================================================
+        // FETCH PROFILE
+        // ============================================================
         async fetchProfile() {
             const token = localStorage.getItem('auth_token');
+
             try {
                 const res = await fetch('/api/me', {
                     headers: {
@@ -46,18 +46,24 @@ export function skpPageData() {
                         'Accept': 'application/json'
                     }
                 });
-                if (!res.ok) throw new Error('Gagal fetch profile');
+
+                if (!res.ok) throw new Error('Gagal memuat profil');
+
                 const json = await res.json();
                 this.atasanName = json.atasan ? json.atasan.name : '- Tidak Ada Atasan -';
+
             } catch (e) {
                 console.error(e);
                 this.atasanName = 'Gagal memuat';
             }
         },
 
-        // Fetch List SKP
+        // ============================================================
+        // FETCH LIST SKP
+        // ============================================================
         async fetchSkpList() {
             const token = localStorage.getItem('auth_token');
+
             try {
                 const res = await fetch('/api/skp', {
                     headers: {
@@ -65,16 +71,21 @@ export function skpPageData() {
                         'Accept': 'application/json'
                     }
                 });
-                if (!res.ok) throw new Error('Gagal fetch list SKP');
+
+                if (!res.ok) throw new Error('Gagal memuat SKP');
+
                 const json = await res.json();
                 this.skpList = json.data || [];
+
             } catch (e) {
                 console.error(e);
                 this.skpList = [];
             }
         },
 
-        // Submit Create
+        // ============================================================
+        // CREATE SKP
+        // ============================================================
         async submitCreate() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
@@ -91,6 +102,7 @@ export function skpPageData() {
                 });
 
                 const json = await res.json();
+
                 if (res.ok) {
                     alert('SKP Berhasil Ditambahkan!');
                     this.resetForm();
@@ -98,8 +110,9 @@ export function skpPageData() {
                 } else {
                     alert('Gagal: ' + (json.message || JSON.stringify(json.errors)));
                 }
+
             } catch (e) {
-                alert('Terjadi kesalahan. Cek koneksi.');
+                alert('Terjadi kesalahan koneksi');
             }
 
             this.isLoading = false;
@@ -116,12 +129,17 @@ export function skpPageData() {
             };
         },
 
-        // Modal Logic
+        // ============================================================
+        // DETAIL MODAL
+        // ============================================================
         openDetailModal(skp) {
             this.detailData = skp;
             this.openDetail = true;
         },
 
+        // ============================================================
+        // EDIT MODAL
+        // ============================================================
         openEditModal() {
             this.editData = JSON.parse(JSON.stringify(this.detailData));
 
@@ -135,21 +153,23 @@ export function skpPageData() {
             this.openEdit = true;
         },
 
-        // Submit Edit
+        // ============================================================
+        // UPDATE SKP
+        // ============================================================
         async submitEdit() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
 
-            const payload = {
-                nama_skp: this.editData.nama_skp,
-                periode_mulai: this.editData.periode_mulai,
-                periode_selesai: this.editData.periode_selesai,
-                indikator: this.editData.indikator,
-                rencana_aksi: this.editData.rencana_aksi,
-                target: this.editData.target
-            };
-
             try {
+                const payload = {
+                    nama_skp: this.editData.nama_skp,
+                    periode_mulai: this.editData.periode_mulai,
+                    periode_selesai: this.editData.periode_selesai,
+                    indikator: this.editData.indikator,
+                    rencana_aksi: this.editData.rencana_aksi,
+                    target: this.editData.target
+                };
+
                 const res = await fetch(`/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
@@ -160,22 +180,26 @@ export function skpPageData() {
                     body: JSON.stringify(payload)
                 });
 
+                const json = await res.json();
+
                 if (res.ok) {
                     alert('Perubahan Disimpan!');
                     this.openEdit = false;
                     this.fetchSkpList();
                 } else {
-                    const json = await res.json();
-                    alert('Gagal Update: ' + (json.message || 'Error Validasi'));
+                    alert('Gagal Update: ' + (json.message || 'Error'));
                 }
+
             } catch (e) {
-                alert('Error koneksi server');
+                alert('Kesalahan koneksi server');
             }
 
             this.isLoading = false;
         },
 
-        // Helper
+        // ============================================================
+        // HELPERS UI
+        // ============================================================
         formatDate(dateString) {
             if (!dateString) return '-';
             try {
@@ -184,29 +208,37 @@ export function skpPageData() {
                     month: 'short',
                     year: 'numeric'
                 });
-            } catch {
+            } catch (e) {
                 return dateString;
             }
         },
 
+        // ============================================================
+        // DATE PICKERS (SUDAH FIX)
+        // ============================================================
         initDatePickers() {
             this.$nextTick(() => {
-                const init = (inputId, btnId) => {
-                    const i = document.getElementById(inputId);
-                    const b = document.getElementById(btnId);
-                    if (i && b) {
-                        b.addEventListener('click', () => {
-                            try {
-                                i.showPicker();
-                            } catch {
-                                i.focus();
-                            }
+                const initDatePicker = (inputId, buttonId) => {
+                    const input = document.getElementById(inputId);
+                    const button = document.getElementById(buttonId);
+                    if (input && button) {
+                        button.addEventListener('click', () => {
+                            try { input.showPicker(); }
+                            catch { input.focus(); }
                         });
                     }
                 };
-                init('periode_awal', 'periode_awal_btn');
-                init('periode_akhir', 'periode_akhir_btn');
+
+                // *** TAMBAHAN UNTUK INPUT SKP ***
+                initDatePicker('periode_mulai', 'periode_mulai_btn');
+                initDatePicker('periode_selesai', 'periode_selesai_btn');
+
+                // *** UNTUK EDIT MODAL (original) ***
+                initDatePicker('periode_awal', 'periode_awal_btn');
+                initDatePicker('periode_akhir', 'periode_akhir_btn');
             });
-        }
+        },
+
+        initSelectPlaceholders() {}
     };
-}
+};

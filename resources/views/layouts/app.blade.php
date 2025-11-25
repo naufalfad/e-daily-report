@@ -61,6 +61,24 @@
             transform: rotate(360deg);
         }
     }
+
+    /* Hapus icon bawaan input tanggal */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        opacity: 0 !important;
+        display: none !important;
+    }
+
+    /* Hapus icon bawaan input time */
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        opacity: 0 !important;
+        display: none !important;
+    }
+
+    /* Hilangkan spinners Android/Edge */
+    input[type="time"]::-webkit-inner-spin-button,
+    input[type="date"]::-webkit-inner-spin-button {
+        display: none !important;
+    }
     </style>
 
     {{-- Setelah semua CSS / asset siap → tampilkan halaman --}}

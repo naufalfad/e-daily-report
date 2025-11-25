@@ -213,6 +213,9 @@ window.skpPageData = function () {
             }
         },
 
+        // ============================================================
+        // DATE PICKERS (SUDAH FIX)
+        // ============================================================
         initDatePickers() {
             this.$nextTick(() => {
                 const initDatePicker = (inputId, buttonId) => {
@@ -225,6 +228,12 @@ window.skpPageData = function () {
                         });
                     }
                 };
+
+                // *** TAMBAHAN UNTUK INPUT SKP ***
+                initDatePicker('periode_mulai', 'periode_mulai_btn');
+                initDatePicker('periode_selesai', 'periode_selesai_btn');
+
+                // *** UNTUK EDIT MODAL (original) ***
                 initDatePicker('periode_awal', 'periode_awal_btn');
                 initDatePicker('periode_akhir', 'periode_akhir_btn');
             });

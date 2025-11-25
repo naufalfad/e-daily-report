@@ -118,33 +118,35 @@
                     select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
                 }" x-init="init()">
 
-                <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
-                <input type="hidden" name="tupoksi_id" x-model="value">
+                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
+                    <input type="hidden" name="tupoksi_id" x-model="value">
 
-                <div class="relative">
-                    <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                    <div class="relative">
+                        <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                                 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
                                 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                        :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
-                        <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
-                        <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
-                    </button>
+                            :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                            <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
+                            <img src="{{ asset('assets/icon/chevron-down.svg') }}"
+                                class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
+                        </button>
 
-                    <div x-show="open" @click.outside="open = false" x-transition
-                        class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
-                        <template x-for="opt in options" :key="opt.value">
-                            <button type="button"
-                                class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
-                                :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
-                                @click="select(opt)">
-                                <span x-text="opt.label" class="line-clamp-2"></span>
-                                <span x-show="opt.value === value" class="text-xs flex-shrink-0">✓</span>
-                            </button>
-                        </template>
-                        <div x-show="options.length === 0 && !isLoading" class="px-3.5 py-2 text-sm text-slate-400 italic">Data kosong</div>
+                        <div x-show="open" @click.outside="open = false" x-transition
+                            class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
+                            <template x-for="opt in options" :key="opt.value">
+                                <button type="button"
+                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
+                                    :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                                    @click="select(opt)">
+                                    <span x-text="opt.label" class="line-clamp-2"></span>
+                                    <span x-show="opt.value === value" class="text-xs flex-shrink-0">✓</span>
+                                </button>
+                            </template>
+                            <div x-show="options.length === 0 && !isLoading"
+                                class="px-3.5 py-2 text-sm text-slate-400 italic">Data kosong</div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
 
                 {{-- Row 3: Uraian Kegiatan --}}
@@ -334,12 +336,18 @@
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+
                         <label class="w-full flex items-center justify-between rounded-[10px]
-                                       border border-dashed border-slate-300 bg-slate-50/60
-                                       px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            <span class="truncate">Pilih File</span>
+                   border border-dashed border-slate-300 bg-slate-50/60
+                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
+
+                            <!-- Nama file tampil di sini -->
+                            <span id="bukti_filename" class="truncate">Pilih File</span>
+
                             <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
-                            <input type="file" name="bukti[]" multiple class="hidden">
+
+                            <!-- Tambah ID untuk dipegang oleh JS -->
+                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
                         </label>
                     </div>
 

@@ -122,14 +122,19 @@ $iconMap = [
         @foreach ($menus as $menu)
         @php
         $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-        $isActive = $activeMenu === $menu['key'];
+
+        // cek active dengan 2 cara
+        $isActive =
+        request()->url() === $menu['route'] ||
+        $activeMenu === $menu['key'];
         @endphp
 
         <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
-                              {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
+           {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
 
-            <img src="{{ asset('assets/icon/' . $iconFile) }}" alt="{{ $menu['label'] }}"
+            <img src="{{ asset('assets/icon/' . $iconFile) }}"
                 class="h-5 w-5 {{ $isActive ? 'filter invert brightness-0' : '' }}" />
+
             <span>{{ $menu['label'] }}</span>
         </a>
         @endforeach

@@ -123,10 +123,33 @@
                                 </span>
                             </div>
 
-                            {{-- NOTIF --}}
-                            <button class="h-10 w-10 flex items-center justify-center ml-6">
-                                <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
-                            </button>
+                            {{-- NOTIFIKASI --}}
+                            <div x-data="{ openNotif:false }" class="relative ml-6">
+
+                                {{-- ICON + BADGE --}}
+                                <button @click="openNotif = !openNotif"
+                                    class="relative h-10 w-10 flex items-center justify-center">
+
+                                    <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
+
+                                    {{-- BADGE — NEMPEL KE ICON --}}
+                                    <span id="notif-badge" class="absolute -top-[6px] -right-[6px] w-5 h-5 bg-[#B6241C] text-white text-[10px] 
+                   font-semibold rounded-full flex items-center justify-center shadow-md">
+                                    </span>
+                                </button>
+
+                                {{-- DROPDOWN — DEKAT ICON --}}
+                                <div x-show="openNotif" @click.outside="openNotif = false" x-transition class="absolute right-0 mt-2 w-[340px] rounded-[15px] bg-white shadow-xl ring-1 ring-slate-200 
+                p-4 z-50">
+
+                                    <h3 class="text-[14px] font-semibold text-slate-700 mb-3">Pemberitahuan</h3>
+
+                                    <div id="notif-list"
+                                        class="space-y-3 max-h-[300px] overflow-y-auto no-scrollbar pr-2">
+                                        {{-- Notif by JS --}}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>

@@ -263,3 +263,7 @@
 </section>
 
 @endsection
+
+@push('scripts')
+    @vite('resources/js/pages/staf/dashboard.js')
+@endpush

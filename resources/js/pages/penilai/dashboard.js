@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async function () {
      * =======================================================*/
     let data;
     try {
-        const res = await fetch("http://127.0.0.1:8000/api/dashboard/stats", {
+        const res = await fetch("/api/dashboard/stats", {
             method: "GET",
             headers
         });

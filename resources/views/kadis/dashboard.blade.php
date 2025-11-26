@@ -1,4 +1,4 @@
-@php($title = 'Dashboard Penilai')
+@php($title = 'Dashboard Kadis')
 @extends('layouts.app', ['title' => $title, 'role' => 'kadis', 'active' => 'dashboard'])
 
 @section('content')
@@ -303,3 +303,7 @@
 </section>
 
 @endsection
+
+@push('scripts')
+    @vite('resources/js/pages/kadis/dashboard.js')
+@endpush

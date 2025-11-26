@@ -1,5 +1,5 @@
 @php($title = 'Input LKH')
-@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'input-lkh'])
+@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'input-lkh'])
 
 @section('content')
 
@@ -556,7 +556,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     // 1. LOGIKA DASHBOARD & DRAFT (Existing)
     // ==========================================
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/dashboard/stats", {
+        const response = await fetch("/api/dashboard/stats", {
             method: "GET",
             headers: headers
         });

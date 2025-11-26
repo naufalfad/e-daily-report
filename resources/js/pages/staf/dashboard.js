@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                     <div class="flex items-center gap-2 shrink-0">
                         <button 
-                            onclick="window.location.href='/penilai/input-laporan/${item.id}'"
+                            onclick="window.location.href='/staf/input-laporan/${item.id}'"
                             class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] shadow-sm hover:brightness-95">
                             Lanjutkan
                         </button>

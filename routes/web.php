@@ -81,6 +81,7 @@ Route::prefix('penilai')->name('penilai.')->group(function () {
     Route::get('/skoring-kinerja', [SkpController::class, 'skoringKinerja'])->name('skoring-kinerja');
     Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
     Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
+    Route::view('/pengumuman', 'penilai.pengumuman')->name('pengumuman');
     
     // Log Aktivitas Penilai
     Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');

@@ -33,7 +33,8 @@ route('penilai.validasi-laporan')
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => route('penilai.peta-aktivitas')],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => route('penilai.riwayat')],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => route('penilai.log-aktivitas')],
-['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => route('penilai.pengumuman')],
+['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' =>route('penilai.pengumuman.index')],
+
 ],
 
 // ==================== ROLE KEPALA DINAS ====================

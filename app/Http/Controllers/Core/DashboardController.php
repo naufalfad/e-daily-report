@@ -117,7 +117,7 @@ class DashboardController extends Controller
             ->where('user_id', $userId)
             ->where('status', 'draft')
             ->latest('created_at')
-            ->limit(5)
+            ->limit(3)
             ->get();
 
         return response()->json([

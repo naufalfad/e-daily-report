@@ -19,7 +19,7 @@ class LkhBukti extends Model
     public function getFileUrlAttribute()
     {
         if ($this->file_path) {
-            return Storage::disk('minio')->url($this->file_path);
+            return Storage::disk('public')->url($this->file_path);
         }
         return null;
     }

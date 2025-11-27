@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Facades\Image;
 use App\Services\NotificationService; 
 use App\Enums\NotificationType; 
 use Carbon\Carbon; // Tambahan untuk formatting tanggal di pesan
@@ -100,10 +102,12 @@ class LkhController extends Controller
             'latitude'          => 'nullable|numeric|required_without:master_kelurahan_id',
             'longitude'         => 'nullable|numeric|required_without:master_kelurahan_id',
             'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id|required_without:latitude',
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
         ]);
 
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+
+        $uploadedFiles = [];
 
         try {
             // 2. Mulai Transaksi Database (Atomic Operation)
@@ -111,22 +115,17 @@ class LkhController extends Controller
 
             $finalLat = $request->latitude;
             $finalLng = $request->longitude;
-            
-            // --- Logika Geofencing ---
-            $officeLat = config('services.office.lat');
-            $officeLng = config('services.office.lng');
-            $radius    = config('services.office.radius');
             $isLuarLokasi = true;
 
-            if ($officeLat && $officeLng && $finalLat && $finalLng) {
+            if (config('services.office.lat') && config('services.office.lng') && $finalLat && $finalLng) {
                 $distanceQuery = DB::selectOne("
                     SELECT ST_DistanceSphere(
                         ST_Point(?, ?), 
                         ST_Point(?, ?)  
                     ) as distance
-                ", [$finalLng, $finalLat, $officeLng, $officeLat]);
+                ", [$finalLng, $finalLat, config('services.office.lng'), config('services.office.lat')]);
 
-                if ($distanceQuery->distance <= $radius) {
+                if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
                     $isLuarLokasi = false;
                 }
             }
@@ -151,15 +150,49 @@ class LkhController extends Controller
                 'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
-            // 4. Upload Bukti ke MinIO
+            // 4. Proses Upload Filen
             if ($request->hasFile('bukti')) {
+                $folderDate = date('Y/m');
+                $storagePath = "uploads/lkh/{$folderDate}";
+
                 foreach ($request->file('bukti') as $file) {
-                    $path = $file->store('lkh_bukti', 'minio'); 
+                    $extension = strtolower($file->getClientOriginalExtension());
+                    $filename  = Str::uuid() . '.' . $extension;
+                    $finalPath = "";
+
+                    // A. Optimasi Gambar (JPG/PNG -> Resize & WebP)
+                    if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $filename = Str::uuid() . '.webp'; // Ubah ekstensi jadi webp
+                        $finalPath = "{$storagePath}/{$filename}";
+                        
+                        // Pastikan folder ada
+                        if (!Storage::disk('public')->exists($storagePath)) {
+                            Storage::disk('public')->makeDirectory($storagePath);
+                        }
+
+                        $image = Image::make($file)
+                            ->resize(1280, null, function ($constraint) {
+                                $constraint->aspectRatio();
+                                $constraint->upsize(); // Jangan perbesar jika gambar asli kecil
+                            })
+                            ->encode('webp', 80);
+
+                        // Simpan ke disk public
+                        Storage::disk('public')->put($finalPath, (string) $image);
+                    }
+                    // B. File Dokumen/Video (Simpan Langsung)
+                    else {
+                        $finalPath = $file->storeAs($storagePath, $filename, 'public');
+                    }
+
+                    $uploadedFiles[] = $finalPath;
+
                     LkhBukti::create([
                         'laporan_id'         => $lkh->id,
-                        'file_path'          => $path,
+                        'file_path'          => $finalPath,
                         'file_name_original' => $file->getClientOriginalName(),
-                        'file_type'          => $file->getClientOriginalExtension(),
+                        'file_type'          => $extension,
+                        'file_size'          => $file->getSize()
                     ]);
                 }
             }
@@ -170,12 +203,16 @@ class LkhController extends Controller
                 // Formatting tanggal agar lebih humanis
                 $tglIndo = Carbon::parse($request->tanggal_laporan)->format('d/m/Y');
                 
-                NotificationService::send(
+                try {
+                    NotificationService::send(
                     $user->atasan_id,
                     NotificationType::LKH_NEW_SUBMISSION->value, 
                     "Pegawai {$user->name} mengajukan LKH baru kegiatan '{$request->jenis_kegiatan}' untuk tanggal {$tglIndo}.",
-                    $lkh // Object untuk Polymorphic Redirect
-                );
+                    $lkh // Object untuk Polymorphic Redirect)
+                    );
+                } catch (\Exception $e) {
+                    \Log::error("Gagal kirim notif LKH: " . $e->getMessage());
+                }
             }
 
             // 6. Commit Transaksi (Simpan Permanen)
@@ -190,9 +227,11 @@ class LkhController extends Controller
         } catch (\Exception $e) {
             // 7. Rollback jika ada error apapun (DB atau Notif)
             DB::rollBack();
-            
-            // Opsional: Clean up file MinIO jika sudah terlanjur terupload (Advanced)
-            // if (isset($path)) Storage::disk('minio')->delete($path);
+            foreach ($uploadedFiles as $path) {
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
 
             return response()->json(['message' => 'Gagal mengirim laporan', 'error' => $e->getMessage()], 500);
         }

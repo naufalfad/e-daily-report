@@ -38,7 +38,7 @@ class User extends Authenticatable
     public function getFotoProfilUrlAttribute()
     {
         return $this->foto_profil
-            ? Storage::disk('minio')->url($this->foto_profil)
+            ? Storage::disk('public')->url($this->foto_profil)
             : asset('images/default-user.png');
     }
 

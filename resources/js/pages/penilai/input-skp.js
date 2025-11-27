@@ -1,8 +1,10 @@
 // ===============================
-//  SKP PAGE — SCRIPT TERPISAH
+//  SKP PAGE (PENILAI)
 // ===============================
 
-export function skpPageData() {
+// Ganti 'export function' menjadi penugasan ke 'window'
+// Agar bisa dipanggil oleh x-data di file Blade
+window.skpPageData = function() {
     return {
         // Data
         skpList: [],
@@ -31,9 +33,10 @@ export function skpPageData() {
                 window.location.href = '/login';
                 return;
             }
+            console.log("Init Penilai SKP Page");
             this.fetchProfile();
             this.fetchSkpList();
-            this.initDatePickers();
+            // initDatePickers dihapus karena HTML menggunakan native input date tanpa ID khusus
         },
 
         // Fetch Profile
@@ -79,6 +82,17 @@ export function skpPageData() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
 
+            // Validasi sederhana sebelum kirim
+            if (!this.formData.nama_skp || !this.formData.target) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Pastikan semua kolom wajib telah terisi.'
+                });
+                this.isLoading = false;
+                return;
+            }
+
             try {
                 const res = await fetch('/api/skp', {
                     method: 'POST',
@@ -92,14 +106,28 @@ export function skpPageData() {
 
                 const json = await res.json();
                 if (res.ok) {
-                    alert('SKP Berhasil Ditambahkan!');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'SKP berhasil ditambahkan!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                     this.resetForm();
                     this.fetchSkpList();
                 } else {
-                    alert('Gagal: ' + (json.message || JSON.stringify(json.errors)));
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: json.message || 'Terjadi kesalahan validasi.'
+                    });
                 }
             } catch (e) {
-                alert('Terjadi kesalahan. Cek koneksi.');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Gagal menghubungi server.'
+                });
             }
 
             this.isLoading = false;
@@ -123,8 +151,10 @@ export function skpPageData() {
         },
 
         openEditModal() {
+            // Deep copy object agar tidak merubah tampilan tabel realtime sebelum save
             this.editData = JSON.parse(JSON.stringify(this.detailData));
 
+            // Format tanggal agar sesuai input type="date" (YYYY-MM-DD)
             if (this.editData.periode_mulai)
                 this.editData.periode_mulai = this.editData.periode_mulai.substring(0, 10);
 
@@ -161,15 +191,29 @@ export function skpPageData() {
                 });
 
                 if (res.ok) {
-                    alert('Perubahan Disimpan!');
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Disimpan',
+                        text: 'Perubahan berhasil disimpan.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                     this.openEdit = false;
                     this.fetchSkpList();
                 } else {
                     const json = await res.json();
-                    alert('Gagal Update: ' + (json.message || 'Error Validasi'));
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Update',
+                        text: json.message || 'Error Validasi'
+                    });
                 }
             } catch (e) {
-                alert('Error koneksi server');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Gagal menghubungi server.'
+                });
             }
 
             this.isLoading = false;
@@ -187,26 +231,6 @@ export function skpPageData() {
             } catch {
                 return dateString;
             }
-        },
-
-        initDatePickers() {
-            this.$nextTick(() => {
-                const init = (inputId, btnId) => {
-                    const i = document.getElementById(inputId);
-                    const b = document.getElementById(btnId);
-                    if (i && b) {
-                        b.addEventListener('click', () => {
-                            try {
-                                i.showPicker();
-                            } catch {
-                                i.focus();
-                            }
-                        });
-                    }
-                };
-                init('periode_awal', 'periode_awal_btn');
-                init('periode_akhir', 'periode_akhir_btn');
-            });
         }
     };
-}
+};

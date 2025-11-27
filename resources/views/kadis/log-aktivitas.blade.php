@@ -5,7 +5,7 @@
 <section x-data="logActivityKadis()" x-init="initLog()" class="flex-1 flex flex-col">
 
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 flex-1 flex flex-col">
-        <h2 class="text-[20px] font-normal mb-6">Log Aktivitas Pegawai</h2>
+        <h2 class="text-[20px] font-normal mb-6">Log Aktivitas Kepala Dinas</h2>
 
         {{-- FILTER --}}
         <form class="mb-8" @submit.prevent="filterData()">

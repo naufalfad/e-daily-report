@@ -546,50 +546,13 @@
 
 @push('scripts')
 <script>
-// ID mode edit
+// ============================================================
+// 🔥 VARIABEL GLOBAL
+// ============================================================
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
 
-    // ============================================================
-    // 1. FILE PREVIEW — FIXED
-    // ============================================================
-    const fileInput = document.getElementById("bukti_input");
-    const fileLabel = document.getElementById("bukti_filename");
-
-    if (fileInput && fileLabel) {
-        fileInput.addEventListener("change", () => {
-            if (fileInput.files.length === 0) {
-                fileLabel.textContent = "Pilih File";
-            } else if (fileInput.files.length === 1) {
-                fileLabel.textContent = fileInput.files[0].name;
-            } else {
-                fileLabel.textContent = `${fileInput.files.length} file dipilih`;
-            }
-        });
-    }
-
-    // ============================================================
-    // 2. BLOKIR MINUS & PLUS VOLUME — FIXED & CLEAN
-    // ============================================================
-    const volumeInput = document.querySelector('input[name="volume"]');
-
-    if (volumeInput) {
-        // Blokir + & -
-        volumeInput.addEventListener("keydown", (e) => {
-            if (e.key === "-" || e.key === "+") e.preventDefault();
-        });
-
-        // Hilangkan karakter non-angka
-        volumeInput.addEventListener("input", () => {
-            volumeInput.value = volumeInput.value.replace(/[^0-9]/g, "");
-            if (volumeInput.value === "") volumeInput.value = 0;
-        });
-    }
-
-    // ============================================================
-    // 3. HEADER FETCH FIX (tanpa typo)
-    // ============================================================
     const token = localStorage.getItem("auth_token");
 
     const headers = {
@@ -598,112 +561,363 @@ document.addEventListener("DOMContentLoaded", async function() {
     if (token) headers["Authorization"] = "Bearer " + token;
 
     // ============================================================
-    // 4. LOAD DASHBOARD STATS (PERBAIKI TYPO)
+    // 🔥 1. FILE PREVIEW
+    // ============================================================
+    const fileInput = document.getElementById("bukti_input");
+    const fileLabel = document.getElementById("bukti_filename");
+
+    if (fileInput && fileLabel) {
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length === 0) fileLabel.textContent = "Pilih File";
+            else if (fileInput.files.length === 1) fileLabel.textContent = fileInput.files[0].name;
+            else fileLabel.textContent = `${fileInput.files.length} file dipilih`;
+        });
+    }
+
+    // ============================================================
+    // 🔥 2. BLOKIR INPUT VOLUME
+    // ============================================================
+    const volumeInput = document.querySelector('input[name="volume"]');
+
+    if (volumeInput) {
+        volumeInput.addEventListener("keydown", (e) => {
+            if (e.key === "-" || e.key === "+") e.preventDefault();
+        });
+
+        volumeInput.addEventListener("input", () => {
+            volumeInput.value = volumeInput.value.replace(/[^0-9]/g, "");
+            if (volumeInput.value === "") volumeInput.value = 0;
+        });
+    }
+
+    // ============================================================
+    // 🔥 3. LOAD DASHBOARD (Aktivitas & Draft)
     // ============================================================
     try {
         const response = await fetch("/api/dashboard/stats", {
             method: "GET",
-            headers: headers
+            headers: headers,
         });
 
         if (response.ok) {
             const data = await response.json();
 
-            // -----------------------
-            // RENDER AKTIVITAS
-            // -----------------------
-            const listContainer = document.getElementById("aktivitas-list");
-            listContainer.innerHTML = "";
-            const aktivitas = data.aktivitas_terbaru ?? [];
-
-            const iconPaths = {
-                pending: "{{ asset('assets/icon/pending.svg') }}",
-                approve: "{{ asset('assets/icon/approve.svg') }}",
-                reject: "{{ asset('assets/icon/reject.svg') }}"
-            };
-
-            if (aktivitas.length === 0) {
-                listContainer.innerHTML =
-                    `<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>`;
-            } else {
-                aktivitas.forEach(item => {
-                    const d = new Date(item.tanggal_laporan);
-                    const tanggal = d.toLocaleDateString("id-ID", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric"
-                    });
-
-                    let tone = "bg-slate-200";
-                    let icon = iconPaths.pending;
-                    let statusLabel = "Menunggu Review";
-
-                    if (item.status === "approved") {
-                        tone = "bg-[#128C60]/50";
-                        icon = iconPaths.approve;
-                        statusLabel = "Disetujui";
-                    } else if (item.status.includes("reject")) {
-                        tone = "bg-[#B6241C]/50";
-                        icon = iconPaths.reject;
-                        statusLabel = "Ditolak";
-                    }
-
-                    listContainer.insertAdjacentHTML("beforeend", `
-                        <li class="flex items-start gap-3">
-                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                                <img src="${icon}" class="h-5 w-5 opacity-90">
-                            </div>
-                            <div class="flex-1 overflow-hidden">
-                                <div class="text-[13px] font-medium leading-snug truncate">
-                                    ${item.deskripsi_aktivitas}
-                                </div>
-                                <div class="flex justify-between mt-[2px]">
-                                    <span class="text-xs text-slate-500">${statusLabel}</span>
-                                    <span class="text-xs text-slate-500">${tanggal}</span>
-                                </div>
-                            </div>
-                        </li>
-                    `);
-                });
-            }
+            renderAktivitas(data.aktivitas_terbaru || []);
+            renderDraft(data.draft_terbaru || []);
         }
-
     } catch (err) {
         console.error("Gagal load dashboard stats:", err);
     }
 
     // ============================================================
-    // 5. TOMBOL DATE & TIME PICKER (NO ERROR)
+    // 🔥 4. LOAD DATA EDIT LKH
     // ============================================================
-    const btnTanggal = document.getElementById("tanggal_lkh_btn");
-    const inputTanggal = document.getElementById("tanggal_lkh");
-    if (btnTanggal && inputTanggal) {
-        btnTanggal.addEventListener("click", (e) => {
-            e.preventDefault();
-            inputTanggal.showPicker ? inputTanggal.showPicker() : inputTanggal.click();
-        });
+    if (lkhIdToEdit) {
+        loadEditLKH(lkhIdToEdit, headers);
     }
 
-    const btnJamMulai = document.getElementById("jam_mulai_btn");
-    const inputJamMulai = document.getElementById("jam_mulai");
-    if (btnJamMulai && inputJamMulai) {
-        btnJamMulai.addEventListener("click", (e) => {
-            e.preventDefault();
-            inputJamMulai.showPicker ? inputJamMulai.showPicker() : inputJamMulai.click();
-        });
+    // ============================================================
+    // 🔥 5. DATE & TIME BUTTON
+    // ============================================================
+    activatePickerButton("tanggal_lkh_btn", "tanggal_lkh");
+    activatePickerButton("jam_mulai_btn", "jam_mulai");
+    activatePickerButton("jam_selesai_btn", "jam_selesai");
+}); // END DOM LOADED
+
+
+
+// ============================================================
+// 🔥 RENDER AKTIVITAS
+// ============================================================
+function renderAktivitas(aktivitas) {
+    const listContainer = document.getElementById("aktivitas-list");
+    listContainer.innerHTML = "";
+
+    const iconPaths = {
+        pending: "{{ asset('assets/icon/pending.svg') }}",
+        approve: "{{ asset('assets/icon/approve.svg') }}",
+        reject: "{{ asset('assets/icon/reject.svg') }}"
+    };
+
+    if (aktivitas.length === 0) {
+        listContainer.innerHTML =
+            `<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>`;
+        return;
     }
 
-    const btnJamSelesai = document.getElementById("jam_selesai_btn");
-    const inputJamSelesai = document.getElementById("jam_selesai");
-    if (btnJamSelesai && inputJamSelesai) {
-        btnJamSelesai.addEventListener("click", (e) => {
-            e.preventDefault();
-            inputJamSelesai.showPicker ? inputJamSelesai.showPicker() : inputJamSelesai.click();
+    aktivitas.forEach(item => {
+        const d = new Date(item.tanggal_laporan);
+        const tanggal = d.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+
+        let tone = "bg-slate-200";
+        let icon = iconPaths.pending;
+        let statusLabel = "Menunggu Review";
+
+        if (item.status === "approved") {
+            tone = "bg-[#128C60]/50";
+            icon = iconPaths.approve;
+            statusLabel = "Disetujui";
+        } else if (item.status.includes("reject")) {
+            tone = "bg-[#B6241C]/50";
+            icon = iconPaths.reject;
+            statusLabel = "Ditolak";
+        }
+
+        listContainer.insertAdjacentHTML("beforeend", `
+            <li class="flex items-start gap-3">
+                <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
+                    <img src="${icon}" class="h-5 w-5 opacity-90">
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <div class="text-[13px] font-medium leading-snug truncate">
+                        ${item.deskripsi_aktivitas}
+                    </div>
+                    <div class="flex justify-between mt-[2px]">
+                        <span class="text-xs text-slate-500">${statusLabel}</span>
+                        <span class="text-xs text-slate-500">${tanggal}</span>
+                    </div>
+                </div>
+            </li>
+        `);
+    });
+}
+
+
+
+// ============================================================
+// 🔥 RENDER DRAFT
+// ============================================================
+function renderDraft(rawDrafts) {
+    const draftContainer = document.getElementById("draft-list");
+    draftContainer.innerHTML = "";
+
+    const processedDrafts = rawDrafts.map(item => {
+        const d = new Date(item.updated_at);
+        return {
+            id: item.id,
+            deskripsi: item.deskripsi_aktivitas || "Draft tanpa judul",
+            waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
+        };
+    });
+
+    if (processedDrafts.length === 0) {
+        draftContainer.innerHTML =
+            `<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>`;
+        return;
+    }
+
+    processedDrafts.slice(0, 3).forEach(item => {
+        draftContainer.insertAdjacentHTML("beforeend", `
+            <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-[12px] font-medium text-slate-900 truncate">${item.deskripsi}</h4>
+                    <p class="text-[10px] text-slate-500 mt-1">${item.waktu_simpan}</p>
+                </div>
+                <a href="/staf/input-lkh/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px]">
+                    Lanjutkan
+                </a>
+                <button onclick="deleteDraft('${item.id}')" class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
+                    Hapus
+                </button>
+            </div>
+        `);
+    });
+
+    // Kirim draft ke Alpine Modal
+    window.dispatchEvent(new CustomEvent("update-drafts", { detail: processedDrafts }));
+}
+
+
+
+// ============================================================
+// 🔥 LOAD EDIT LKH
+// ============================================================
+async function loadEditLKH(id, headers) {
+    try {
+        document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
+
+        const res = await fetch(`/api/lkh/${id}`, {
+            method: "GET",
+            headers: headers,
+        });
+
+        if (!res.ok) throw new Error("Gagal ambil detail LKH");
+
+        const data = (await res.json()).data;
+
+        // Isi input
+        setVal("tanggal_lkh", data.tanggal_laporan);
+        setVal("jam_mulai", data.waktu_mulai);
+        setVal("jam_selesai", data.waktu_selesai);
+        document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas;
+        document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja;
+        document.querySelector('input[name="volume"]').value = data.volume;
+
+        if (data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
+        if (data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
+
+        updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
+        updateAlpineDropdown('satuan', data.satuan);
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label);
+
+        document.querySelector('h2').innerText = "Edit LKH";
+
+    } catch (err) {
+        console.error(err);
+        alert("Gagal memuat data edit.");
+    }
+}
+
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+}
+
+
+
+// ============================================================
+// 🔥 ALPINE HELPER
+// ============================================================
+function updateAlpineDropdown(inputName, value, label = null) {
+    const el = document.querySelector(`input[name="${inputName}"]`);
+    if (el) {
+        const scope = Alpine.$data(el.closest('[x-data]'));
+        scope.value = value;
+        scope.label = label || value;
+    }
+}
+
+function setAlpineValue(selector, key, value) {
+    const el = document.querySelector(selector);
+    if (el && el.closest("[x-data]")) {
+        Alpine.$data(el.closest("[x-data]"))[key] = value;
+    }
+}
+
+
+
+// ============================================================
+// 🔥 BUTTON DATE/TIME PICKER
+// ============================================================
+function activatePickerButton(btnId, inputId) {
+    const btn = document.getElementById(btnId);
+    const input = document.getElementById(inputId);
+    if (!btn || !input) return;
+
+    btn.addEventListener("click", e => {
+        e.preventDefault();
+        input.showPicker ? input.showPicker() : input.click();
+    });
+}
+
+
+
+// ============================================================
+// 🔥 SUBMIT FORM (CREATE / UPDATE)
+// ============================================================
+async function submitForm(statusType) {
+    if (event) event.preventDefault();
+
+    const token = localStorage.getItem("auth_token");
+    const form = document.getElementById("form-lkh");
+    const formData = new FormData(form);
+
+    formData.set("status", statusType);
+
+    // Validasi — Waiting Review
+    if (statusType === "waiting_review") {
+        const required = [
+            "tanggal_laporan", "jenis_kegiatan", "tupoksi_id",
+            "deskripsi_aktivitas", "output_hasil_kerja",
+            "volume", "satuan", "waktu_mulai", "waktu_selesai"
+        ];
+
+        let missing = required.filter(name => !formData.get(name)?.trim());
+
+        if (missing.length > 0) {
+            return Swal.fire({
+                icon: "warning",
+                title: "Form Belum Lengkap",
+                text: "Harap lengkapi semua field sebelum mengirim LKH.",
+            });
+        }
+    }
+
+    // Validasi — Draft
+    if (statusType === "draft") {
+        const minimal = [
+            "deskripsi_aktivitas",
+            "output_hasil_kerja",
+            "tanggal_laporan"
+        ];
+
+        const isEmpty = minimal.every(name => !formData.get(name)?.trim());
+
+        if (isEmpty) {
+            return Swal.fire({
+                icon: "info",
+                title: "Tidak Ada Data",
+                text: "Isi minimal 1 field untuk menyimpan draft.",
+            });
+        }
+    }
+
+    let url = "/api/lkh";
+
+    if (lkhIdToEdit) url = `/api/lkh/update/${lkhIdToEdit}`;
+
+    try {
+        const btn = event.target;
+        const old = btn.innerText;
+        btn.innerText = "Memproses...";
+        btn.disabled = true;
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/json"
+            },
+            body: formData
+        });
+
+        const json = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                icon: "success",
+                title: statusType === "draft" ? "Draft Disimpan" : "LKH Terkirim!",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            setTimeout(() => window.location.href = "/staf/dashboard", 1000);
+            return;
+        }
+
+        Swal.fire({
+            icon: "error",
+            title: "Gagal Menyimpan",
+            text: json.message || "Terjadi kesalahan.",
+        });
+
+        btn.disabled = false;
+        btn.innerText = old;
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            icon: "error",
+            title: "Kesalahan Koneksi",
+            text: "Periksa koneksi internet Anda.",
         });
     }
-});
+}
 </script>
 @endpush
-
 
 @endsection

@@ -1,5 +1,5 @@
 @php($title = 'Input LKH')
-@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'input-lkh'])
+@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'input-lkh'])
 
 @section('content')
 

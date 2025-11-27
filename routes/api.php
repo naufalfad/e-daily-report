@@ -34,6 +34,13 @@ Route::post('/login', [AuthController::class, 'login']);
 // 2. PROTECTED ROUTES (Wajib Login / Sanctum)
 // ======================================================
 Route::middleware('auth:sanctum')->group(function () {
+     // Laporan yang harus divalidasi oleh KADIS (dari KABID)
+    Route::get('/lkh', [\App\Http\Controllers\Core\KadisValidatorController::class, 'index']);
+    Route::get('/lkh/{id}', [\App\Http\Controllers\Core\KadisValidatorController::class, 'show']);
+    Route::post('/lkh/{id}/validate', [\App\Http\Controllers\Core\KadisValidatorController::class, 'validateLkh']);
+
+    // Monitoring laporan staf (yang sudah approved oleh Kabid)
+    Route::get('/monitoring/staf', [\App\Http\Controllers\Core\KadisValidatorController::class, 'monitoringStaf']);
 
     // --- A. AUTH & PROFILE ---
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -43,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- B. DASHBOARD ---
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/kadis', [DashboardController::class, 'getStatsKadis']);
 
     // --- C. ADMIN MODULE ---
     Route::prefix('admin')->group(function () {

@@ -144,9 +144,9 @@ $iconMap = [
     {{-- Footer Sidebar --}}
     <div class="mt-6 pt-4 shrink-0">
         @if (Route::has('logout'))
-        <form action="{{ route('logout') }}" method="POST">
+        <form id="logout-form" action="{{ route('logout') }}" method="POST">
             @csrf
-            <button type="submit"
+            <button type="button" id="btn-logout"
                 class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
                 <img src="{{ asset('assets/icon/logout.svg') }}" alt="Logout" class="h-5 w-5" />
                 <span>Logout</span>

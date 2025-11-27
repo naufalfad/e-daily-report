@@ -69,36 +69,38 @@ Route::prefix('staf')->name('staf.')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('penilai')->name('penilai.')->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
-    Route::view('/input-laporan', 'penilai.input-lkh')->name('input-laporan');
-    Route::get('/input-laporan/{id?}', function ($id = null) {
-        return view('penilai.input-lkh', ['id' => $id]);
-    })->name('input-laporan');
-    Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
-    Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
-    Route::get('/skoring-kinerja', [SkpController::class, 'skoringKinerja'])->name('skoring-kinerja');
-    Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
-    Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
-    Route::view('/pengumuman', 'penilai.pengumuman')->name('pengumuman');
-    
-    // Log Aktivitas Penilai
-    Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');
+    Route::prefix('penilai')->name('penilai.')->group(function () {
 
-    // [PERBAIKAN 2] Route Pengumuman Lengkap untuk Penilai (CRUD)
-    // ---------------------------------------------------------
-    Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
-        // Halaman Utama (View)
-        Route::view('/', 'penilai.pengumuman')->name('index');
+        Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
+        Route::view('/input-laporan', 'penilai.input-lkh')->name('input-laporan');
+        Route::get('/input-laporan/{id?}', function ($id = null) {
+            return view('penilai.input-lkh', ['id' => $id]);
+        })->name('input-laporan');
+        Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
+        Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
+        Route::get('/skoring-kinerja', [SkpController::class, 'skoringKinerja'])->name('skoring-kinerja');
+        Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
+        Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
+        Route::view('/pengumuman', 'penilai.pengumuman')->name('pengumuman');
         
-        // API endpoints (dipanggil via fetch/axios di JS)
-        Route::get('/list', [PengumumanController::class, 'index'])->name('list');   // Ambil Data
-        Route::post('/store', [PengumumanController::class, 'store'])->name('store'); // Simpan Baru
-        Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); // Hapus
+        // Log Aktivitas Penilai
+        Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');
+
+        // [PERBAIKAN 2] Route Pengumuman Lengkap untuk Penilai (CRUD)
+        // ---------------------------------------------------------
+        Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
+            // Halaman Utama (View)
+            Route::view('/', 'penilai.pengumuman')->name('index');
+            
+            // API endpoints (dipanggil via fetch/axios di JS)
+            Route::get('/list', [PengumumanController::class, 'index'])->name('list');   // Ambil Data
+            Route::post('/store', [PengumumanController::class, 'store'])->name('store'); // Simpan Baru
+            Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); // Hapus
+        });
     });
 });
-
 
 /*
 |--------------------------------------------------------------------------

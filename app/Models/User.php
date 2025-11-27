@@ -124,4 +124,9 @@ class User extends Authenticatable
         return $this->roles()->where('nama_role', $roleName)->exists();
     }
 
+    public function skp()
+    {
+        return $this->hasMany(Skp::class, 'user_id');
+    }
+
 }

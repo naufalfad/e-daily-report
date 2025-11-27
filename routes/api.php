@@ -34,6 +34,13 @@ Route::post('/login', [AuthController::class, 'login']);
 // 2. PROTECTED ROUTES (Wajib Login / Sanctum)
 // ======================================================
 Route::middleware('auth:sanctum')->group(function () {
+     // Laporan yang harus divalidasi oleh KADIS (dari KABID)
+    Route::get('/lkh', [\App\Http\Controllers\Core\KadisValidatorController::class, 'index']);
+    Route::get('/lkh/{id}', [\App\Http\Controllers\Core\KadisValidatorController::class, 'show']);
+    Route::post('/lkh/{id}/validate', [\App\Http\Controllers\Core\KadisValidatorController::class, 'validateLkh']);
+
+    // Monitoring laporan staf (yang sudah approved oleh Kabid)
+    Route::get('/monitoring/staf', [\App\Http\Controllers\Core\KadisValidatorController::class, 'monitoringStaf']);
 
     // --- A. AUTH & PROFILE ---
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -43,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- B. DASHBOARD ---
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/kadis', [DashboardController::class, 'getStatsKadis']);
 
     // --- C. ADMIN MODULE ---
     Route::prefix('admin')->group(function () {
@@ -91,18 +99,22 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // LKH
     Route::prefix('lkh')->group(function () {
-        // 1. Spesifik / Utility Routes (Ditaruh di atas)
+        // 1. Spesifik / Utility Routes (PRIORITAS UTAMA)
         Route::get('riwayat', [LkhController::class, 'getRiwayat']);
         Route::get('referensi', [LkhController::class, 'getReferensi']);
                 
-        // 2. Resource Routes (API Resource diganti manual)
-        Route::get('/', [LkhController::class, 'index']); // GET /lkh -> List
-        Route::post('/', [LkhController::class, 'store']); // POST /lkh -> Create
-        Route::post('/update/{id}', [LkhController::class, 'update']); // PUT /lkh -> Create
+        // 2. Resource Routes
+        Route::get('/', [LkhController::class, 'index']); 
+        Route::post('/', [LkhController::class, 'store']); 
         
-        // Rute yang menggunakan {id} (Harus DITARUH PALING BAWAH)
-        Route::get('/{id}', [LkhController::class, 'show']); // GET /lkh/{id} -> Show
-        Route::delete('/{id}', [LkhController::class, 'destroy']); // DELETE /lkh/{id} -> Delete
+        // [PERBAIKAN] Tambahkan ->where('id', '[0-9]+')
+        // Ini memaksa {id} hanya menerima ANGKA.
+        // Jadi, request 'riwayat' tidak akan nyasar ke sini lagi.
+        Route::post('/update/{id}', [LkhController::class, 'update'])->where('id', '[0-9]+'); 
+        
+        Route::get('/{id}', [LkhController::class, 'show'])->where('id', '[0-9]+'); 
+        
+        Route::delete('/{id}', [LkhController::class, 'destroy'])->where('id', '[0-9]+'); 
     });
 
     // Validator

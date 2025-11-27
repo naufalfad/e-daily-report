@@ -165,3 +165,7 @@ function riwayatData(role) {
         },
     };
 }
+
+// [CRITICAL FIX]
+// Daftarkan fungsi ke Global Window agar dikenali oleh Alpine.js di HTML
+window.riwayatData = riwayatData;

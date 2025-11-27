@@ -3,34 +3,34 @@ $title = 'Validasi Laporan';
 
 // DATA DUMMY (Tetap dipertahankan untuk display)
 $rows = [
-    [
-        'tanggal_dikirim' => '07 Nov 2025 | 12:30',
-        'nama_kegiatan' => 'Rapat Koordinasi Internal',
-        'waktu' => '13:00 – 15:30',
-        'pegawai' => 'Muhammad Naufal',
-        'lokasi' => 'Distrik Mimika',
-        'status' => 'waiting_review',
-        'detail' => [], // (Data detail disederhanakan di view ini karena diload via JS/API aslinya)
-    ],
-    [
-        'tanggal_dikirim' => '08 Nov 2025 | 14:10',
-        'nama_kegiatan' => 'Rapat Koordinasi Pendapatan',
-        'waktu' => '14:00 – 17:00',
-        'pegawai' => 'Fahrizal Mudzaqi Maulana',
-        'lokasi' => 'Kantor Pusat',
-        'status' => 'waiting_review', // Disamakan pending sesuai gambar figma
-        'detail' => [],
-    ],
-    [
-        'tanggal_dikirim' => '10 Nov 2025 | 10:10',
-        'nama_kegiatan' => 'Perjalanan Dinas',
-        'waktu' => '13:00 – 15:00',
-        'pegawai' => 'Reno Sebastian',
-        'lokasi' => 'Distrik Mimika Baru',
-        'status' => 'waiting_review',
-        'detail' => [],
-    ],
-    // ... sisa data
+[
+'tanggal_dikirim' => '07 Nov 2025 | 12:30',
+'nama_kegiatan' => 'Rapat Koordinasi Internal',
+'waktu' => '13:00 – 15:30',
+'pegawai' => 'Muhammad Naufal',
+'lokasi' => 'Distrik Mimika',
+'status' => 'waiting_review',
+'detail' => [], // (Data detail disederhanakan di view ini karena diload via JS/API aslinya)
+],
+[
+'tanggal_dikirim' => '08 Nov 2025 | 14:10',
+'nama_kegiatan' => 'Rapat Koordinasi Pendapatan',
+'waktu' => '14:00 – 17:00',
+'pegawai' => 'Fahrizal Mudzaqi Maulana',
+'lokasi' => 'Kantor Pusat',
+'status' => 'waiting_review', // Disamakan pending sesuai gambar figma
+'detail' => [],
+],
+[
+'tanggal_dikirim' => '10 Nov 2025 | 10:10',
+'nama_kegiatan' => 'Perjalanan Dinas',
+'waktu' => '13:00 – 15:00',
+'pegawai' => 'Reno Sebastian',
+'lokasi' => 'Distrik Mimika Baru',
+'status' => 'waiting_review',
+'detail' => [],
+],
+// ... sisa data
 ];
 @endphp
 
@@ -40,19 +40,23 @@ $rows = [
 
 {{-- Main Container --}}
 <div class="flex flex-col h-full space-y-6">
-    
+
     {{-- Header Section --}}
     <div class="flex items-end justify-between">
         <div>
             <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Validasi Laporan</h2>
             <p class="text-sm text-slate-500 mt-1">Tinjau dan validasi laporan kinerja harian pegawai.</p>
         </div>
-        
+
         {{-- Filter/Search Placeholder (Sesuai style Figma biasanya ada di kanan atas) --}}
         <div class="relative group">
-            <input type="text" placeholder="Cari pegawai..." 
+            <input type="text" placeholder="Cari pegawai..."
                 class="pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all w-64 shadow-sm">
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3 group-focus-within:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3 group-focus-within:text-emerald-600" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
         </div>
     </div>
 
@@ -61,7 +65,8 @@ $rows = [
         <div class="overflow-x-auto flex-1">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                    <tr
+                        class="bg-slate-50/50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                         <th class="px-6 py-5">Tanggal Dikirim</th>
                         <th class="px-6 py-5">Kegiatan</th>
                         <th class="px-6 py-5">Waktu</th>
@@ -81,8 +86,10 @@ $rows = [
                     <tr class="hover:bg-slate-50/80 transition-colors group">
                         {{-- Tanggal --}}
                         <td class="px-6 py-4 align-top">
-                            <div class="text-sm font-semibold text-slate-700">{{ explode('|', $row['tanggal_dikirim'])[0] }}</div>
-                            <div class="text-xs text-slate-400 mt-1 font-medium">{{ explode('|', $row['tanggal_dikirim'])[1] ?? '' }}</div>
+                            <div class="text-sm font-semibold text-slate-700">
+                                {{ explode('|', $row['tanggal_dikirim'])[0] }}</div>
+                            <div class="text-xs text-slate-400 mt-1 font-medium">
+                                {{ explode('|', $row['tanggal_dikirim'])[1] ?? '' }}</div>
                         </td>
 
                         {{-- Kegiatan --}}
@@ -92,7 +99,8 @@ $rows = [
 
                         {{-- Waktu --}}
                         <td class="px-6 py-4 align-top">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                                 {{ $row['waktu'] }}
                             </span>
                         </td>
@@ -100,31 +108,41 @@ $rows = [
                         {{-- Pegawai --}}
                         <td class="px-6 py-4 align-top">
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold shrink-0">
+                                <div
+                                    class="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold shrink-0">
                                     {{ substr($row['pegawai'], 0, 1) }}
                                 </div>
-                                <span class="text-sm text-slate-700 font-medium truncate max-w-[150px]">{{ $row['pegawai'] }}</span>
+                                <span
+                                    class="text-sm text-slate-700 font-medium truncate max-w-[150px]">{{ $row['pegawai'] }}</span>
                             </div>
                         </td>
 
                         {{-- Lokasi --}}
                         <td class="px-6 py-4 align-top">
                             <div class="text-sm text-slate-500 flex items-center gap-1.5">
-                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
                                 {{ $row['lokasi'] }}
                             </div>
                         </td>
 
                         {{-- Status --}}
                         <td class="px-6 py-4 align-top text-center">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100">
+                            <span
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100">
                                 Pending
                             </span>
                         </td>
 
                         {{-- Aksi --}}
                         <td class="px-6 py-4 align-top text-right">
-                            <button class="js-open-detail text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline decoration-blue-600/30 underline-offset-4 transition-all">
+                            <button
+                                class="js-open-detail text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline decoration-blue-600/30 underline-offset-4 transition-all">
                                 Lihat Detail
                             </button>
                         </td>
@@ -133,13 +151,19 @@ $rows = [
                 </tbody>
             </table>
         </div>
-        
+
         {{-- Footer Table (Pagination Placeholder) --}}
         <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between">
             <span class="text-xs text-slate-500">Menampilkan 1-6 dari 120 data</span>
             <div class="flex gap-2">
-                <button class="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30" disabled><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-                <button class="p-1 text-slate-600 hover:text-slate-800"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+                <button class="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30" disabled><svg
+                        class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg></button>
+                <button class="p-1 text-slate-600 hover:text-slate-800"><svg class="w-5 h-5" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg></button>
             </div>
         </div>
     </div>
@@ -153,37 +177,49 @@ $rows = [
     {{-- Modal Panel --}}
     <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-100">
-                
+            <div
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-100">
+
                 {{-- Header Modal --}}
                 <div class="bg-white px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-bold text-slate-800">Detail Laporan</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Tinjau detail aktivitas pegawai di bawah ini.</p>
                     </div>
-                    <button type="button" class="js-close-detail rounded-full p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button type="button"
+                        class="js-close-detail rounded-full p-2 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                 </div>
 
                 {{-- Body Modal --}}
                 <div class="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto">
-                    
+
                     {{-- Informasi Utama (Grid) --}}
                     <div class="grid grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Tanggal</label>
+                            <label
+                                class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Tanggal</label>
                             <div id="detail-tanggal" class="text-sm font-medium text-slate-800">-</div>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Status</label>
+                            <label
+                                class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Status</label>
                             <div id="detail-status">-</div>
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pegawai</label>
+                            <label
+                                class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pegawai</label>
                             <div class="flex items-center gap-3">
-                                <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                <div
+                                    class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
                                 </div>
                                 <div id="detail-pegawai" class="text-sm font-bold text-slate-800">-</div>
                             </div>
@@ -195,12 +231,16 @@ $rows = [
                     {{-- Detail Kegiatan --}}
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Nama Kegiatan</label>
+                            <label
+                                class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Nama
+                                Kegiatan</label>
                             <div id="detail-nama" class="text-base font-bold text-slate-900">-</div>
                         </div>
-                        
+
                         <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Uraian Aktivitas</label>
+                            <label
+                                class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Uraian
+                                Aktivitas</label>
                             <p id="detail-uraian" class="text-sm text-slate-600 leading-relaxed">-</p>
                         </div>
                     </div>
@@ -213,7 +253,8 @@ $rows = [
                         </div>
                         <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
                             <label class="block text-[10px] text-slate-400 mb-1">Volume</label>
-                            <div class="text-sm font-semibold text-slate-700"><span id="detail-volume">-</span> <span id="detail-satuan" class="text-xs font-normal text-slate-500"></span></div>
+                            <div class="text-sm font-semibold text-slate-700"><span id="detail-volume">-</span> <span
+                                    id="detail-satuan" class="text-xs font-normal text-slate-500"></span></div>
                         </div>
                         <div class="p-3 rounded-lg border border-slate-100 bg-slate-50/50">
                             <label class="block text-[10px] text-slate-400 mb-1">Kategori</label>
@@ -227,25 +268,41 @@ $rows = [
 
                     <div class="flex items-center justify-between pt-2">
                         <div>
-                            <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Lokasi</label>
+                            <label
+                                class="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Lokasi</label>
                             <div id="detail-lokasi" class="text-sm text-slate-700 font-medium flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
                                 -
                             </div>
                         </div>
                         <div>
-                            <button id="detail-bukti-btn" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                            <button id="detail-bukti-btn"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
                                 Lihat Bukti
                             </button>
                         </div>
                     </div>
 
                     {{-- Catatan Validator (Hidden by default) --}}
-                    <div id="detail-catatan-wrapper" class="hidden mt-4 bg-rose-50 border border-rose-100 rounded-lg p-4">
+                    <div id="detail-catatan-wrapper"
+                        class="hidden mt-4 bg-rose-50 border border-rose-100 rounded-lg p-4">
                         <div class="flex gap-3">
                             <div class="shrink-0 text-rose-500">
-                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                        clip-rule="evenodd" />
+                                </svg>
                             </div>
                             <div>
                                 <h4 class="text-sm font-medium text-rose-800">Catatan Revisi</h4>
@@ -259,16 +316,24 @@ $rows = [
                 {{-- Footer Modal (Actions) --}}
                 <div class="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-200">
                     <div id="validation-info" class="hidden text-sm text-slate-500 italic flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         Laporan ini telah divalidasi.
                     </div>
-                    
+
                     <div id="validation-actions" class="flex items-center gap-3 w-full justify-end">
-                        <button type="button" class="js-open-reject px-4 py-2 bg-white text-rose-600 text-sm font-medium rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition-all focus:ring-2 focus:ring-rose-500/20">
+                        <button type="button"
+                            class="js-open-reject px-4 py-2 bg-white text-rose-600 text-sm font-medium rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition-all focus:ring-2 focus:ring-rose-500/20">
                             Tolak
                         </button>
-                        <button type="button" class="js-open-approve px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-emerald-700 transition-all focus:ring-2 focus:ring-emerald-500/30 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <button type="button"
+                            class="js-open-approve px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-emerald-700 transition-all focus:ring-2 focus:ring-emerald-500/30 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
                             Terima Laporan
                         </button>
                     </div>
@@ -285,19 +350,28 @@ $rows = [
     <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
         <div class="p-6">
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-4">
-                <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
             </div>
             <h3 class="text-lg font-bold text-center text-slate-900">Terima Laporan?</h3>
-            <p class="text-sm text-center text-slate-500 mt-2">Laporan yang diterima akan masuk ke rekap kinerja pegawai.</p>
-            
+            <p class="text-sm text-center text-slate-500 mt-2">Laporan yang diterima akan masuk ke rekap kinerja
+                pegawai.</p>
+
             <div class="mt-4">
                 <label class="block text-xs font-medium text-slate-700 mb-1 ml-1">Catatan Opsional</label>
-                <textarea id="approve-note" rows="3" class="w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500/20" placeholder="Berikan apresiasi atau catatan..."></textarea>
+                <textarea id="approve-note" rows="3"
+                    class="w-full rounded-xl border-slate-200 text-sm focus:border-emerald-500 focus:ring-emerald-500/20"
+                    placeholder="Berikan apresiasi atau catatan..."></textarea>
             </div>
         </div>
         <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
-            <button type="button" class="js-close-approve w-full inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Batal</button>
-            <button type="button" id="btn-submit-approve" class="w-full inline-flex justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">Ya, Terima</button>
+            <button type="button"
+                class="js-close-approve w-full inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Batal</button>
+            <button type="button" id="btn-submit-approve"
+                class="w-full inline-flex justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">Ya,
+                Terima</button>
         </div>
     </div>
 </div>
@@ -308,29 +382,39 @@ $rows = [
     <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
         <div class="p-6">
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 mb-4">
-                <svg class="h-6 w-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg class="h-6 w-6 text-rose-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
             </div>
             <h3 class="text-lg font-bold text-center text-slate-900">Tolak Laporan?</h3>
-            <p class="text-sm text-center text-slate-500 mt-2">Pegawai harus memperbaiki laporan ini. Wajib sertakan alasan.</p>
-            
+            <p class="text-sm text-center text-slate-500 mt-2">Pegawai harus memperbaiki laporan ini. Wajib sertakan
+                alasan.</p>
+
             <div class="mt-4">
-                <label class="block text-xs font-medium text-slate-700 mb-1 ml-1">Alasan Penolakan <span class="text-rose-500">*</span></label>
-                <textarea id="reject-note" rows="3" class="w-full rounded-xl border-slate-200 text-sm focus:border-rose-500 focus:ring-rose-500/20" placeholder="Contoh: Bukti foto kurang jelas..."></textarea>
+                <label class="block text-xs font-medium text-slate-700 mb-1 ml-1">Alasan Penolakan <span
+                        class="text-rose-500">*</span></label>
+                <textarea id="reject-note" rows="3"
+                    class="w-full rounded-xl border-slate-200 text-sm focus:border-rose-500 focus:ring-rose-500/20"
+                    placeholder="Contoh: Bukti foto kurang jelas..."></textarea>
                 <p id="reject-error" class="hidden mt-1 text-xs text-rose-600 font-medium flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd" />
+                    </svg>
                     Alasan wajib diisi.
                 </p>
             </div>
         </div>
         <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
-            <button type="button" class="js-close-reject w-full inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Batal</button>
-            <button type="button" id="btn-submit-reject" class="w-full inline-flex justify-center rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">Tolak Laporan</button>
+            <button type="button"
+                class="js-close-reject w-full inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">Batal</button>
+            <button type="button" id="btn-submit-reject"
+                class="w-full inline-flex justify-center rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">Tolak
+                Laporan</button>
         </div>
     </div>
 </div>
 
 @endsection
-
-@push('scripts')
-@vite('resources/js/pages/penilai/validasi-laporan.js')
-@endpush

@@ -1,54 +1,65 @@
-// =====================================================
-//   LOG AKTIVITAS — SCRIPT TERPISAH (Penilai & Staf)
-// =====================================================
+console.log("KADIS LOG FILE LOADED!");
 
-export function logActivityData() {
+import { authFetch } from "../../utils/auth-fetch";
+
+export function logActivityKadis() {
     return {
         allItems: [],
         filteredItems: [],
-        filter: {
-            from: '',
-            to: ''
-        },
+        filter: { from: "", to: "" },
 
-        // ----- INIT -----
         initLog() {
-            fetch('/data/log-aktivitas.json')
-                .then(res => res.json())
-                .then(data => {
-                    this.allItems = data.sort((a, b) => {
-                        return new Date(b.tanggal + ' ' + b.waktu)
-                             - new Date(a.tanggal + ' ' + a.waktu);
-                    });
+            console.log("INIT LOG KADIS");
+
+            authFetch("/api/log-aktivitas")
+                .then(r => r.json())
+                .then(res => {
+
+                    // FORMAT BALIK KE AWAL, TIDAK SAMA DENGAN KABID/PENILAI
+                    this.allItems = res.data.map(i => ({
+                        id: i.id,
+                        tanggal: i.timestamp?.split(" ")[0], // YYYY-MM-DD
+                        waktu: i.timestamp?.split(" ")[1],   // HH:MM:SS
+                        aktivitas: i.deskripsi_aktivitas ?? "-",
+                        deskripsi: "-", // kadis tdk punya detail
+                        tipe: "system",
+                        timestamp_fixed: i.timestamp?.replace(" ", "T")
+                    }));
+
                     this.filteredItems = this.allItems;
                 })
-                .catch(err => console.error('Gagal memuat log:', err));
+                .catch(err => console.error("ERR LOG:", err));
         },
 
-        // ----- FILTER -----
         filterData() {
-            const from = this.filter.from ? new Date(this.filter.from) : null;
-            const to   = this.filter.to   ? new Date(this.filter.to)   : null;
+            let from = this.filter.from ? new Date(this.filter.from) : null;
+            let to   = this.filter.to   ? new Date(this.filter.to)   : null;
 
-            if (from) from.setHours(0, 0, 0, 0);
-            if (to)   to.setHours(23, 59, 59, 999);
+            if (from) from.setHours(0,0,0,0);
+            if (to)   to.setHours(23,59,59,999);
 
-            this.filteredItems = this.allItems.filter(item => {
-                const itemDate = new Date(item.tanggal);
-                if (from && itemDate < from) return false;
-                if (to   && itemDate > to)   return false;
+            this.filteredItems = this.allItems.filter(it => {
+                const t = new Date(it.timestamp_fixed);
+                if (from && t < from) return false;
+                if (to && t > to) return false;
                 return true;
             });
         },
 
-        // ----- HELPER -----
         formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
+            if (!dateString) return "-";
+            return new Date(dateString).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
             });
+        },
+
+        formatTime(v) {
+            if (!v) return "-";
+            return v.substring(0, 5); // ambil HH:MM saja
         }
     };
 }
+
+window.logActivityKadis = logActivityKadis;

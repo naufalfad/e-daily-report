@@ -200,6 +200,21 @@
     </div>
 
     @stack('scripts')
+
+    {{-- Load script sesuai role --}}
+    @switch($role)
+
+    @case('admin')
+    @vite('resources/js/pages/admin/dashboard.js')
+    @vite('resources/js/pages/admin/manajemen-pegawai.js')
+    @vite('resources/js/pages/admin/log-aktivitas.js')
+    @vite('resources/js/pages/admin/akun-pengguna.js')
+    @vite('resources/js/pages/admin/setting-sistem.js')
+    @break
+
+    @endswitch
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 
 </html>

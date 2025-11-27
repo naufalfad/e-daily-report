@@ -100,8 +100,3 @@
 </div>
 
 @endsection
-
-{{-- Load Script Khusus Penilai --}}
-@push('scripts')
-    @vite(['resources/js/pages/penilai/pengumuman.js'])
-@endpush

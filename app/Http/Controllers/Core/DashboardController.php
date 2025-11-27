@@ -15,7 +15,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $userId = $user->id;
-        
+
         // Filter Tahun & Bulan (Default: Bulan ini)
         $month = $request->query('month', date('m'));
         $year = $request->query('year', date('Y'));
@@ -23,7 +23,7 @@ class DashboardController extends Controller
         // ==========================================
         // 1. SKORING CAPAIAN SKP (Target vs Realisasi)
         // ==========================================
-        
+
         $totalTargetTahunan = Skp::where('user_id', $userId)
             ->whereYear('periode_mulai', $year)
             ->sum('target');
@@ -34,20 +34,20 @@ class DashboardController extends Controller
             ->whereYear('tanggal_laporan', $year)
             ->count();
 
-        $persenCapaian = $totalTargetTahunan > 0 
-            ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1) 
+        $persenCapaian = $totalTargetTahunan > 0
+            ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1)
             : 0;
 
         // ==========================================
         // 2. STATISTIK KUALITAS LKH SKP
         // ==========================================
-        
+
         $queryLkhSkp = LaporanHarian::where('user_id', $userId)
             ->whereNotNull('skp_id')
             ->whereYear('tanggal_laporan', $year);
-            
+
         if ($request->has('month')) {
-             $queryLkhSkp->whereMonth('tanggal_laporan', $month);
+            $queryLkhSkp->whereMonth('tanggal_laporan', $month);
         }
 
         $totalLkhSkp = $queryLkhSkp->whereNot('status', 'draft')->count();
@@ -55,7 +55,7 @@ class DashboardController extends Controller
         $lkhSkpRejected = (clone $queryLkhSkp)->where('status', 'rejected')->count();
 
         $persenSkpDiterima = $totalLkhSkp > 0 ? round(($lkhSkpApproved / $totalLkhSkp) * 100, 1) : 0;
-        $persenSkpDitolak  = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
+        $persenSkpDitolak = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
 
         // ==========================================
         // 3. STATISTIK LKH NON-SKP
@@ -66,7 +66,7 @@ class DashboardController extends Controller
             ->whereYear('tanggal_laporan', $year);
 
         if ($request->has('month')) {
-             $queryNonSkp->whereMonth('tanggal_laporan', $month);
+            $queryNonSkp->whereMonth('tanggal_laporan', $month);
         }
 
         $totalNonSkp = $queryNonSkp->whereNot('status', 'draft')->count();
@@ -152,4 +152,68 @@ class DashboardController extends Controller
             'draft_terbaru' => $recentDrafts,
         ]);
     }
+
+    public function getStatsKadis()
+    {
+        $user = Auth::user();
+        $user->load(['jabatan', 'unitKerja']);
+
+        // Ambil laporan NON-DRAFT saja (validasi selesai / sedang berjalan)
+        $all = LaporanHarian::select('status', 'tanggal_laporan', 'deskripsi_aktivitas')
+            ->where('status', '!=', 'draft')
+            ->orderBy('tanggal_laporan', 'desc')
+            ->get();
+
+        // Hitung statistik
+        $totalHariIni = LaporanHarian::whereDate('tanggal_laporan', today())
+            ->where('status', '!=', 'draft')
+            ->count();
+
+        $totalMenunggu = $all->where('status', 'waiting_review')->count();
+        $totalDisetujui = $all->where('status', 'approved')->count();
+        $totalDitolak = $all->where('status', 'rejected')->count();
+        $totalSemua = $all->count();
+
+        // Persentase
+        $rateDisetujui = $totalSemua > 0 ? round(($totalDisetujui / $totalSemua) * 100) : 0;
+        $rateDitolak = $totalSemua > 0 ? round(($totalDitolak / $totalSemua) * 100) : 0;
+
+        // Perubahan dari kemarin
+        $kemarin = LaporanHarian::whereDate('tanggal_laporan', today()->subDay())
+            ->where('status', '!=', 'draft')
+            ->count();
+
+        $rateTotal = $kemarin > 0
+            ? round((($totalHariIni - $kemarin) / $kemarin) * 100)
+            : 0;
+
+        // Aktivitas terbaru (5 terakhir)
+        $aktivitas = $all->take(5);
+
+        return response()->json([
+            "user_info" => [
+                "name" => $user->name,
+                "nip" => $user->nip,
+                "alamat" => $user->alamat,
+                "jabatan" => $user->jabatan->nama_jabatan ?? "-",
+                "unit" => $user->unitKerja->nama_unit ?? "-",
+                "daerah" => "Mimika, Papua Tengah",
+            ],
+
+            "statistik" => [
+                "total_hari_ini" => $totalHariIni,
+                "total_menunggu" => $totalMenunggu,
+                "total_disetujui" => $totalDisetujui,
+                "total_ditolak" => $totalDitolak,
+                "rate_total" => $rateTotal,
+                "rate_disetujui" => $rateDisetujui,
+                "rate_ditolak" => $rateDitolak,
+            ],
+
+            "aktivitas_terbaru" => $aktivitas,
+
+            "grafik" => $all
+        ]);
+    }
+
 }

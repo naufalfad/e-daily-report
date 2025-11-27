@@ -163,7 +163,3 @@
 </section>
 
 @endsection
-
-@push('scripts')
-@vite('resources/js/pages/kadis/dashboard.js')
-@endpush

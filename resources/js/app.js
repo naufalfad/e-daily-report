@@ -11,6 +11,17 @@ import './global/loader.js';
 import './global/notification.js';
 import './utils/auth-fetch';
 
+import './pages/staf/dashboard.js';
+import './pages/staf/input-lkh.js';
+import './pages/staf/input-skp.js';
+import './pages/staf/log-aktivitas.js';
+import './pages/staf/peta-aktivitas.js';
+import './pages/staf/riwayat-lkh.js';
+
+import './pages/kadis/dashboard.js';
+import './pages/kadis/log-aktivitas.js';
+import './pages/kadis/validasi-laporan.js';
+
 // Chart global (boleh)
 import Chart from 'chart.js/auto';
 window.Chart = Chart;

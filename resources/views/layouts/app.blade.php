@@ -204,15 +204,6 @@
     {{-- Load script sesuai role --}}
     @switch($role)
 
-    @case('staf')
-    @vite('resources/js/pages/staf/dashboard.js')
-    @vite('resources/js/pages/staf/input-lkh.js')
-    @vite('resources/js/pages/staf/input-skp.js')
-    @vite('resources/js/pages/staf/log-aktivitas.js')
-    @vite('resources/js/pages/staf/peta-aktivitas.js')
-    @vite('resources/js/pages/staf/riwayat-lkh.js')
-    @break
-
     @case('penilai')
     @vite('resources/js/pages/penilai/dashboard.js')
     @vite('resources/js/pages/penilai/input-lkh.js')
@@ -229,12 +220,6 @@
     @vite('resources/js/pages/admin/log-aktivitas.js')
     @vite('resources/js/pages/admin/akun-pengguna.js')
     @vite('resources/js/pages/admin/setting-sistem.js')
-    @break
-
-    @case('kadis')
-    @vite('resources/js/pages/kadis/dashboard.js')
-    @vite('resources/js/pages/kadis/log-aktivitas.js')
-    @vite('resources/js/pages/kadis/validasi-laporan.js')
     @break
 
     @endswitch

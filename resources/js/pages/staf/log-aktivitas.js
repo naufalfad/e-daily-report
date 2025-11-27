@@ -1,4 +1,5 @@
 console.log("PENILAI LOG FILE LOADED!");
+import { authFetch } from "../../utils/auth-fetch";
 
 export function logActivityStaf() {
     return {
@@ -49,3 +50,5 @@ export function logActivityStaf() {
         }
     }
 }
+
+window.logActivityStaf = logActivityStaf;

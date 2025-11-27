@@ -101,8 +101,7 @@ $iconMap = [
         </div>
     </div>
 
-    {{-- Menu --}}
-    <nav class="flex-1 flex flex-col gap-[5px] overflow-y-auto pr-1 no-scrollbar">
+    <nav class="flex-1 overflow-y-auto pr-1 sidebar-scroll">
         @foreach ($menus as $menu)
         @php
         $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
@@ -111,9 +110,8 @@ $iconMap = [
         @endphp
 
         <a href="{{ $menu['route'] }}" class="flex text-[17px] items-center gap-3 px-4 py-3 rounded-xl transition
-                        {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
+            {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
 
-            {{-- ICON --}}
             <img src="{{ asset('assets/icon/' . $iconFile) }}"
                 class="h-5 w-5 {{ $shouldInvert ? 'filter invert brightness-0' : '' }}" />
 

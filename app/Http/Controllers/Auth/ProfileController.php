@@ -34,7 +34,7 @@ class ProfileController extends Controller
             }
             
             // Simpan foto baru ke MinIO
-            $path = $request->file('foto_profil')->store('profil', 'minio');
+            $path = $request->file('foto_profil')->store('profil', 'public');
             $user->foto_profil = $path;
         }
 

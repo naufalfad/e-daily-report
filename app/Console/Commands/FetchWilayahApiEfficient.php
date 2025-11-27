@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 
-class FetchAllWilayah extends Command
+class FetchWilayahApiEfficient extends Command
 {
     protected $signature = 'app:fetch-all-wilayah'; 
     protected $description = 'Download SELURUH Data Wilayah Indonesia (Emsifa Static API)';

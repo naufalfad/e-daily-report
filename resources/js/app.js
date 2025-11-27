@@ -174,5 +174,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
         notifList.insertAdjacentHTML("beforeend", html);
     });
-
 });

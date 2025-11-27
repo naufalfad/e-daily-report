@@ -262,3 +262,7 @@
 </section>
 
 @endsection
+
+@push('scripts')
+    @vite('resources/js/pages/penilai/dashboard.js')
+@endpush

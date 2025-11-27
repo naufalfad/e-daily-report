@@ -59,22 +59,6 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
-        // Tambahkan konfigurasi disk MinIO di sini
-        'minio' => [
-        'driver' => 's3',
-        'key' => env('MINIO_KEY'),
-        'secret' => env('MINIO_SECRET'),
-        'region' => env('MINIO_REGION'),
-        'bucket' => env('MINIO_BUCKET'),
-        // URL digunakan untuk menghasilkan link yang bisa diakses publik (seperti di Model User.php)
-        'url' => env('MINIO_ENDPOINT').'/'.env('MINIO_BUCKET'), 
-        'endpoint' => env('MINIO_ENDPOINT'), 
-        // Wajib untuk MinIO lokal
-        'use_path_style_endpoint' => true, 
-        'throw' => false,
-        'report' => false,
-        ],
     ],
 
     /*

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Facades\Image;
 use App\Services\NotificationService; 
 use App\Enums\NotificationType; 
 use Carbon\Carbon; // Tambahan untuk formatting tanggal di pesan
@@ -100,10 +102,12 @@ class LkhController extends Controller
             'latitude'          => 'nullable|numeric|required_without:master_kelurahan_id',
             'longitude'         => 'nullable|numeric|required_without:master_kelurahan_id',
             'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id|required_without:latitude',
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
         ]);
 
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+
+        $uploadedFiles = [];
 
         try {
             // 2. Mulai Transaksi Database (Atomic Operation)
@@ -111,22 +115,17 @@ class LkhController extends Controller
 
             $finalLat = $request->latitude;
             $finalLng = $request->longitude;
-            
-            // --- Logika Geofencing ---
-            $officeLat = config('services.office.lat');
-            $officeLng = config('services.office.lng');
-            $radius    = config('services.office.radius');
             $isLuarLokasi = true;
 
-            if ($officeLat && $officeLng && $finalLat && $finalLng) {
+            if (config('services.office.lat') && config('services.office.lng') && $finalLat && $finalLng) {
                 $distanceQuery = DB::selectOne("
                     SELECT ST_DistanceSphere(
                         ST_Point(?, ?), 
                         ST_Point(?, ?)  
                     ) as distance
-                ", [$finalLng, $finalLat, $officeLng, $officeLat]);
+                ", [$finalLng, $finalLat, config('services.office.lng'), config('services.office.lat')]);
 
-                if ($distanceQuery->distance <= $radius) {
+                if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
                     $isLuarLokasi = false;
                 }
             }
@@ -151,15 +150,49 @@ class LkhController extends Controller
                 'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
-            // 4. Upload Bukti ke MinIO
+            // 4. Proses Upload Filen
             if ($request->hasFile('bukti')) {
+                $folderDate = date('Y/m');
+                $storagePath = "uploads/lkh/{$folderDate}";
+
                 foreach ($request->file('bukti') as $file) {
-                    $path = $file->store('lkh_bukti', 'minio'); 
+                    $extension = strtolower($file->getClientOriginalExtension());
+                    $filename  = Str::uuid() . '.' . $extension;
+                    $finalPath = "";
+
+                    // A. Optimasi Gambar (JPG/PNG -> Resize & WebP)
+                    if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $filename = Str::uuid() . '.webp'; // Ubah ekstensi jadi webp
+                        $finalPath = "{$storagePath}/{$filename}";
+                        
+                        // Pastikan folder ada
+                        if (!Storage::disk('public')->exists($storagePath)) {
+                            Storage::disk('public')->makeDirectory($storagePath);
+                        }
+
+                        $image = Image::make($file)
+                            ->resize(1280, null, function ($constraint) {
+                                $constraint->aspectRatio();
+                                $constraint->upsize(); // Jangan perbesar jika gambar asli kecil
+                            })
+                            ->encode('webp', 80);
+
+                        // Simpan ke disk public
+                        Storage::disk('public')->put($finalPath, (string) $image);
+                    }
+                    // B. File Dokumen/Video (Simpan Langsung)
+                    else {
+                        $finalPath = $file->storeAs($storagePath, $filename, 'public');
+                    }
+
+                    $uploadedFiles[] = $finalPath;
+
                     LkhBukti::create([
                         'laporan_id'         => $lkh->id,
-                        'file_path'          => $path,
+                        'file_path'          => $finalPath,
                         'file_name_original' => $file->getClientOriginalName(),
-                        'file_type'          => $file->getClientOriginalExtension(),
+                        'file_type'          => $extension,
+                        'file_size'          => $file->getSize()
                     ]);
                 }
             }
@@ -170,12 +203,16 @@ class LkhController extends Controller
                 // Formatting tanggal agar lebih humanis
                 $tglIndo = Carbon::parse($request->tanggal_laporan)->format('d/m/Y');
                 
-                NotificationService::send(
+                try {
+                    NotificationService::send(
                     $user->atasan_id,
                     NotificationType::LKH_NEW_SUBMISSION->value, 
                     "Pegawai {$user->name} mengajukan LKH baru kegiatan '{$request->jenis_kegiatan}' untuk tanggal {$tglIndo}.",
-                    $lkh // Object untuk Polymorphic Redirect
-                );
+                    $lkh // Object untuk Polymorphic Redirect)
+                    );
+                } catch (\Exception $e) {
+                    \Log::error("Gagal kirim notif LKH: " . $e->getMessage());
+                }
             }
 
             // 6. Commit Transaksi (Simpan Permanen)
@@ -190,9 +227,11 @@ class LkhController extends Controller
         } catch (\Exception $e) {
             // 7. Rollback jika ada error apapun (DB atau Notif)
             DB::rollBack();
-            
-            // Opsional: Clean up file MinIO jika sudah terlanjur terupload (Advanced)
-            // if (isset($path)) Storage::disk('minio')->delete($path);
+            foreach ($uploadedFiles as $path) {
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
 
             return response()->json(['message' => 'Gagal mengirim laporan', 'error' => $e->getMessage()], 500);
         }
@@ -275,14 +314,27 @@ class LkhController extends Controller
             return response()->json(['message' => 'Laporan yang sudah disetujui tidak bisa dihapus'], 403);
         }
 
-        // Hapus file fisik di MinIO
-        foreach ($lkh->bukti as $file) {
-            Storage::disk('minio')->delete($file->file_path);
-        }
-        
-        $lkh->delete(); 
+        try {
+            DB::beginTransaction();
 
-        return response()->json(['message' => 'Laporan berhasil dihapus']);
+            foreach ($lkh->bukti as $file) {
+                if (Storage::disk('public')->exists($file->file_path)) {
+                    Storage::disk('public')->delete($file->file_path);
+                }
+
+                $file->delete();
+            }
+                
+            $lkh->delete(); 
+
+            DB::commit();
+
+            return response()->json(['message' => 'Laporan berhasil dihapus']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Gagal menghapus laporan', 'error'
+             => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -303,6 +355,10 @@ class LkhController extends Controller
 
         if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
 
+        if ($lkh->status === 'approved') {
+            return response()->json(['message' => 'Laporan yang sudah disetujui tidak bisa diedit'], 403);
+        }
+
         // VALIDASI — semua optional kecuali yang wajib
         $validator = Validator::make($request->all(), [
             'tupoksi_id'        => 'sometimes|required|exists:tupoksi,id',
@@ -320,7 +376,7 @@ class LkhController extends Controller
             'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id',
 
             // upload optional
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240',
 
             // jika ingin hapus bukti tertentu
             'hapus_bukti'       => 'array',
@@ -334,96 +390,137 @@ class LkhController extends Controller
         try {
             DB::beginTransaction();
 
-            // Lokasi
-            $finalLat = $request->latitude ?? $lkh->latitude;
-            $finalLng = $request->longitude ?? $lkh->longitude;
-
-            // === GEOFENCING ===
-            $officeLat = config('services.office.lat');
-            $officeLng = config('services.office.lng');
-            $radius    = config('services.office.radius');
-            $isLuarLokasi = true;
-
-            if ($officeLat && $officeLng && $finalLat && $finalLng) {
-                $distanceQuery = DB::selectOne("
-                    SELECT ST_DistanceSphere(
-                        ST_Point(?, ?),
-                        ST_Point(?, ?)
-                    ) as distance
-                ", [$finalLng, $finalLat, $officeLng, $officeLat]);
-
-                if ($distanceQuery->distance <= $radius) {
-                    $isLuarLokasi = false;
-                }
-            }
-
-            // === UPDATE LKH ===
-            $lkh->update([
-                'skp_id'             => $request->skp_id ?? $lkh->skp_id,
-                'tupoksi_id'         => $request->tupoksi_id ?? $lkh->tupoksi_id,
-                'jenis_kegiatan'     => $request->jenis_kegiatan ?? $lkh->jenis_kegiatan,
-                'tanggal_laporan'    => $request->tanggal_laporan ?? $lkh->tanggal_laporan,
-                'waktu_mulai'        => $request->waktu_mulai ?? $lkh->waktu_mulai,
-                'waktu_selesai'      => $request->waktu_selesai ?? $lkh->waktu_selesai,
-                'deskripsi_aktivitas'=> $request->deskripsi_aktivitas ?? $lkh->deskripsi_aktivitas,
-                'output_hasil_kerja' => $request->output_hasil_kerja ?? $lkh->output_hasil_kerja,
-                'volume'             => $request->volume ?? $lkh->volume,
-                'satuan'             => $request->satuan ?? $lkh->satuan,
-                'status'             => $request->status ?? $lkh->status,
-                'master_kelurahan_id'=> $request->master_kelurahan_id ?? $lkh->master_kelurahan_id,
-                'is_luar_lokasi'     => $isLuarLokasi,
-                'lokasi' => ($finalLat && $finalLng)
-                            ? DB::raw("ST_SetSRID(ST_MakePoint($finalLng, $finalLat), 4326)")
-                            : $lkh->lokasi
+            // 1. Logika GIS (Hanya jalan jika ada input koordinat baru)
+            $updateData = $request->only([
+                'skp_id', 'tupoksi_id', 'jenis_kegiatan', 'tanggal_laporan', 
+                'waktu_mulai', 'waktu_selesai', 'deskripsi_aktivitas', 
+                'output_hasil_kerja', 'volume', 'satuan', 'status', 'master_kelurahan_id'
             ]);
 
-            // === HAPUS BUKTI ===
-            if ($request->hapus_bukti) {
-                foreach ($request->hapus_bukti as $buktiId) {
-                    $bukti = LkhBukti::where('id', $buktiId)
-                                ->where('laporan_id', $lkh->id)
-                                ->first();
-                    if ($bukti) {
-                        Storage::disk('minio')->delete($bukti->file_path);
-                        $bukti->delete();
+            // Jika user mengirim koordinat baru, hitung ulang lokasi & geofencing
+            if ($request->has('latitude') && $request->has('longitude') && $request->latitude && $request->longitude) {
+                $finalLat = $request->latitude;
+                $finalLng = $request->longitude;
+                $isLuarLokasi = true;
+
+                $officeLat = config('services.office.lat');
+                $officeLng = config('services.office.lng');
+
+                // Cek Jarak
+                if ($officeLat && $officeLng) {
+                    $distanceQuery = DB::selectOne("
+                        SELECT ST_DistanceSphere(
+                            ST_Point(?, ?), ST_Point(?, ?)
+                        ) as distance
+                    ", [$finalLng, $finalLat, $officeLng, $officeLat]);
+
+                    if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
+                        $isLuarLokasi = false;
                     }
+                }
+
+                // Masukkan data GIS ke array update
+                $updateData['is_luar_lokasi'] = $isLuarLokasi;
+                $updateData['lokasi'] = DB::raw("ST_GeomFromText('POINT({$finalLng} {$finalLat})', 4326)");
+            }
+
+            // Lakukan Update Data LKH
+            $lkh->update($updateData);
+
+            // 2. HAPUS BUKTI LAMA (Jika diminta)
+            if ($request->filled('hapus_bukti')) {
+                $buktiToDelete = LkhBukti::whereIn('id', $request->hapus_bukti)
+                                    ->where('laporan_id', $lkh->id)
+                                    ->get();
+                
+                foreach ($buktiToDelete as $bukti) {
+                    // Hapus fisik
+                    if (Storage::disk('public')->exists($bukti->file_path)) {
+                        Storage::disk('public')->delete($bukti->file_path);
+                    }
+                    // Hapus DB
+                    $bukti->delete();
                 }
             }
 
-            // === TAMBAH BUKTI BARU ===
+            // 3. TAMBAH BUKTI BARU (Dengan Optimasi WebP)
             if ($request->hasFile('bukti')) {
-                foreach ($request->file('bukti') as $file) {
-                    $path = $file->store('lkh_bukti', 'minio');
+                $folderDate = date('Y/m'); // Masukkan ke folder bulan berjalan
+                $storagePath = "uploads/lkh/{$folderDate}";
 
+                foreach ($request->file('bukti') as $file) {
+                    $extension = strtolower($file->getClientOriginalExtension());
+                    $filename  = Str::uuid() . '.' . $extension;
+                    $finalPath = "";
+
+                    // A. Optimasi Gambar
+                    if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $filename = Str::uuid() . '.webp';
+                        $finalPath = "{$storagePath}/{$filename}";
+
+                        if (!Storage::disk('public')->exists($storagePath)) {
+                            Storage::disk('public')->makeDirectory($storagePath);
+                        }
+
+                        $image = Image::make($file)
+                            ->resize(1280, null, function ($constraint) {
+                                $constraint->aspectRatio();
+                                $constraint->upsize();
+                            })
+                            ->encode('webp', 80);
+
+                        Storage::disk('public')->put($finalPath, (string) $image);
+                    } 
+                    // B. Dokumen/Video
+                    else {
+                        $finalPath = $file->storeAs($storagePath, $filename, 'public');
+                    }
+
+                    // Catat path untuk rollback
+                    $uploadedFiles[] = $finalPath;
+
+                    // Simpan DB
                     LkhBukti::create([
                         'laporan_id'         => $lkh->id,
-                        'file_path'          => $path,
+                        'file_path'          => $finalPath,
                         'file_name_original' => $file->getClientOriginalName(),
-                        'file_type'          => $file->getClientOriginalExtension(),
+                        'file_type'          => $extension,
+                        'file_size'          => $file->getSize()
                     ]);
                 }
             }
 
             DB::commit();
 
-            // Kirim notifikasi jika status berubah (misal dari draft ke dikirim)
+            // Notifikasi update
             if ($user->atasan_id && $request->status) {
-                NotificationService::send(
-                    $user->atasan_id,
-                    'lkh_update_submission',
-                    'Pegawai ' . $user->name . ' memperbarui laporan: ' . $lkh->jenis_kegiatan,
-                    $lkh->id
-                );
+                try {
+                    NotificationService::send(
+                        $user->atasan_id,
+                        'lkh_update_submission', // Pastikan Enum/String sesuai logic Anda
+                        "Pegawai {$user->name} memperbarui laporan: {$lkh->jenis_kegiatan}",
+                        $lkh
+                    );
+                } catch (\Exception $n) {
+                    // Ignore error notif
+                }
             }
 
             return response()->json([
                 'message' => 'Laporan Harian berhasil diperbarui',
-                'is_luar_lokasi' => $isLuarLokasi,
-                'data' => $lkh->load(['bukti', 'tupoksi'])
+                'data' => $lkh->load(['bukti']) // Load bukti terbaru
             ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // CLEANUP: Hapus file baru yang terlanjur ke-upload jika DB error
+            foreach ($uploadedFiles as $path) {
+                if (Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+            }
+
             return response()->json([
                 'message' => 'Gagal memperbarui laporan',
                 'error' => $e->getMessage()

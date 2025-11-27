@@ -667,110 +667,29 @@ function renderAktivitas(aktivitas) {
         }
 
         listContainer.insertAdjacentHTML("beforeend", `
-            <li class="flex items-start gap-3">
-                <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                    <img src="${icon}" class="h-5 w-5 opacity-90">
-                </div>
-                <div class="flex-1 overflow-hidden">
-                    <div class="text-[13px] font-medium leading-snug truncate">
-                        ${item.deskripsi_aktivitas}
-                    </div>
-                    <div class="flex justify-between mt-[2px]">
-                        <span class="text-xs text-slate-500">${statusLabel}</span>
-                        <span class="text-xs text-slate-500">${tanggal}</span>
-                    </div>
-                </div>
-            </li>
-        `);
+                        <li class="flex items-start gap-3">
+                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
+                                <img src="${icon}" class="h-5 w-5 opacity-90">
+                            </div>
+                            <div class="flex-1 overflow-hidden">
+                                <div class="text-[13px] font-medium leading-snug truncate">
+                                    ${item.deskripsi_aktivitas}
+                                </div>
+                                <div class="flex justify-between mt-[2px]">
+                                    <span class="text-xs text-slate-500">${statusLabel}</span>
+                                    <span class="text-xs text-slate-500">${tanggal}</span>
+                                </div>
+                            </div>
+                        </li>
+                    `);
     });
 }
-
-
-
-// ============================================================
-// 🔥 RENDER DRAFT
-// ============================================================
-function renderDraft(rawDrafts) {
-    const draftContainer = document.getElementById("draft-list");
-    draftContainer.innerHTML = "";
-
-    const processedDrafts = rawDrafts.map(item => {
-        const d = new Date(item.updated_at);
-        return {
-            id: item.id,
-            deskripsi: item.deskripsi_aktivitas || "Draft tanpa judul",
-            waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
-        };
-    });
-
-    if (processedDrafts.length === 0) {
-        draftContainer.innerHTML =
-            `<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>`;
-        return;
-    }
-
-    processedDrafts.slice(0, 3).forEach(item => {
-        draftContainer.insertAdjacentHTML("beforeend", `
-            <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
-                <div class="flex-1 min-w-0">
-                    <h4 class="text-[12px] font-medium text-slate-900 truncate">${item.deskripsi}</h4>
-                    <p class="text-[10px] text-slate-500 mt-1">${item.waktu_simpan}</p>
-                </div>
-                <a href="/penilai/input-laporan/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px]">
-                    Lanjutkan
-                </a>
-                <button onclick="deleteDraft('${item.id}')" class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
-                    Hapus
-                </button>
-            </div>
-        `);
-    });
-
-    // Kirim draft ke Alpine Modal
-    window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: processedDrafts
-    }));
 }
 
-
-
-// ============================================================
-// 🔥 LOAD EDIT LKH
-// ============================================================
-async function loadEditLKH(id, headers) {
-    try {
-        document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
-
-        const res = await fetch(`/api/lkh/${id}`, {
-            method: "GET",
-            headers: headers,
-        });
-
-        if (!res.ok) throw new Error("Gagal ambil detail LKH");
-
-        const data = (await res.json()).data;
-
-        // Isi input
-        setVal("tanggal_lkh", data.tanggal_laporan);
-        setVal("jam_mulai", data.waktu_mulai);
-        setVal("jam_selesai", data.waktu_selesai);
-        document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas;
-        document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja;
-        document.querySelector('input[name="volume"]').value = data.volume;
-
-        if (data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
-        if (data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
-
-        updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-        updateAlpineDropdown('satuan', data.satuan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label);
-
-        document.querySelector('h2').innerText = "Edit LKH";
-
-    } catch (err) {
-        console.error(err);
-        alert("Gagal memuat data edit.");
-    }
+} catch (err) {
+    console.error(err);
+    alert("Gagal memuat data edit.");
+}
 }
 
 function setVal(id, val) {

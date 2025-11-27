@@ -728,9 +728,13 @@ function renderDraft(rawDrafts) {
     });
 
     // Kirim draft ke Alpine Modal
+<<<<<<< HEAD
     window.dispatchEvent(new CustomEvent("update-drafts", {
         detail: processedDrafts
     }));
+=======
+    window.dispatchEvent(new CustomEvent("update-drafts", { detail: processedDrafts }));
+>>>>>>> 28156f3622c732567a58b18c7357b73ba06798f5
 }
 
 

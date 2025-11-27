@@ -4,10 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
+
     {{-- [PERBAIKAN 1] Menambahkan CSRF Token (Wajib untuk Ajax) --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <title>Login – E-Daily Report</title>
 
     {{-- Font --}}
@@ -17,7 +17,7 @@
         rel="stylesheet">
 
     {{-- Vite & Tailwind --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/pages/login.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
     body {
@@ -28,7 +28,7 @@
 
 <body class="min-h-dvh bg-slate-100 text-slate-800">
     <main class="grid min-h-dvh lg:grid-cols-[60%_40%]">
-        
+
         {{-- BAGIAN KIRI (GAMBAR & FITUR) --}}
         <section class="relative hidden lg:block overflow-hidden">
             <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
@@ -55,30 +55,38 @@
                 {{-- Feature Cards --}}
                 <div class="mx-auto mt-10 w-fit">
                     <div class="grid grid-cols-2 gap-[10px] justify-items-center">
-                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
-                                <img src="{{ asset('assets/icon/monitoring-icon.svg') }}" alt="Monitoring Real-Time" class="mb-3 h-12 w-12">
+                                <img src="{{ asset('assets/icon/monitoring-icon.svg') }}" alt="Monitoring Real-Time"
+                                    class="mb-3 h-12 w-12">
                                 <h3 class="text-[15px] font-semibold">Monitoring Real-Time</h3>
                                 <p class="mt-1 text-sm/6 opacity-90">Pantau kinerja harian pegawai secara langsung</p>
                             </div>
                         </div>
-                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
-                                <img src="{{ asset('assets/icon/tracking-icon.svg') }}" alt="Tracking Lokasi" class="mb-3 h-12 w-12 text-white">
+                                <img src="{{ asset('assets/icon/tracking-icon.svg') }}" alt="Tracking Lokasi"
+                                    class="mb-3 h-12 w-12 text-white">
                                 <h3 class="text-[15px] font-semibold">Tracking Lokasi</h3>
                                 <p class="mt-1 text-sm/6 opacity-90">Lacak aktivitas lapangan dengan integrasi GPS</p>
                             </div>
                         </div>
-                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
-                                <img src="{{ asset('assets/icon/validasi-icon.svg') }}" alt="Validasi Digital" class="mb-3 h-12 w-12 text-white">
+                                <img src="{{ asset('assets/icon/validasi-icon.svg') }}" alt="Validasi Digital"
+                                    class="mb-3 h-12 w-12 text-white">
                                 <h3 class="text-[15px] font-semibold">Validasi Digital</h3>
                                 <p class="mt-1 text-sm/6 opacity-90">Proses persetujuan laporan cepat dan akurat</p>
                             </div>
                         </div>
-                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div
+                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
-                                <img src="{{ asset('assets/icon/proteksi-icon.svg') }}" alt="Data Terproteksi" class="mb-3 h-12 w-12 text-white">
+                                <img src="{{ asset('assets/icon/proteksi-icon.svg') }}" alt="Data Terproteksi"
+                                    class="mb-3 h-12 w-12 text-white">
                                 <h3 class="text-[15px] font-semibold">Data Terproteksi</h3>
                                 <p class="mt-1 text-sm/6 opacity-90">Keamanan data terjamin dengan enkripsi</p>
                             </div>
@@ -89,20 +97,10 @@
         </section>
 
         {{-- BAGIAN KANAN (FORM LOGIN) --}}
-        <section class="flex items-center justify-center bg-slate-100 px-6 py-10">
+        <section class="flex items-center justify-center b-slate-100 px-6 py-10">
             <div class="w-full max-w-md">
                 <h2 class="text-3xl font-semibold text-[#1C7C54]">Login Aplikasi</h2>
                 <p class="mt-2 text-slate-500">Silahkan masuk menggunakan akun anda</p>
-
-                {{-- Alert Sukses Logout --}}
-                <div id="success-alert" class="hidden mt-4 p-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200" role="alert">
-                    <span class="font-bold">Berhasil!</span> <span id="success-message"></span>
-                </div>
-
-                {{-- Alert Error --}}
-                <div id="error-alert" class="hidden mt-4 p-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200" role="alert">
-                    <span class="font-bold">Gagal!</span> <span id="error-message">Kredensial tidak valid.</span>
-                </div>
 
                 {{-- [PERBAIKAN 2] ID Form disesuaikan menjadi 'login-form' --}}
                 <form id="login-form" class="mt-8 space-y-5">
@@ -116,9 +114,10 @@
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
                         <div class="relative">
-                            <input id="password" type="password" name="password" placeholder="Masukkan Password" required
+                            <input id="password" type="password" name="password" placeholder="Masukkan Password"
+                                required
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition">
-                            
+
                             {{-- Toggle Password Button --}}
                             <button type="button" id="togglePassword"
                                 class="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 transition"
@@ -129,9 +128,11 @@
                                     <circle cx="12" cy="12" r="3.2" stroke-width="1.8" />
                                 </svg>
                                 <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg"
-                                    class="hidden h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    class="hidden h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor">
                                     <path stroke-width="1.8" d="M3 3l18 18" />
-                                    <path stroke-width="1.8" d="M2.5 10s3.8 7 9.5 7c1.6 0 3.1-.3 4.4-.9M21.5 10S17.7 3 12 3c-.9 0-1.7.07-2.4.2" />
+                                    <path stroke-width="1.8"
+                                        d="M2.5 10s3.8 7 9.5 7c1.6 0 3.1-.3 4.4-.9M21.5 10S17.7 3 12 3c-.9 0-1.7.07-2.4.2" />
                                     <path stroke-width="1.8" d="M9.5 10.5a3.5 3.5 0 0 0 4 4" />
                                 </svg>
                             </button>
@@ -140,16 +141,17 @@
 
                     <button type="submit" id="btn-submit"
                         class="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1C7C54] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm ring-1 ring-inset ring-[#1C7C54]/30 hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40 disabled:opacity-70 disabled:cursor-not-allowed transition">
-                        
+
                         {{-- Loading Icon --}}
                         <svg id="btn-loader" class="hidden animate-spin h-5 w-5 text-white"
                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
                         </svg>
-                        
+
                         {{-- Button Text --}}
                         <span id="btn-text" class="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 -ml-1 opacity-95" viewBox="0 0 24 24"
@@ -167,21 +169,22 @@
 
     {{-- Script untuk Toggle Password (Opsional jika tidak ada di login.js) --}}
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const eyeOpen = document.getElementById('eyeOpen');
-            const eyeClosed = document.getElementById('eyeClosed');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                eyeOpen.classList.add('hidden');
-                eyeClosed.classList.remove('hidden');
-            } else {
-                passwordInput.type = 'password';
-                eyeOpen.classList.remove('hidden');
-                eyeClosed.classList.add('hidden');
-            }
-        });
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const eyeOpen = document.getElementById('eyeOpen');
+        const eyeClosed = document.getElementById('eyeClosed');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeOpen.classList.add('hidden');
+            eyeClosed.classList.remove('hidden');
+        } else {
+            passwordInput.type = 'password';
+            eyeOpen.classList.remove('hidden');
+            eyeClosed.classList.add('hidden');
+        }
+    });
     </script>
 </body>
+
 </html>

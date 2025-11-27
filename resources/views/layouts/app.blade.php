@@ -204,16 +204,6 @@
     {{-- Load script sesuai role --}}
     @switch($role)
 
-    @case('penilai')
-    @vite('resources/js/pages/penilai/dashboard.js')
-    @vite('resources/js/pages/penilai/input-lkh.js')
-    @vite('resources/js/pages/penilai/input-skp.js')
-    @vite('resources/js/pages/penilai/log-aktivitas.js')
-    @vite('resources/js/pages/penilai/peta-aktivitas.js')
-    @vite('resources/js/pages/penilai/validasi-laporan.js')
-    @vite('resources/js/pages/penilai/pengumuman.js')
-    @break
-
     @case('admin')
     @vite('resources/js/pages/admin/dashboard.js')
     @vite('resources/js/pages/admin/manajemen-pegawai.js')

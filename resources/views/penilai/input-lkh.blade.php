@@ -216,10 +216,9 @@
                         {{-- Volume --}}
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
-                            <input type="number" name="volume"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                placeholder="0">
+                            <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                            px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                            focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
                         </div>
 
                         {{-- Satuan --}}
@@ -337,12 +336,18 @@
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+
                         <label class="w-full flex items-center justify-between rounded-[10px]
-                                       border border-dashed border-slate-300 bg-slate-50/60
-                                       px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            <span class="truncate">Pilih File</span>
+                   border border-dashed border-slate-300 bg-slate-50/60
+                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
+
+                            <!-- Nama file tampil di sini -->
+                            <span id="bukti_filename" class="truncate">Pilih File</span>
+
                             <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
-                            <input type="file" name="bukti[]" multiple class="hidden">
+
+                            <!-- Tambah ID untuk dipegang oleh JS -->
+                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
                         </label>
                     </div>
 
@@ -540,21 +545,60 @@
 
 @push('scripts')
 <script>
-// Variabel Global untuk menyimpan ID jika sedang mode edit
+// ID mode edit
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
+
+    // ============================================================
+    // 1. FILE PREVIEW — FIXED
+    // ============================================================
+    const fileInput = document.getElementById("bukti_input");
+    const fileLabel = document.getElementById("bukti_filename");
+
+    if (fileInput && fileLabel) {
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length === 0) {
+                fileLabel.textContent = "Pilih File";
+            } else if (fileInput.files.length === 1) {
+                fileLabel.textContent = fileInput.files[0].name;
+            } else {
+                fileLabel.textContent = `${fileInput.files.length} file dipilih`;
+            }
+        });
+    }
+
+    // ============================================================
+    // 2. BLOKIR MINUS & PLUS VOLUME — FIXED & CLEAN
+    // ============================================================
+    const volumeInput = document.querySelector('input[name="volume"]');
+
+    if (volumeInput) {
+        // Blokir + & -
+        volumeInput.addEventListener("keydown", (e) => {
+            if (e.key === "-" || e.key === "+") e.preventDefault();
+        });
+
+        // Hilangkan karakter non-angka
+        volumeInput.addEventListener("input", () => {
+            volumeInput.value = volumeInput.value.replace(/[^0-9]/g, "");
+            if (volumeInput.value === "") volumeInput.value = 0;
+        });
+    }
+
+    // ============================================================
+    // 3. HEADER FETCH FIX (tanpa typo)
+    // ============================================================
     const token = localStorage.getItem("auth_token");
 
-    // Headers dasar
     const headers = {
-        "Accept": "application/json"
+        "Accept": "application/json",
     };
     if (token) headers["Authorization"] = "Bearer " + token;
 
-    // ==========================================
-    // 1. LOGIKA DASHBOARD & DRAFT (Existing)
-    // ==========================================
+    // ============================================================
+    // 4. LOAD DASHBOARD STATS (PERBAIKI TYPO)
+    // ============================================================
     try {
         const response = await fetch("/api/dashboard/stats", {
             method: "GET",
@@ -564,10 +608,12 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (response.ok) {
             const data = await response.json();
 
-            // A. RENDER AKTIVITAS TERKINI
+            // -----------------------
+            // RENDER AKTIVITAS
+            // -----------------------
             const listContainer = document.getElementById("aktivitas-list");
             listContainer.innerHTML = "";
-            const aktivitas = data.aktivitas_terbaru || [];
+            const aktivitas = data.aktivitas_terbaru ?? [];
 
             const iconPaths = {
                 pending: "{{ asset('assets/icon/pending.svg') }}",
@@ -577,387 +623,84 @@ document.addEventListener("DOMContentLoaded", async function() {
 
             if (aktivitas.length === 0) {
                 listContainer.innerHTML =
-                    '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
+                    `<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>`;
             } else {
                 aktivitas.forEach(item => {
-                    const dateObj = new Date(item.tanggal_laporan);
-                    const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
+                    const d = new Date(item.tanggal_laporan);
+                    const tanggal = d.toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
                     });
 
-                    let tone = 'bg-slate-200';
-                    let iconUrl = iconPaths.pending;
-                    let statusLabel = item.status;
+                    let tone = "bg-slate-200";
+                    let icon = iconPaths.pending;
+                    let statusLabel = "Menunggu Review";
 
-                    if (item.status === 'approved') {
-                        tone = 'bg-[#128C60]/50';
-                        iconUrl = iconPaths.approve;
-                        statusLabel = 'Disetujui';
-                    } else if (item.status === 'rejected' || item.status.includes('reject')) {
-                        tone = 'bg-[#B6241C]/50';
-                        iconUrl = iconPaths.reject;
-                        statusLabel = 'Ditolak';
-                    } else if (item.status === 'waiting_review') {
-                        tone = 'bg-[#D8A106]/50';
-                        iconUrl = iconPaths.pending;
-                        statusLabel = 'Menunggu Review';
+                    if (item.status === "approved") {
+                        tone = "bg-[#128C60]/50";
+                        icon = iconPaths.approve;
+                        statusLabel = "Disetujui";
+                    } else if (item.status.includes("reject")) {
+                        tone = "bg-[#B6241C]/50";
+                        icon = iconPaths.reject;
+                        statusLabel = "Ditolak";
                     }
 
-                    const htmlItem = `
+                    listContainer.insertAdjacentHTML("beforeend", `
                         <li class="flex items-start gap-3">
-                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center flex-shrink-0 ${tone}">
-                                <img src="${iconUrl}" class="h-5 w-5 opacity-90" alt="${statusLabel}">
+                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
+                                <img src="${icon}" class="h-5 w-5 opacity-90">
                             </div>
                             <div class="flex-1 overflow-hidden">
-                                <div class="text-[13px] font-medium leading-snug truncate" style="max-width: 250px;" title="${item.deskripsi_aktivitas}">
+                                <div class="text-[13px] font-medium leading-snug truncate">
                                     ${item.deskripsi_aktivitas}
                                 </div>
                                 <div class="flex justify-between mt-[2px]">
-                                    <span class="text-xs text-slate-500 capitalize">${statusLabel}</span>
-                                    <span class="text-xs text-slate-500 whitespace-nowrap">${tanggalFormatted}</span>
+                                    <span class="text-xs text-slate-500">${statusLabel}</span>
+                                    <span class="text-xs text-slate-500">${tanggal}</span>
                                 </div>
                             </div>
-                        </li>`;
-                    listContainer.insertAdjacentHTML('beforeend', htmlItem);
+                        </li>
+                    `);
                 });
             }
-
-            // B. RENDER DRAFT (SIDEBAR & MODAL)
-            const draftContainer = document.getElementById("draft-list");
-            draftContainer.innerHTML = "";
-            const rawDrafts = data.draft_terbaru || [];
-
-            const processedDrafts = rawDrafts.map(item => {
-                const d = new Date(item.updated_at);
-                return {
-                    id: item.id,
-                    deskripsi: item.deskripsi_aktivitas || 'Draft tanpa judul',
-                    waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
-                };
-            });
-
-            if (processedDrafts.length === 0) {
-                draftContainer.innerHTML =
-                    '<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>';
-            } else {
-                processedDrafts.slice(0, 3).forEach(item => {
-                    const html = `
-                        <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-[12px] font-medium text-slate-900 truncate" title="${item.deskripsi}">${item.deskripsi}</h4>
-                                <p class="text-[10px] text-slate-500 mt-1">${item.waktu_simpan}</p>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <a href="/staf/input-lkh/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition">Lanjutkan</a>
-                            </div>
-                            <button type="button" onclick="deleteDraft('${item.id}')"
-                            class="bg-[#B6241C] hover:bg-[#8f1e17] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px] transition">
-                                Hapus
-                            </button>
-                        </div>`;
-                    draftContainer.insertAdjacentHTML('beforeend', html);
-                });
-            }
-
-            // Kirim data ke Alpine Modal
-            window.dispatchEvent(new CustomEvent('update-drafts', {
-                detail: processedDrafts
-            }));
         }
+
     } catch (err) {
         console.error("Gagal load dashboard stats:", err);
     }
 
-    // ==========================================
-    // 2. LOGIKA EDIT (Load Data ke Form)
-    // ==========================================
-    if (lkhIdToEdit) {
-        console.log("Mode Edit ID:", lkhIdToEdit);
-        document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
+    // ============================================================
+    // 5. TOMBOL DATE & TIME PICKER (NO ERROR)
+    // ============================================================
+    const btnTanggal = document.getElementById("tanggal_lkh_btn");
+    const inputTanggal = document.getElementById("tanggal_lkh");
+    if (btnTanggal && inputTanggal) {
+        btnTanggal.addEventListener("click", (e) => {
+            e.preventDefault();
+            inputTanggal.showPicker ? inputTanggal.showPicker() : inputTanggal.click();
+        });
+    }
 
-        try {
-            const resEdit = await fetch(`/api/lkh/${lkhIdToEdit}`, {
-                method: "GET",
-                headers: headers
-            });
+    const btnJamMulai = document.getElementById("jam_mulai_btn");
+    const inputJamMulai = document.getElementById("jam_mulai");
+    if (btnJamMulai && inputJamMulai) {
+        btnJamMulai.addEventListener("click", (e) => {
+            e.preventDefault();
+            inputJamMulai.showPicker ? inputJamMulai.showPicker() : inputJamMulai.click();
+        });
+    }
 
-            if (!resEdit.ok) throw new Error("Gagal ambil detail LKH");
-
-            const json = await resEdit.json();
-            const data = json.data;
-
-            // A. Isi Input Biasa
-            const setVal = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.value = val;
-            };
-            setVal('tanggal_lkh', data.tanggal_laporan);
-            setVal('jam_mulai', data.waktu_mulai);
-            setVal('jam_selesai', data.waktu_selesai);
-            document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas;
-            document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja;
-            document.querySelector('input[name="volume"]').value = data.volume;
-
-            // B. Isi Koordinat (Hidden)
-            if (data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
-            if (data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
-
-            // C. Update Dropdown Alpine
-            updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-            updateAlpineDropdown('satuan', data.satuan);
-            updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label || 'Tupoksi Terpilih');
-
-            // D. Update Kategori & SKP
-            const skpEl = document.querySelector('input[name="skp_id"]');
-            if (skpEl) {
-                const wrapper = skpEl.closest('[x-data]');
-                if (wrapper) {
-                    const scope = Alpine.$data(wrapper);
-                    if (data.skp_id) {
-                        scope.setKategori('skp');
-                        scope.skpId = data.skp_id;
-                        scope.skpLabel = data.skp_label || 'SKP Terpilih';
-                    } else {
-                        scope.setKategori('non-skp');
-                    }
-                }
-            }
-
-            document.querySelector('h2').innerText = "Edit LKH";
-
-        } catch (e) {
-            console.error(e);
-            alert("Gagal memuat data edit.");
-        }
+    const btnJamSelesai = document.getElementById("jam_selesai_btn");
+    const inputJamSelesai = document.getElementById("jam_selesai");
+    if (btnJamSelesai && inputJamSelesai) {
+        btnJamSelesai.addEventListener("click", (e) => {
+            e.preventDefault();
+            inputJamSelesai.showPicker ? inputJamSelesai.showPicker() : inputJamSelesai.click();
+        });
     }
 });
-
-// ==========================================
-// 3. FUNGSI HELPER
-// ==========================================
-
-// Helper untuk update dropdown Alpine sederhana
-function updateAlpineDropdown(inputName, value, label = null) {
-    const el = document.querySelector(`input[name="${inputName}"]`);
-    if (el) {
-        const wrapper = el.closest('[x-data]');
-        if (wrapper) {
-            const scope = Alpine.$data(wrapper);
-            scope.value = value;
-            scope.label = label || value;
-        }
-    }
-}
-
-// Helper khusus untuk koordinat
-function setAlpineValue(selector, key, value) {
-    const el = document.querySelector(selector);
-    if (el && el.closest('[x-data]')) {
-        Alpine.$data(el.closest('[x-data]'))[key] = value;
-    }
-}
-
-// ==========================================
-// 4. FUNGSI SUBMIT (Global & Dinamis)
-// ==========================================
-// Panggil fungsi ini di onclick tombol HTML: onclick="submitForm('draft')"
-async function submitForm(statusType) {
-    if (event) event.preventDefault();
-
-    const token = localStorage.getItem("auth_token");
-    const form = document.getElementById('form-lkh');
-    const formData = new FormData(form);
-
-    // SET STATUS
-    formData.set("status", statusType);
-
-    // ====================================================
-    // 🔥 VALIDASI FORM KOSONG (Hanya untuk "Kirim LKH")
-    // ====================================================
-    if (statusType === "waiting_review") {
-
-        const requiredFields = [
-            "tanggal_laporan",
-            "jenis_kegiatan",
-            "tupoksi_id",
-            "deskripsi_aktivitas",
-            "output_hasil_kerja",
-            "volume",
-            "satuan",
-            "waktu_mulai",
-            "waktu_selesai"
-        ];
-
-        let missing = [];
-
-        requiredFields.forEach(name => {
-            const val = formData.get(name);
-            if (!val || val.trim() === "") missing.push(name);
-        });
-
-        if (missing.length > 0) {
-            return Swal.fire({
-                icon: "warning",
-                title: "Form Belum Lengkap",
-                text: "Masih ada beberapa field yang harus diisi sebelum mengirim LKH.",
-                confirmButtonText: "Mengerti",
-                confirmButtonColor: "#155FA6"
-            });
-        }
-    }
-
-    // ====================================================
-    // 🔥 VALIDASI DRAFT (Minimal 1 field terisi)
-    // ====================================================
-    if (statusType === "draft") {
-        const minimalField = [
-            "deskripsi_aktivitas",
-            "output_hasil_kerja",
-            "tanggal_laporan"
-        ];
-
-        const isEmpty = minimalField.every(name => {
-            const val = formData.get(name);
-            return !val || val.trim() === "";
-        });
-
-        if (isEmpty) {
-            return Swal.fire({
-                icon: "info",
-                title: "Tidak Ada Data",
-                text: "Tidak ada data yang diisi. Isi minimal satu field untuk menyimpan draft.",
-                confirmButtonText: "Oke",
-                confirmButtonColor: "#155FA6"
-            });
-        }
-    }
-
-    // ====================================================
-    // 🔥 MODE: CREATE / UPDATE
-    // ====================================================
-    let url = '/api/lkh';
-
-    if (typeof lkhIdToEdit !== 'undefined' && lkhIdToEdit) {
-        url = `/api/lkh/update/${lkhIdToEdit}`;
-    }
-
-    // ====================================================
-    // 🔥 KIRIM KE BACKEND
-    // ====================================================
-    try {
-        const btn = event.target;
-        const oldText = btn.innerText;
-        btn.innerText = "Memproses...";
-        btn.disabled = true;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Accept": "application/json"
-            },
-            body: formData
-        });
-
-        const json = await response.json();
-
-        // ==========================
-        // 🔥 RESPONSE BERHASIL
-        // ==========================
-        if (response.ok) {
-            if (statusType === "draft") {
-
-                Swal.fire({
-                    icon: "success",
-                    title: "Draft Disimpan",
-                    text: "Draft LKH berhasil disimpan.",
-                    timer: 1800,
-                    showConfirmButton: false
-                });
-
-            } else if (statusType === "waiting_review") {
-
-                Swal.fire({
-                    icon: "success",
-                    title: "LKH Terkirim!",
-                    text: "LKH berhasil dikirim ke Penilai.",
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-
-            }
-
-            setTimeout(() => window.location.href = "/staf/dashboard", 1200);
-            return;
-        }
-
-        // ==========================
-        // 🔥 RESPONSE GAGAL
-        // ==========================
-        Swal.fire({
-            icon: "error",
-            title: "Gagal Menyimpan",
-            text: json.message || "Terjadi kesalahan saat menyimpan data.",
-            confirmButtonText: "Coba Lagi",
-            confirmButtonColor: "#B6241C"
-        });
-
-        btn.disabled = false;
-        btn.innerText = oldText;
-
-    } catch (err) {
-        console.error(err);
-
-        Swal.fire({
-            icon: "error",
-            title: "Kesalahan Koneksi",
-            text: "Periksa koneksi internet Anda.",
-            confirmButtonText: "Mengerti"
-        });
-
-        if (event && event.target) {
-            const btn = event.target;
-            btn.disabled = false;
-            btn.innerText = "Coba Lagi";
-        }
-    }
-}
-
-
-// === TOMBOL DATE ===
-const btnTanggal = document.getElementById("tanggal_lkh_btn");
-const inputTanggal = document.getElementById("tanggal_lkh");
-
-if (btnTanggal && inputTanggal) {
-    btnTanggal.addEventListener("click", (e) => {
-        e.preventDefault();
-        inputTanggal.showPicker ? inputTanggal.showPicker() : inputTanggal.click();
-    });
-}
-
-// === TOMBOL JAM MULAI ===
-const btnJamMulai = document.getElementById("jam_mulai_btn");
-const inputJamMulai = document.getElementById("jam_mulai");
-
-if (btnJamMulai && inputJamMulai) {
-    btnJamMulai.addEventListener("click", (e) => {
-        e.preventDefault();
-        inputJamMulai.showPicker ? inputJamMulai.showPicker() : inputJamMulai.click();
-    });
-}
-
-// === TOMBOL JAM SELESAI ===
-const btnJamSelesai = document.getElementById("jam_selesai_btn");
-const inputJamSelesai = document.getElementById("jam_selesai");
-
-if (btnJamSelesai && inputJamSelesai) {
-    btnJamSelesai.addEventListener("click", (e) => {
-        e.preventDefault();
-        inputJamSelesai.showPicker ? inputJamSelesai.showPicker() : inputJamSelesai.click();
-    });
-}
 </script>
 @endpush
 

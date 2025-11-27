@@ -15,6 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
+    <link rel="shortcut icon" href="{{ asset('assets/icon/logo-aplikasi.png') }}" type="image/png">
+
 
     {{-- Vite & Tailwind --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -106,7 +109,7 @@
                 <form id="login-form" class="mt-8 space-y-5">
                     @csrf
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">Username (NIP / Email)</label>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Username</label>
                         <input type="text" name="username" id="username" placeholder="Masukkan NIP atau Email" required
                             class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition">
                     </div>

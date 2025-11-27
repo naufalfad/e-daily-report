@@ -16,7 +16,7 @@ import './pages/staf/input-lkh.js';
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
 import './pages/staf/peta-aktivitas.js';
-import './pages/staf/riwayat-lkh.js';
+import './pages/staf/riwayat.js';
 
 import './pages/penilai/dashboard.js';
 import './pages/penilai/input-lkh.js';

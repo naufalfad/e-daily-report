@@ -12,7 +12,7 @@ import './global/notification.js';
 import './utils/auth-fetch';
 
 import './pages/staf/dashboard.js';
-import './pages/staf/input-lkh.js';
+// import './pages/staf/input-lkh.js';
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
 import './pages/staf/peta-aktivitas.js';

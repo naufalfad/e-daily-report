@@ -2,7 +2,7 @@
 // GLOBAL STYLE & LOGIN
 // =========================
 import '../css/app.css';
-import './login.js';
+import '../js/pages/login.js';
 
 // =========================
 // GLOBAL UTILITY

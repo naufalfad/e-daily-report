@@ -47,20 +47,22 @@ Route::view('/tes-pohon-organisasi', 'organisasi');
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('staf')->name('staf.')->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-    Route::view('/dashboard', 'staf.dashboard')->name('dashboard');
-    Route::view('/input-lkh', 'staf.input-lkh')->name('input-lkh');
-    Route::get('/input-lkh/{id?}', function ($id = null) {
-        return view('staf.input-lkh', ['id' => $id]);
-    })->name('input-lkh');
-    Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
-    Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
-    Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
+    Route::prefix('staf')->name('staf.')->group(function () {
 
-    // Log Aktivitas Staf
-    Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
-});
+        Route::view('/dashboard', 'staf.dashboard')->name('dashboard');
+        Route::view('/input-lkh', 'staf.input-lkh')->name('input-lkh');
+        Route::get('/input-lkh/{id?}', function ($id = null) {
+            return view('staf.input-lkh', ['id' => $id]);
+        })->name('input-lkh');
+        Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
+        Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
+        Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
+
+        // Log Aktivitas Staf
+        Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
+    });
 
 
 /*
@@ -69,7 +71,7 @@ Route::prefix('staf')->name('staf.')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->group(function () {
+
 
     Route::prefix('penilai')->name('penilai.')->group(function () {
 
@@ -100,59 +102,60 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); // Hapus
         });
     });
-});
 
-/*
-|--------------------------------------------------------------------------
-| KADIS ROUTES
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | KADIS ROUTES
+    |--------------------------------------------------------------------------
+    */
 
-Route::prefix('kadis')->name('kadis.')->group(function () {
-    Route::view('/dashboard', 'kadis.dashboard')->name('dashboard');
-    Route::view('/validasi-laporan', 'kadis.validasi-laporan')->name('validasi-laporan');
-    Route::view('/log-aktivitas', 'kadis.log-aktivitas')->name('log-aktivitas');
-});
+    Route::prefix('kadis')->name('kadis.')->group(function () {
+        Route::view('/dashboard', 'kadis.dashboard')->name('dashboard');
+        Route::view('/validasi-laporan', 'kadis.validasi-laporan')->name('validasi-laporan');
+        Route::view('/log-aktivitas', 'kadis.log-aktivitas')->name('log-aktivitas');
+    });
 
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN ROUTES
-|--------------------------------------------------------------------------
-*/
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN ROUTES
+    |--------------------------------------------------------------------------
+    */
 
-Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
 
-    Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
-    Route::view('/manajemen-pegawai', 'admin.manajemen-pegawai')->name('manajemen-pegawai');
-    Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
-    Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
+        Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+        Route::view('/manajemen-pegawai', 'admin.manajemen-pegawai')->name('manajemen-pegawai');
+        Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
+        Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
 
-    Route::get('/akun-pengguna', fn () => view('admin.akun-pengguna'))
-        ->name('akun-pengguna');
+        Route::get('/akun-pengguna', fn () => view('admin.akun-pengguna'))
+            ->name('akun-pengguna');
 
-    Route::get('/pengaturan-sistem', fn () => view('admin.pengaturan-sistem'))
-        ->name('pengaturan-sistem');
+        Route::get('/pengaturan-sistem', fn () => view('admin.pengaturan-sistem'))
+            ->name('pengaturan-sistem');
 
-    Route::get('/log-aktivitas', fn () => view('admin.log-aktivitas'))
-        ->name('log-aktivitas');
-});
+        Route::get('/log-aktivitas', fn () => view('admin.log-aktivitas'))
+            ->name('log-aktivitas');
+    });
 
-// === ROUTE TESTING HALAMAN ERROR & MAINTENANCE ===
+    // === ROUTE TESTING HALAMAN ERROR & MAINTENANCE ===
 
-// Test generic error page (error.blade.php)
-Route::get('/error', function () {
-    return view('errors.error', [
-        'message' => 'Contoh pesan error dari sistem.'
-    ]);
-});
+    // Test generic error page (error.blade.php)
+    Route::get('/error', function () {
+        return view('errors.error', [
+            'message' => 'Contoh pesan error dari sistem.'
+        ]);
+    });
 
-// Test halaman maintenance (maintenance.blade.php)
-Route::get('/maintenance', function () {
-    return view('errors.maintenance');
-});
+    // Test halaman maintenance (maintenance.blade.php)
+    Route::get('/maintenance', function () {
+        return view('errors.maintenance');
+    });
 
-// Test halaman 503 (503.blade.php)
-Route::get('/503', function () {
-    return view('errors.503');
+    // Test halaman 503 (503.blade.php)
+    Route::get('/503', function () {
+        return view('errors.503');
+    });
+
 });

@@ -215,20 +215,12 @@
     @case('staf')
         @vite('resources/js/pages/staf/dashboard.js')
         @vite('resources/js/pages/staf/input-lkh.js')
-        @vite('resources/js/pages/staf/input-skp.js')
-        @vite('resources/js/pages/staf/log-aktivitas.js')
-        @vite('resources/js/pages/staf/peta-aktivitas.js')
-        @vite('resources/js/pages/staf/riwayat.js')
     @break
 
     @case('penilai')
         @vite('resources/js/pages/penilai/dashboard.js')
         @vite('resources/js/pages/penilai/input-lkh.js')
-        @vite('resources/js/pages/penilai/input-skp.js')
-        @vite('resources/js/pages/penilai/log-aktivitas.js')
         @vite('resources/js/pages/penilai/pengumuman.js')
-        @vite('resources/js/pages/penilai/peta-aktivitas.js')
-        @vite('resources/js/pages/penilai/riwayat.js')
         @vite('resources/js/pages/penilai/validasi-laporan.js')
     @break
 

@@ -11,6 +11,23 @@ import './global/loader.js';
 import './global/notification.js';
 import './utils/auth-fetch';
 
+// =========================
+// STAF
+// =========================
+import './pages/staf/input-skp.js';
+import './pages/staf/log-aktivitas.js';
+import './pages/staf/peta-aktivitas.js';
+import './pages/staf/riwayat.js';
+
+// =========================
+// PENILAI
+// =========================
+import './pages/penilai/input-skp.js';
+import './pages/penilai/log-aktivitas.js';
+import './pages/penilai/pengumuman.js';
+import './pages/penilai/peta-aktivitas.js';
+import './pages/penilai/riwayat.js';
+
 // Chart global (boleh)
 import Chart from 'chart.js/auto';
 window.Chart = Chart;

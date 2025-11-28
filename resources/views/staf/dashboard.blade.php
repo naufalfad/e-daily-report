@@ -1,5 +1,5 @@
 @php($title = 'Dashboard Staf')
-@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'dashboard'])
+@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'dashboard-staf'])
 
 @section('content')
 

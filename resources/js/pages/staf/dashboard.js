@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const draftContainer = document.getElementById("draft-list");
     if (draftContainer) draftContainer.innerHTML = "";
 
-    const draft = data.draft_terbaru || [];
+    const draft = data.draft_limit || [];
 
     if (draftContainer) {
         if (draft.length === 0) {
@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                     <div class="flex items-center gap-2 shrink-0">
                         <button 
-                            onclick="window.location.href='/staf/input-laporan/${item.id}'"
+                            onclick="window.location.href='/staf/input-lkh/${item.id}'"
                             class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] shadow-sm hover:brightness-95">
                             Lanjutkan
                         </button>

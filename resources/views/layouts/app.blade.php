@@ -212,6 +212,32 @@
     @vite('resources/js/pages/admin/setting-sistem.js')
     @break
 
+    @case('staf')
+        @vite('resources/js/pages/staf/dashboard.js')
+        @vite('resources/js/pages/staf/input-lkh.js')
+        @vite('resources/js/pages/staf/input-skp.js')
+        @vite('resources/js/pages/staf/log-aktivitas.js')
+        @vite('resources/js/pages/staf/peta-aktivitas.js')
+        @vite('resources/js/pages/staf/riwayat.js')
+    @break
+
+    @case('penilai')
+        @vite('resources/js/pages/penilai/dashboard.js')
+        @vite('resources/js/pages/penilai/input-lkh.js')
+        @vite('resources/js/pages/penilai/input-skp.js')
+        @vite('resources/js/pages/penilai/log-aktivitas.js')
+        @vite('resources/js/pages/penilai/pengumuman.js')
+        @vite('resources/js/pages/penilai/peta-aktivitas.js')
+        @vite('resources/js/pages/penilai/riwayat.js')
+        @vite('resources/js/pages/penilai/validasi-laporan.js')
+    @break
+
+    @case('kadis')
+        @vite('resources/js/pages/kadis/dashboard.js')
+        @vite('resources/js/pages/kadis/log-aktivitas.js')
+        @vite('resources/js/pages/kadis/validasi-laporan.js')
+    @break
+
     @endswitch
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

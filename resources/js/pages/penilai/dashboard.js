@@ -113,12 +113,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                     tone = "bg-[#128C60]/50";
                     iconName = "approve.svg";
                     statusLabel = "Disetujui";
-                } 
+                }
                 else if (item.status === "rejected" || item.status.includes("reject")) {
                     tone = "bg-[#B6241C]/50";
                     iconName = "reject.svg";
                     statusLabel = "Ditolak";
-                } 
+                }
                 else if (item.status === "waiting_review") {
                     tone = "bg-[#D8A106]/50";
                     iconName = "pending.svg";
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const draftList = document.getElementById("draft-list");
     draftList && (draftList.innerHTML = "");
 
-    const draft = data.draft_terbaru || [];
+    const draft = data.draft_limit || [];
 
     if (draftList) {
         if (!draft.length) {
@@ -239,7 +239,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         chartKinerja = new Chart(ctx, {
             type: "line",
             data: {
-                labels: ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"],
+                labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
                 datasets: [
                     {
                         label: "Total Laporan",

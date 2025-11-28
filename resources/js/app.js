@@ -11,26 +11,6 @@ import './global/loader.js';
 import './global/notification.js';
 import './utils/auth-fetch';
 
-import './pages/staf/dashboard.js';
-// import './pages/staf/input-lkh.js';
-import './pages/staf/input-skp.js';
-import './pages/staf/log-aktivitas.js';
-import './pages/staf/peta-aktivitas.js';
-import './pages/staf/riwayat.js';
-
-import './pages/penilai/dashboard.js';
-import './pages/penilai/input-lkh.js';
-import './pages/penilai/input-skp.js';
-import './pages/penilai/log-aktivitas.js';
-import './pages/penilai/pengumuman.js';
-import './pages/penilai/peta-aktivitas.js';
-import './pages/penilai/riwayat.js';
-import './pages/penilai/validasi-laporan.js';
-
-import './pages/kadis/dashboard.js';
-import './pages/kadis/log-aktivitas.js';
-import './pages/kadis/validasi-laporan.js';
-
 // Chart global (boleh)
 import Chart from 'chart.js/auto';
 window.Chart = Chart;
@@ -39,14 +19,14 @@ window.Chart = Chart;
 // NOTIFIKASI GLOBAL FIX
 // =========================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const logoutBtn = document.getElementById('btn-logout');
 
     // =========================
     // 1. LOGOUT FIX
     // =========================
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async function(e) {
+        logoutBtn.addEventListener('click', async function (e) {
             e.preventDefault();
 
             Swal.fire({

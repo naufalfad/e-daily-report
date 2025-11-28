@@ -793,6 +793,21 @@ async function loadEditLKH(id, headers) {
         updateAlpineDropdown('satuan', data.satuan);
         updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
 
+        const skpEl = document.querySelector('input[name="skp_id"]');
+        if(skpEl) {
+            const wrapper = skpEl.closest('[x-data]');
+            if(wrapper) {
+                const scope = Alpine.$data(wrapper);
+                if(data.skp_id) {
+                    scope.setKategori('skp');
+                    scope.skpId = data.skp_id;
+                    scope.skpLabel = data.skp.nama_skp || 'SKP Terpilih';
+                } else {
+                    scope.setKategori('non-skp');
+                }
+            }
+        }
+
         document.querySelector('h2').innerText = "Edit LKH";
 
     } catch (err) {

@@ -602,7 +602,8 @@ document.addEventListener("DOMContentLoaded", async function() {
             const data = await response.json();
 
             renderAktivitas(data.aktivitas_terbaru || []);
-            renderDraft(data.draft_terbaru || []);
+            renderDraftAll(data.draft_terbaru || []);
+            renderDraftLimit(data.draft_limit || []);
         }
     } catch (err) {
         console.error("Gagal load dashboard stats:", err);
@@ -685,16 +686,12 @@ function renderAktivitas(aktivitas) {
     });
 }
 
-
-
 // ============================================================
 // 🔥 RENDER DRAFT
 // ============================================================
-function renderDraft(rawDrafts) {
-    const draftContainer = document.getElementById("draft-list");
-    draftContainer.innerHTML = "";
+function renderDraftLimit(rawDrafts) {
 
-    const processedDrafts = rawDrafts.map(item => {
+    const draftsLimit = rawDrafts.map(item => {
         const d = new Date(item.updated_at);
         return {
             id: item.id,
@@ -703,36 +700,36 @@ function renderDraft(rawDrafts) {
         };
     });
 
-    if (processedDrafts.length === 0) {
-        draftContainer.innerHTML =
-            `<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>`;
-        return;
-    }
-
-    processedDrafts.slice(0, 3).forEach(item => {
-        draftContainer.insertAdjacentHTML("beforeend", `
-            <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
-                <div class="flex-1 min-w-0">
-                    <h4 class="text-[12px] font-medium text-slate-900 truncate">${item.deskripsi}</h4>
-                    <p class="text-[10px] text-slate-500 mt-1">${item.waktu_simpan}</p>
-                </div>
-                <a href="/penilai/input-laporan/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px]">
-                    Lanjutkan
-                </a>
-                <button onclick="deleteDraft('${item.id}')" class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
-                    Hapus
-                </button>
-            </div>
-        `);
-    });
-
-    // Kirim draft ke Alpine Modal
     window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: processedDrafts
+        detail: {
+            limit: draftsLimit.slice(0, 3),
+            all: window.__draftsAll || []
+        }
     }));
+
+    window.__draftsLimit = draftsLimit;
 }
 
+function renderDraftAll(rawDrafts) {
 
+    const draftsAll = rawDrafts.map(item => {
+        const d = new Date(item.updated_at);
+        return {
+            id: item.id,
+            deskripsi: item.deskripsi_aktivitas || "Draft tanpa judul",
+            waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
+        };
+    });
+
+    window.dispatchEvent(new CustomEvent("update-drafts", {
+        detail: {
+            limit: window.__draftsLimit || [], 
+            all: draftsAll
+        }
+    }));
+
+    window.__draftsAll = draftsAll;
+}
 
 // ============================================================
 // 🔥 LOAD EDIT LKH
@@ -763,7 +760,7 @@ async function loadEditLKH(id, headers) {
 
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
         updateAlpineDropdown('satuan', data.satuan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label);
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
 
         document.querySelector('h2').innerText = "Edit LKH";
 

@@ -117,6 +117,12 @@ class DashboardController extends Controller
             ->where('user_id', $userId)
             ->where('status', 'draft')
             ->latest('created_at')
+            ->get();
+
+        $draftsLimit = LaporanHarian::with('skp')
+            ->where('user_id', $userId)
+            ->where('status', 'draft')
+            ->latest('created_at')
             ->limit(3)
             ->get();
 
@@ -150,6 +156,7 @@ class DashboardController extends Controller
             'grafik_aktivitas' => $graphActivities,
             'aktivitas_terbaru' => $recentActivities,
             'draft_terbaru' => $recentDrafts,
+            'draft_limit' => $draftsLimit,
         ]);
     }
 }

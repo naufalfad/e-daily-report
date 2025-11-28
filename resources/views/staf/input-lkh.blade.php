@@ -449,79 +449,109 @@
 
     {{-- KIRI BAWAH: DRAFT LKH --}}
     <div x-data="{ 
-                openDraftModal: false, 
-                drafts: [] 
-            }" @update-drafts.window="drafts = $event.detail" x-cloak
-        class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
+            openDraftModal: false, 
+            draftsLimit: [], 
+            draftsAll: [] 
+        }" 
+
+        @update-drafts.window="
+            draftsLimit = $event.detail.limit;
+            draftsAll = $event.detail.all;
+        "
+
+        x-cloak
+        class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col"
+    >
 
         {{-- HEADER CARD --}}
         <div class="flex items-center justify-between mb-3 shrink-0">
             <h3 class="text-[15px] font-medium text-slate-800">Draft LKH</h3>
-            {{-- Tombol hanya muncul jika ada draft --}}
-            <button type="button" x-show="drafts.length > 0"
-                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
-                Lihat Semua (<span x-text="drafts.length"></span>)
+
+            <button type="button" 
+                x-show="draftsAll.length > 0"
+                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" 
+                @click="openDraftModal = true">
+                Lihat Semua (<span x-text="draftsAll.length"></span>)
             </button>
         </div>
 
-        {{-- LIST PREVIEW (Diisi oleh JavaScript native via ID - Maksimal 3) --}}
-        <div id="draft-list" class="space-y-3 flex-1 overflow-y-auto pr-1">
-            <p class="text-sm text-slate-400 italic">Memuat draft...</p>
+        {{-- LIST PREVIEW LIMIT (MAKS 3) --}}
+        <div class="space-y-3 flex-1 overflow-y-auto pr-1">
+
+            <template x-if="draftsLimit.length === 0">
+                <p class="text-sm text-slate-400 italic">Tidak ada draft.</p>
+            </template>
+
+            <template x-for="item in draftsLimit" :key="item.id">
+                <div
+                    class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
+
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
+                        <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
+                    </div>
+
+                    <a :href="'/staf/input-lkh/' + item.id" 
+                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
+                        Lanjutkan
+                    </a>
+                    <button @click="deleteDraft(item.id)"
+                        class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
+                        Hapus
+                    </button>
+                </div>
+            </template>
         </div>
 
-        {{-- MODAL DRAFT LENGKAP --}}
+        {{-- MODAL FULL LIST --}}
         <div x-show="openDraftModal" x-transition.opacity
             class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
 
-            {{-- Background gelap --}}
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openDraftModal = false"></div>
 
-            {{-- Card modal --}}
             <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
 
-                {{-- Header Modal --}}
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
-                    <h2 class="text-lg font-semibold text-slate-800">
-                        Semua Draft Laporan
-                    </h2>
-                    <button type="button"
-                        class="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
-                        @click="openDraftModal = false">
-                        <span class="text-slate-500 text-xl leading-none">&times;</span>
+                {{-- Header --}}
+                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                    <h2 class="text-lg font-semibold text-slate-800">Semua Draft Laporan</h2>
+                    <button @click="openDraftModal = false" 
+                        class="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200">
+                        <span class="text-slate-500 text-xl">&times;</span>
                     </button>
                 </div>
 
-                {{-- Isi Modal (Scrollable & Full List) --}}
+                {{-- Body --}}
                 <div class="overflow-y-auto p-6 space-y-3">
-                    <template x-for="item in drafts" :key="item.id">
-                        <!-- TAMPILAN SAMA PERSIS DENGAN YANG DILUAR -->
+
+                    <template x-if="draftsAll.length === 0">
+                        <div class="text-center py-10 text-slate-400">
+                            Tidak ada draft tersimpan saat ini.
+                        </div>
+                    </template>
+
+                    <template x-for="item in draftsAll" :key="item.id">
                         <div
                             class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
                             <div>
                                 <h4 class="text-[12px] font-medium text-slate-900" x-text="item.deskripsi"></h4>
                                 <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <a :href="'input-lkh/' + item.id"
-                                    class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition text-center">
+                            <div class="flex items-center gap-2">
+                                <a :href="'/staf/input-lkh/' + item.id"
+                                    class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">
                                     Lanjutkan
                                 </a>
-                                <button type="button" @click="deleteDraft(item.id)"
-                                    class="bg-[#B6241C] hover:bg-[#8f1e17] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition">
+                                <button @click="deleteDraft(item.id)"
+                                    class="bg-[#B6241C] text-white text-[12px] px-2 py-1 rounded-[8px]">
                                     Hapus
                                 </button>
                             </div>
                         </div>
                     </template>
-
-                    {{-- Empty State di Modal --}}
-                    <div x-show="drafts.length === 0" class="text-center py-10 text-slate-400">
-                        Tidak ada draft tersimpan saat ini.
-                    </div>
                 </div>
 
-                {{-- Footer Modal --}}
-                <div class="px-6 py-3 bg-slate-50 rounded-b-2xl border-t border-slate-100 text-right shrink-0">
+                {{-- Footer --}}
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
                     <button @click="openDraftModal = false"
                         class="text-xs text-slate-500 hover:text-slate-700 font-medium">
                         Tutup
@@ -603,7 +633,8 @@ document.addEventListener("DOMContentLoaded", async function() {
             const data = await response.json();
 
             renderAktivitas(data.aktivitas_terbaru || []);
-            renderDraft(data.draft_terbaru || []);
+            renderDraftAll(data.draft_terbaru || []);
+            renderDraftLimit(data.draft_limit || []);
         }
     } catch (err) {
         console.error("Gagal load dashboard stats:", err);
@@ -686,16 +717,12 @@ function renderAktivitas(aktivitas) {
     });
 }
 
-
-
 // ============================================================
 // 🔥 RENDER DRAFT
 // ============================================================
-function renderDraft(rawDrafts) {
-    const draftContainer = document.getElementById("draft-list");
-    draftContainer.innerHTML = "";
+function renderDraftLimit(rawDrafts) {
 
-    const processedDrafts = rawDrafts.map(item => {
+    const draftsLimit = rawDrafts.map(item => {
         const d = new Date(item.updated_at);
         return {
             id: item.id,
@@ -704,36 +731,36 @@ function renderDraft(rawDrafts) {
         };
     });
 
-    if (processedDrafts.length === 0) {
-        draftContainer.innerHTML =
-            `<div class="p-4 text-sm text-slate-500 bg-slate-50 rounded-lg text-center">Tidak ada draft.</div>`;
-        return;
-    }
-
-    processedDrafts.slice(0, 3).forEach(item => {
-        draftContainer.insertAdjacentHTML("beforeend", `
-            <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
-                <div class="flex-1 min-w-0">
-                    <h4 class="text-[12px] font-medium text-slate-900 truncate">${item.deskripsi}</h4>
-                    <p class="text-[10px] text-slate-500 mt-1">${item.waktu_simpan}</p>
-                </div>
-                <a href="/staf/input-lkh/${item.id}" class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-3 py-1.5 rounded-[8px]">
-                    Lanjutkan
-                </a>
-                <button onclick="deleteDraft('${item.id}')" class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
-                    Hapus
-                </button>
-            </div>
-        `);
-    });
-
-    // Kirim draft ke Alpine Modal
     window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: processedDrafts
+        detail: {
+            limit: draftsLimit.slice(0, 3),
+            all: window.__draftsAll || []
+        }
     }));
+
+    window.__draftsLimit = draftsLimit;
 }
 
+function renderDraftAll(rawDrafts) {
 
+    const draftsAll = rawDrafts.map(item => {
+        const d = new Date(item.updated_at);
+        return {
+            id: item.id,
+            deskripsi: item.deskripsi_aktivitas || "Draft tanpa judul",
+            waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
+        };
+    });
+
+    window.dispatchEvent(new CustomEvent("update-drafts", {
+        detail: {
+            limit: window.__draftsLimit || [], 
+            all: draftsAll
+        }
+    }));
+
+    window.__draftsAll = draftsAll;
+}
 
 // ============================================================
 // 🔥 LOAD EDIT LKH
@@ -764,7 +791,7 @@ async function loadEditLKH(id, headers) {
 
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
         updateAlpineDropdown('satuan', data.satuan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi_label);
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
 
         document.querySelector('h2').innerText = "Edit LKH";
 

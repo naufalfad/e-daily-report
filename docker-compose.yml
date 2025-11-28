@@ -1,32 +1,30 @@
 services:
-  # 1. Aplikasi Laravel
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: edaily-app
-    container_name: edaily-app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - ./:/var/www
-    depends_on:
-      - db
-
-  # 2. Web Server Nginx
-  web:
+  nginx:
     image: nginx:alpine
     container_name: edaily-nginx
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./:/var/www
-      - ./docker/nginx/app.conf:/etc/nginx/conf.d/default.conf
+      - ./docker/nginx/app.conf:/etc/nginx/conf.d/app.conf
+      - ./docker/nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+      - /dev/null:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
 
-  # 3. Database PostGIS
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edaily-app
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www
+
   db:
     image: postgis/postgis:14-3.4
     container_name: edaily-db
@@ -36,9 +34,16 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:5432" # Akses dari luar (opsional, matikan jika ingin private)
+      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
 
 volumes:
   db_data:

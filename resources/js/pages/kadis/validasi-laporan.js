@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!token) return;
 
         try {
-            const res = await fetch('/api/validator/lkh', {
+            const res = await fetch('/e-daily-report/api/validator/lkh', {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = getToken();
 
         try {
-            const res = await fetch(`/api/validator/lkh/${lkhId}/validate`, {
+            const res = await fetch(`/e-daily-report/api/validator/lkh/${lkhId}/validate`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

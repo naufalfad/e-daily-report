@@ -3,11 +3,11 @@
 
 @section('content')
 
-{{-- 
-    SOLUSI FINAL: 
+{{--
+    SOLUSI FINAL:
     Script dipindahkan langsung ke bawah file ini menggunakan 'alpine:init'.
     Ini menjamin Alpine mengenali komponen 'skpPageData' sebelum render.
---}}
+    --}}
 
 <section x-data="skpPageData()" x-init="initPage()"
     class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 flex-1">
@@ -255,162 +255,173 @@
 {{-- SCRIPT INLINE AGAR TERBACA ALPINE --}}
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('skpPageData', () => ({
-        // State
-        skpList: [],
-        atasanName: 'Memuat...',
-        isLoading: false,
+            Alpine.data('skpPageData', () => ({
+                    // State
+                    skpList: [],
+                    atasanName: 'Memuat...',
+                    isLoading: false,
 
-        // Modal State
-        openDetail: false,
-        openEdit: false,
-        detailData: null,
-        editData: null,
+                    // Modal State
+                    openDetail: false,
+                    openEdit: false,
+                    detailData: null,
+                    editData: null,
 
-        // Form
-        formData: {
-            nama_skp: '',
-            periode_mulai: '',
-            periode_selesai: '',
-            indikator: '',
-            rencana_aksi: '',
-            target: ''
-        },
-
-        // Init
-        initPage() {
-            if (!localStorage.getItem('auth_token')) {
-                window.location.href = '/login';
-                return;
-            }
-            this.fetchProfile();
-            this.fetchSkpList();
-        },
-
-        // API Calls
-        async fetchProfile() {
-            const token = localStorage.getItem('auth_token');
-            try {
-                const res = await fetch('/api/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                const json = await res.json();
-                this.atasanName = json.atasan ? json.atasan.name : '- Tidak Ada Atasan -';
-            } catch (e) {
-                this.atasanName = 'Gagal memuat';
-            }
-        },
-
-        async fetchSkpList() {
-            const token = localStorage.getItem('auth_token');
-            try {
-                const res = await fetch('/api/skp', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                const json = await res.json();
-                this.skpList = json.data || [];
-            } catch (e) {
-                this.skpList = [];
-            }
-        },
-
-        async submitCreate() {
-            this.isLoading = true;
-            const token = localStorage.getItem('auth_token');
-            try {
-                const res = await fetch('/api/skp', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                    // Form
+                    formData: {
+                        nama_skp: '',
+                        periode_mulai: '',
+                        periode_selesai: '',
+                        indikator: '',
+                        rencana_aksi: '',
+                        target: ''
                     },
-                    body: JSON.stringify(this.formData)
-                });
-                if (res.ok) {
-                    Swal.fire('Berhasil', 'SKP ditambahkan', 'success');
-                    this.resetForm();
-                    this.fetchSkpList();
-                } else {
-                    Swal.fire('Gagal', 'Periksa input anda', 'error');
-                }
-            } catch (e) {
-                Swal.fire('Error', 'Gagal koneksi server', 'error');
-            }
-            this.isLoading = false;
-        },
 
-        async submitEdit() {
-            this.isLoading = true;
-            const token = localStorage.getItem('auth_token');
-            try {
-                const res = await fetch(`/api/skp/${this.editData.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                    // Init
+                    initPage() {
+                        if (!localStorage.getItem('auth_token')) {
+                            window.location.href = '/login';
+                            return;
+                        }
+                        this.fetchProfile();
+                        this.fetchSkpList();
                     },
-                    body: JSON.stringify(this.editData)
-                });
-                if (res.ok) {
-                    Swal.fire('Berhasil', 'Perubahan disimpan', 'success');
-                    this.openEdit = false;
-                    this.fetchSkpList();
-                } else {
-                    Swal.fire('Gagal', 'Gagal update data', 'error');
-                }
-            } catch (e) {
-                Swal.fire('Error', 'Gagal koneksi server', 'error');
-            }
-            this.isLoading = false;
-        },
 
-        // Utilities
-        resetForm() {
-            this.formData = {
-                nama_skp: '',
-                periode_mulai: '',
-                periode_selesai: '',
-                indikator: '',
-                rencana_aksi: '',
-                target: ''
-            };
-        },
-        openDetailModal(item) {
-            this.detailData = item;
-            this.openDetail = true;
-        },
-        openEditModal() {
-            this.editData = JSON.parse(JSON.stringify(this.detailData));
-            // Format date for input type=date
-            if (this.editData.periode_mulai) this.editData.periode_mulai = this.editData
-                .periode_mulai.substring(0, 10);
-            if (this.editData.periode_selesai) this.editData.periode_selesai = this.editData
-                .periode_selesai.substring(0, 10);
-            this.openDetail = false;
-            this.openEdit = true;
-        },
-        formatDate(date) {
-            if (!date) return '-';
-            try {
-                return new Date(date).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                });
-            } catch (e) {
-                return date;
-            }
-        }
-    }));
-});
+                    // API Calls
+                    async fetchProfile() {
+                        const token = localStorage.getItem('auth_token');
+                        try {
+                            const res = await fetch('/api/me', {
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`,
+                                            'Accept': 'application/json'
+                                        }
+                                        const res = await fetch('/e-daily-report/api/me', {
+                                            headers: {
+                                                'Authorization': `Bearer ${token}`,
+                                                'Accept': 'application/json'
+                                            }
+                                        });
+                                        const json = await res.json();
+                                        this.atasanName = json.atasan ? json.atasan.name :
+                                        '- Tidak Ada Atasan -';
+                                    }
+                                    catch (e) {
+                                        this.atasanName = 'Gagal memuat';
+                                    }
+                                },
+
+                                async fetchSkpList() {
+                                        const token = localStorage.getItem('auth_token');
+                                        try {
+                                            const res = await fetch('/api/skp', {
+                                                headers: {
+                                                    'Authorization': `Bearer ${token}`,
+                                                    'Accept': 'application/json'
+                                                }
+                                            });
+                                            const json = await res.json();
+                                            this.skpList = json.data || [];
+                                        } catch (e) {
+                                            this.skpList = [];
+                                        }
+                                    },
+
+                                    async submitCreate() {
+                                            this.isLoading = true;
+                                            const token = localStorage.getItem('auth_token');
+                                            try {
+                                                const res = await fetch('/e-daily-report/api/skp', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Authorization': `Bearer ${token}`,
+                                                        'Content-Type': 'application/json',
+                                                        'Accept': 'application/json'
+                                                    },
+                                                    body: JSON.stringify(this.formData)
+                                                });
+                                                if (res.ok) {
+                                                    Swal.fire('Berhasil', 'SKP ditambahkan', 'success');
+                                                    this.resetForm();
+                                                    this.fetchSkpList();
+                                                } else {
+                                                    Swal.fire('Gagal', 'Periksa input anda', 'error');
+                                                }
+                                            } catch (e) {
+                                                Swal.fire('Error', 'Gagal koneksi server', 'error');
+                                            }
+                                            this.isLoading = false;
+                                        },
+
+                                        async submitEdit() {
+                                                this.isLoading = true;
+                                                const token = localStorage.getItem('auth_token');
+                                                try {
+                                                    const res = await fetch(
+                                                        `/e-daily-report/api/skp/${this.editData.id}`, {
+                                                            method: 'PUT',
+                                                            headers: {
+                                                                'Authorization': `Bearer ${token}`,
+                                                                'Content-Type': 'application/json',
+                                                                'Accept': 'application/json'
+                                                            },
+                                                            body: JSON.stringify(this.editData)
+                                                        });
+                                                    if (res.ok) {
+                                                        Swal.fire('Berhasil', 'Perubahan disimpan',
+                                                            'success');
+                                                        this.openEdit = false;
+                                                        this.fetchSkpList();
+                                                    } else {
+                                                        Swal.fire('Gagal', 'Gagal update data', 'error');
+                                                    }
+                                                } catch (e) {
+                                                    Swal.fire('Error', 'Gagal koneksi server', 'error');
+                                                }
+                                                this.isLoading = false;
+                                            },
+
+                                            // Utilities
+                                            resetForm() {
+                                                this.formData = {
+                                                    nama_skp: '',
+                                                    periode_mulai: '',
+                                                    periode_selesai: '',
+                                                    indikator: '',
+                                                    rencana_aksi: '',
+                                                    target: ''
+                                                };
+                                            },
+                                            openDetailModal(item) {
+                                                this.detailData = item;
+                                                this.openDetail = true;
+                                            },
+                                            openEditModal() {
+                                                this.editData = JSON.parse(JSON.stringify(this.detailData));
+                                                // Format date for input type=date
+                                                if (this.editData.periode_mulai) this.editData
+                                                    .periode_mulai = this.editData
+                                                    .periode_mulai.substring(0, 10);
+                                                if (this.editData.periode_selesai) this.editData
+                                                    .periode_selesai = this.editData
+                                                    .periode_selesai.substring(0, 10);
+                                                this.openDetail = false;
+                                                this.openEdit = true;
+                                            },
+                                            formatDate(date) {
+                                                if (!date) return '-';
+                                                try {
+                                                    return new Date(date).toLocaleDateString('id-ID', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        year: 'numeric'
+                                                    });
+                                                } catch (e) {
+                                                    return date;
+                                                }
+                                            }
+                        }));
+            });
 </script>
 
 @endsection

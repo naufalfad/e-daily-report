@@ -28,7 +28,7 @@ window.skpPageData = function() {
         // Init halaman
         initPage() {
             if (!localStorage.getItem('auth_token')) {
-                window.location.href = '/login';
+                window.location.href = '/e-daily-report/login';
                 return;
             }
             console.log("Init Penilai SKP Page");
@@ -44,7 +44,7 @@ window.skpPageData = function() {
             const token = localStorage.getItem('auth_token');
 
             try {
-                const res = await fetch('/api/me', {
+                const res = await fetch('/e-daily-report/api/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -69,7 +69,7 @@ window.skpPageData = function() {
             const token = localStorage.getItem('auth_token');
 
             try {
-                const res = await fetch('/api/skp', {
+                const res = await fetch('/e-daily-report/api/skp', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -106,7 +106,7 @@ window.skpPageData = function() {
             }
 
             try {
-                const res = await fetch('/api/skp', {
+                const res = await fetch('/e-daily-report/api/skp', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -201,7 +201,8 @@ window.skpPageData = function() {
                     target: this.editData.target
                 };
 
-                const res = await fetch(`/api/skp/${this.editData.id}`, {
+            try {
+                const res = await fetch(`/e-daily-report/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,

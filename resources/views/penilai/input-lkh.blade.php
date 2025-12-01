@@ -600,7 +600,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     // 🔥 3. LOAD DASHBOARD (Aktivitas & Draft)
     // ============================================================
     try {
-        const response = await fetch("/api/dashboard/stats", {
+        const response = await fetch("/e-daily-report/api/dashboard/stats", {
             method: "GET",
             headers: headers,
         });
@@ -745,7 +745,7 @@ async function loadEditLKH(id, headers) {
     try {
         document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
 
-        const res = await fetch(`/api/lkh/${id}`, {
+        const res = await fetch(`/e-daily-report/api/lkh/${id}`, {
             method: "GET",
             headers: headers,
         });
@@ -871,9 +871,9 @@ async function submitForm(statusType) {
         }
     }
 
-    let url = "/api/lkh";
+    let url = "/e-daily-report/api/lkh";
 
-    if (lkhIdToEdit) url = `/api/lkh/update/${lkhIdToEdit}`;
+    if (lkhIdToEdit) url = `/e-daily-report/api/lkh/update/${lkhIdToEdit}`;
 
     try {
         const btn = event.target;
@@ -900,7 +900,7 @@ async function submitForm(statusType) {
                 showConfirmButton: false
             });
 
-            setTimeout(() => window.location.href = "/penilai/dashboard", 1000);
+            setTimeout(() => window.location.href = "/e-daily-report/penilai/dashboard", 1000);
             return;
         }
 

@@ -78,56 +78,50 @@ class SkpController extends Controller
             $user = Auth::user()->load(['jabatan', 'unitKerja']);
             $jabatanName = strtolower($user->jabatan->nama_jabatan ?? '');
             
-            // Query Dasar: Cari User di Unit Kerja yang sama, KECUALI diri sendiri
-            // Ini filter pertama yang sangat penting (Organizational Unit Filter)
+            // Query Dasar
             $query = User::query()
                         ->where('id', '!=', $user->id)
                         ->where('unit_kerja_id', $user->unit_kerja_id);
 
-            // --- LOGIKA HIERARKI (Sesuai Titah Paduka) ---
-            
-            // Skenario 1: KADIS / KABAN / SEKRETARIS (Level Pimpinan Puncak Unit)
-            // Melihat SEMUA pegawai di Unit/Dinasnya
+            // --- LOGIKA HIERARKI (Tetap Sama) ---
             if (str_contains($jabatanName, 'kepala badan') || 
                 str_contains($jabatanName, 'kepala dinas') || 
                 str_contains($jabatanName, 'sekretaris')) {
-                // Tidak perlu filter atasan_id, karena sudah difilter by unit_kerja_id
-            }
-            
-            // Skenario 2: KEPALA BIDANG (KABID)
-            // Melihat Kasubid (Bawahan Langsung) & Staf di Bidangnya (Cucu Buah)
-            elseif (str_contains($jabatanName, 'kepala bidang')) {
+                // All unit
+            } elseif (str_contains($jabatanName, 'kepala bidang')) {
                 $query->where(function($q) use ($user) {
-                    $q->where('atasan_id', $user->id) // Level 1: Anak Buah Langsung
+                    $q->where('atasan_id', $user->id)
                       ->orWhereIn('atasan_id', function($sq) use ($user) { 
-                          $sq->select('id')->from('users')->where('atasan_id', $user->id); // Level 2: Cucu Buah
+                          $sq->select('id')->from('users')->where('atasan_id', $user->id);
                       });
                 });
-            }
-            
-            // Skenario 3: KASUBID / KASUBAG (Level Pengawas)
-            // Hanya melihat Staf langsung di bawahnya
-            elseif (str_contains($jabatanName, 'kepala sub')) {
+            } elseif (str_contains($jabatanName, 'kepala sub')) {
                 $query->where('atasan_id', $user->id);
-            }
-            
-            // Skenario Default (Staf/Lainnya)
-            // Tidak punya bawahan
-            else {
-                $query->where('id', 0); // Force result kosong
+            } else {
+                $query->where('id', 0);
             }
 
-            // Eksekusi Query & Load Relasi LKH untuk hitung skor
             $allSubordinates = $query->with(['unitKerja', 'jabatan', 'laporanHarian'])
                                      ->orderBy('name', 'asc')
                                      ->get();
 
-            // --- MAPPING & CALCULATING SKOR ---
+            // --- [PERBAIKAN LOGIKA DISINI] ---
             $listBawahan = $allSubordinates->map(function($pegawai) {
-                $totalLkh = $pegawai->laporanHarian->count();
-                $approvedLkh = $pegawai->laporanHarian->where('status', 'approved')->count();
                 
-                // Rumus: (Disetujui / Total) * 100
+                // 1. Ambil Laporan yang statusnya VALID saja (Bukan Draft)
+                // Filter di level Collection Laravel (karena data sudah di-eager load)
+                $lkhValid = $pegawai->laporanHarian->filter(function ($lkh) {
+                    return in_array($lkh->status, ['approved', 'rejected', 'waiting_review']);
+                });
+
+                // 2. Hitung Total yang menjadi Pembagi (Hanya Approved, Rejected, Waiting)
+                $totalLkh = $lkhValid->count();
+
+                // 3. Hitung yang Disetujui
+                $approvedLkh = $lkhValid->where('status', 'approved')->count();
+                
+                // 4. Hitung Skor
+                // Sekarang 'Draft' tidak akan membuat skor menjadi kecil
                 $skor = $totalLkh > 0 
                     ? round(($approvedLkh / $totalLkh) * 100, 1) 
                     : 0;
@@ -144,7 +138,7 @@ class SkpController extends Controller
                     'name' => $pegawai->name,
                     'jabatan' => $pegawai->jabatan->nama_jabatan ?? '-',
                     'unit_kerja' => $pegawai->unitKerja->nama_unit ?? '-',
-                    'total_lkh' => $totalLkh,
+                    'total_lkh' => $totalLkh, // Ini sekarang angka Murni (Tanpa Draft)
                     'approved_lkh' => $approvedLkh,
                     'total_nilai' => $skor,
                     'predikat' => $predikat,
@@ -154,22 +148,18 @@ class SkpController extends Controller
                 ];
             });
 
-            // --- OUTPUT JSON TERPISAH (SESUAI PERMINTAAN) ---
             return response()->json([
                 'status' => 'success',
-                // INFO 1: Data Diri (Hanya untuk Debug/Header)
                 'viewer_info' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'jabatan' => $user->jabatan->nama_jabatan,
                     'role_detected' => $jabatanName
                 ],
-                // INFO 2: Data Bawahan (Ini yang dipakai tabel JS)
                 'kinerja_bawahan' => $listBawahan 
             ]);
         }
 
-        // B. JIKA REQUEST BROWSER (View HTML)
         return view('penilai.skoring-kinerja');
     }
 }

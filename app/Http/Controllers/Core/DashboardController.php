@@ -15,7 +15,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $userId = $user->id;
-        
+
         // Filter Tahun & Bulan (Default: Bulan ini)
         $month = $request->query('month', date('m'));
         $year = $request->query('year', date('Y'));
@@ -23,7 +23,7 @@ class DashboardController extends Controller
         // ==========================================
         // 1. SKORING CAPAIAN SKP (Target vs Realisasi)
         // ==========================================
-        
+
         $totalTargetTahunan = Skp::where('user_id', $userId)
             ->whereYear('periode_mulai', $year)
             ->sum('target');
@@ -34,20 +34,20 @@ class DashboardController extends Controller
             ->whereYear('tanggal_laporan', $year)
             ->count();
 
-        $persenCapaian = $totalTargetTahunan > 0 
-            ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1) 
+        $persenCapaian = $totalTargetTahunan > 0
+            ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1)
             : 0;
 
         // ==========================================
         // 2. STATISTIK KUALITAS LKH SKP
         // ==========================================
-        
+
         $queryLkhSkp = LaporanHarian::where('user_id', $userId)
             ->whereNotNull('skp_id')
             ->whereYear('tanggal_laporan', $year);
-            
+
         if ($request->has('month')) {
-             $queryLkhSkp->whereMonth('tanggal_laporan', $month);
+            $queryLkhSkp->whereMonth('tanggal_laporan', $month);
         }
 
         $totalLkhSkp = $queryLkhSkp->whereNot('status', 'draft')->count();
@@ -55,7 +55,7 @@ class DashboardController extends Controller
         $lkhSkpRejected = (clone $queryLkhSkp)->where('status', 'rejected')->count();
 
         $persenSkpDiterima = $totalLkhSkp > 0 ? round(($lkhSkpApproved / $totalLkhSkp) * 100, 1) : 0;
-        $persenSkpDitolak  = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
+        $persenSkpDitolak = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
 
         // ==========================================
         // 3. STATISTIK LKH NON-SKP
@@ -66,7 +66,7 @@ class DashboardController extends Controller
             ->whereYear('tanggal_laporan', $year);
 
         if ($request->has('month')) {
-             $queryNonSkp->whereMonth('tanggal_laporan', $month);
+            $queryNonSkp->whereMonth('tanggal_laporan', $month);
         }
 
         $totalNonSkp = $queryNonSkp->whereNot('status', 'draft')->count();
@@ -160,15 +160,86 @@ class DashboardController extends Controller
         ]);
     }
 
-public function getStatsKadis()
-{
-    // Minimal response biar tidak 500
-    return response()->json([
-        'total_pegawai' => 0,
-        'total_lkh' => 0,
-        'total_skp' => 0,
-        'recent_activity' => []
-    ]);
-}
+    public function getStatsKadis(Request $request)
+    {
+        $kadis = Auth::user();
+
+        // Ambil seluruh pegawai di bawah Kadis
+        $pegawaiIds = \App\Models\User::where('atasan_id', $kadis->id)->pluck('id');
+
+        // =============================
+        // Statistik Dasar Dashboard Kadis
+        // =============================
+
+        $today = now()->toDateString();
+
+        $totalHariIni = LaporanHarian::whereIn('user_id', $pegawaiIds)
+            ->whereDate('tanggal_laporan', $today)
+            ->whereNot('status', 'draft')
+            ->count();
+
+        $menunggu = LaporanHarian::whereIn('user_id', $pegawaiIds)
+            ->where('status', 'waiting_review')
+            ->count();
+
+        $disetujui = LaporanHarian::whereIn('user_id', $pegawaiIds)
+            ->where('status', 'approved')
+            ->count();
+
+        $ditolak = LaporanHarian::whereIn('user_id', $pegawaiIds)
+            ->where('status', 'rejected')
+            ->count();
+
+        // =============================
+        // Aktivitas Terbaru
+        // =============================
+
+        $recentActivities = LaporanHarian::with('user')
+            ->whereIn('user_id', $pegawaiIds)
+            ->latest('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function ($x) {
+                return [
+                    'deskripsi_aktivitas' => $x->nama_kegiatan ?? '-',
+                    'tanggal_laporan' => $x->tanggal_laporan,
+                    'status' => $x->status,
+                    'user' => $x->user->name ?? '-',
+                ];
+            });
+
+        // =============================
+        // Grafik (ambil seluruh laporan navigasi 1 tahun)
+        // =============================
+
+        $grafik = LaporanHarian::whereIn('user_id', $pegawaiIds)
+            ->whereYear('tanggal_laporan', now()->year)
+            ->get(['tanggal_laporan', 'status']);
+
+        return response()->json([
+            'user_info' => [
+                'name' => $kadis->name,
+                'nip' => $kadis->nip,
+                'daerah' => $kadis->alamat ?? '-',
+                'jabatan' => $kadis->jabatan->nama_jabatan ?? '-',
+                'unit' => $kadis->unitKerja->nama_unit ?? '-',
+                'alamat' => $kadis->alamat ?? '-',
+            ],
+
+            'statistik' => [
+                'total_hari_ini' => $totalHariIni,
+                'total_menunggu' => $menunggu,
+                'total_disetujui' => $disetujui,
+                'total_ditolak' => $ditolak,
+
+                'rate_total' => 0,
+                'rate_disetujui' => 0,
+                'rate_ditolak' => 0,
+            ],
+
+            'aktivitas_terbaru' => $recentActivities,
+            'grafik' => $grafik,
+        ]);
+    }
 
 }

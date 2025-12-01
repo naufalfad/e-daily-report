@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             emptyState.classList.add('hidden');
 
             // Tambahkan timestamp agar browser TIDAK menggunakan Cache
-            const url = `/penilai/skoring-kinerja?t=${new Date().getTime()}`;
+            const url = `/e-daily-report/penilai/skoring-kinerja?t=${new Date().getTime()}`;
             console.log("[2] URL Target:", url);
 
             const response = await fetch(url, {

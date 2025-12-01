@@ -501,7 +501,7 @@
                                 <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                <a :href="'input-lkh/' + item.id"
+                                <a :href="'/e-daily-report/input-lkh/' + item.id"
                                     class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition text-center">
                                     Lanjutkan
                                 </a>

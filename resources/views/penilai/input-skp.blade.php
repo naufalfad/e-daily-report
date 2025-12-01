@@ -244,7 +244,7 @@ document.addEventListener('alpine:init', () => {
         async fetchProfile() {
             const token = localStorage.getItem('auth_token');
             try {
-                const res = await fetch('/api/me', {
+                const res = await fetch('/e-daily-report/api/me', {
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 });
                 const json = await res.json();
@@ -257,7 +257,7 @@ document.addEventListener('alpine:init', () => {
         async fetchSkpList() {
             const token = localStorage.getItem('auth_token');
             try {
-                const res = await fetch('/api/skp', {
+                const res = await fetch('/e-daily-report/api/skp', {
                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                 });
                 const json = await res.json();
@@ -271,7 +271,7 @@ document.addEventListener('alpine:init', () => {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
             try {
-                const res = await fetch('/api/skp', {
+                const res = await fetch('/e-daily-report/api/skp', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -297,7 +297,7 @@ document.addEventListener('alpine:init', () => {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
             try {
-                const res = await fetch(`/api/skp/${this.editData.id}`, {
+                const res = await fetch(`/e-daily-report/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,

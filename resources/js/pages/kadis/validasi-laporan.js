@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!token) return;
 
         try {
-            const res = await fetch('/e-daily-report/api/validator/lkh', {
+            const res = await fetch('/api/validator/lkh', {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
             listContainer.innerHTML += `
                 <tr class="border-t border-slate-200">
                     <td class="px-4 py-2 whitespace-nowrap">${formatDate(lkh.created_at)}</td>
-                    <td class="px-4 py-2">${lkh.deskripsi_aktivitas.substring(0,40)}...</td>
+                    <td class="px-4 py-2">${lkh.deskripsi_aktivitas.substring(0, 40)}...</td>
                     <td class="px-4 py-2 whitespace-nowrap">${waktu}</td>
                     <td class="px-4 py-2 whitespace-nowrap">${lkh.user?.name ?? '-'}</td>
                     <td class="px-4 py-2 whitespace-nowrap">${lokasi}</td>
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = getToken();
 
         try {
-            const res = await fetch(`/e-daily-report/api/validator/lkh/${lkhId}/validate`, {
+            const res = await fetch(`/api/validator/lkh/${lkhId}/validate`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

@@ -105,11 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // [FIX] Kunci tombol secara visual dan logic
         btnSubmit.disabled = true;
-        btnSubmit.dataset.processing = "true"; 
+        btnSubmit.dataset.processing = "true";
         btnSubmit.textContent = "Menyimpan...";
 
         try {
-            const res = await authFetch("/e-daily-report/api/pengumuman", {
+            const res = await authFetch("/api/pengumuman", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirm("Hapus pengumuman ini?")) return;
 
         try {
-            const res = await authFetch(`/e-daily-report/api/pengumuman/${id}`, {
+            const res = await authFetch(`/api/pengumuman/${id}`, {
                 method: "DELETE"
             });
 

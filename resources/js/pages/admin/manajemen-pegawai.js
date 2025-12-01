@@ -2,14 +2,14 @@ import Swal from "sweetalert2";
 
 export function manajemenPegawaiData() {
     // Config URL dengan Prefix Subpath
-    const BASE_URL = "/e-daily-report/api/admin/pegawai";
+    const BASE_URL = "/api/admin/pegawai";
     const getToken = () => localStorage.getItem("auth_token");
 
     return {
         items: [],
         isLoading: false,
         search: '',
-        
+
         // Pagination
         pagination: {
             current_page: 1,
@@ -22,7 +22,7 @@ export function manajemenPegawaiData() {
         openAdd: false,
         openEdit: false,
         openUpload: false,
-        
+
         // Data Holders
         editId: null,
         formData: {
@@ -46,7 +46,7 @@ export function manajemenPegawaiData() {
         // --- FETCH DATA ---
         async fetchData(url = BASE_URL) {
             this.isLoading = true;
-            
+
             let targetUrl = url;
             if (this.search) {
                 const separator = targetUrl.includes('?') ? '&' : '?';
@@ -55,16 +55,16 @@ export function manajemenPegawaiData() {
 
             try {
                 const response = await fetch(targetUrl, {
-                    headers: { 
-                        "Authorization": `Bearer ${getToken()}`, 
-                        "Accept": "application/json" 
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`,
+                        "Accept": "application/json"
                     }
                 });
 
                 if (!response.ok) throw new Error("Gagal mengambil data");
                 const json = await response.json();
-                
-                this.items = json.data || []; 
+
+                this.items = json.data || [];
                 this.pagination = {
                     current_page: json.current_page,
                     last_page: json.last_page,
@@ -111,11 +111,11 @@ export function manajemenPegawaiData() {
                 }
 
                 Swal.fire("Berhasil", result.message, "success");
-                
+
                 if (isEdit) this.toggleEdit(false);
                 else this.toggleAdd(false);
-                
-                this.fetchData(); 
+
+                this.fetchData();
 
             } catch (error) {
                 Swal.fire("Gagal", error.message, "error");
@@ -142,7 +142,7 @@ export function manajemenPegawaiData() {
 
                     if (!response.ok) throw new Error("Gagal menghapus data");
                     Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-                    this.fetchData(); 
+                    this.fetchData();
 
                 } catch (error) {
                     Swal.fire("Error", error.message, "error");
@@ -162,7 +162,7 @@ export function manajemenPegawaiData() {
             this.openEdit = val;
             this.editId = null;
         },
-        
+
         toggleUpload(val) {
             this.openUpload = val;
         },

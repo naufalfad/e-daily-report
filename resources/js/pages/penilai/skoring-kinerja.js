@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     const loadingState = document.getElementById('loading-state');
     const emptyState = document.getElementById('empty-state');
-    
+
     // Statistik Elements
     const statTotal = document.getElementById('stat-total');
     const statAvg = document.getElementById('stat-avg');
@@ -18,13 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchData() {
         try {
             console.log("%c[1] MEMULAI FETCH DATA...", "color: blue; font-weight: bold;");
-            
+
             loadingState.classList.remove('hidden');
             tableBody.innerHTML = '';
             emptyState.classList.add('hidden');
 
             // Tambahkan timestamp agar browser TIDAK menggunakan Cache
-            const url = `/e-daily-report/penilai/skoring-kinerja?t=${new Date().getTime()}`;
+            const url = `/penilai/skoring-kinerja?t=${new Date().getTime()}`;
             console.log("[2] URL Target:", url);
 
             const response = await fetch(url, {
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         data.forEach(pegawai => {
             const badgeColor = getBadgeColor(pegawai.predikat);
             const avatar = pegawai.avatar_url || '/assets/icon/avatar.png';
-            
+
             const row = `
                 <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
                     <td class="py-3 px-6 text-left whitespace-nowrap">
@@ -134,17 +134,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const keyword = e.target.value.toLowerCase();
         console.log("Mencari:", keyword);
         const filtered = subordinateData.filter(p => {
-            return (p.name && p.name.toLowerCase().includes(keyword)) || 
-                   (p.unit_kerja && p.unit_kerja.toLowerCase().includes(keyword));
+            return (p.name && p.name.toLowerCase().includes(keyword)) ||
+                (p.unit_kerja && p.unit_kerja.toLowerCase().includes(keyword));
         });
         renderTable(filtered);
     });
 
     // --- 4. STATS ---
     function calculateStats(data) {
-        if(statTotal) statTotal.innerText = data.length;
-        
-        if(statAvg) {
+        if (statTotal) statTotal.innerText = data.length;
+
+        if (statAvg) {
             if (data.length > 0) {
                 const sum = data.reduce((acc, curr) => acc + parseFloat(curr.total_nilai || 0), 0);
                 statAvg.innerText = (sum / data.length).toFixed(1) + '%';
@@ -153,12 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if(statSangatBaik) statSangatBaik.innerText = data.filter(p => p.predikat === 'Sangat Baik').length;
-        if(statPembinaan) statPembinaan.innerText = data.filter(p => ['Kurang', 'Sangat Kurang'].includes(p.predikat)).length;
+        if (statSangatBaik) statSangatBaik.innerText = data.filter(p => p.predikat === 'Sangat Baik').length;
+        if (statPembinaan) statPembinaan.innerText = data.filter(p => ['Kurang', 'Sangat Kurang'].includes(p.predikat)).length;
     }
 
     function getBadgeColor(predikat) {
-        switch(predikat) {
+        switch (predikat) {
             case 'Sangat Baik': return 'bg-green-100 text-green-800 border border-green-200';
             case 'Baik': return 'bg-blue-100 text-blue-800 border border-blue-200';
             case 'Cukup': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';

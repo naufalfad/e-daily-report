@@ -11,6 +11,7 @@ window.skpPageData = function() {
         atasanName: 'Memuat...',
         isLoading: false,
 
+        // Form Create Model
         formData: {
             nama_skp: '',
             periode_mulai: '',
@@ -20,12 +21,13 @@ window.skpPageData = function() {
             target: ''
         },
 
+        // Modal State
         openDetail: false,
         openEdit: false,
         detailData: null,
         editData: null,
 
-        // Init halaman
+        // Init
         initPage() {
             if (!localStorage.getItem('auth_token')) {
                 window.location.href = '/e-daily-report/login';
@@ -37,12 +39,9 @@ window.skpPageData = function() {
             // initDatePickers dihapus karena HTML menggunakan native input date tanpa ID khusus
         },
 
-        // ============================================================
-        // FETCH PROFILE
-        // ============================================================
+        // Fetch Profile
         async fetchProfile() {
             const token = localStorage.getItem('auth_token');
-
             try {
                 const res = await fetch('/e-daily-report/api/me', {
                     headers: {
@@ -50,24 +49,18 @@ window.skpPageData = function() {
                         'Accept': 'application/json'
                     }
                 });
-
-                if (!res.ok) throw new Error('Gagal memuat profil');
-
+                if (!res.ok) throw new Error('Gagal fetch profile');
                 const json = await res.json();
                 this.atasanName = json.atasan ? json.atasan.name : '- Tidak Ada Atasan -';
-
             } catch (e) {
                 console.error(e);
                 this.atasanName = 'Gagal memuat';
             }
         },
 
-        // ============================================================
-        // FETCH LIST SKP
-        // ============================================================
+        // Fetch List SKP
         async fetchSkpList() {
             const token = localStorage.getItem('auth_token');
-
             try {
                 const res = await fetch('/e-daily-report/api/skp', {
                     headers: {
@@ -75,21 +68,16 @@ window.skpPageData = function() {
                         'Accept': 'application/json'
                     }
                 });
-
-                if (!res.ok) throw new Error('Gagal memuat SKP');
-
+                if (!res.ok) throw new Error('Gagal fetch list SKP');
                 const json = await res.json();
                 this.skpList = json.data || [];
-
             } catch (e) {
                 console.error(e);
                 this.skpList = [];
             }
         },
 
-        // ============================================================
-        // CREATE SKP
-        // ============================================================
+        // Submit Create
         async submitCreate() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
@@ -117,7 +105,6 @@ window.skpPageData = function() {
                 });
 
                 const json = await res.json();
-
                 if (res.ok) {
                     Swal.fire({
                         icon: 'success',
@@ -135,7 +122,6 @@ window.skpPageData = function() {
                         text: json.message || 'Terjadi kesalahan validasi.'
                     });
                 }
-
             } catch (e) {
                 Swal.fire({
                     icon: 'error',
@@ -158,17 +144,12 @@ window.skpPageData = function() {
             };
         },
 
-        // ============================================================
-        // DETAIL MODAL
-        // ============================================================
+        // Modal Logic
         openDetailModal(skp) {
             this.detailData = skp;
             this.openDetail = true;
         },
 
-        // ============================================================
-        // EDIT MODAL
-        // ============================================================
         openEditModal() {
             // Deep copy object agar tidak merubah tampilan tabel realtime sebelum save
             this.editData = JSON.parse(JSON.stringify(this.detailData));
@@ -184,22 +165,19 @@ window.skpPageData = function() {
             this.openEdit = true;
         },
 
-        // ============================================================
-        // UPDATE SKP
-        // ============================================================
+        // Submit Edit
         async submitEdit() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
 
-            try {
-                const payload = {
-                    nama_skp: this.editData.nama_skp,
-                    periode_mulai: this.editData.periode_mulai,
-                    periode_selesai: this.editData.periode_selesai,
-                    indikator: this.editData.indikator,
-                    rencana_aksi: this.editData.rencana_aksi,
-                    target: this.editData.target
-                };
+            const payload = {
+                nama_skp: this.editData.nama_skp,
+                periode_mulai: this.editData.periode_mulai,
+                periode_selesai: this.editData.periode_selesai,
+                indikator: this.editData.indikator,
+                rencana_aksi: this.editData.rencana_aksi,
+                target: this.editData.target
+            };
 
             try {
                 const res = await fetch(`/e-daily-report/api/skp/${this.editData.id}`, {
@@ -211,8 +189,6 @@ window.skpPageData = function() {
                     },
                     body: JSON.stringify(payload)
                 });
-
-                const json = await res.json();
 
                 if (res.ok) {
                     Swal.fire({
@@ -232,7 +208,6 @@ window.skpPageData = function() {
                         text: json.message || 'Error Validasi'
                     });
                 }
-
             } catch (e) {
                 Swal.fire({
                     icon: 'error',
@@ -244,9 +219,7 @@ window.skpPageData = function() {
             this.isLoading = false;
         },
 
-        // ============================================================
-        // HELPERS UI
-        // ============================================================
+        // Helper
         formatDate(dateString) {
             if (!dateString) return '-';
             try {
@@ -255,7 +228,7 @@ window.skpPageData = function() {
                     month: 'short',
                     year: 'numeric'
                 });
-            } catch (e) {
+            } catch {
                 return dateString;
             }
         }

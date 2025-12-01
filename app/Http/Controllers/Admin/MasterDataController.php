@@ -3,163 +3,140 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Jabatan;
-use App\Models\UnitKerja;
-use App\Models\Role;
-use App\Models\User;
-use App\Models\Bidang; // [BARU]
-use App\Models\Tupoksi; // [BARU]
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator; // [BARU]
+use App\Models\UnitKerja;
+use App\Models\Bidang;
+use App\Models\Tupoksi;
+use App\Models\Role;
+use App\Models\Jabatan;
+use App\Models\User;
 
 class MasterDataController extends Controller
 {
-    // =========================================================================
-    // BAGIAN PENGAMBILAN DATA DROPDOWN (EKSISTING)
-    // =========================================================================
+    // ===============================================================
+    // DROPDOWN HELPERS (API untuk Form Select Frontend)
+    // ===============================================================
 
-    // Mengambil semua roles (Dropdown)
-    public function getRoles() { return response()->json(Role::all()); }
-    
-    // Mengambil semua jabatan (Dropdown)
-    public function getJabatan() { return response()->json(Jabatan::all()); }
-    
-    // Mengambil semua unit kerja (Dropdown)
-    public function getUnitKerja() { return response()->json(UnitKerja::all()); }
-    
-    // Mengambil user untuk dijadikan atasan (Dropdown)
-    public function getCalonAtasan() { return response()->json(User::select('id','name','nip')->get()); }
+    public function getRoles()
+    {
+        return response()->json(Role::select('id', 'nama_role')->get());
+    }
 
-    // =========================================================================
-    // [BARU] BAGIAN PENGAMBILAN DATA DROPDOWN (CASCADING)
-    // =========================================================================
+    public function getJabatan()
+    {
+        // Urutkan biar rapi (Kaban -> Kabid -> Kasubid -> Staf)
+        return response()->json(Jabatan::select('id', 'nama_jabatan')->orderBy('id', 'asc')->get());
+    }
 
-    /**
-     * [BARU] Ambil list Bidang berdasarkan Unit Kerja
-     * Penting: Dipanggil di Form User Management setelah Admin memilih Unit Kerja.
-     */
+    public function getUnitKerja()
+    {
+        return response()->json(UnitKerja::select('id', 'nama_unit')->get());
+    }
+
     public function getBidangByUnitKerja($unitKerjaId)
     {
-        $bidang = Bidang::where('unit_kerja_id', $unitKerjaId)
-                        ->select('id', 'nama_bidang')
-                        ->get();
-        return response()->json($bidang);
+        $data = Bidang::where('unit_kerja_id', $unitKerjaId)->select('id', 'nama_bidang')->get();
+        return response()->json($data);
     }
 
     /**
-     * [BARU] Ambil list Tupoksi berdasarkan Bidang
-     * Penting: Dipanggil di Form LKH Pegawai (berdasarkan bidang pegawai ybs).
+     * [LOGIKA PINTAR] Mencari Kandidat Atasan
+     * Berdasarkan Jabatan & Bidang yang dipilih calon pegawai.
      */
-    public function getTupoksiByBidang($bidangId)
+    public function getCalonAtasan(Request $request)
     {
-        $tupoksi = Tupoksi::where('bidang_id', $bidangId)
-                         ->select('id', 'uraian_tugas')
-                         ->get();
-        return response()->json($tupoksi);
-    }
+        $unitKerjaId = $request->unit_kerja_id;
+        $bidangId    = $request->bidang_id;
+        $jabatanId   = $request->jabatan_id;
 
-    // =========================================================================
-    // [BARU] BAGIAN CRUD (MANAJEMEN DATA OLEH ADMIN)
-    // =========================================================================
-
-    // --- CRUD UNIT KERJA ---
-    public function indexUnitKerja() 
-    {
-        return response()->json(UnitKerja::withCount('bidang', 'users')->get());
-    }
-
-    public function storeUnitKerja(Request $request)
-    {
-        $validator = Validator::make($request->all(), ['nama' => 'required|string|unique:unit_kerja,nama']);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
-        
-        $unitKerja = UnitKerja::create($validator->validated());
-        return response()->json($unitKerja, 201);
-    }
-
-    // --- CRUD BIDANG ---
-    public function indexBidang(Request $request)
-    {
-        $query = Bidang::with('unitKerja');
-        if ($request->has('unit_kerja_id')) {
-            $query->where('unit_kerja_id', $request->unit_kerja_id);
+        // Jika data belum lengkap, return kosong dulu
+        if (!$unitKerjaId || !$jabatanId) {
+            return response()->json([]);
         }
-        return response()->json($query->get());
-    }
 
-    public function storeBidang(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'unit_kerja_id' => 'required|exists:unit_kerja,id',
-            'nama_bidang'   => 'required|string|max:255',
-        ]);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        // 1. Identifikasi Level Jabatan
+        $jabatan = Jabatan::find($jabatanId);
+        if (!$jabatan) return response()->json([]);
+
+        $namaJabatan = strtolower($jabatan->nama_jabatan);
         
-        $bidang = Bidang::create($validator->validated());
-        return response()->json($bidang->load('unitKerja'), 201);
-    }
+        // Base Query: Cari pegawai di Unit Kerja yang sama
+        $query = User::where('unit_kerja_id', $unitKerjaId)
+                     ->where('id', '!=', auth()->id()); // Bukan diri sendiri (jika admin ngedit diri sendiri)
 
-    public function updateBidang(Request $request, $id)
-    {
-        $bidang = Bidang::findOrFail($id);
-        $validator = Validator::make($request->all(), [
-            'unit_kerja_id' => 'required|exists:unit_kerja,id',
-            'nama_bidang'   => 'required|string|max:255',
-        ]);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
-
-        $bidang->update($validator->validated());
-        return response()->json($bidang->load('unitKerja'));
-    }
-
-    public function destroyBidang($id)
-    {
-        // Tambahkan pengecekan jika bidang masih punya user
-        $bidang = Bidang::withCount('users')->findOrFail($id);
-        if ($bidang->users_count > 0) {
-            return response()->json(['message' => 'Gagal hapus, masih ada user di bidang ini'], 422);
+        // 2. Logika Filter Berdasarkan Hierarki
+        
+        // KASUS A: Input "Staf/Pelaksana"
+        // Atasan = Kasubid (Eselon 4) di Bidang yang SAMA
+        if (str_contains($namaJabatan, 'staf') || str_contains($namaJabatan, 'pelaksana')) {
+            $query->whereHas('jabatan', function($q) {
+                $q->where('nama_jabatan', 'ilike', '%Sub%') // Cari yang jabatannya mengandung "Sub"
+                  ->orWhere('nama_jabatan', 'ilike', '%Kasi%');
+            });
+            
+            // Wajib satu bidang. Kalau bidang beda, bukan atasannya.
+            if ($bidangId) {
+                $query->where('bidang_id', $bidangId);
+            }
         }
-        $bidang->delete();
-        return response()->json(['message' => 'Bidang berhasil dihapus']);
-    }
-
-    // --- CRUD TUPOKSI ---
-    public function indexTupoksi(Request $request)
-    {
-        $validator = Validator::make($request->all(), ['bidang_id' => 'required|exists:bidang,id']);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
-
-        $tupoksi = Tupoksi::where('bidang_id', $request->bidang_id)->get();
-        return response()->json($tupoksi);
-    }
-
-    public function storeTupoksi(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'bidang_id'    => 'required|exists:bidang,id',
-            'uraian_tugas' => 'required|string',
-        ]);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
         
-        $tupoksi = Tupoksi::create($validator->validated());
-        return response()->json($tupoksi, 201);
-    }
+        // KASUS B: Input "Kasubid/Kasi" (Kepala Sub)
+        // Atasan = Kabid (Eselon 3) di Bidang yang SAMA
+        elseif (str_contains($namaJabatan, 'sub') || str_contains($namaJabatan, 'seksi')) {
+            $query->whereHas('jabatan', function($q) {
+                $q->where('nama_jabatan', 'ilike', '%Kepala Bidang%')
+                  ->orWhere('nama_jabatan', 'ilike', '%Kabid%');
+            });
 
-    public function updateTupoksi(Request $request, $id)
-    {
-        $tupoksi = Tupoksi::findOrFail($id);
-        $validator = Validator::make($request->all(), [
-            'uraian_tugas' => 'required|string',
-        ]);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+            if ($bidangId) {
+                $query->where('bidang_id', $bidangId);
+            }
+        }
 
-        $tupoksi->update($validator->validated());
-        return response()->json($tupoksi);
-    }
+        // KASUS C: Input "Kepala Bidang" (Kabid)
+        // Atasan = Kepala Badan / Kepala Dinas / Sekretaris
+        elseif (str_contains($namaJabatan, 'kepala bidang') || str_contains($namaJabatan, 'kabid')) {
+            $query->whereHas('jabatan', function($q) {
+                $q->where('nama_jabatan', 'ilike', '%Kepala Badan%')
+                  ->orWhere('nama_jabatan', 'ilike', '%Kepala Dinas%')
+                  ->orWhere('nama_jabatan', 'ilike', '%Sekretaris%');
+            });
+            // Kabid lapor ke Kaban, tidak perlu filter bidang_id (karena Kaban menaungi semua bidang)
+        }
 
-    public function destroyTupoksi($id)
-    {
-        Tupoksi::findOrFail($id)->delete();
-        return response()->json(['message' => 'Tupoksi berhasil dihapus']);
+        // KASUS D: Kepala Badan / Top Level
+        // Tidak punya atasan di sistem (return kosong)
+        elseif (str_contains($namaJabatan, 'kepala badan') || str_contains($namaJabatan, 'kepala dinas')) {
+            return response()->json([]);
+        }
+
+        // Ambil data (ID & Nama & Jabatan untuk display dropdown)
+        $candidates = $query->with('jabatan')->get()->map(function($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name . ' (' . ($user->jabatan->nama_jabatan ?? '-') . ')'
+            ];
+        });
+
+        return response()->json($candidates);
     }
+    
+    // --- CRUD METHODS ---
+
+    public function indexUnitKerja() { return response()->json(UnitKerja::all()); }
+    public function storeUnitKerja(Request $request) { UnitKerja::create($request->all()); return response()->json(['message'=>'Saved']); }
+    
+    public function indexBidang(Request $request) { 
+        $q = Bidang::with('unitKerja');
+        if($request->unit_kerja_id) $q->where('unit_kerja_id', $request->unit_kerja_id);
+        return response()->json($q->get()); 
+    }
+    public function storeBidang(Request $request) { Bidang::create($request->all()); return response()->json(['message'=>'Saved']); }
+    public function updateBidang(Request $request, $id) { Bidang::find($id)->update($request->all()); return response()->json(['message'=>'Updated']); }
+    public function destroyBidang($id) { Bidang::destroy($id); return response()->json(['message'=>'Deleted']); }
+
+    public function indexTupoksi(Request $request) { return response()->json(Tupoksi::with('bidang')->get()); }
+    public function storeTupoksi(Request $request) { Tupoksi::create($request->all()); return response()->json(['message'=>'Saved']); }
+    public function updateTupoksi(Request $request, $id) { Tupoksi::find($id)->update($request->all()); return response()->json(['message'=>'Updated']); }
+    public function destroyTupoksi($id) { Tupoksi::destroy($id); return response()->json(['message'=>'Deleted']); }
 }

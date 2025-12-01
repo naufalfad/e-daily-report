@@ -46,3 +46,5 @@ resources/js/pages/staf/peta-aktivitas.js.save
 
 # Lock file yang sering berubah (opsional)
 package-lock.json
+
+sha256:*

@@ -60,7 +60,7 @@ document.addEventListener('alpine:init', () => {
 
         // ---------------- LOGIC DATA ----------------
         loadData() {
-            fetch('/data/peta-aktivitas.json')
+            fetch('/e-daily-report/data/peta-aktivitas.json')
                 .then(res => res.json())
                 .then(data => {
                     this.allActivities = data;

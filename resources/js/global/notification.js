@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const res = await fetch('/api/notifikasi', { headers });
+        const res = await fetch('/e-daily-report/api/notifikasi', { headers });
 
         if (!res.ok) return; // Silent fail kalau unauthorized
 

@@ -1,5 +1,5 @@
 // =============================
-// PENGATURAN SISTEM - JS TERPISAH
+// PENGATURAN SISTEM - JS LOGIC
 // =============================
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -7,26 +7,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const buttons = document.querySelectorAll('.settings-menu-btn');
     const panels = document.querySelectorAll('[data-settings-panel]');
 
-    // ---------------------------
-    // SET ACTIVE MENU
-    // ---------------------------
+    // --- 1. TAB SWITCHING LOGIC ---
     function setActive(btn) {
+        // Reset semua tombol ke style default (inactive)
         buttons.forEach(b => {
-            b.classList.remove('text-[15px]', 'font-medium', 'text-[#0E1726]');
-            b.classList.add('text-[14px]', 'font-normal', 'text-[#9CA3AF]');
+            b.classList.remove('bg-slate-50', 'text-[#0E1726]', 'font-medium');
+            b.classList.add('text-[#5B687A]', 'font-normal', 'hover:bg-slate-50');
         });
 
-        btn.classList.remove('text-[14px]', 'font-normal', 'text-[#9CA3AF]');
-        btn.classList.add('text-[15px]', 'font-medium', 'text-[#0E1726]');
+        // Set tombol aktif
+        btn.classList.remove('text-[#5B687A]', 'font-normal', 'hover:bg-slate-50');
+        btn.classList.add('bg-slate-50', 'text-[#0E1726]', 'font-medium');
     }
 
-    // ---------------------------
-    // TAMPILKAN PANEL
-    // ---------------------------
     function showPanel(key) {
         panels.forEach(p => {
             if (p.dataset.settingsPanel === key) {
                 p.classList.remove('hidden');
+                // Efek fade-in sederhana
+                p.style.opacity = 0;
+                setTimeout(() => p.style.opacity = 1, 50);
             } else {
                 p.classList.add('hidden');
             }
@@ -41,66 +41,59 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Default panel
-    showPanel('sistem');
+    // Default: Buka tab pertama ('sistem')
+    const defaultBtn = document.querySelector('[data-settings-menu="sistem"]');
+    if(defaultBtn) defaultBtn.click();
 
-    // ==================================================================
-    // RESET PASSWORD ADMIN — MODAL
-    // ==================================================================
 
+    // --- 2. MODAL LOGIC ---
     const resetAdminCard = document.getElementById('reset-admin-card');
     const resetAdminModal = document.getElementById('reset-admin-modal');
     const btnCancelReset = document.getElementById('btn-reset-admin-cancel');
     const btnSaveReset = document.getElementById('btn-reset-admin-save');
 
-    function openResetModal() {
-        resetAdminModal?.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
+    function toggleModal(show) {
+        if(!resetAdminModal) return;
+        if(show) {
+            resetAdminModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden'); // Prevent scroll
+        } else {
+            resetAdminModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
     }
 
-    function closeResetModal() {
-        resetAdminModal?.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    if (resetAdminCard) resetAdminCard.addEventListener('click', openResetModal);
-    if (btnCancelReset) btnCancelReset.addEventListener('click', closeResetModal);
-    if (btnSaveReset) btnSaveReset.addEventListener('click', closeResetModal);
-
+    if (resetAdminCard) resetAdminCard.addEventListener('click', () => toggleModal(true));
+    if (btnCancelReset) btnCancelReset.addEventListener('click', () => toggleModal(false));
+    
+    // Close ketika klik di luar modal (overlay)
     if (resetAdminModal) {
-        resetAdminModal.addEventListener('click', function (e) {
-            if (e.target === resetAdminModal) {
-                closeResetModal();
-            }
+        resetAdminModal.addEventListener('click', (e) => {
+            if (e.target === resetAdminModal) toggleModal(false);
         });
     }
 
-    // ==================================================================
-    // TOGGLE PASSWORD EYE
-    // ==================================================================
 
+    // --- 3. PASSWORD VISIBILITY TOGGLE ---
     const eyeButtons = document.querySelectorAll('[data-eye-target]');
 
     eyeButtons.forEach(btn => {
-        const targetId = btn.getAttribute('data-eye-target');
-        const input = document.getElementById(targetId);
-        const eyeShow = btn.querySelector('.eye-show');
-        const eyeHide = btn.querySelector('.eye-hide');
-
-        if (!input) return;
-
         btn.addEventListener('click', function () {
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
+            const targetId = this.getAttribute('data-eye-target');
+            const input = document.getElementById(targetId);
+            const eyeShow = this.querySelector('.eye-show');
+            const eyeHide = this.querySelector('.eye-hide');
 
-            if (eyeShow && eyeHide) {
-                if (isPassword) {
-                    eyeShow.classList.add('hidden');
-                    eyeHide.classList.remove('hidden');
-                } else {
-                    eyeShow.classList.remove('hidden');
-                    eyeHide.classList.add('hidden');
-                }
+            if (!input) return;
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeShow.classList.add('hidden');
+                eyeHide.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                eyeShow.classList.remove('hidden');
+                eyeHide.classList.add('hidden');
             }
         });
     });

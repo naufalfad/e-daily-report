@@ -1,101 +1,208 @@
-// resources/js/pages/admin/manajemen-pegawai.js
+import Swal from "sweetalert2"; // Pastikan SweetAlert sudah diinstall/import
 
 export function manajemenPegawaiData() {
-    const TOKEN = localStorage.getItem("auth_token");
-    const BASE_URL = "/api/admin/pegawai"; // Sesuaikan dengan route API backend Anda
+    // [CONFIG]
+    const BASE_URL = "/api/admin/pegawai"; 
+    
+    // Helper untuk ambil token (jika pakai Sanctum via Header)
+    const getToken = () => localStorage.getItem("auth_token");
 
     return {
-        // State Data
+        // State
         items: [],
         isLoading: false,
+        
+        // Pagination State
+        pagination: {
+            current_page: 1,
+            last_page: 1,
+            next_page_url: null,
+            prev_page_url: null
+        },
 
-        // State Modal Detail
+        // State Modal
         openDetail: false,
-        detailData: null,
-
-        // State Modal Edit
         openEdit: false,
-        editData: null,
-
-        // State Modal Tambah (Migrasi dari Vanilla JS)
         openAdd: false,
+        
+        // Data Holder
+        detailData: {},
+        formData: {
+            name: '',
+            email: '',
+            nip: '',
+            password: '', // Optional saat edit
+            unit_kerja_id: '',
+            bidang_id: '',
+            jabatan_id: '',
+            role_id: '',
+            atasan_id: ''
+        },
+        editId: null, // ID user yang sedang diedit
 
-        // State Modal Upload (Migrasi dari Vanilla JS)
-        openUpload: false,
-
-        // Init
+        // --- INIT ---
         async initPage() {
-            console.log("Manajemen Pegawai Component Initialized");
+            console.log("🚀 Manajemen Pegawai: Initializing...");
             await this.fetchData();
         },
 
-        // Fetch Data Pegawai
-        async fetchData() {
+        // --- 1. READ (FETCH DATA) ---
+        async fetchData(url = BASE_URL) {
             this.isLoading = true;
             try {
-                // Contoh call API, sesuaikan endpoint backend
-                // const response = await fetch(BASE_URL, {
-                //     headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/json" }
-                // });
-                // const data = await response.json();
-                // this.items = data.data;
+                const response = await fetch(url, {
+                    headers: { 
+                        "Authorization": `Bearer ${getToken()}`, 
+                        "Accept": "application/json" 
+                    }
+                });
 
-                // DUMMY DATA (Hapus ini jika backend sudah siap)
-                this.items = [
-                    { 
-                        id: 1, 
-                        nama: 'Fahrizal Mudzaqi', 
-                        nip: '1988030109', 
-                        jabatan: 'Staf Teknis', 
-                        unit_kerja: 'BAPENDA', 
-                        atasan: 'Joko Anwar', 
-                        status: 'Aktif' 
-                    },
-                    { 
-                        id: 2, 
-                        nama: 'Muhammad Naufal', 
-                        nip: '1990010101', 
-                        jabatan: 'Kepala Bidang', 
-                        unit_kerja: 'Bidang I', 
-                        atasan: 'Darius Sabon', 
-                        status: 'Cuti' 
-                    },
-                ];
+                if (!response.ok) throw new Error("Gagal mengambil data");
+
+                const json = await response.json();
+                
+                // Laravel Pagination membungkus data dalam 'data'
+                this.items = json.data; 
+                
+                // Update Pagination State
+                this.pagination = {
+                    current_page: json.current_page,
+                    last_page: json.last_page,
+                    next_page_url: json.next_page_url,
+                    prev_page_url: json.prev_page_url
+                };
 
             } catch (error) {
-                console.error("Gagal memuat data pegawai:", error);
+                console.error(error);
+                Swal.fire("Error", "Gagal memuat data pegawai", "error");
             } finally {
                 this.isLoading = false;
             }
         },
 
-        // --- Logic Detail ---
+        // --- 2. CREATE & UPDATE (SUBMIT FORM) ---
+        async submitForm(type) {
+            // type: 'add' atau 'edit'
+            const isEdit = type === 'edit';
+            const url = isEdit ? `${BASE_URL}/${this.editId}` : BASE_URL;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            // Ambil data dari Form HTML (pastikan input punya name="...")
+            // Atau gunakan x-model binding this.formData
+            const formElement = document.getElementById(isEdit ? 'form-edit' : 'form-add');
+            const payload = new FormData(formElement);
+
+            // Jika PUT (Edit), Laravel butuh trik _method atau x-www-form-urlencoded
+            // Tapi karena kita pakai JSON body di fetch, kita convert FormData ke Object
+            const dataObj = Object.fromEntries(payload.entries());
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        // CSRF Token jika perlu (untuk web routes), tapi API usually stateless
+                        // "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(dataObj)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Handle Validation Error
+                    if (response.status === 422) {
+                        let errorMsg = Object.values(result.errors).flat().join('\n');
+                        throw new Error(errorMsg || "Validasi gagal");
+                    }
+                    throw new Error(result.message || "Terjadi kesalahan");
+                }
+
+                Swal.fire("Berhasil", result.message, "success");
+                
+                // Reset & Refresh
+                if (isEdit) this.closeModalEdit();
+                else this.toggleAdd(false);
+                
+                this.fetchData(); // Refresh tabel
+
+            } catch (error) {
+                Swal.fire("Gagal", error.message, "error");
+            }
+        },
+
+        // --- 3. DELETE ---
+        async deleteItem(id) {
+            const confirm = await Swal.fire({
+                title: 'Hapus Pegawai?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const response = await fetch(`${BASE_URL}/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": `Bearer ${getToken()}`,
+                            "Accept": "application/json"
+                        }
+                    });
+
+                    if (!response.ok) throw new Error("Gagal menghapus data");
+
+                    Swal.fire('Terhapus!', 'Data pegawai berhasil dihapus.', 'success');
+                    this.fetchData(); // Refresh
+
+                } catch (error) {
+                    Swal.fire("Error", error.message, "error");
+                }
+            }
+        },
+
+        // --- HELPER MODALS ---
         openModalDetail(item) {
-            this.detailData = item; // Set data untuk ditampilkan
+            this.detailData = item;
             this.openDetail = true;
         },
         closeModalDetail() {
             this.openDetail = false;
-            setTimeout(() => { this.detailData = null; }, 300); // Clear data setelah animasi
+            this.detailData = {};
         },
-
-        // --- Logic Edit ---
         openModalEdit(item) {
-            // Clone object agar perubahan tidak langsung reaktif ke tabel sebelum disave
-            this.editData = JSON.parse(JSON.stringify(item));
+            this.editId = item.id;
+            this.editData = { ...item }; // Copy object
+            
+            // Populate form logic (bisa via x-model atau manual set value di DOM)
+            // Contoh manual untuk memastikan data masuk ke form edit
+            setTimeout(() => {
+               // Logic mengisi value input form edit jika tidak pakai x-model penuh
+            }, 100);
+
             this.openEdit = true;
         },
         closeModalEdit() {
             this.openEdit = false;
-            setTimeout(() => { this.editData = null; }, 300);
+            this.editId = null;
+            this.editData = null;
         },
-
-        // --- Logic Tambah & Upload (Pengganti Vanilla JS) ---
-        toggleAdd(state) {
-            this.openAdd = state;
+        toggleAdd(val) {
+            this.openAdd = val;
+            if(!val) {
+                // Reset form add jika ditutup
+                document.getElementById('form-add')?.reset();
+            }
         },
-        toggleUpload(state) {
-            this.openUpload = state;
+        
+        // Pagination Helpers
+        changePage(url) {
+            if (url) this.fetchData(url);
         }
     };
 }

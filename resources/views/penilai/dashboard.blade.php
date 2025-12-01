@@ -247,18 +247,70 @@
         </ul>
     </div>
 
-    {{-- DRAFT LAPORAN --}}
+    {{-- DRAFT LAPORAN (TAMPILAN LUAR) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Draft Laporan</h3>
-            <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua</a>
+            {{-- 1. Tambahkan event onclick pada tombol Lihat Semua --}}
+            <a href="#" onclick="openModalDraft(event)" class="text-sm text-[#1C7C54] hover:underline">
+                Lihat Semua
+            </a>
         </div>
 
-        {{-- LIST DRAFT DINAMIS --}}
+        {{-- LIST DRAFT LIMIT (LUAR) --}}
         <ul id="draft-list" class="space-y-2">
-            <li class="text-sm text-slate-500">Memuat...</li> {{-- default loading --}}
+            <li class="text-sm text-slate-500">Memuat...</li>
         </ul>
     </div>
-</section>
+
+    {{-- ======================================================= --}}
+    {{-- MODAL POPUP (Hidden by default) --}}
+    {{-- ======================================================= --}}
+    <div id="modal-all-draft" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Background Backdrop (Gelap & Blur) --}}
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeModalDraft()"></div>
+
+        {{-- Modal Panel --}}
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    
+                    {{-- Modal Header --}}
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold leading-6 text-slate-900" id="modal-title">
+                                Semua Draft Laporan
+                            </h3>
+                            {{-- Tombol Close (X) --}}
+                            <button type="button" onclick="closeModalDraft()" class="rounded-md bg-white text-slate-400 hover:text-slate-500 focus:outline-none">
+                                <span class="sr-only">Close</span>
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Modal Body (Scrollable List) --}}
+                    <div class="bg-white px-4 pb-4 pt-2 sm:p-6">
+                        {{-- LIST DRAFT LENGKAP (DALAM MODAL) --}}
+                        {{-- Kita beri max-height agar bisa discroll jika datanya banyak --}}
+                        <ul id="draft-terbaru" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                            <li class="text-sm text-slate-500">Memuat data lengkap...</li>
+                        </ul>
+                    </div>
+                    
+                    {{-- Modal Footer --}}
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeModalDraft()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">
+                            Tutup
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
 
 @endsection

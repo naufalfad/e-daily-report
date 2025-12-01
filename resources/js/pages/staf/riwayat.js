@@ -2,7 +2,7 @@
 
 function riwayatData(role) {
     const TOKEN = localStorage.getItem("auth_token");
-    const BASE_URL = "/e-daily-report/api/lkh/riwayat";
+    const BASE_URL = "/api/lkh/riwayat";
 
     return {
         role: role,
@@ -109,8 +109,7 @@ function riwayatData(role) {
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(
-                        `Gagal memuat data. Status: ${
-                            response.status
+                        `Gagal memuat data. Status: ${response.status
                         }. Pesan: ${errorData.message || "Unknown Error"}`
                     );
                 }

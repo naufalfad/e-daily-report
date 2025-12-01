@@ -1,13 +1,13 @@
 @php($title = 'Input SKP')
-@extends('layouts.app', ['title' => $title, 'role' => 'staf', 'active' => 'skp'])
+@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'skp'])
 
 @section('content')
 
-{{--
-    SOLUSI FINAL:
+{{-- 
+    SOLUSI FINAL: 
     Script dipindahkan langsung ke bawah file ini menggunakan 'alpine:init'.
     Ini menjamin Alpine mengenali komponen 'skpPageData' sebelum render.
-    --}}
+--}}
 
 <section x-data="skpPageData()" x-init="initPage()"
     class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 flex-1">
@@ -27,19 +27,7 @@
                         <input type="date" x-model="formData.periode_mulai" required
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" />
                     </div>
-
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
-                            Selesai</label>
-                        <div class="relative">
-                            <input id="periode_selesai" type="date" x-model="formData.periode_selesai" required
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                            <button type="button" id="periode_selesai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
-                            </button>
-                        </div>
-
                         <label class="block text-xs font-normal text-[#5B687A] mb-[10px]">Periode Selesai</label>
                         <input type="date" x-model="formData.periode_selesai" required
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" />
@@ -49,17 +37,12 @@
                 {{-- Row 2: Sasaran & Indikator --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran
-                            Kinerja</label>
                         <label class="block text-xs font-normal text-[#5B687A] mb-[10px]">Sasaran Kinerja</label>
                         <input type="text" x-model="formData.nama_skp" required
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                             placeholder="Contoh: Meningkatkan PAD...">
                     </div>
-
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator
-                            Kinerja</label>
                         <label class="block text-xs font-normal text-[#5B687A] mb-[10px]">Indikator Kinerja</label>
                         <input type="text" x-model="formData.indikator" required
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
@@ -69,8 +52,6 @@
 
                 {{-- Row 3: Rencana Aksi --}}
                 <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Rencana
-                        Aksi</label>
                     <label class="block text-xs font-normal text-[#5B687A] mb-[10px]">Rencana Aksi</label>
                     <textarea x-model="formData.rencana_aksi" rows="3" required
                         class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
@@ -80,29 +61,23 @@
                 {{-- Row 4: Target & Atasan --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target
-                            (Angka)</label>
                         <label class="block text-xs font-normal text-[#5B687A] mb-[10px]">Target (Angka)</label>
                         <input type="number" x-model="formData.target" required min="1"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                             placeholder="Contoh: 12">
                     </div>
-
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Atasan
-                            Langsung</label>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Atasan Langsung</label>
                         <input type="text" :value="atasanName" readonly disabled
                             class="w-full rounded-[10px] border border-slate-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none">
-                        <p class="text-[10px] text-gray-400 mt-1">*Sesuai struktur organisasi user saat
-                            ini.</p>
                         <p class="text-[10px] text-gray-400 mt-1">*Sesuai struktur organisasi.</p>
                     </div>
                 </div>
 
-                {{-- Tombol --}}
+                {{-- Tombol Aksi --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
                     <button type="button" @click="resetForm"
-                        class="rounded-[10px] bg-[#B6241C] px-4 py-2 text-sm font-normal text-white hover:brightness-95 ring-1 ring-slate-300">
+                        class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                         Reset
                     </button>
                     <button type="submit"
@@ -112,7 +87,6 @@
                         <span x-show="isLoading">Menyimpan...</span>
                     </button>
                 </div>
-
             </form>
         </div>
 
@@ -255,173 +229,162 @@
 {{-- SCRIPT INLINE AGAR TERBACA ALPINE --}}
 <script>
 document.addEventListener('alpine:init', () => {
-            Alpine.data('skpPageData', () => ({
-                    // State
-                    skpList: [],
-                    atasanName: 'Memuat...',
-                    isLoading: false,
+    Alpine.data('skpPageData', () => ({
+        // State
+        skpList: [],
+        atasanName: 'Memuat...',
+        isLoading: false,
 
-                    // Modal State
-                    openDetail: false,
-                    openEdit: false,
-                    detailData: null,
-                    editData: null,
+        // Modal State
+        openDetail: false,
+        openEdit: false,
+        detailData: null,
+        editData: null,
 
-                    // Form
-                    formData: {
-                        nama_skp: '',
-                        periode_mulai: '',
-                        periode_selesai: '',
-                        indikator: '',
-                        rencana_aksi: '',
-                        target: ''
+        // Form
+        formData: {
+            nama_skp: '',
+            periode_mulai: '',
+            periode_selesai: '',
+            indikator: '',
+            rencana_aksi: '',
+            target: ''
+        },
+
+        // Init
+        initPage() {
+            if (!localStorage.getItem('auth_token')) {
+                window.location.href = '/login';
+                return;
+            }
+            this.fetchProfile();
+            this.fetchSkpList();
+        },
+
+        // API Calls
+        async fetchProfile() {
+            const token = localStorage.getItem('auth_token');
+            try {
+                const res = await fetch('/e-daily-report/api/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                const json = await res.json();
+                this.atasanName = json.atasan ? json.atasan.name : '- Tidak Ada Atasan -';
+            } catch (e) {
+                this.atasanName = 'Gagal memuat';
+            }
+        },
+
+        async fetchSkpList() {
+            const token = localStorage.getItem('auth_token');
+            try {
+                const res = await fetch('/e-daily-report/api/skp', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                const json = await res.json();
+                this.skpList = json.data || [];
+            } catch (e) {
+                this.skpList = [];
+            }
+        },
+
+        async submitCreate() {
+            this.isLoading = true;
+            const token = localStorage.getItem('auth_token');
+            try {
+                const res = await fetch('/e-daily-report/api/skp', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
+                    body: JSON.stringify(this.formData)
+                });
+                if (res.ok) {
+                    Swal.fire('Berhasil', 'SKP ditambahkan', 'success');
+                    this.resetForm();
+                    this.fetchSkpList();
+                } else {
+                    Swal.fire('Gagal', 'Periksa input anda', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Error', 'Gagal koneksi server', 'error');
+            }
+            this.isLoading = false;
+        },
 
-                    // Init
-                    initPage() {
-                        if (!localStorage.getItem('auth_token')) {
-                            window.location.href = '/login';
-                            return;
-                        }
-                        this.fetchProfile();
-                        this.fetchSkpList();
+        async submitEdit() {
+            this.isLoading = true;
+            const token = localStorage.getItem('auth_token');
+            try {
+                const res = await fetch(`/e-daily-report/api/skp/${this.editData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
+                    body: JSON.stringify(this.editData)
+                });
+                if (res.ok) {
+                    Swal.fire('Berhasil', 'Perubahan disimpan', 'success');
+                    this.openEdit = false;
+                    this.fetchSkpList();
+                } else {
+                    Swal.fire('Gagal', 'Gagal update data', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Error', 'Gagal koneksi server', 'error');
+            }
+            this.isLoading = false;
+        },
 
-                    // API Calls
-                    async fetchProfile() {
-                        const token = localStorage.getItem('auth_token');
-                        try {
-                            const res = await fetch('/api/me', {
-                                        headers: {
-                                            'Authorization': `Bearer ${token}`,
-                                            'Accept': 'application/json'
-                                        }
-                                        const res = await fetch('/e-daily-report/api/me', {
-                                            headers: {
-                                                'Authorization': `Bearer ${token}`,
-                                                'Accept': 'application/json'
-                                            }
-                                        });
-                                        const json = await res.json();
-                                        this.atasanName = json.atasan ? json.atasan.name :
-                                        '- Tidak Ada Atasan -';
-                                    }
-                                    catch (e) {
-                                        this.atasanName = 'Gagal memuat';
-                                    }
-                                },
-
-                                async fetchSkpList() {
-                                        const token = localStorage.getItem('auth_token');
-                                        try {
-                                            const res = await fetch('/api/skp', {
-                                                headers: {
-                                                    'Authorization': `Bearer ${token}`,
-                                                    'Accept': 'application/json'
-                                                }
-                                            });
-                                            const json = await res.json();
-                                            this.skpList = json.data || [];
-                                        } catch (e) {
-                                            this.skpList = [];
-                                        }
-                                    },
-
-                                    async submitCreate() {
-                                            this.isLoading = true;
-                                            const token = localStorage.getItem('auth_token');
-                                            try {
-                                                const res = await fetch('/e-daily-report/api/skp', {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'Authorization': `Bearer ${token}`,
-                                                        'Content-Type': 'application/json',
-                                                        'Accept': 'application/json'
-                                                    },
-                                                    body: JSON.stringify(this.formData)
-                                                });
-                                                if (res.ok) {
-                                                    Swal.fire('Berhasil', 'SKP ditambahkan', 'success');
-                                                    this.resetForm();
-                                                    this.fetchSkpList();
-                                                } else {
-                                                    Swal.fire('Gagal', 'Periksa input anda', 'error');
-                                                }
-                                            } catch (e) {
-                                                Swal.fire('Error', 'Gagal koneksi server', 'error');
-                                            }
-                                            this.isLoading = false;
-                                        },
-
-                                        async submitEdit() {
-                                                this.isLoading = true;
-                                                const token = localStorage.getItem('auth_token');
-                                                try {
-                                                    const res = await fetch(
-                                                        `/e-daily-report/api/skp/${this.editData.id}`, {
-                                                            method: 'PUT',
-                                                            headers: {
-                                                                'Authorization': `Bearer ${token}`,
-                                                                'Content-Type': 'application/json',
-                                                                'Accept': 'application/json'
-                                                            },
-                                                            body: JSON.stringify(this.editData)
-                                                        });
-                                                    if (res.ok) {
-                                                        Swal.fire('Berhasil', 'Perubahan disimpan',
-                                                            'success');
-                                                        this.openEdit = false;
-                                                        this.fetchSkpList();
-                                                    } else {
-                                                        Swal.fire('Gagal', 'Gagal update data', 'error');
-                                                    }
-                                                } catch (e) {
-                                                    Swal.fire('Error', 'Gagal koneksi server', 'error');
-                                                }
-                                                this.isLoading = false;
-                                            },
-
-                                            // Utilities
-                                            resetForm() {
-                                                this.formData = {
-                                                    nama_skp: '',
-                                                    periode_mulai: '',
-                                                    periode_selesai: '',
-                                                    indikator: '',
-                                                    rencana_aksi: '',
-                                                    target: ''
-                                                };
-                                            },
-                                            openDetailModal(item) {
-                                                this.detailData = item;
-                                                this.openDetail = true;
-                                            },
-                                            openEditModal() {
-                                                this.editData = JSON.parse(JSON.stringify(this.detailData));
-                                                // Format date for input type=date
-                                                if (this.editData.periode_mulai) this.editData
-                                                    .periode_mulai = this.editData
-                                                    .periode_mulai.substring(0, 10);
-                                                if (this.editData.periode_selesai) this.editData
-                                                    .periode_selesai = this.editData
-                                                    .periode_selesai.substring(0, 10);
-                                                this.openDetail = false;
-                                                this.openEdit = true;
-                                            },
-                                            formatDate(date) {
-                                                if (!date) return '-';
-                                                try {
-                                                    return new Date(date).toLocaleDateString('id-ID', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                        year: 'numeric'
-                                                    });
-                                                } catch (e) {
-                                                    return date;
-                                                }
-                                            }
-                        }));
-            });
+        // Utilities
+        resetForm() {
+            this.formData = {
+                nama_skp: '',
+                periode_mulai: '',
+                periode_selesai: '',
+                indikator: '',
+                rencana_aksi: '',
+                target: ''
+            };
+        },
+        openDetailModal(item) {
+            this.detailData = item;
+            this.openDetail = true;
+        },
+        openEditModal() {
+            this.editData = JSON.parse(JSON.stringify(this.detailData));
+            // Format date for input type=date
+            if (this.editData.periode_mulai) this.editData.periode_mulai = this.editData
+                .periode_mulai.substring(0, 10);
+            if (this.editData.periode_selesai) this.editData.periode_selesai = this.editData
+                .periode_selesai.substring(0, 10);
+            this.openDetail = false;
+            this.openEdit = true;
+        },
+        formatDate(date) {
+            if (!date) return '-';
+            try {
+                return new Date(date).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return date;
+            }
+        }
+    }));
+});
 </script>
 
 @endsection

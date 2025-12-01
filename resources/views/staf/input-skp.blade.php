@@ -19,118 +19,83 @@
         <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
             <h2 class="text-[20px] font-normal mb-4">Form Input SKP</h2>
 
+            {{-- Menggunakan submitCreate dari Alpine --}}
             <form class="space-y-4" @submit.prevent="submitCreate">
-
                 {{-- Row 1: Periode Awal + Periode Akhir --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
                             Mulai</label>
                         <div class="relative">
-                            <input id="periode_mulai" type="date" x-model="formData.periode_mulai" required
+                            {{-- Menggunakan x-model formData.periode_mulai --}}
+                            <input type="date" x-model="formData.periode_mulai" required
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                            <button type="button" id="periode_mulai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
-                            </button>
                         </div>
                     </div>
-
                     <div>
-                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
+                        <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
                             Selesai</label>
-                            =======
-                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
-                                Selesai</label>
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
-                            <div class="relative">
-                                <input id="periode_selesai" type="date" x-model="formData.periode_selesai" required
-                                    class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                                <button type="button" id="periode_selesai_btn"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
-                                    <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
-                                </button>
-                            </div>
+                        <div class="relative">
+                            {{-- Menggunakan x-model formData.periode_selesai --}}
+                            <input type="date" x-model="formData.periode_selesai" required
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                        </div>
                     </div>
                 </div>
 
                 {{-- Row 2: Sasaran Kinerja + Indikator Kinerja --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran
+                        <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran
                             Kinerja</label>
-                            =======
-                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran
-                                Kinerja</label>
-                            {{-- Menggunakan x-model formData.nama_skp (sesuai DB) --}}
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
-                            <input type="text" x-model="formData.nama_skp" required
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                placeholder="Contoh: Meningkatkan PAD...">
+                        {{-- Menggunakan x-model formData.nama_skp (sesuai DB) --}}
+                        <input type="text" x-model="formData.nama_skp" required
+                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                            placeholder="Contoh: Meningkatkan PAD...">
                     </div>
-
                     <div>
-                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator
+                        <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator
                             Kinerja</label>
-                            =======
-                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator
-                                Kinerja</label>
-                            {{-- Menggunakan x-model formData.indikator (sesuai DB) --}}
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
-                            <input type="text" x-model="formData.indikator" required
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                placeholder="Contoh: Jumlah dokumen terverifikasi...">
+                        {{-- Menggunakan x-model formData.indikator (sesuai DB) --}}
+                        <input type="text" x-model="formData.indikator" required
+                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                            placeholder="Contoh: Jumlah dokumen terverifikasi...">
                     </div>
                 </div>
 
                 {{-- Row 3: Rencana Aksi --}}
                 <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Rencana Aksi</label>
+                    <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Rencana Aksi</label>
                     <textarea x-model="formData.rencana_aksi" rows="3" required
                         class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                         placeholder="Tulis uraian rencana aksi..."></textarea>
                 </div>
 
-                {{-- Row 4: Target & Atasan --}}
+                {{-- Row 4: Target Kuantitas & Atasan --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target
+                        <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Target
                             (Angka)</label>
-                            =======
-                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Target
-                                (Angka)</label>
-                            {{-- Menggunakan x-model formData.target (sesuai DB) --}}
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
-                            <input type="number" x-model="formData.target" required min="1"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                placeholder="Contoh: 12">
+                        {{-- Menggunakan x-model formData.target (sesuai DB) --}}
+                        <input type="number" x-model="formData.target" required min="1"
+                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                            placeholder="Contoh: 12">
                     </div>
 
-                    <<<<<<< HEAD <div>
+                    {{-- Row 5: Atasan Langsung (Otomatis dari API) --}}
+                    <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Atasan Langsung</label>
                         <input type="text" :value="atasanName" readonly disabled
-                            class="w-full rounded-[10px] border border-slate-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none">
-                        =======
-                        {{-- Row 5: Atasan Langsung (Otomatis dari API) --}}
-                        <div>
-                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Atasan
-                                Langsung</label>
-                            <input type="text" :value="atasanName" readonly disabled
-                                class="w-full rounded-[10px] border border-slate-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none"
-                                placeholder="Memuat data atasan...">
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
-                            <p class="text-[10px] text-gray-400 mt-1">*Sesuai struktur organisasi user saat ini.</p>
-                        </div>
+                            class="w-full rounded-[10px] border border-slate-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none"
+                            placeholder="Memuat data atasan...">
+                        <p class="text-[10px] text-gray-400 mt-1">*Sesuai struktur organisasi user saat ini.</p>
+                    </div>
                 </div>
 
-                {{-- Tombol --}}
+                {{-- Tombol Aksi --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                    <button type="button" @click="resetForm" <<<<<<< HEAD
-                        class="rounded-[10px] bg-[#B6241C] px-4 py-2 text-sm font-normal text-white hover:brightness-95 ring-1 ring-slate-300">
-                        =======
-                        class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700
-                        hover:bg-slate-200 ring-1 ring-slate-300">
-                        >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
+                    <button type="button" @click="resetForm"
+                        class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                         Reset
                     </button>
                     <button type="submit"
@@ -140,7 +105,6 @@
                         <span x-show="isLoading">Menyimpan...</span>
                     </button>
                 </div>
-
             </form>
         </div>
 

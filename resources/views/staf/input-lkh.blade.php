@@ -217,13 +217,8 @@
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
                             <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-<<<<<<< HEAD
                             px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
                             focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
-                            =======
-                            px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                            focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
                         </div>
 
                         {{-- Satuan --}}
@@ -343,14 +338,8 @@
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
 
                         <label class="w-full flex items-center justify-between rounded-[10px]
-<<<<<<< HEAD
                    border border-dashed border-slate-300 bg-slate-50/60
                    px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            =======
-                            border border-dashed border-slate-300 bg-slate-50/60
-                            px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
-
                             <!-- Nama file tampil di sini -->
                             <span id="bukti_filename" class="truncate">Pilih File</span>
 

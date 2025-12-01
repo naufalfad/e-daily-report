@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let data;
     try {
-        const res = await fetch(`/e-daily-report/api/dashboard/kadis`, {
+        const res = await fetch(`/api/dashboard/kadis`, {
             method: "GET",
             headers,
         });

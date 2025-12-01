@@ -101,7 +101,7 @@ $iconMap = [
         </div>
     </div>
 
-    <nav class="flex-1 overflow-y-auto pr-1 sidebar-scroll">
+    <nav class="flex-1 overflow-y-auto pr-1 sidebar-scroll space-y-2">
         @foreach ($menus as $menu)
         @php
         $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';

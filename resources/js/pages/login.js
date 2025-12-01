@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btnLoader.classList.remove("hidden");
 
             try {
-                const response = await fetch("/login", {
+                const response = await fetch("/e-daily-report/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -69,16 +69,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 setTimeout(() => {
                     if (roles.includes("admin")) {
-                        window.location.href = "/admin/dashboard";
+                        window.location.href = "/e-daily-report/admin/dashboard";
                     } else if (
                         roles.includes("kepala dinas") ||
                         roles.includes("kadis")
                     ) {
-                        window.location.href = "/kadis/dashboard";
+                        window.location.href = "/e-daily-report/kadis/dashboard";
                     } else if (roles.includes("penilai")) {
-                        window.location.href = "/penilai/dashboard";
+                        window.location.href = "/e-daily-report/penilai/dashboard";
                     } else {
-                        window.location.href = "/staf/dashboard";
+                        window.location.href = "/e-daily-report/staf/dashboard";
                     }
                 }, 1200);
             } catch (error) {

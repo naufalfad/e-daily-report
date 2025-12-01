@@ -90,7 +90,7 @@
                             this.isLoading = true;
                             try {
                                 const token = localStorage.getItem('auth_token'); 
-                                const response = await fetch('/api/lkh/referensi', {
+                                const response = await fetch('/e-daily-report/api/lkh/referensi', {
                                     headers: {
                                         'Authorization': `Bearer ${token}`,
                                         'Accept': 'application/json'
@@ -181,7 +181,7 @@
                             this.skpLoading = true;
                             try {
                                 const token = localStorage.getItem('auth_token');
-                                const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
+                                const response = await fetch('/e-daily-report/api/skp?year=' + new Date().getFullYear(), {
                                     headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                                 });
                                 const res = await response.json();

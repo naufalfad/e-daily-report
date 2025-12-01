@@ -159,4 +159,16 @@ class DashboardController extends Controller
             'draft_limit' => $draftsLimit,
         ]);
     }
+
+public function getStatsKadis()
+{
+    // Minimal response biar tidak 500
+    return response()->json([
+        'total_pegawai' => 0,
+        'total_lkh' => 0,
+        'total_skp' => 0,
+        'recent_activity' => []
+    ]);
+}
+
 }

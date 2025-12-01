@@ -1,18 +1,16 @@
-import Swal from "sweetalert2"; // Pastikan SweetAlert sudah diinstall/import
+import Swal from "sweetalert2";
 
 export function manajemenPegawaiData() {
-    // [CONFIG]
-    const BASE_URL = "/api/admin/pegawai"; 
-    
-    // Helper untuk ambil token (jika pakai Sanctum via Header)
+    // Config URL dengan Prefix Subpath
+    const BASE_URL = "/e-daily-report/api/admin/pegawai";
     const getToken = () => localStorage.getItem("auth_token");
 
     return {
-        // State
         items: [],
         isLoading: false,
+        search: '',
         
-        // Pagination State
+        // Pagination
         pagination: {
             current_page: 1,
             last_page: 1,
@@ -20,37 +18,43 @@ export function manajemenPegawaiData() {
             prev_page_url: null
         },
 
-        // State Modal
-        openDetail: false,
-        openEdit: false,
+        // Modal States
         openAdd: false,
+        openEdit: false,
+        openUpload: false,
         
-        // Data Holder
-        detailData: {},
+        // Data Holders
+        editId: null,
         formData: {
             name: '',
-            email: '',
+            username: '', // [GANTI] Email jadi Username
             nip: '',
-            password: '', // Optional saat edit
+            password: '',
             unit_kerja_id: '',
             bidang_id: '',
             jabatan_id: '',
             role_id: '',
             atasan_id: ''
         },
-        editId: null, // ID user yang sedang diedit
 
         // --- INIT ---
         async initPage() {
-            console.log("🚀 Manajemen Pegawai: Initializing...");
+            console.log("🚀 Manajemen Pegawai Started");
             await this.fetchData();
         },
 
-        // --- 1. READ (FETCH DATA) ---
+        // --- FETCH DATA ---
         async fetchData(url = BASE_URL) {
             this.isLoading = true;
+            
+            let targetUrl = url;
+            if (this.search) {
+                const separator = targetUrl.includes('?') ? '&' : '?';
+                targetUrl += `${separator}search=${encodeURIComponent(this.search)}`;
+            }
+
             try {
-                const response = await fetch(url, {
+                const response = await fetch(targetUrl, {
                     headers: { 
                         "Authorization": `Bearer ${getToken()}`, 
                         "Accept": "application/json" 
@@ -58,13 +62,9 @@ export function manajemenPegawaiData() {
                 });
 
                 if (!response.ok) throw new Error("Gagal mengambil data");
-
                 const json = await response.json();
                 
-                // Laravel Pagination membungkus data dalam 'data'
-                this.items = json.data; 
-                
-                // Update Pagination State
+                this.items = json.data || []; 
                 this.pagination = {
                     current_page: json.current_page,
                     last_page: json.last_page,
@@ -74,27 +74,20 @@ export function manajemenPegawaiData() {
 
             } catch (error) {
                 console.error(error);
-                Swal.fire("Error", "Gagal memuat data pegawai", "error");
             } finally {
                 this.isLoading = false;
             }
         },
 
-        // --- 2. CREATE & UPDATE (SUBMIT FORM) ---
+        // --- SUBMIT FORM ---
         async submitForm(type) {
-            // type: 'add' atau 'edit'
             const isEdit = type === 'edit';
+            // URL Endpoint
             const url = isEdit ? `${BASE_URL}/${this.editId}` : BASE_URL;
             const method = isEdit ? 'PUT' : 'POST';
 
-            // Ambil data dari Form HTML (pastikan input punya name="...")
-            // Atau gunakan x-model binding this.formData
-            const formElement = document.getElementById(isEdit ? 'form-edit' : 'form-add');
-            const payload = new FormData(formElement);
-
-            // Jika PUT (Edit), Laravel butuh trik _method atau x-www-form-urlencoded
-            // Tapi karena kita pakai JSON body di fetch, kita convert FormData ke Object
-            const dataObj = Object.fromEntries(payload.entries());
+            // Copy Data untuk Payload
+            const payload = { ...this.formData };
 
             try {
                 const response = await fetch(url, {
@@ -102,38 +95,34 @@ export function manajemenPegawaiData() {
                     headers: {
                         "Authorization": `Bearer ${getToken()}`,
                         "Content-Type": "application/json",
-                        "Accept": "application/json",
-                        // CSRF Token jika perlu (untuk web routes), tapi API usually stateless
-                        // "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                        "Accept": "application/json"
                     },
-                    body: JSON.stringify(dataObj)
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
 
                 if (!response.ok) {
-                    // Handle Validation Error
                     if (response.status === 422) {
-                        let errorMsg = Object.values(result.errors).flat().join('\n');
-                        throw new Error(errorMsg || "Validasi gagal");
+                        const errors = Object.values(result.errors).flat().join('\n');
+                        throw new Error(errors || "Validasi gagal");
                     }
                     throw new Error(result.message || "Terjadi kesalahan");
                 }
 
                 Swal.fire("Berhasil", result.message, "success");
                 
-                // Reset & Refresh
-                if (isEdit) this.closeModalEdit();
+                if (isEdit) this.toggleEdit(false);
                 else this.toggleAdd(false);
                 
-                this.fetchData(); // Refresh tabel
+                this.fetchData(); 
 
             } catch (error) {
                 Swal.fire("Gagal", error.message, "error");
             }
         },
 
-        // --- 3. DELETE ---
+        // --- DELETE ---
         async deleteItem(id) {
             const confirm = await Swal.fire({
                 title: 'Hapus Pegawai?',
@@ -141,7 +130,6 @@ export function manajemenPegawaiData() {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Ya, Hapus!'
             });
 
@@ -149,16 +137,12 @@ export function manajemenPegawaiData() {
                 try {
                     const response = await fetch(`${BASE_URL}/${id}`, {
                         method: "DELETE",
-                        headers: {
-                            "Authorization": `Bearer ${getToken()}`,
-                            "Accept": "application/json"
-                        }
+                        headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
                     });
 
                     if (!response.ok) throw new Error("Gagal menghapus data");
-
-                    Swal.fire('Terhapus!', 'Data pegawai berhasil dihapus.', 'success');
-                    this.fetchData(); // Refresh
+                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                    this.fetchData(); 
 
                 } catch (error) {
                     Swal.fire("Error", error.message, "error");
@@ -166,43 +150,46 @@ export function manajemenPegawaiData() {
             }
         },
 
-        // --- HELPER MODALS ---
-        openModalDetail(item) {
-            this.detailData = item;
-            this.openDetail = true;
-        },
-        closeModalDetail() {
-            this.openDetail = false;
-            this.detailData = {};
-        },
-        openModalEdit(item) {
-            this.editId = item.id;
-            this.editData = { ...item }; // Copy object
-            
-            // Populate form logic (bisa via x-model atau manual set value di DOM)
-            // Contoh manual untuk memastikan data masuk ke form edit
-            setTimeout(() => {
-               // Logic mengisi value input form edit jika tidak pakai x-model penuh
-            }, 100);
-
-            this.openEdit = true;
-        },
-        closeModalEdit() {
-            this.openEdit = false;
-            this.editId = null;
-            this.editData = null;
-        },
+        // --- MODAL HANDLERS ---
         toggleAdd(val) {
             this.openAdd = val;
-            if(!val) {
-                // Reset form add jika ditutup
-                document.getElementById('form-add')?.reset();
+            if (val) {
+                this.resetForm();
             }
         },
+
+        toggleEdit(val) {
+            this.openEdit = val;
+            this.editId = null;
+        },
         
-        // Pagination Helpers
-        changePage(url) {
-            if (url) this.fetchData(url);
-        }
+        toggleUpload(val) {
+            this.openUpload = val;
+        },
+
+        openModalEdit(item) {
+            this.editId = item.id;
+            this.formData = {
+                name: item.name,
+                username: item.username, // Load Username
+                nip: item.nip,
+                password: '',
+                unit_kerja_id: item.unit_kerja_id,
+                bidang_id: item.bidang_id,
+                jabatan_id: item.jabatan_id,
+                role_id: item.roles && item.roles.length > 0 ? item.roles[0].id : '',
+                atasan_id: item.atasan_id
+            };
+            this.openEdit = true;
+        },
+
+        resetForm() {
+            this.formData = {
+                name: '', username: '', nip: '', password: '',
+                unit_kerja_id: '', bidang_id: '', jabatan_id: '', role_id: '', atasan_id: ''
+            };
+        },
+
+        changePage(url) { if (url) this.fetchData(url); }
     };
 }

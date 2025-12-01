@@ -1,101 +1,195 @@
-// resources/js/pages/admin/manajemen-pegawai.js
+import Swal from "sweetalert2";
 
 export function manajemenPegawaiData() {
-    const TOKEN = localStorage.getItem("auth_token");
-    const BASE_URL = "/api/admin/pegawai"; // Sesuaikan dengan route API backend Anda
+    // Config URL dengan Prefix Subpath
+    const BASE_URL = "/e-daily-report/api/admin/pegawai";
+    const getToken = () => localStorage.getItem("auth_token");
 
     return {
-        // State Data
         items: [],
         isLoading: false,
+        search: '',
+        
+        // Pagination
+        pagination: {
+            current_page: 1,
+            last_page: 1,
+            next_page_url: null,
+            prev_page_url: null
+        },
 
-        // State Modal Detail
-        openDetail: false,
-        detailData: null,
-
-        // State Modal Edit
-        openEdit: false,
-        editData: null,
-
-        // State Modal Tambah (Migrasi dari Vanilla JS)
+        // Modal States
         openAdd: false,
-
-        // State Modal Upload (Migrasi dari Vanilla JS)
+        openEdit: false,
         openUpload: false,
+        
+        // Data Holders
+        editId: null,
+        formData: {
+            name: '',
+            username: '', // [GANTI] Email jadi Username
+            nip: '',
+            password: '',
+            unit_kerja_id: '',
+            bidang_id: '',
+            jabatan_id: '',
+            role_id: '',
+            atasan_id: ''
+        },
 
-        // Init
+        // --- INIT ---
         async initPage() {
-            console.log("Manajemen Pegawai Component Initialized");
+            console.log("🚀 Manajemen Pegawai Started");
             await this.fetchData();
         },
 
-        // Fetch Data Pegawai
-        async fetchData() {
+        // --- FETCH DATA ---
+        async fetchData(url = BASE_URL) {
             this.isLoading = true;
-            try {
-                // Contoh call API, sesuaikan endpoint backend
-                // const response = await fetch(BASE_URL, {
-                //     headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/json" }
-                // });
-                // const data = await response.json();
-                // this.items = data.data;
+            
+            let targetUrl = url;
+            if (this.search) {
+                const separator = targetUrl.includes('?') ? '&' : '?';
+                targetUrl += `${separator}search=${encodeURIComponent(this.search)}`;
+            }
 
-                // DUMMY DATA (Hapus ini jika backend sudah siap)
-                this.items = [
-                    { 
-                        id: 1, 
-                        nama: 'Fahrizal Mudzaqi', 
-                        nip: '1988030109', 
-                        jabatan: 'Staf Teknis', 
-                        unit_kerja: 'BAPENDA', 
-                        atasan: 'Joko Anwar', 
-                        status: 'Aktif' 
-                    },
-                    { 
-                        id: 2, 
-                        nama: 'Muhammad Naufal', 
-                        nip: '1990010101', 
-                        jabatan: 'Kepala Bidang', 
-                        unit_kerja: 'Bidang I', 
-                        atasan: 'Darius Sabon', 
-                        status: 'Cuti' 
-                    },
-                ];
+            try {
+                const response = await fetch(targetUrl, {
+                    headers: { 
+                        "Authorization": `Bearer ${getToken()}`, 
+                        "Accept": "application/json" 
+                    }
+                });
+
+                if (!response.ok) throw new Error("Gagal mengambil data");
+                const json = await response.json();
+                
+                this.items = json.data || []; 
+                this.pagination = {
+                    current_page: json.current_page,
+                    last_page: json.last_page,
+                    next_page_url: json.next_page_url,
+                    prev_page_url: json.prev_page_url
+                };
 
             } catch (error) {
-                console.error("Gagal memuat data pegawai:", error);
+                console.error(error);
             } finally {
                 this.isLoading = false;
             }
         },
 
-        // --- Logic Detail ---
-        openModalDetail(item) {
-            this.detailData = item; // Set data untuk ditampilkan
-            this.openDetail = true;
-        },
-        closeModalDetail() {
-            this.openDetail = false;
-            setTimeout(() => { this.detailData = null; }, 300); // Clear data setelah animasi
+        // --- SUBMIT FORM ---
+        async submitForm(type) {
+            const isEdit = type === 'edit';
+            // URL Endpoint
+            const url = isEdit ? `${BASE_URL}/${this.editId}` : BASE_URL;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            // Copy Data untuk Payload
+            const payload = { ...this.formData };
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const errors = Object.values(result.errors).flat().join('\n');
+                        throw new Error(errors || "Validasi gagal");
+                    }
+                    throw new Error(result.message || "Terjadi kesalahan");
+                }
+
+                Swal.fire("Berhasil", result.message, "success");
+                
+                if (isEdit) this.toggleEdit(false);
+                else this.toggleAdd(false);
+                
+                this.fetchData(); 
+
+            } catch (error) {
+                Swal.fire("Gagal", error.message, "error");
+            }
         },
 
-        // --- Logic Edit ---
+        // --- DELETE ---
+        async deleteItem(id) {
+            const confirm = await Swal.fire({
+                title: 'Hapus Pegawai?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const response = await fetch(`${BASE_URL}/${id}`, {
+                        method: "DELETE",
+                        headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
+                    });
+
+                    if (!response.ok) throw new Error("Gagal menghapus data");
+                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                    this.fetchData(); 
+
+                } catch (error) {
+                    Swal.fire("Error", error.message, "error");
+                }
+            }
+        },
+
+        // --- MODAL HANDLERS ---
+        toggleAdd(val) {
+            this.openAdd = val;
+            if (val) {
+                this.resetForm();
+            }
+        },
+
+        toggleEdit(val) {
+            this.openEdit = val;
+            this.editId = null;
+        },
+        
+        toggleUpload(val) {
+            this.openUpload = val;
+        },
+
         openModalEdit(item) {
-            // Clone object agar perubahan tidak langsung reaktif ke tabel sebelum disave
-            this.editData = JSON.parse(JSON.stringify(item));
+            this.editId = item.id;
+            this.formData = {
+                name: item.name,
+                username: item.username, // Load Username
+                nip: item.nip,
+                password: '',
+                unit_kerja_id: item.unit_kerja_id,
+                bidang_id: item.bidang_id,
+                jabatan_id: item.jabatan_id,
+                role_id: item.roles && item.roles.length > 0 ? item.roles[0].id : '',
+                atasan_id: item.atasan_id
+            };
             this.openEdit = true;
         },
-        closeModalEdit() {
-            this.openEdit = false;
-            setTimeout(() => { this.editData = null; }, 300);
+
+        resetForm() {
+            this.formData = {
+                name: '', username: '', nip: '', password: '',
+                unit_kerja_id: '', bidang_id: '', jabatan_id: '', role_id: '', atasan_id: ''
+            };
         },
 
-        // --- Logic Tambah & Upload (Pengganti Vanilla JS) ---
-        toggleAdd(state) {
-            this.openAdd = state;
-        },
-        toggleUpload(state) {
-            this.openUpload = state;
-        }
+        changePage(url) { if (url) this.fetchData(url); }
     };
 }

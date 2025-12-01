@@ -11,7 +11,7 @@ export function logActivityKadis() {
         initLog() {
             console.log("INIT LOG KADIS");
 
-            authFetch("/api/log-aktivitas")
+            authFetch("/e-daily-report/api/log-aktivitas")
                 .then(r => r.json())
                 .then(res => {
 

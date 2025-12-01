@@ -28,6 +28,22 @@ import './pages/penilai/pengumuman.js';
 import './pages/penilai/peta-aktivitas.js';
 import './pages/penilai/riwayat.js';
 
+// =========================
+// KADIS
+// =========================
+import './pages/kadis/dashboard.js'
+import './pages/kadis/log-aktivitas.js'
+import './pages/kadis/validasi-laporan.js'
+
+// =========================
+// ADMIN
+// =========================
+// import './pages/admin/dashboard.js'
+// import './pages/admin/manajemen-pegawai.js'
+// import './pages/admin/log-aktivitas.js'
+// import './pages/admin/akun-pengguna.js'
+// import './pages/admin/setting-sistem.js'
+
 // Chart global (boleh)
 import Chart from 'chart.js/auto';
 window.Chart = Chart;

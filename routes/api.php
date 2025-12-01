@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
 
         // User Management
-        Route::apiResource('users', UserManagementController::class);
+        Route::apiResource('pegawai', UserManagementController::class);
 
         // Master Data
         Route::prefix('master')->group(function() {

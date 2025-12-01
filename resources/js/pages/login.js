@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     : [];
 
                 setTimeout(() => {
-                    if (roles.includes("admin")) {
+                    if (roles.some(role => role.includes("admin"))) {
                         window.location.href = "/e-daily-report/admin/dashboard";
                     } else if (
                         roles.includes("kepala dinas") ||

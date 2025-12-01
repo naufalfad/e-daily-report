@@ -5,6 +5,29 @@ import '../css/app.css';
 import '../js/pages/login.js';
 
 // =========================
+// 1. IMPORT ENGINE ALPINE (WAJIB UNTUK MODAL)
+// =========================
+import Alpine from 'alpinejs';
+
+// =========================
+// 2. IMPORT LOGIKA HALAMAN ADMIN
+// =========================
+// Import fungsi logika halaman manajemen pegawai
+import { manajemenPegawaiData } from './pages/admin/manajemen-pegawai.js';
+
+// =========================
+// 3. REGISTRASI GLOBAL (Agar Blade Bisa Panggil)
+// =========================
+window.Alpine = Alpine;
+window.manajemenPegawaiData = manajemenPegawaiData;
+
+// =========================
+// 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
+// =========================
+Alpine.start();
+
+
+// =========================
 // GLOBAL UTILITY
 // =========================
 import './global/loader.js';
@@ -36,10 +59,9 @@ import './pages/kadis/log-aktivitas.js'
 import './pages/kadis/validasi-laporan.js'
 
 // =========================
-// ADMIN
+// ADMIN (Logic lain jika ada)
 // =========================
 // import './pages/admin/dashboard.js'
-// import './pages/admin/manajemen-pegawai.js'
 // import './pages/admin/log-aktivitas.js'
 // import './pages/admin/akun-pengguna.js'
 import './pages/admin/setting-sistem.js'
@@ -49,7 +71,7 @@ import Chart from 'chart.js/auto';
 window.Chart = Chart;
 
 // =========================
-// NOTIFIKASI GLOBAL FIX
+// NOTIFIKASI GLOBAL FIX (KODE ASLI YANG MULIA)
 // =========================
 
 document.addEventListener('DOMContentLoaded', function () {

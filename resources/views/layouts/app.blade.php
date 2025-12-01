@@ -113,12 +113,12 @@
             ])
 
             {{-- KONTEN KANAN --}}
-            <div class="h-full flex flex-col pl-9 overflow-hidden">
+            <div class="h-full flex flex-col pl-9 overflow-y-auto no-scrollbar">
 
                 {{-- TOPBAR: hanya muncul di dashboard --}}
                 @if (($active ?? null) === 'dashboard')
-                <header class="sticky top-0 z-40">
-                    <div class="relative flex items-center gap-35 py-1">
+                <header>
+                    <div class="py-1">
 
                         {{-- Burger (mobile) --}}
                         <button id="sb-toggle"
@@ -184,7 +184,7 @@
                 @endif
 
                 {{-- KONTEN --}}
-                <main class="pt-1 p-0 flex-1 flex flex-col overflow-y-auto no-scrollbar">
+                <main class="pt-1 p-0 flex-1 flex flex-col">
                     @yield('content')
                 </main>
 

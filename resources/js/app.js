@@ -42,7 +42,7 @@ import './pages/kadis/validasi-laporan.js'
 // import './pages/admin/manajemen-pegawai.js'
 // import './pages/admin/log-aktivitas.js'
 // import './pages/admin/akun-pengguna.js'
-// import './pages/admin/setting-sistem.js'
+import './pages/admin/setting-sistem.js'
 
 // Chart global (boleh)
 import Chart from 'chart.js/auto';

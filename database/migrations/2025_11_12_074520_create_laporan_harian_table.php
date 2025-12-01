@@ -28,7 +28,7 @@ return new class extends Migration
             $table->boolean('is_luar_lokasi')->default(false);
             
             // Data Validasi
-            $table->foreignId('validator_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('atasan_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('waktu_validasi')->nullable();
             $table->text('komentar_validasi')->nullable();
             $table->timestamps();

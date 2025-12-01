@@ -1,127 +1,88 @@
-@php
-$title = 'Skoring Kinerja Pegawai';
-
-// Data dummy skoring – bisa kamu ganti dengan data dari DB nanti
-$rows = [
-[
-'nama' => 'Fahrizal Mudzaqi Maulana',
-'unit' => 'Unit Pajak',
-'total' => 45,
-'accepted' => '95%',
-'avg_hours' => '7,5 jam/hari',
-],
-[
-'nama' => 'Muhammad Naufal',
-'unit' => 'Unit Pajak',
-'total' => 48,
-'accepted' => '94%',
-'avg_hours' => '7,8 jam/hari',
-],
-[
-'nama' => 'Reno Sebastian',
-'unit' => 'Unit Pajak',
-'total' => 44,
-'accepted' => '93%',
-'avg_hours' => '7,4 jam/hari',
-],
-[
-'nama' => 'Silvia Lestari',
-'unit' => 'Unit Pendataan',
-'total' => 42,
-'accepted' => '92%',
-'avg_hours' => '7,2 jam/hari',
-],
-[
-'nama' => 'Agus Prasetyo',
-'unit' => 'Unit Penagihan',
-'total' => 40,
-'accepted' => '90%',
-'avg_hours' => '7,0 jam/hari',
-],
-[
-'nama' => 'Intan Permata',
-'unit' => 'Unit Pengawasan',
-'total' => 39,
-'accepted' => '89%',
-'avg_hours' => '6,9 jam/hari',
-],
-[
-'nama' => 'Rai Fazri',
-'unit' => 'Unit Pajak',
-'total' => 38,
-'accepted' => '88%',
-'avg_hours' => '6,8 jam/hari',
-],
-[
-'nama' => 'Anna Septiani',
-'unit' => 'Unit Pendataan',
-'total' => 37,
-'accepted' => '87%',
-'avg_hours' => '6,7 jam/hari',
-],
-[
-'nama' => 'Bima Pratama',
-'unit' => 'Unit Penagihan',
-'total' => 35,
-'accepted' => '85%',
-'avg_hours' => '6,5 jam/hari',
-],
-[
-'nama' => 'Dewi Rahma',
-'unit' => 'Unit Pengawasan',
-'total' => 34,
-'accepted' => '84%',
-'avg_hours' => '6,4 jam/hari',
-],
-];
-@endphp
-
-@extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'skoring'])
+@extends('layouts.app', ['role' => 'penilai'])
 
 @section('content')
-<section class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 flex flex-col h-full">
-    <h2 class="text-[18px] font-normal mb-4">Skoring Kinerja Pegawai</h2>
+<div class="container mx-auto px-4 py-8">
+    {{-- HEADER DASHBOARD --}}
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Skoring Kinerja Pegawai</h1>
+            <p class="text-gray-500 mt-1">Monitor dan evaluasi performa pegawai di Unit Kerja Anda.</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow flex items-center gap-2">
+                <i class="fas fa-download"></i> Export Laporan
+            </button>
+        </div>
+    </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-full text-sm">
-            <thead class="bg-slate-100 text-[13px] text-slate-600">
-                <tr>
-                    <th class="px-4 py-2 text-left font-medium w-[120px]">Peringkat</th>
-                    <th class="px-4 py-2 text-left font-medium">Nama Pegawai</th>
-                    <th class="px-4 py-2 text-left font-medium">Unit</th>
-                    <th class="px-4 py-2 text-left font-medium">Total Laporan</th>
-                    <th class="px-4 py-2 text-left font-medium">Persentase Diterima</th>
-                    <th class="px-4 py-2 text-left font-medium">Rata-rata Waktu Kerja</th>
-                </tr>
-            </thead>
-            <tbody class="text-[13px] text-slate-700">
-                @foreach ($rows as $row)
-                @php
-                $rank = $loop->iteration;
-                @endphp
-                <tr class="border-t border-slate-200">
-                    <td class="px-4 py-2 whitespace-nowrap">
-                        @if ($rank <= 3) {{-- Icon medal untuk peringkat 1, 2, 3 --}} <div
-                            class="flex items-center gap-2">
-                            <img src="{{ asset('assets/icon/rank-' . $rank . '.svg') }}" alt="Peringkat {{ $rank }}"
-                                class="h-5 w-5">
-                            <span>{{ $rank }}</span>
+    {{-- STATISTIK CARDS (Diisi oleh JS) --}}
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm font-medium">Total Bawahan</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2" id="stat-total">0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+            <p class="text-gray-500 text-sm font-medium">Rata-rata Skor</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2" id="stat-avg">0%</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+            <p class="text-gray-500 text-sm font-medium">Predikat Sangat Baik</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2" id="stat-sb">0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+            <p class="text-gray-500 text-sm font-medium">Perlu Pembinaan</p>
+            <p class="text-2xl font-bold text-gray-800 mt-2" id="stat-pembinaan">0</p>
+        </div>
     </div>
-    @else
-    <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[12px]">
-        {{ $rank }}
-    </span>
-    @endif
-    </td>
-    <td class="px-4 py-2">{{ $row['nama'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['unit'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['total'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['accepted'] }}</td>
-    <td class="px-4 py-2 whitespace-nowrap">{{ $row['avg_hours'] }}</td>
-    </tr>
-    @endforeach
-    </tbody>
-    </table>
+
+    {{-- TABEL DATA --}}
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden min-h-[400px]">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-800">Detail Kinerja Pegawai</h3>
+            <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </span>
+                <input type="text" id="search-input" 
+                       class="pl-10 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 w-64 transition shadow-sm"
+                       placeholder="Cari nama pegawai...">
+            </div>
+        </div>
+
+        <div class="overflow-x-auto relative">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Nama Pegawai</th>
+                        <th class="py-3 px-6 text-left">Unit Kerja</th>
+                        <th class="py-3 px-6 text-center">Realisasi LKH<br><span class="text-xs text-gray-400 normal-case">(Disetujui / Total)</span></th>
+                        <th class="py-3 px-6 text-center">Skor Kinerja</th>
+                        <th class="py-3 px-6 text-center">Predikat</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="text-gray-600 text-sm font-light">
+                    {{-- Data akan di-inject oleh JS disini --}}
+                </tbody>
+            </table>
+
+            {{-- Loading State --}}
+            <div id="loading-state" class="absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center z-10 hidden">
+                <svg class="animate-spin h-10 w-10 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-gray-500 font-medium">Sedang memuat data...</p>
+            </div>
+
+            {{-- Empty State --}}
+            <div id="empty-state" class="hidden py-12 flex flex-col items-center justify-center text-center">
+                <img src="{{ asset('assets/icon/search.svg') }}" class="w-16 h-16 opacity-40 mb-3">
+                <p class="text-gray-500">Data tidak ditemukan.</p>
+            </div>
+        </div>
     </div>
-</section>
+</div>
+
+{{-- Load JS File --}}
+@vite(['resources/js/pages/penilai/skoring-kinerja.js'])
 @endsection

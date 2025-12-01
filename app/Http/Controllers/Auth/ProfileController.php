@@ -30,11 +30,11 @@ class ProfileController extends Controller
         if ($request->hasFile('foto_profil')) {
             // Hapus foto lama jika ada (dari MinIO)
             if ($user->foto_profil) {
-                Storage::disk('minio')->delete($user->foto_profil);
+                Storage::disk('public')->delete($user->foto_profil);
             }
             
             // Simpan foto baru ke MinIO
-            $path = $request->file('foto_profil')->store('profil', 'minio');
+            $path = $request->file('foto_profil')->store('profil', 'public');
             $user->foto_profil = $path;
         }
 

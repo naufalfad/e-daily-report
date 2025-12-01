@@ -2,8 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-// Import All Controllers
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController; 
 use App\Http\Controllers\Admin\UserManagementController;
@@ -30,115 +28,119 @@ use App\Http\Controllers\Core\OrganisasiController;
 // 1. PUBLIC ROUTES (Tanpa Login)
 // ======================================================
 Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
 
 
 // ======================================================
-// 2. PROTECTED ROUTES (Wajib Login / Bearer Token)
+// 2. PROTECTED ROUTES (Wajib Login / Sanctum)
 // ======================================================
 Route::middleware('auth:sanctum')->group(function () {
-    
-    // --- A. AUTH & PROFIL MODULE ---
+     // Laporan yang harus divalidasi oleh KADIS (dari KABID)
+    Route::get('/lkh', [\App\Http\Controllers\Core\KadisValidatorController::class, 'index']);
+    Route::get('/lkh/{id}', [\App\Http\Controllers\Core\KadisValidatorController::class, 'show']);
+    Route::post('/lkh/{id}/validate', [\App\Http\Controllers\Core\KadisValidatorController::class, 'validateLkh']);
+
+    // Monitoring laporan staf (yang sudah approved oleh Kabid)
+    Route::get('/monitoring/staf', [\App\Http\Controllers\Core\KadisValidatorController::class, 'monitoringStaf']);
+
+    // --- A. AUTH & PROFILE ---
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
 
-    // --- B. ADMIN MODULE (Manajemen User & Master) ---
+    // --- B. DASHBOARD ---
+    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('/dashboard/kadis', [DashboardController::class, 'getStatsKadis']);
+
+    // --- C. ADMIN MODULE ---
     Route::prefix('admin')->group(function () {
-        
-        // B.1. Manajemen User
+
+        // User Management
         Route::apiResource('users', UserManagementController::class);
 
-        // B.2. Manajemen Master Data (CRUD oleh Admin)
+        // Master Data
         Route::prefix('master')->group(function() {
-            // CRUD Unit Kerja
-            Route::get('/unit-kerja', [MasterDataController::class, 'indexUnitKerja']);
-            Route::post('/unit-kerja', [MasterDataController::class, 'storeUnitKerja']);
-            
-            // CRUD Bidang
-            Route::get('/bidang', [MasterDataController::class, 'indexBidang']);
-            Route::post('/bidang', [MasterDataController::class, 'storeBidang']);
-            Route::put('/bidang/{id}', [MasterDataController::class, 'updateBidang']);
-            Route::delete('/bidang/{id}', [MasterDataController::class, 'destroyBidang']);
+            Route::get('unit-kerja', [MasterDataController::class, 'indexUnitKerja']);
+            Route::post('unit-kerja', [MasterDataController::class, 'storeUnitKerja']);
 
-            // CRUD Tupoksi
-            Route::get('/tupoksi', [MasterDataController::class, 'indexTupoksi']); // Wajib kirim ?bidang_id=...
-            Route::post('/tupoksi', [MasterDataController::class, 'storeTupoksi']);
-            Route::put('/tupoksi/{id}', [MasterDataController::class, 'updateTupoksi']);
-            Route::delete('/tupoksi/{id}', [MasterDataController::class, 'destroyTupoksi']);
+            Route::get('bidang', [MasterDataController::class, 'indexBidang']);
+            Route::post('bidang', [MasterDataController::class, 'storeBidang']);
+            Route::put('bidang/{id}', [MasterDataController::class, 'updateBidang']);
+            Route::delete('bidang/{id}', [MasterDataController::class, 'destroyBidang']);
+
+            Route::get('tupoksi', [MasterDataController::class, 'indexTupoksi']);
+            Route::post('tupoksi', [MasterDataController::class, 'storeTupoksi']);
+            Route::put('tupoksi/{id}', [MasterDataController::class, 'updateTupoksi']);
+            Route::delete('tupoksi/{id}', [MasterDataController::class, 'destroyTupoksi']);
         });
 
-        // B.3. Dropdown Getters (Untuk Form)
+        // Dropdown Getters
         Route::prefix('master-dropdown')->group(function() {
-            Route::get('/roles', [MasterDataController::class, 'getRoles']);
-            Route::get('/jabatan', [MasterDataController::class, 'getJabatan']);
-            Route::get('/unit-kerja', [MasterDataController::class, 'getUnitKerja']);
-            Route::get('/calon-atasan', [MasterDataController::class, 'getCalonAtasan']);
-            // [BARU] Cascading dropdown
-            Route::get('/bidang-by-unit-kerja/{unitKerjaId}', [MasterDataController::class, 'getBidangByUnitKerja']);
+            Route::get('roles', [MasterDataController::class, 'getRoles']);
+            Route::get('jabatan', [MasterDataController::class, 'getJabatan']);
+            Route::get('unit-kerja', [MasterDataController::class, 'getUnitKerja']);
+            Route::get('calon-atasan', [MasterDataController::class, 'getCalonAtasan']);
+            Route::get('bidang-by-unit-kerja/{unitKerjaId}', [MasterDataController::class, 'getBidangByUnitKerja']);
         });
 
-        // B.4. System Settings
-        Route::get('/settings', [SystemSettingController::class, 'index']);
-        Route::post('/settings', [SystemSettingController::class, 'update']);
+        // System Settings
+        Route::get('settings', [SystemSettingController::class, 'index']);
+        Route::post('settings', [SystemSettingController::class, 'update']);
     });
 
-    // --- C. GIS MODULE ---
+    // --- D. GIS MODULE ---
     Route::get('/provinsi', [WilayahController::class, 'provinsi']);
     Route::get('/kabupaten', [WilayahController::class, 'kabupaten']);
     Route::get('/kecamatan', [WilayahController::class, 'kecamatan']);
     Route::get('/kelurahan', [WilayahController::class, 'kelurahan']);
 
-    // --- D. CORE: SKP ---
+    // --- E. CORE MODULE ---
     Route::apiResource('skp', SkpController::class);
 
-    // --- E. CORE: LKH (FIXED ROUTING ORDER) ---
+    // LKH
     Route::prefix('lkh')->group(function () {
+        // 1. Spesifik / Utility Routes (PRIORITAS UTAMA)
+        Route::get('riwayat', [LkhController::class, 'getRiwayat']);
+        Route::get('referensi', [LkhController::class, 'getReferensi']);
+                
+        // 2. Resource Routes
+        Route::get('/', [LkhController::class, 'index']); 
+        Route::post('/', [LkhController::class, 'store']); 
         
-        // 1. Spesifik / Utility Routes (Ditaruh di atas)
-        Route::get('/history/riwayat', [LkhController::class, 'getRiwayat']); // FIX: Rute Riwayat
-        Route::get('/referensi', [LkhController::class, 'getReferensi']); // FIX: Rute Referensi
+        // [PERBAIKAN] Tambahkan ->where('id', '[0-9]+')
+        // Ini memaksa {id} hanya menerima ANGKA.
+        // Jadi, request 'riwayat' tidak akan nyasar ke sini lagi.
+        Route::post('/update/{id}', [LkhController::class, 'update'])->where('id', '[0-9]+'); 
         
-        // 2. Resource Routes (API Resource diganti manual)
-        Route::get('/', [LkhController::class, 'index']); // GET /lkh -> List
-        Route::post('/', [LkhController::class, 'store']); // POST /lkh -> Create
+        Route::get('/{id}', [LkhController::class, 'show'])->where('id', '[0-9]+'); 
         
-        // Rute yang menggunakan {id} (Harus DITARUH PALING BAWAH)
-        Route::get('/{id}', [LkhController::class, 'show']); // GET /lkh/{id} -> Show
-        Route::put('/{id}', [LkhController::class, 'update']); // PUT /lkh/{id} -> Update
-        Route::delete('/{id}', [LkhController::class, 'destroy']); // DELETE /lkh/{id} -> Delete
+        Route::delete('/{id}', [LkhController::class, 'destroy'])->where('id', '[0-9]+'); 
     });
-    // Route::get('/lkh/riwayat', [LkhController::class, 'getRiwayat']); // HAPUS RUTE INI
 
-    // --- F. CORE: VALIDATOR ---
+    // Validator
     Route::prefix('validator')->group(function () {
-        Route::get('/lkh', [ValidatorController::class, 'index']); 
-        Route::get('/lkh/{id}', [ValidatorController::class, 'show']); 
-        Route::post('/lkh/{id}/validate', [ValidatorController::class, 'validateLkh']); 
+        Route::get('lkh', [ValidatorController::class, 'index']);
+        Route::get('lkh/{id}', [ValidatorController::class, 'show']);
+        Route::post('lkh/{id}/validate', [ValidatorController::class, 'validateLkh']);
     });
 
-    // --- G. CORE: DASHBOARD ---
-    Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
+    // Export
+    Route::get('export/excel', [ExportController::class, 'exportExcel']);
+    Route::get('export/pdf', [ExportController::class, 'exportPdf']);
 
-    // --- H. CORE: EXPORT ---
-    Route::get('/export/excel', [ExportController::class, 'exportExcel']);
-    Route::get('/export/pdf', [ExportController::class, 'exportPdf']);
+    // Pengumuman
+    Route::get('pengumuman', [PengumumanController::class, 'index']);
+    Route::post('pengumuman', [PengumumanController::class, 'store']);
+    Route::delete('pengumuman/{id}', [PengumumanController::class, 'destroy']);
 
-    // --- I. CORE: PENGUMUMAN ---
-    Route::get('/pengumuman', [PengumumanController::class, 'index']);
-    Route::post('/pengumuman', [PengumumanController::class, 'store']);
-    Route::delete('/pengumuman/{id}', [PengumumanController::class, 'destroy']);
+    // Notifikasi
+    Route::get('notifikasi', [NotifikasiController::class, 'index']);
+    Route::post('notifikasi/{id}/read', [NotifikasiController::class, 'markAsRead']);
+    Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead']);
 
-    // --- J. CORE: NOTIFIKASI ---
-    Route::get('/notifikasi', [NotifikasiController::class, 'index']);
-    Route::post('/notifikasi/{id}/read', [NotifikasiController::class, 'markAsRead']);
-    Route::post('/notifikasi/read-all', [NotifikasiController::class, 'markAllRead']);
-    
-    // --- K. MODUL LOG AKTIVITAS ---
-    Route::get('/activity-logs', [ActivityLogController::class, 'index']);
+    // Activity Log
+    Route::get('log-aktivitas', [ActivityLogController::class, 'index'])->name('api.log.aktivitas');
 
-    // --- L. [BARU] MODUL STRUKTUR ORGANISASI ---
-    Route::get('/organisasi/tree', [OrganisasiController::class, 'getTree']);
-
+    // Organisasi
+    Route::get('organisasi/tree', [OrganisasiController::class, 'getTree']);
 });

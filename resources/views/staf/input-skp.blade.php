@@ -24,7 +24,8 @@
                 {{-- Row 1: Periode Awal + Periode Akhir --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode Mulai</label>
+                        <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
+                            Mulai</label>
                         <div class="relative">
                             <input id="periode_mulai" type="date" x-model="formData.periode_mulai" required
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
@@ -36,32 +37,49 @@
                     </div>
 
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode Selesai</label>
-                        <div class="relative">
-                            <input id="periode_selesai" type="date" x-model="formData.periode_selesai" required
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                            <button type="button" id="periode_selesai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
-                            </button>
-                        </div>
+                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
+                            Selesai</label>
+                            =======
+                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Periode
+                                Selesai</label>
+                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
+                            <div class="relative">
+                                <input id="periode_selesai" type="date" x-model="formData.periode_selesai" required
+                                    class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                                <button type="button" id="periode_selesai_btn"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
+                                    <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
+                                </button>
+                            </div>
                     </div>
                 </div>
 
                 {{-- Row 2: Sasaran Kinerja + Indikator Kinerja --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran Kinerja</label>
-                        <input type="text" x-model="formData.nama_skp" required
-                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                            placeholder="Contoh: Meningkatkan PAD...">
+                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran
+                            Kinerja</label>
+                            =======
+                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Sasaran
+                                Kinerja</label>
+                            {{-- Menggunakan x-model formData.nama_skp (sesuai DB) --}}
+                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
+                            <input type="text" x-model="formData.nama_skp" required
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                placeholder="Contoh: Meningkatkan PAD...">
                     </div>
 
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator Kinerja</label>
-                        <input type="text" x-model="formData.indikator" required
-                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                            placeholder="Contoh: Jumlah dokumen terverifikasi...">
+                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator
+                            Kinerja</label>
+                            =======
+                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Indikator
+                                Kinerja</label>
+                            {{-- Menggunakan x-model formData.indikator (sesuai DB) --}}
+                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
+                            <input type="text" x-model="formData.indikator" required
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                placeholder="Contoh: Jumlah dokumen terverifikasi...">
                     </div>
                 </div>
 
@@ -76,24 +94,43 @@
                 {{-- Row 4: Target & Atasan --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target (Angka)</label>
-                        <input type="number" x-model="formData.target" required min="1"
-                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                            placeholder="Contoh: 12">
+                        <<<<<<< HEAD <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target
+                            (Angka)</label>
+                            =======
+                            <label class="block text-xs font-normal text-[15px] text-[#5B687A] mb-[10px]">Target
+                                (Angka)</label>
+                            {{-- Menggunakan x-model formData.target (sesuai DB) --}}
+                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
+                            <input type="number" x-model="formData.target" required min="1"
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                placeholder="Contoh: 12">
                     </div>
 
-                    <div>
+                    <<<<<<< HEAD <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Atasan Langsung</label>
                         <input type="text" :value="atasanName" readonly disabled
                             class="w-full rounded-[10px] border border-slate-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none">
-                        <p class="text-[10px] text-gray-400 mt-1">*Sesuai struktur organisasi user saat ini.</p>
-                    </div>
+                        =======
+                        {{-- Row 5: Atasan Langsung (Otomatis dari API) --}}
+                        <div>
+                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Atasan
+                                Langsung</label>
+                            <input type="text" :value="atasanName" readonly disabled
+                                class="w-full rounded-[10px] border border-slate-200 bg-gray-100 px-3.5 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none"
+                                placeholder="Memuat data atasan...">
+                            >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
+                            <p class="text-[10px] text-gray-400 mt-1">*Sesuai struktur organisasi user saat ini.</p>
+                        </div>
                 </div>
 
                 {{-- Tombol --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                    <button type="button" @click="resetForm"
+                    <button type="button" @click="resetForm" <<<<<<< HEAD
                         class="rounded-[10px] bg-[#B6241C] px-4 py-2 text-sm font-normal text-white hover:brightness-95 ring-1 ring-slate-300">
+                        =======
+                        class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700
+                        hover:bg-slate-200 ring-1 ring-slate-300">
+                        >>>>>>> cb0f6c46d2938d39580086fb708a30aaa944bbdf
                         Reset
                     </button>
                     <button type="submit"
@@ -386,5 +423,247 @@
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener("alpine:init", () => {
+    Alpine.data("skpPageData", () => ({
+
+        skpList: [],
+        atasanName: 'Memuat...',
+        isLoading: false,
+
+        formData: {
+            nama_skp: '',
+            periode_mulai: '',
+            periode_selesai: '',
+            indikator: '',
+            rencana_aksi: '',
+            target: ''
+        },
+
+        openDetail: false,
+        openEdit: false,
+        detailData: null,
+        editData: null,
+
+        // INIT PAGE
+        initPage() {
+            if (!localStorage.getItem('auth_token')) {
+                window.location.href = '/e-daily-report/login';
+                return;
+            }
+            this.fetchProfile();
+            this.fetchSkpList();
+        },
+
+        // FETCH PROFILE
+        async fetchProfile() {
+            const token = localStorage.getItem('auth_token');
+
+            try {
+                const res = await fetch('/e-daily-report/api/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!res.ok) throw new Error();
+
+                const json = await res.json();
+                this.atasanName = json.atasan ? json.atasan.name : '- Tidak Ada Atasan -';
+
+            } catch (err) {
+                console.error(err);
+                this.atasanName = 'Gagal memuat';
+            }
+        },
+
+        // FETCH SKP LIST
+        async fetchSkpList() {
+            const token = localStorage.getItem('auth_token');
+
+            try {
+                const res = await fetch('/e-daily-report/api/skp', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!res.ok) throw new Error();
+
+                const json = await res.json();
+                this.skpList = json.data || [];
+
+            } catch (err) {
+                console.error(err);
+                this.skpList = [];
+            }
+        },
+
+        // ================================
+        // CREATE SKP + VALIDASI MANUAL
+        // ================================
+        async submitCreate() {
+            this.isLoading = true;
+            const token = localStorage.getItem('auth_token');
+
+            // === VALIDASI MANUAL (BIAR SWEETALERT MUNCUL) ===
+            if (!this.formData.periode_mulai ||
+                !this.formData.periode_selesai ||
+                !this.formData.nama_skp ||
+                !this.formData.indikator ||
+                !this.formData.rencana_aksi ||
+                !this.formData.target
+            ) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Form Belum Lengkap",
+                    text: "Mohon isi semua field sebelum menambahkan SKP.",
+                    confirmButtonColor: "#F97316"
+                });
+                this.isLoading = false;
+                return;
+            }
+
+            try {
+                const res = await fetch('/e-daily-report/api/skp', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(this.formData)
+                });
+
+                const json = await res.json();
+
+                if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'SKP Berhasil Ditambahkan!',
+                        text: 'Data SKP baru sudah masuk daftar.',
+                        confirmButtonColor: '#1C7C54'
+                    });
+
+                    this.resetForm();
+                    this.fetchSkpList();
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menyimpan SKP',
+                        text: json.message || 'Terjadi kesalahan.',
+                        confirmButtonColor: '#DC2626'
+                    });
+                }
+
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Server',
+                    text: 'Tidak dapat menghubungi server.',
+                });
+            }
+
+            this.isLoading = false;
+        },
+
+        resetForm() {
+            this.formData = {
+                nama_skp: '',
+                periode_mulai: '',
+                periode_selesai: '',
+                indikator: '',
+                rencana_aksi: '',
+                target: ''
+            };
+        },
+
+        // DETAIL MODAL
+        openDetailModal(skp) {
+            this.detailData = skp;
+            this.openDetail = true;
+        },
+
+        // EDIT MODAL
+        openEditModal() {
+            this.editData = JSON.parse(JSON.stringify(this.detailData));
+
+            if (this.editData.periode_mulai)
+                this.editData.periode_mulai = this.editData.periode_mulai.substring(0, 10);
+
+            if (this.editData.periode_selesai)
+                this.editData.periode_selesai = this.editData.periode_selesai.substring(0, 10);
+
+            this.openDetail = false;
+            this.openEdit = true;
+        },
+
+        // UPDATE SKP
+        async submitEdit() {
+            this.isLoading = true;
+            const token = localStorage.getItem('auth_token');
+
+            try {
+                const res = await fetch(`/e-daily-report/api/skp/${this.editData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(this.editData)
+                });
+
+                const json = await res.json();
+
+                if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Perubahan Disimpan!',
+                        confirmButtonColor: '#155FA6'
+                    });
+
+                    this.openEdit = false;
+                    this.fetchSkpList();
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Update',
+                        text: json.message || 'Periksa kembali data!',
+                    });
+                }
+
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Koneksi',
+                });
+            }
+
+            this.isLoading = false;
+        },
+
+        // FORMAT TANGGAL
+        formatDate(dateString) {
+            if (!dateString) return '-';
+            try {
+                return new Date(dateString).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+
+    }));
+});
+</script>
 
 @endsection

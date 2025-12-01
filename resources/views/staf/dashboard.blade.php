@@ -21,8 +21,8 @@
 
             {{-- Teks utama --}}
             <p class="text-[20px] md:text-[28px] font-bold leading-tight">Selamat Datang,</p>
-            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap">
-                Fahrizal Mudzaqi Maulana!
+            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap" id="banner-nama">
+                User...
             </h1>
             <p class="mt-3 text-white/90 text-[16px]">Semoga harimu menyenangkan!</p>
         </div>
@@ -54,17 +54,17 @@
 
                 {{-- Info teks utama --}}
                 <div class="min-w-0 flex flex-col">
-                    <h3 class="text-[17px] font-semibold text-slate-900 leading-snug">
-                        Fahrizal Mudzaqi Maulana
+                    <h3 class="text-[17px] font-semibold text-slate-900 leading-snug" id="profile-nama">
+                        -
                     </h3>
-                    <p class="mt-[2px] text-[13px] text-slate-500 leading-snug">
-                        196703101988030109
+                    <p class="mt-[2px] text-[13px] text-slate-500 leading-snug" id="profile-nip">
+                        -
                     </p>
 
                     {{-- Lokasi --}}
                     <div class="mt-1.5 flex items-center gap-1.5 text-[13px] text-slate-500">
                         <img src="{{ asset('assets/icon/location.svg') }}" class="h-4 w-4" alt="Lokasi" />
-                        <span class="truncate">Mimika, Papua Tengah</span>
+                        <span class="truncate" id="profile-alamat">-</span>
                     </div>
                 </div>
             </div>
@@ -73,11 +73,11 @@
             <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-[13px] text-slate-600">
                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
                     <img src="{{ asset('assets/icon/email.svg') }}" class="h-3.5 w-3.5" alt="Email" />
-                    <span class="truncate">sari.dewi@bapendamimika.go.id</span>
+                    <span class="truncate" id="profile-email">-</span>
                 </div>
                 <div class="flex items-center gap-1.5 whitespace-nowrap">
                     <img src="{{ asset('assets/icon/telpon.svg') }}" class="h-3.5 w-3.5" alt="Telepon" />
-                    <span>081234567891</span>
+                    <span id="profile-telepon">-</span>
                 </div>
             </div>
 
@@ -86,22 +86,22 @@
                 {{-- Jabatan --}}
                 <div class="pr-3">
                     <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Jabatan</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug">Staf BAPENDA</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-jabatan">-</p>
                 </div>
 
                 {{-- Dinas --}}
                 <div class="px-3 border-l border-slate-200">
-                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Dinas</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug">
-                        Badan Pendapatan<br>Daerah
+                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Unit Kerja</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-dinas">
+                        -
                     </p>
                 </div>
 
                 {{-- Alamat --}}
                 <div class="pl-3 border-l border-slate-200">
-                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Alamat</p>
-                    <p class="mt-1 font-semibold text-slate-900 leading-snug">
-                        Jl. Cenderawasih,<br>Mimika Baru
+                    <p class="text-[11px] tracking-[0.06em] uppercase text-slate-400">Target</p>
+                    <p class="mt-1 font-semibold text-slate-900 leading-snug" id="profile-target">
+                        -
                     </p>
                 </div>
             </div>
@@ -112,65 +112,54 @@
 
 {{-- Statistik ringkas --}}
 <section class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4">
-
-    @foreach ([
-    [
-    'val' => '10',
-    'label' => 'Total Laporan Terkirim Hari ini',
-    'tone' => 'bg-[#155FA6]/50',
-    'icon' => 'send'
-    ],
-    [
-    'val' => '4',
-    'label' => 'Menunggu Verifikasi',
-    'tone' => 'bg-[#D8A106]/50',
-    'icon' => 'pending'
-    ],
-    [
-    'val' => '2',
-    'label' => 'Disetujui',
-    'tone' => 'bg-[#128C60]/50',
-    'icon' => 'approve'
-    ],
-    [
-    'val' => '4',
-    'label' => 'Ditolak',
-    'tone' => 'bg-[#B6241C]/50',
-    'icon' => 'reject'
-    ],
-    ] as $stat)
-
+    {{-- Card 1: Total Laporan (Mapping ke SKP Diajukan) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
-        {{-- NILAI + ICON --}}
         <div class="flex items-start justify-between">
-            {{-- Angka --}}
-            <div class="text-4xl font-semibold tracking-tight">
-                {{ $stat['val'] }}
-            </div>
-
-            {{-- Icon Wrapper --}}
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] {{ $stat['tone'] }}">
-                <img src="{{ asset('assets/icon/' . $stat['icon'] . '.svg') }}" alt="{{ $stat['icon'] }}"
-                    class="h-5 w-5 object-contain">
+            <div class="text-4xl font-semibold tracking-tight" id="stat-val-1">0</div>
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#155FA6]/50">
+                <img src="{{ asset('assets/icon/send.svg') }}" class="h-5 w-5 object-contain">
             </div>
         </div>
-
-        {{-- Label --}}
-        <div class="text-xs text-slate-500">{{ $stat['label'] }}</div>
-
-        {{-- Additional Info --}}
-        @if ($stat['icon'] === 'approve')
-        <div class="text-xs text-emerald-600 font-medium">↑ 85% Approval Rate</div>
-        @elseif ($stat['icon'] === 'reject')
-        <div class="text-xs text-rose-600 font-medium">↓ 5% Rejection Rate</div>
-        @elseif ($stat['icon'] === 'send')
-        <div class="text-xs text-emerald-600 font-medium">↑ 12% dari kemarin</div>
-        @else
-        <div class="text-xs text-amber-600 font-medium">⚠ Perlu perhatian</div>
-        @endif
+        <div class="text-xs text-slate-500">Total Laporan SKP</div>
+        <div class="text-xs text-slate-400 font-medium">Total diajukan</div>
     </div>
 
-    @endforeach
+    {{-- Card 2: Menunggu Verifikasi (Mapping ke Realisasi Tahunan / Waiting) --}}
+    {{-- Karena JSON tidak punya count 'Waiting', kita pakai Realisasi Tahunan sebagai pengganti --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
+        <div class="flex items-start justify-between">
+            <div class="text-4xl font-semibold tracking-tight" id="stat-val-2">0</div>
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#D8A106]/50">
+                <img src="{{ asset('assets/icon/pending.svg') }}" class="h-5 w-5 object-contain">
+            </div>
+        </div>
+        <div class="text-xs text-slate-500">Realisasi Tahunan</div>
+        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-2">0% Capaian</div>
+    </div>
+
+    {{-- Card 3: Disetujui (Mapping ke Persen Diterima) --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
+        <div class="flex items-start justify-between">
+            <div class="text-4xl font-semibold tracking-tight" id="stat-val-3">0</div>
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#128C60]/50">
+                <img src="{{ asset('assets/icon/approve.svg') }}" class="h-5 w-5 object-contain">
+            </div>
+        </div>
+        <div class="text-xs text-slate-500">Rate Disetujui</div>
+        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-3">0% Dari total laporan</div>
+    </div>
+
+    {{-- Card 4: Ditolak (Mapping ke Persen Ditolak) --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
+        <div class="flex items-start justify-between">
+            <div class="text-4xl font-semibold tracking-tight" id="stat-val-4">0</div>
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#B6241C]/50">
+                <img src="{{ asset('assets/icon/reject.svg') }}" class="h-5 w-5 object-contain">
+            </div>
+        </div>
+        <div class="text-xs text-slate-500">Rate Ditolak</div>
+        <div class="text-xs text-rose-600 font-medium" id="stat-desc-4">0% Dari total laporan</div>
+    </div>
 </section>
 
 {{-- Grafik + Aktivitas terkini + Draft Laporan --}}
@@ -182,11 +171,7 @@
             <h3 class="font-semibold">Grafik Kinerja Bulanan</h3>
             <button
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-50">
-                Pilih Tahun
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor">
-                    <path stroke-width="1.6" stroke-linecap="round" d="m6 9 6 6 6-6" />
-                </svg>
+                {{ date('Y') }}
             </button>
         </div>
 
@@ -263,42 +248,17 @@
     </div>
 
 
-    {{-- DRAFT LAPORAN (kanan bawah, sejajar bawah dengan grafik) --}}
+    {{-- DRAFT LAPORAN --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
         <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Draft Laporan</h3>
-            <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua Draft</a>
+            <a href="#" class="text-sm text-[#1C7C54] hover:underline">Lihat Semua</a>
         </div>
 
-        <div class="space-y-2">
-            @foreach ([1, 2] as $i)
-            <div class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-center justify-between">
-
-                {{-- Judul + Tanggal --}}
-                <div>
-                    <div class="font-medium leading-tight text-[15px]">
-                        Rapat Koordinasi Pendapatan
-                    </div>
-
-                    <div class="text-xs text-slate-500 mt-[2px] leading-tight">
-                        Disimpan: {{ now()->translatedFormat('d F Y | H:i') }}
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 ml-2">
-                    <button
-                        class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95">
-                        Lanjutkan
-                    </button>
-                    <button
-                        class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] leading-none shadow-sm hover:bg-rose-600/15">
-                        Hapus
-                    </button>
-                </div>
-
-            </div>
-            @endforeach
-        </div>
+        {{-- LIST DRAFT DINAMIS --}}
+        <ul id="draft-list" class="space-y-2">
+            <li class="text-sm text-slate-500">Memuat...</li> {{-- default loading --}}
+        </ul>
     </div>
 </section>
 

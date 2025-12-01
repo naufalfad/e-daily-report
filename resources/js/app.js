@@ -1,74 +1,148 @@
+// =========================
+// GLOBAL STYLE & LOGIN
+// =========================
 import '../css/app.css';
-import './login.js';
-import './pages/staf/dashboard.js';
-import './pages/staf/input-lkh.js';
+import '../js/pages/login.js';
+
+// =========================
+// GLOBAL UTILITY
+// =========================
+import './global/loader.js';
+import './global/notification.js';
+import './utils/auth-fetch';
+
+// =========================
+// STAF
+// =========================
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
 import './pages/staf/peta-aktivitas.js';
-import './pages/staf/riwayat-lkh.js';
-import './pages/penilai/dashboard.js';
-import './pages/penilai/input-lkh.js';
+import './pages/staf/riwayat.js';
+
+// =========================
+// PENILAI
+// =========================
 import './pages/penilai/input-skp.js';
 import './pages/penilai/log-aktivitas.js';
+import './pages/penilai/pengumuman.js';
 import './pages/penilai/peta-aktivitas.js';
 import './pages/penilai/riwayat.js';
-import './pages/penilai/validasi-laporan.js';
-import './pages/penilai/pengumuman.js';
-import './pages/admin/dashboard.js';
-import './pages/admin/manajemen-pegawai.js';
-import './pages/admin/log-aktivitas.js';
-import './pages/admin/akun-pengguna.js';
-import './pages/admin/setting-sistem.js';
-import './pages/kadis/dashboard.js';
-import './pages/kadis/log-aktivitas.js';
-import './pages/kadis/validasi-laporan.js';
-import './global/loader.js';
-import './global/notification.js';
 
-// Logika Global untuk Logout
-document.addEventListener('DOMContentLoaded', function() {
+// =========================
+// KADIS
+// =========================
+import './pages/kadis/dashboard.js'
+import './pages/kadis/log-aktivitas.js'
+import './pages/kadis/validasi-laporan.js'
+
+// =========================
+// ADMIN
+// =========================
+// import './pages/admin/dashboard.js'
+// import './pages/admin/manajemen-pegawai.js'
+// import './pages/admin/log-aktivitas.js'
+// import './pages/admin/akun-pengguna.js'
+// import './pages/admin/setting-sistem.js'
+
+// Chart global (boleh)
+import Chart from 'chart.js/auto';
+window.Chart = Chart;
+
+// =========================
+// NOTIFIKASI GLOBAL FIX
+// =========================
+
+document.addEventListener('DOMContentLoaded', function () {
     const logoutBtn = document.getElementById('btn-logout');
 
+    // =========================
+    // 1. LOGOUT FIX
+    // =========================
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async function(e) {
-            e.preventDefault(); // Cegah link default
+        logoutBtn.addEventListener('click', async function (e) {
+            e.preventDefault();
 
-            // Konfirmasi (Opsional)
-            if(!confirm('Apakah Paduka yakin ingin keluar?')) return;
+            Swal.fire({
+                title: 'Yakin ingin keluar?',
+                text: 'Sesi Anda akan diakhiri.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, keluar',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6'
+            }).then(async (result) => {
 
-            // Ambil token dari storage
-            const token = localStorage.getItem('auth_token');
+                if (!result.isConfirmed) return;
 
-            try {
-                // Panggil API Logout untuk invalidasi token di server
-                if (token) {
-                    await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json'
-                        }
-                    });
+                const token = localStorage.getItem('auth_token');
+
+                try {
+                    if (token) {
+                        await fetch('/api/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Accept': 'application/json'
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.warn('Logout server gagal, lanjut logout lokal');
                 }
-            } catch (error) {
-                console.warn('Gagal logout di server, tetap lakukan logout lokal.', error);
-            } finally {
-                // Hapus sesi lokal & Redirect
+
+                // Hapus session local
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user_data');
-                window.location.href = '/login';
-            }
+
+                Swal.fire({
+                    title: 'Berhasil Logout',
+                    text: 'Anda telah keluar dari aplikasi.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                setTimeout(() => window.location.href = '/login', 900);
+            });
         });
     }
 
-        const notifBadge = document.getElementById("notif-badge");
+    // =========================
+    // LOGOUT SWEETALERT (BARU)
+    // =========================
+    const logoutForm = document.getElementById('logout-form');
+
+    if (logoutBtn && logoutForm) {
+        logoutBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: 'Yakin ingin logout?',
+                text: 'Sesi Anda akan diakhiri.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#1C7C54',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logoutForm.submit();
+                }
+            });
+        });
+    }
+
+    // =========================
+    // 2. NOTIFIKASI GLOBAL FIX
+    // =========================
+    const notifBadge = document.getElementById("notif-badge");
     const notifList = document.getElementById("notif-list");
 
     if (!notifBadge || !notifList) return;
 
-    // ===========================
-    // 1. DUMMY / BACKEND DATA
-    // ===========================
+    // Dummy backend
     const notifications = [
         {
             type: "success",
@@ -90,9 +164,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     ];
 
-    // ===========================
-    // 2. MAP ICON NOTIF
-    // ===========================
+    // =========================
+    // 3. FIX iconMap TIDAK UNDEFINED
+    // =========================
     const iconMap = {
         success: {
             bg: "bg-[#0E7A4A]/10",
@@ -108,15 +182,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // ===========================
-    // 3. UPDATE BADGE
-    // ===========================
+    // Badge counter
     const count = notifications.length;
     notifBadge.textContent = count > 9 ? "9+" : count;
 
-    // ===========================
-    // 4. RENDER NOTIFIKASI
-    // ===========================
+    // Render notif
     notifications.forEach(n => {
         const icon = iconMap[n.type] ?? iconMap["warning"];
 

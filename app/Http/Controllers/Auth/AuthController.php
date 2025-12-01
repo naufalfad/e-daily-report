@@ -47,6 +47,8 @@ class AuthController extends Controller
             $token = $user->createToken('auth_token')->plainTextToken;
 
             // 6. Respon sukses
+
+
             return response()->json([
                 'message' => 'Login berhasil',
                 'access_token' => $token,
@@ -66,7 +68,9 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+
         $request->user()->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Logout berhasil']);
     }
 
@@ -78,6 +82,7 @@ class AuthController extends Controller
     }
 
     public function me(Request $request)
+
     {
         return response()->json($request->user());
     }

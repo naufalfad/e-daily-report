@@ -38,7 +38,7 @@ class User extends Authenticatable
     public function getFotoProfilUrlAttribute()
     {
         return $this->foto_profil
-            ? Storage::disk('minio')->url($this->foto_profil)
+            ? Storage::disk('public')->url($this->foto_profil)
             : asset('images/default-user.png');
     }
 
@@ -118,4 +118,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(ActivityLog::class, 'user_id');
     }
+
+    public function hasRole($roleName)
+    {
+        return $this->roles()->where('nama_role', $roleName)->exists();
+    }
+
+    public function skp()
+    {
+        return $this->hasMany(Skp::class, 'user_id');
+    }
+
 }

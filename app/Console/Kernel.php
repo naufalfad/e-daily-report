@@ -34,8 +34,8 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 
-    protected $commands = [
-        // DAFTARKAN DI SINI MANUAL
-        \App\Console\Commands\FetchAllWilayah::class,
-    ];
+//    protected $commands = [
+//        // DAFTARKAN DI SINI MANUAL
+//        \App\Console\Commands\FetchAllWilayah::class,
+//    ];
 }

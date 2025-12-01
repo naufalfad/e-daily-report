@@ -3,40 +3,90 @@
 namespace App\Http\Controllers\Core;
 
 use App\Http\Controllers\Controller;
-use App\Models\ActivityLog; // Pastikan Model ini ada
-use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ActivityLogController extends Controller
 {
-    /**
-     * List Log Aktivitas
-     * Logic berbeda tiap role (Sesuai UI Document)
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = ActivityLog::with('user')->latest();
 
-        // 1. Admin/Kadis: Bisa lihat SEMUA log (UI-20, UI-22)
-        if ($user->roles->contains('nama_role', 'Super Admin') || $user->roles->contains('nama_role', 'Kadis')) {
-            // No filter (Show All)
-            if ($request->has('user_id')) {
-                $query->where('user_id', $request->user_id);
-            }
-        }
-        // 2. Penilai: Bisa lihat log BAWAHAN + Diri Sendiri (UI-13)
-        elseif ($user->roles->contains('nama_role', 'Penilai')) {
-            $bawahanIds = User::where('atasan_id', $user->id)->pluck('id');
-            $bawahanIds[] = $user->id; // Include diri sendiri
-            $query->whereIn('user_id', $bawahanIds);
-        }
-        // 3. Pegawai: Hanya lihat log DIRI SENDIRI (UI-07)
-        else {
-            $query->where('user_id', $user->id);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        return response()->json($query->paginate(15));
+        // Load log + user + role
+        $query = ActivityLog::with([
+            'user:id,name,nip,jabatan_id',
+            'user.roles:id,nama_role'
+        ]);
+
+        // Super Admin bisa lihat semua
+        $isSuperAdmin = $user->roles()->where('nama_role', 'Super Admin')->exists();
+
+        if (!$isSuperAdmin) {
+            // User biasa: hanya lihat log miliknya & log system
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhereNull('user_id'); // log system
+            });
+        }
+
+        // ==========================
+        // PENCARIAN
+        // ==========================
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+
+            $query->where(function ($q) use ($search, $like) {
+                $q->where('deskripsi_aktivitas', $like, "%{$search}%")
+                  ->orWhereHas('user', function ($sub) use ($search, $like) {
+                      $sub->where('name', $like, "%{$search}%");
+                  });
+            });
+        }
+
+        // ==========================
+        // FILTER TANGGAL
+        // ==========================
+        if ($request->filled('date')) {
+            $query->whereDate('timestamp', $request->date);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('timestamp', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('timestamp', '<=', $request->date_to);
+        }
+
+        // ==========================
+        // SORTING + PAGINATION
+        // ==========================
+        $logs = $query->orderBy('timestamp', 'desc')->paginate(15);
+
+        // ==========================
+        // TRANSFORM OUTPUT
+        // ==========================
+        $logs->getCollection()->transform(function ($log) {
+
+            $user = $log->user;
+            $role = $user ? optional($user->roles->first())->nama_role ?? '-' : '-';
+            $timestamp = $log->timestamp ? Carbon::parse($log->timestamp) : null;
+
+            return [
+                'id' => $log->id,
+                'user_name' => $user->name ?? 'SYSTEM',
+                'user_role' => $role,
+                'deskripsi_aktivitas' => $log->deskripsi_aktivitas,
+                'timestamp' => $timestamp ? $timestamp->format('Y-m-d H:i:s') : null,
+                'time_ago' => $timestamp ? $timestamp->diffForHumans() : '-',
+            ];
+        });
+
+        return response()->json($logs);
     }
 }

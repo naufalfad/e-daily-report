@@ -233,6 +233,88 @@
     </div>
     {{-- END MODAL --}}
 
+    {{-- MODAL LIST BUKTI DOKUMEN --}}
+    <div x-show="openBukti" style="display: none;"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+
+        <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200"
+            @click.outside="openBukti = false" x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95">
+
+            {{-- Header Modal --}}
+            <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Dokumen Bukti</h3>
+                    <p class="text-xs text-slate-500 mt-1">Daftar lampiran aktivitas ini</p>
+                </div>
+                <button @click="openBukti = false"
+                    class="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 p-1.5 rounded-full hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- List Dokumen --}}
+            <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+                <template x-for="(bukti, index) in daftarBukti" :key="index">
+                    <a :href="bukti.file_url" target="_blank"
+                        class="flex items-center p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-all group relative overflow-hidden">
+
+                        {{-- Icon Dokumen --}}
+                        <div
+                            class="h-10 w-10 shrink-0 rounded-lg bg-white flex items-center justify-center text-slate-500 shadow-sm group-hover:text-blue-600 border border-slate-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                        </div>
+
+                        {{-- Info Dokumen --}}
+                        <div class="ml-3.5 flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-slate-700 truncate group-hover:text-blue-700"
+                                x-text="'Dokumen Lampiran ' + (index + 1)"></p>
+                            <div class="flex items-center text-[11px] text-slate-500 mt-0.5 space-x-2">
+                                <span class="truncate max-w-[150px]" x-text="bukti.file_url.split('/').pop()"></span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                <span
+                                    class="text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">Buka
+                                    File</span>
+                            </div>
+                        </div>
+
+                        {{-- Icon External Link --}}
+                        <div class="ml-2 text-slate-300 group-hover:text-blue-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                            </svg>
+                        </div>
+                    </a>
+                </template>
+            </div>
+
+            {{-- Footer --}}
+            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                <button @click="openBukti = false"
+                    class="px-5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors shadow-sm">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
 </section>
 
 @endsection

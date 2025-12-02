@@ -8,8 +8,9 @@ export function logActivityStaf() {
         filter: { from: "", to: "" },
 
         initLog() {
+            const APP_URL = window.APP_URL;
             console.log("INIT LOG PENILAI");
-            authFetch("/api/log-aktivitas")
+            authFetch(`${APP_URL}/api/log-aktivitas`)
                 .then(r => r.json())
                 .then(res => {
                     this.allItems = res.data.map(i => ({

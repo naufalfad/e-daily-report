@@ -9,6 +9,9 @@
     2. x-init="initPage()" memanggil loader data dan inisialisasi form
     3. 'flex-1' ditambahkan untuk memenuhi layout flexbox dari app.blade.php
 --}}
+<script>
+    const APP_URL = "{{ env('APP_URL') }}";
+</script>
 <section x-data="skpPageData()" x-init="initPage()"
     class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 flex-1">
 
@@ -425,7 +428,7 @@ document.addEventListener("alpine:init", () => {
             const token = localStorage.getItem('auth_token');
 
             try {
-                const res = await fetch('/api/me', {
+                const res = await fetch(`${APP_URL}/api/me`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -448,7 +451,7 @@ document.addEventListener("alpine:init", () => {
             const token = localStorage.getItem('auth_token');
 
             try {
-                const res = await fetch('/api/skp', {
+                const res = await fetch(`${APP_URL}/api/skp`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -492,7 +495,7 @@ document.addEventListener("alpine:init", () => {
             }
 
             try {
-                const res = await fetch('/api/skp', {
+                const res = await fetch(`${APP_URL}/api/skp`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -572,7 +575,7 @@ document.addEventListener("alpine:init", () => {
             const token = localStorage.getItem('auth_token');
 
             try {
-                const res = await fetch(`/api/skp/${this.editData.id}`, {
+                const res = await fetch(`${APP_URL}/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,

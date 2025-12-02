@@ -2,7 +2,8 @@
 
 function riwayatData(role) {
     const TOKEN = localStorage.getItem("auth_token");
-    const BASE_URL = "/api/lkh/riwayat";
+    const APP_URL = window.APP_URL;
+    const BASE_URL = `${APP_URL}/api/lkh/riwayat`;
 
     return {
         role: role,

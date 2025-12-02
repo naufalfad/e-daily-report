@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", async function () {
      * 1. TOKEN & HEADER
      * =======================================================*/
     const token = localStorage.getItem("auth_token");
+    const APP_URL = window.APP_URL;
 
     const headers = { "Accept": "application/json" };
     if (token) headers["Authorization"] = "Bearer " + token;
@@ -31,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let data;
 
     try {
-        const res = await fetch("/api/dashboard/stats", {
+        const res = await fetch(`${APP_URL}/api/dashboard/stats`, {
             method: "GET",
             headers: headers
         });
@@ -336,10 +337,11 @@ window.deleteDraft = async function (id) {
 
     if (!confirm('Apakah Anda yakin ingin menghapus draft laporan ini?')) return;
 
+    const APP_URL = window.APP_URL;
     const token = localStorage.getItem("auth_token");
 
     try {
-        const res = await fetch(`/api/lkh/${id}`, {
+        const res = await fetch(`${APP_URL}/api/lkh/${id}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,

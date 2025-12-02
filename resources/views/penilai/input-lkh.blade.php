@@ -2,6 +2,9 @@
 @extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'input-lkh'])
 
 @section('content')
+<script>
+    const APP_URL = "{{ env('APP_URL') }}";
+</script>
 
 {{-- GRID UTAMA: FORM + PANDUAN + DRAFT + STATUS --}}
 <section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:auto-rows-min">
@@ -90,7 +93,7 @@
                         this.isLoading = true;
                         try {
                             const token = localStorage.getItem('auth_token'); 
-                            const response = await fetch('/api/lkh/referensi', {
+                            const response = await fetch(`${APP_URL}/api/lkh/referensi`, {
                                 headers: {
                                     'Authorization': `Bearer ${token}`,
                                     'Accept': 'application/json'
@@ -181,7 +184,7 @@
                         this.skpLoading = true;
                         try {
                             const token = localStorage.getItem('auth_token');
-                            const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
+                            const response = await fetch(`${APP_URL}/api/skp?year=` + new Date().getFullYear(), {
                                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
                             });
                             const res = await response.json();
@@ -622,7 +625,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     // 🔥 3. LOAD DASHBOARD (Aktivitas & Draft)
     // ============================================================
     try {
-        const response = await fetch("/api/dashboard/stats", {
+        const response = await fetch(`${APP_URL}/api/dashboard/stats`, {
             method: "GET",
             headers: headers,
         });
@@ -767,7 +770,7 @@ async function loadEditLKH(id, headers) {
     try {
         document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
 
-        const res = await fetch(`/api/lkh/${id}`, {
+        const res = await fetch(`${APP_URL}/api/lkh/${id}`, {
             method: "GET",
             headers: headers,
         });
@@ -908,9 +911,9 @@ async function submitForm(statusType) {
         }
     }
 
-    let url = "/api/lkh";
+    let url = `${APP_URL}/api/lkh`;
 
-    if (lkhIdToEdit) url = `/api/lkh/update/${lkhIdToEdit}`;
+    if (lkhIdToEdit) url = `${APP_URL}/api/lkh/update/${lkhIdToEdit}`;
 
     try {
         const btn = event.target;

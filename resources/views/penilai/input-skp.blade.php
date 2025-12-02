@@ -20,6 +20,7 @@
         <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
             <h2 class="text-[20px] font-normal mb-4">Form Input SKP</h2>
 
+            {{-- Menggunakan submitCreate dari Alpine --}}
             <form class="space-y-4" @submit.prevent="submitCreate">
 
                 {{-- Row 1: Periode --}}
@@ -41,7 +42,7 @@
                     </div>
                 </div>
 
-                {{-- Row 2: Sasaran & Indikator --}}
+                {{-- Row 2: Sasaran Kinerja + Indikator Kinerja --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[15px] text-[#5B687A] mb-2">Sasaran Kinerja</label>
@@ -72,7 +73,7 @@
                         placeholder="Tulis uraian rencana aksi..."></textarea>
                 </div>
 
-                {{-- Row 4: Target & Atasan --}}
+                {{-- Row 4: Target Kuantitas & Atasan --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[15px] text-[#5B687A] mb-2">Target (Angka)</label>
@@ -117,6 +118,7 @@
         <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
             <h2 class="text-[20px] font-normal mb-4">Daftar SKP Saya</h2>
 
+
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[700px] text-sm">
                     <thead>
@@ -124,6 +126,7 @@
                             <th class="px-3 py-3 font-medium">Periode</th>
                             <th class="px-3 py-3 font-medium">Sasaran Kinerja</th>
                             <th class="px-3 py-3 font-medium">Indikator</th>
+                            <th class="px-3 py-3 font-medium text-center">Target</th>
                             <th class="px-3 py-3 font-medium text-center">Target</th>
                             <th class="px-3 py-3 font-medium text-center">Aksi</th>
                         </tr>
@@ -166,6 +169,9 @@
 
                         {{-- EMPTY STATE --}}
                         <tr x-show="skpList.length === 0" style="display: none;">
+                            <td colspan="5" class="px-3 py-8 text-center text-slate-400 italic">
+                                Belum ada data SKP yang ditambahkan.
+                            </td>
                             <td colspan="5" class="px-3 py-8 text-center text-slate-400 italic">
                                 Belum ada data SKP yang ditambahkan.
                             </td>
@@ -279,6 +285,7 @@
             </button>
 
             <h3 class="text-lg font-semibold text-slate-800">Detail SKP</h3>
+
 
             <template x-if="detailData">
                 <div class="mt-6 space-y-5 text-sm">
@@ -495,6 +502,7 @@ document.addEventListener("alpine:init", () => {
         async fetchProfile() {
             const token = localStorage.getItem('auth_token');
 
+
             try {
                 const res = await fetch('/e-daily-report/api/me', {
                     headers: {
@@ -517,6 +525,7 @@ document.addEventListener("alpine:init", () => {
         // =====================================================
         async fetchSkpList() {
             const token = localStorage.getItem('auth_token');
+
 
             try {
                 const res = await fetch('/e-daily-report/api/skp', {
@@ -574,7 +583,17 @@ document.addEventListener("alpine:init", () => {
 
                 const json = await res.json();
 
+
+                const json = await res.json();
+
                 if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'SKP Berhasil Ditambahkan!',
+                        text: 'Data SKP baru sudah masuk daftar.',
+                        confirmButtonColor: '#1C7C54'
+                    });
+
                     Swal.fire({
                         icon: 'success',
                         title: 'SKP Berhasil Ditambahkan!',
@@ -584,6 +603,7 @@ document.addEventListener("alpine:init", () => {
 
                     this.resetForm();
                     this.fetchSkpList();
+
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -599,7 +619,15 @@ document.addEventListener("alpine:init", () => {
                     title: 'Kesalahan Server',
                     text: 'Tidak dapat menghubungi server.',
                 });
+
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Server',
+                    text: 'Tidak dapat menghubungi server.',
+                });
             }
+
 
             this.isLoading = false;
         },
@@ -650,8 +678,9 @@ document.addEventListener("alpine:init", () => {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
 
+
             try {
-                const res = await fetch(`/e-daily-report/api/skp/${this.editData.id}`, {
+                const res = await fetch(`/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -663,7 +692,16 @@ document.addEventListener("alpine:init", () => {
 
                 const json = await res.json();
 
+
+                const json = await res.json();
+
                 if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Perubahan Disimpan!',
+                        confirmButtonColor: '#155FA6'
+                    });
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Perubahan Disimpan!',
@@ -672,7 +710,13 @@ document.addEventListener("alpine:init", () => {
 
                     this.openEdit = false;
                     this.fetchSkpList();
+
                 } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Update',
+                        text: json.message || 'Periksa kembali data!',
+                    });
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal Update',
@@ -687,6 +731,7 @@ document.addEventListener("alpine:init", () => {
                     text: 'Tidak dapat terhubung dengan server.',
                 });
             }
+
 
             this.isLoading = false;
         },
@@ -708,8 +753,10 @@ document.addEventListener("alpine:init", () => {
             }
         }
 
+
     }));
 });
 </script>
 
 @endsection
+

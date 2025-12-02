@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let data;
     try {
-        const res = await fetch(`/e-daily-report/api/dashboard/kadis`, {
+        const res = await fetch(`/api/dashboard/kadis`, {
             method: "GET",
             headers,
         });
@@ -28,16 +28,16 @@ document.addEventListener("DOMContentLoaded", async function () {
  * 0. BANNER & PROFIL
  * =======================*/
 
-const u = data.user_info || {};
+    const u = data.user_info || {};
 
-setText("banner-nama", u.name ?? "-");
-setText("profile-nama", u.name ?? "-");
-setText("profile-nip", u.nip ?? "-");
-setText("profile-daerah", u.daerah ?? "-");
+    setText("banner-nama", u.name ?? "-");
+    setText("profile-nama", u.name ?? "-");
+    setText("profile-nip", u.nip ?? "-");
+    setText("profile-daerah", u.daerah ?? "-");
 
-setText("profile-jabatan", u.jabatan ?? "-");
-setText("profile-dinas", u.unit ?? "-");
-setText("profile-alamat", u.alamat ?? "-");
+    setText("profile-jabatan", u.jabatan ?? "-");
+    setText("profile-dinas", u.unit ?? "-");
+    setText("profile-alamat", u.alamat ?? "-");
 
     /* =======================
      * 1. Statistik Angka
@@ -118,7 +118,7 @@ setText("profile-alamat", u.alamat ?? "-");
     if (window.kadisChart) {
         try {
             window.kadisChart.destroy();
-        } catch (e) {}
+        } catch (e) { }
     }
 
     const grafikAll = data.grafik || [];

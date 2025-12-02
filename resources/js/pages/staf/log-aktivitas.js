@@ -9,7 +9,7 @@ export function logActivityStaf() {
 
         initLog() {
             console.log("INIT LOG PENILAI");
-            authFetch("/e-daily-report/api/log-aktivitas")
+            authFetch("/api/log-aktivitas")
                 .then(r => r.json())
                 .then(res => {
                     this.allItems = res.data.map(i => ({
@@ -22,10 +22,10 @@ export function logActivityStaf() {
 
         filterData() {
             let from = this.filter.from ? new Date(this.filter.from) : null;
-            let to   = this.filter.to   ? new Date(this.filter.to) : null;
+            let to = this.filter.to ? new Date(this.filter.to) : null;
 
-            if (from) from.setHours(0,0,0,0);
-            if (to) to.setHours(23,59,59,999);
+            if (from) from.setHours(0, 0, 0, 0);
+            if (to) to.setHours(23, 59, 59, 999);
 
             this.filteredItems = this.allItems.filter(it => {
                 const t = new Date(it.timestamp_fixed);
@@ -38,14 +38,14 @@ export function logActivityStaf() {
         formatDate(v) {
             if (!v) return "-";
             return new Date(v).toLocaleDateString("id-ID", {
-                day:"numeric", month:"short", year:"numeric"
+                day: "numeric", month: "short", year: "numeric"
             });
         },
 
         formatTime(v) {
             if (!v) return "-";
             return new Date(v).toLocaleTimeString("id-ID", {
-                hour:"2-digit", minute:"2-digit"
+                hour: "2-digit", minute: "2-digit"
             });
         }
     }

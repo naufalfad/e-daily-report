@@ -60,7 +60,7 @@ document.addEventListener('alpine:init', () => {
 
         // ---------------- LOGIC DATA ----------------
         loadData() {
-            fetch('/e-daily-report/data/peta-aktivitas.json')
+            fetch('/data/peta-aktivitas.json')
                 .then(res => res.json())
                 .then(data => {
                     this.allActivities = data;
@@ -109,7 +109,7 @@ document.addEventListener('alpine:init', () => {
                                 <span style="display:flex; align-items:center; gap:3px;">⏰ ${act.waktu}</span>
                             </div>
                             <p style="font-size:12px; line-height:1.5; color:#334155; margin:0; font-style:italic; background:#f8fafc; padding:6px; border-radius:4px; border-left: 3px solid ${color};">
-                                "${act.deskripsi.length > 50 ? act.deskripsi.substring(0,50)+'...' : act.deskripsi}"
+                                "${act.deskripsi.length > 50 ? act.deskripsi.substring(0, 50) + '...' : act.deskripsi}"
                             </p>
                         </div>
 
@@ -136,8 +136,8 @@ document.addEventListener('alpine:init', () => {
                     weight: 2,
                     fillOpacity: 0.9
                 })
-                .bindPopup(popupContent)
-                .addTo(this.markersLayer);
+                    .bindPopup(popupContent)
+                    .addTo(this.markersLayer);
             });
         },
 

@@ -6,24 +6,57 @@ export function manajemenPegawaiData() {
     const getToken = () => localStorage.getItem("auth_token");
 
     return {
-        items: [], isLoading: false, search: '',
-        pagination: { current_page: 1, last_page: 1, next_page_url: null, prev_page_url: null },
-        
-        openAdd: false, openEdit: false, openUpload: false,
-        editId: null,
-        
-        // Master Data Holders
-        unitKerjaList: [], bidangList: [], jabatanList: [], roleList: [], atasanList: [],
+        // --- STATE ---
+        items: [],
+        isLoading: false,
+        search: '',
 
+        // Pagination
+        pagination: {
+            current_page: 1,
+            last_page: 1,
+            next_page_url: null,
+            prev_page_url: null
+        },
+
+        // Modal States
+        openAdd: false,
+        openEdit: false,
+        openDetail: false,
+        openUpload: false,
+
+        // Data Holders
+        editId: null,
+        detailData: {},
+
+        // [DATA MASTER] Untuk Dropdown
+        unitKerjaList: [],
+        bidangList: [],
+        jabatanList: [],
+        roleList: [],
+        atasanList: [], // Dinamis dari API
+
+        // Form Data
         formData: {
-            name: '', username: '', nip: '', password: '',
-            unit_kerja_id: '', bidang_id: '', jabatan_id: '', role_id: '', atasan_id: ''
+            name: '',
+            username: '',
+            nip: '',
+            password: '',
+            unit_kerja_id: '',
+            bidang_id: '',
+            jabatan_id: '',
+            role_id: '',
+            atasan_id: ''
         },
         isFetchingAtasan: false,
 
         async initPage() {
-            console.log("🚀 Manajemen Pegawai: Init...");
+            console.log("🚀 Manajemen Pegawai: Initializing...");
+
+            // Load Data Master (Dropdown)
             await this.fetchMasterData();
+
+            // Load Data Pegawai
             await this.fetchData();
 
             // Watchers (Aktifkan setelah load awal agar tidak spam API)
@@ -35,6 +68,7 @@ export function manajemenPegawaiData() {
         async fetchMasterData() {
             try {
                 const headers = { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" };
+
                 const [resUnit, resJab, resRole] = await Promise.all([
                     fetch(`${MASTER_URL}/unit-kerja`, { headers }),
                     fetch(`${MASTER_URL}/jabatan`, { headers }),
@@ -43,12 +77,16 @@ export function manajemenPegawaiData() {
                 this.unitKerjaList = await resUnit.json();
                 this.jabatanList = await resJab.json();
                 this.roleList = await resRole.json();
-            } catch (e) { console.error("Gagal master data", e); }
+
+            } catch (e) {
+                console.error("Gagal load master data", e);
+            }
         },
 
         async onUnitKerjaChange() {
             const unitId = this.formData.unit_kerja_id;
-            this.bidangList = [];
+            this.bidangList = []; // Reset
+
             if (!unitId) return;
             try {
                 const res = await fetch(`${MASTER_URL}/bidang-by-unit-kerja/${unitId}`, {
@@ -61,8 +99,10 @@ export function manajemenPegawaiData() {
         async fetchCalonAtasan() {
             const { unit_kerja_id, bidang_id, jabatan_id } = this.formData;
             this.atasanList = [];
+
+            // Jangan fetch kalau data belum lengkap
             if (!unit_kerja_id || !jabatan_id) return;
-            
+
             this.isFetchingAtasan = true;
             try {
                 const params = new URLSearchParams({ unit_kerja_id, bidang_id: bidang_id || '', jabatan_id });
@@ -76,8 +116,16 @@ export function manajemenPegawaiData() {
                 if (!this.editId && candidates.length === 1) {
                     this.formData.atasan_id = candidates[0].id;
                 }
-            } catch (e) { console.error(e); } 
-            finally { this.isFetchingAtasan = false; }
+                // Jika kosong (misal Kepala Dinas), set null
+                else if (candidates.length === 0) {
+                    this.formData.atasan_id = '';
+                }
+
+            } catch (e) {
+                console.error("Gagal cari atasan", e);
+            } finally {
+                this.isFetchingAtasan = false;
+            }
         },
 
         async fetchData(url = BASE_URL) {
@@ -86,12 +134,32 @@ export function manajemenPegawaiData() {
             if (this.search) targetUrl += (targetUrl.includes('?') ? '&' : '?') + `search=${encodeURIComponent(this.search)}`;
             
             try {
-                const res = await fetch(targetUrl, { headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" } });
-                const json = await res.json();
+                const response = await fetch(targetUrl, {
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`,
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!response.ok) throw new Error("Gagal mengambil data");
+
+                const json = await response.json();
+                console.log("Data Loaded:", json);
+
                 this.items = json.data || [];
-                this.pagination = { ...json }; // Simplified
-            } catch (e) { console.error(e); } 
-            finally { this.isLoading = false; }
+
+                this.pagination = {
+                    current_page: json.current_page,
+                    last_page: json.last_page,
+                    next_page_url: json.next_page_url,
+                    prev_page_url: json.prev_page_url
+                };
+
+            } catch (error) {
+                console.error(error);
+            } finally {
+                this.isLoading = false;
+            }
         },
 
         async submitForm(type) {
@@ -105,26 +173,58 @@ export function manajemenPegawaiData() {
                     headers: { "Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json", "Accept": "application/json" },
                     body: JSON.stringify(this.formData)
                 });
-                const json = await res.json();
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const errors = Object.values(result.errors).flat().join('\n');
+                        throw new Error(errors || "Validasi gagal");
+                    }
+                    throw new Error(result.message || "Terjadi kesalahan");
+                }
+
+                Swal.fire("Berhasil", result.message, "success");
                 
-                if (!res.ok) throw new Error(json.status === 422 ? Object.values(json.errors).flat().join('\n') : json.message);
+                if (isEdit) this.toggleEdit(false);
+                else this.toggleAdd(false);
                 
-                Swal.fire("Berhasil", json.message, "success");
-                this.toggleAdd(false); this.toggleEdit(false);
-                this.fetchData();
-            } catch (e) { Swal.fire("Gagal", e.message, "error"); }
+                this.fetchData(); 
+
+            } catch (error) {
+                Swal.fire("Gagal", error.message, "error");
+            }
         },
 
         async deleteItem(id) {
-            const c = await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
-            if (!c.isConfirmed) return;
-            
-            try {
-                const res = await fetch(`${BASE_URL}/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" } });
-                if (!res.ok) throw new Error("Gagal menghapus");
-                Swal.fire('Terhapus!', '', 'success');
-                this.fetchData();
-            } catch (e) { Swal.fire("Error", e.message, "error"); }
+            const confirm = await Swal.fire({
+                title: 'Hapus Pegawai?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const response = await fetch(`${BASE_URL}/${id}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": `Bearer ${getToken()}`,
+                            "Accept": "application/json"
+                        }
+                    });
+
+                    if (!response.ok) throw new Error("Gagal menghapus data");
+
+                    Swal.fire('Terhapus!', 'Data pegawai berhasil dihapus.', 'success');
+                    this.fetchData();
+
+                } catch (error) {
+                    Swal.fire("Error", error.message, "error");
+                }
+            }
         },
 
         toggleAdd(val) { 
@@ -168,6 +268,14 @@ export function manajemenPegawaiData() {
 
             this.openEdit = true;
         },
-        changePage(url) { if (url) this.fetchData(url); }
+
+        toggleUpload(val) {
+            this.openUpload = val;
+        },
+
+        // Pagination Helpers
+        changePage(url) {
+            if (url) this.fetchData(url);
+        }
     };
 }

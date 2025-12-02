@@ -25,8 +25,8 @@
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
                         <div class="relative">
                             <input id="tanggal_lkh" name="tanggal_laporan" type="date" class="tanggal-placeholder w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                              px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                              focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
                             <button type="button" id="tanggal_lkh_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal"
@@ -37,26 +37,26 @@
 
                     {{-- Jenis Kegiatan (SUDAH DIPERBAIKI: Value Title Case) --}}
                     <div x-data="{
-                                open: false,
-                                value: '',
-                                label: 'Pilih Jenis Kegiatan',
-                                options: [
-                                    { value: 'Rapat',              label: 'Rapat' },
-                                    { value: 'Pelayanan Publik',   label: 'Pelayanan Publik' },
-                                    { value: 'Penyusunan Dokumen', label: 'Penyusunan Dokumen' },
-                                    { value: 'Kunjungan Lapangan', label: 'Kunjungan Lapangan' },
-                                    { value: 'Lainnya',            label: 'Lainnya' },
-                                ],
-                                select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                            }">
+                                    open: false,
+                                    value: '',
+                                    label: 'Pilih Jenis Kegiatan',
+                                    options: [
+                                        { value: 'Rapat',              label: 'Rapat' },
+                                        { value: 'Pelayanan Publik',   label: 'Pelayanan Publik' },
+                                        { value: 'Penyusunan Dokumen', label: 'Penyusunan Dokumen' },
+                                        { value: 'Kunjungan Lapangan', label: 'Kunjungan Lapangan' },
+                                        { value: 'Lainnya',            label: 'Lainnya' },
+                                    ],
+                                    select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                                }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
                         <input type="hidden" name="jenis_kegiatan" x-model="value">
 
                         <div class="relative">
                             <button type="button" @click="open = !open"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                               px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                               focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                                   px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                                   focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                                 :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
                                 <span x-text="label"></span>
                                 <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70"
@@ -81,51 +81,51 @@
 
                 {{-- Row 2: Referensi Tupoksi (SUDAH DIPERBAIKI: Dynamic Fetching) --}}
                 <div x-data="{
-                        open: false,
-                        value: '',
-                        label: 'Pilih Referensi Tupoksi',
-                        options: [],
-                        isLoading: false,
-                        async init() {
-                            this.isLoading = true;
-                            try {
-                                const token = localStorage.getItem('auth_token'); 
-                                const response = await fetch('/api/lkh/referensi', {
-                                    headers: {
-                                        'Authorization': `Bearer ${token}`,
-                                        'Accept': 'application/json'
-                                    }
-                                });
-                                if(!response.ok) throw new Error('HTTP error ' + response.status);
-                                const data = await response.json();
+                            open: false,
+                            value: '',
+                            label: 'Pilih Referensi Tupoksi',
+                            options: [],
+                            isLoading: false,
+                            async init() {
+                                this.isLoading = true;
+                                try {
+                                    const token = localStorage.getItem('auth_token'); 
+                                    const response = await fetch('/api/lkh/referensi', {
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`,
+                                            'Accept': 'application/json'
+                                        }
+                                    });
+                                    if(!response.ok) throw new Error('HTTP error ' + response.status);
+                                    const data = await response.json();
 
-                                // Pastikan key sesuai JSON
-                                if(data.tupoksi && Array.isArray(data.tupoksi)) {
-                                    this.options = data.tupoksi.map(item => ({
-                                        value: item.id,
-                                        label: item.uraian_tugas
-                                    }));
-                                    if(this.options.length === 0) this.label = 'Data Tupoksi Kosong';
-                                } else {
-                                    this.label = 'Format data tidak valid';
+                                    // Pastikan key sesuai JSON
+                                    if(data.tupoksi && Array.isArray(data.tupoksi)) {
+                                        this.options = data.tupoksi.map(item => ({
+                                            value: item.id,
+                                            label: item.uraian_tugas
+                                        }));
+                                        if(this.options.length === 0) this.label = 'Data Tupoksi Kosong';
+                                    } else {
+                                        this.label = 'Format data tidak valid';
+                                    }
+                                } catch (error) {
+                                    console.error(error);
+                                    this.label = 'Gagal memuat data';
+                                } finally {
+                                    this.isLoading = false;
                                 }
-                            } catch (error) {
-                                console.error(error);
-                                this.label = 'Gagal memuat data';
-                            } finally {
-                                this.isLoading = false;
-                            }
-                        },
-                        select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                    }" x-init="init()">
+                            },
+                            select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                        }" x-init="init()">
 
                     <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
                     <input type="hidden" name="tupoksi_id" x-model="value">
 
                     <div class="relative">
                         <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                    px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                    focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                        px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                        focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                             :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
                             <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
                             <img src="{{ asset('assets/icon/chevron-down.svg') }}"
@@ -155,8 +155,8 @@
                     <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
                     {{-- [FIX] Name ditambahkan --}}
                     <textarea name="deskripsi_aktivitas" rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                         px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
-                                         focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                             px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
+                                             focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                         placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
                 </div>
 
@@ -165,40 +165,40 @@
                         Kita bungkus dalam satu x-data besar agar logika Kategori & SKP terhubung
                         --}}
                 <div x-data="{
-                        kategori: 'non-skp',
-                        skpId: '',
-                        skpLabel: 'Pilih Target SKP',
-                        skpOptions: [],
-                        skpLoading: false,
-                        satuanValue: '',
-                        satuanLabel: 'Satuan',
-                        satuanOpen: false,
-                        kategoriOpen: false,
-                        skpOpen: false,
+                            kategori: 'non-skp',
+                            skpId: '',
+                            skpLabel: 'Pilih Target SKP',
+                            skpOptions: [],
+                            skpLoading: false,
+                            satuanValue: '',
+                            satuanLabel: 'Satuan',
+                            satuanOpen: false,
+                            kategoriOpen: false,
+                            skpOpen: false,
 
-                        // Fungsi fetch SKP
-                        async fetchSkp() {
-                            this.skpLoading = true;
-                            try {
-                                const token = localStorage.getItem('auth_token');
-                                const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
-                                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                                });
-                                const res = await response.json();
-                                if(res.data) {
-                                    this.skpOptions = res.data.map(s => ({ value: s.id, label: s.rencana_aksi }));
+                            // Fungsi fetch SKP
+                            async fetchSkp() {
+                                this.skpLoading = true;
+                                try {
+                                    const token = localStorage.getItem('auth_token');
+                                    const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
+                                        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                                    });
+                                    const res = await response.json();
+                                    if(res.data) {
+                                        this.skpOptions = res.data.map(s => ({ value: s.id, label: s.rencana_aksi }));
+                                    }
+                                } catch (e) { console.error(e); } finally { this.skpLoading = false; }
+                            },
+                            // Saat kategori berubah
+                            setKategori(val) {
+                                this.kategori = val;
+                                this.kategoriOpen = false;
+                                if (val === 'skp' && this.skpOptions.length === 0) {
+                                    this.fetchSkp();
                                 }
-                            } catch (e) { console.error(e); } finally { this.skpLoading = false; }
-                        },
-                        // Saat kategori berubah
-                        setKategori(val) {
-                            this.kategori = val;
-                            this.kategoriOpen = false;
-                            if (val === 'skp' && this.skpOptions.length === 0) {
-                                this.fetchSkp();
                             }
-                        }
-                    }">
+                        }">
 
                     {{-- Baris Atas: Output, Volume, Satuan, Kategori --}}
                     <div
@@ -209,7 +209,7 @@
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
                             <input type="text" name="output_hasil_kerja"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                              px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                                 placeholder="Contoh: Notulensi">
                         </div>
 
@@ -217,8 +217,8 @@
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
                             <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                            px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                            focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
+                                px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
                         </div>
 
                         {{-- Satuan --}}
@@ -306,8 +306,8 @@
                         <div class="relative">
                             <input id="jam_mulai" name="waktu_mulai" type="time"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                              px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                              focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
                             <button type="button" id="jam_mulai_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/time.svg') }}"
@@ -321,8 +321,8 @@
                         <div class="relative">
                             <input id="jam_selesai" name="waktu_selesai" type="time"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                              px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                              focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
                             <button type="button" id="jam_selesai_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/time.svg') }}"
@@ -338,8 +338,8 @@
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
 
                         <label class="w-full flex items-center justify-between rounded-[10px]
-                   border border-dashed border-slate-300 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
+                       border border-dashed border-slate-300 bg-slate-50/60
+                       px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
                             <!-- Nama file tampil di sini -->
                             <span id="bukti_filename" class="truncate">Pilih File</span>
 
@@ -352,32 +352,32 @@
 
                     {{-- Input Lokasi dengan Geolocation --}}
                     <div x-data="{
-                            lat: '',
-                            lng: '',
-                            status: 'Klik tombol untuk ambil lokasi',
-                            loading: false,
-                            getLocation() {
-                                this.loading = true;
-                                this.status = 'Mencari koordinat...';
-                                if (navigator.geolocation) {
-                                    navigator.geolocation.getCurrentPosition(
-                                        (position) => {
-                                            this.lat = position.coords.latitude;
-                                            this.lng = position.coords.longitude;
-                                            this.status = 'Terkunci: ' + this.lat.toFixed(5) + ', ' + this.lng.toFixed(5);
-                                            this.loading = false;
-                                        },
-                                        (error) => {
-                                            this.status = 'Gagal: Izin lokasi ditolak/error.';
-                                            this.loading = false;
-                                        }
-                                    );
-                                } else {
-                                    this.status = 'Browser tidak support GPS.';
-                                    this.loading = false;
+                                lat: '',
+                                lng: '',
+                                status: 'Klik tombol untuk ambil lokasi',
+                                loading: false,
+                                getLocation() {
+                                    this.loading = true;
+                                    this.status = 'Mencari koordinat...';
+                                    if (navigator.geolocation) {
+                                        navigator.geolocation.getCurrentPosition(
+                                            (position) => {
+                                                this.lat = position.coords.latitude;
+                                                this.lng = position.coords.longitude;
+                                                this.status = 'Terkunci: ' + this.lat.toFixed(5) + ', ' + this.lng.toFixed(5);
+                                                this.loading = false;
+                                            },
+                                            (error) => {
+                                                this.status = 'Gagal: Izin lokasi ditolak/error.';
+                                                this.loading = false;
+                                            }
+                                        );
+                                    } else {
+                                        this.status = 'Browser tidak support GPS.';
+                                        this.loading = false;
+                                    }
                                 }
-                            }
-                        }">
+                            }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
 
                         {{-- Hidden Input untuk Backend --}}
@@ -388,7 +388,7 @@
                             {{-- Input Visual (Readonly) --}}
                             <input type="text"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-100
-                                              px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
+                                                  px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
                                 x-model="status" readonly>
 
                             {{-- Tombol Trigger GPS --}}
@@ -406,6 +406,10 @@
 
                 {{-- Tombol Aksi --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="exportPDF()"
+                        class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm font-normal text-white hover:bg-[#555]">
+                        Export PDF
+                    </button>
                     <button type="button" onclick="submitForm('draft')"
                         class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white">
                         Simpan Draft
@@ -448,13 +452,13 @@
 
     {{-- KIRI BAWAH: DRAFT LKH --}}
     <div x-data="{ 
-            openDraftModal: false, 
-            draftsLimit: [], 
-            draftsAll: [] 
-        }" @update-drafts.window="
-            draftsLimit = $event.detail.limit;
-            draftsAll = $event.detail.all;
-        " x-cloak class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
+                openDraftModal: false, 
+                draftsLimit: [], 
+                draftsAll: [] 
+            }" @update-drafts.window="
+                draftsLimit = $event.detail.limit;
+                draftsAll = $event.detail.all;
+            " x-cloak class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
 
         {{-- HEADER CARD --}}
         <div class="flex items-center justify-between mb-3 shrink-0">
@@ -573,7 +577,6 @@
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
-
     const token = localStorage.getItem("auth_token");
 
     const headers = {
@@ -690,21 +693,21 @@ function renderAktivitas(aktivitas) {
         }
 
         listContainer.insertAdjacentHTML("beforeend", `
-            <li class="flex items-start gap-3">
-                <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                    <img src="${icon}" class="h-5 w-5 opacity-90">
-                </div>
-                <div class="flex-1 overflow-hidden">
-                    <div class="text-[13px] font-medium leading-snug truncate">
-                        ${item.deskripsi_aktivitas}
-                    </div>
-                    <div class="flex justify-between mt-[2px]">
-                        <span class="text-xs text-slate-500">${statusLabel}</span>
-                        <span class="text-xs text-slate-500">${tanggal}</span>
-                    </div>
-                </div>
-            </li>
-        `);
+                        <li class="flex items-start gap-3">
+                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
+                                <img src="${icon}" class="h-5 w-5 opacity-90">
+                                </div>
+                                <div class="flex-1 overflow-hidden">
+                                <div class="text-[13px] font-medium leading-snug truncate">
+                                        ${item.deskripsi_aktivitas}
+                                    </div>
+                                    <div class="flex justify-between mt-[2px]">
+                                        <span class="text-xs text-slate-500">${statusLabel}</span>
+                                    <span class="text-xs text-slate-500">${tanggal}</span>
+                                    </div>
+                                </div>
+                            </li>
+                        `);
     });
 }
 
@@ -936,6 +939,57 @@ async function submitForm(statusType) {
             text: "Periksa koneksi internet Anda.",
         });
     }
+
+}
+
+async function exportPDF() {
+    Swal.fire({
+        title: "Export LKH ke PDF?",
+        text: "Pastikan data yang kamu isi sudah benar.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#1C7C54",
+        cancelButtonColor: "#6B7280",
+        confirmButtonText: "Ya, Export!",
+        cancelButtonText: "Batal",
+    }).then(async (result) => {
+
+        if (!result.isConfirmed) return;
+
+        const form = document.getElementById("form-lkh");
+        const formData = new FormData(form);
+        const token = localStorage.getItem("auth_token");
+
+        try {
+            const response = await fetch("/api/lkh/export-pdf", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Gagal Export PDF",
+                    text: `Status: ${response.status}`,
+                });
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, "_blank");
+
+        } catch (err) {
+            Swal.fire({
+                icon: "error",
+                title: "Kesalahan Server",
+                text: "Tidak bisa menghubungi server untuk export PDF.",
+            });
+        }
+    });
 }
 </script>
 @endpush

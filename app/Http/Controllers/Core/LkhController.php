@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
-use App\Services\NotificationService; 
-use App\Enums\NotificationType; 
+use App\Services\NotificationService;
+use App\Enums\NotificationType;
 use Carbon\Carbon; // Tambahan untuk formatting tanggal di pesan
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LkhController extends Controller
 {
@@ -57,7 +58,7 @@ class LkhController extends Controller
     public function index(Request $request)
     {
         $userId = Auth::id();
-        
+
         $query = LaporanHarian::with(['tupoksi', 'skp', 'bukti'])
             ->where('user_id', $userId);
 
@@ -89,23 +90,24 @@ class LkhController extends Controller
 
         // 1. Validasi Input
         $validator = Validator::make($request->all(), [
-            'tupoksi_id'        => 'required|exists:tupoksi,id',
-            'jenis_kegiatan'    => 'required|in:' . $validAktivitas, 
-            'skp_id'            => 'nullable|exists:skp,id',
-            'tanggal_laporan'   => 'required|date',
-            'waktu_mulai'       => 'required',
-            'waktu_selesai'     => 'required|after:waktu_mulai',
-            'deskripsi_aktivitas'=> 'required|string',
-            'output_hasil_kerja'=> 'required|string',
-            'volume'            => 'required|integer|min:1',
-            'satuan'            => 'required|string|max:50',
-            'latitude'          => 'nullable|numeric|required_without:master_kelurahan_id',
-            'longitude'         => 'nullable|numeric|required_without:master_kelurahan_id',
-            'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id|required_without:latitude',
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
+            'tupoksi_id' => 'required|exists:tupoksi,id',
+            'jenis_kegiatan' => 'required|in:' . $validAktivitas,
+            'skp_id' => 'nullable|exists:skp,id',
+            'tanggal_laporan' => 'required|date',
+            'waktu_mulai' => 'required',
+            'waktu_selesai' => 'required|after:waktu_mulai',
+            'deskripsi_aktivitas' => 'required|string',
+            'output_hasil_kerja' => 'required|string',
+            'volume' => 'required|integer|min:1',
+            'satuan' => 'required|string|max:50',
+            'latitude' => 'nullable|numeric|required_without:master_kelurahan_id',
+            'longitude' => 'nullable|numeric|required_without:master_kelurahan_id',
+            'master_kelurahan_id' => 'nullable|exists:master_kelurahan,id|required_without:latitude',
+            'bukti.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
         ]);
 
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails())
+            return response()->json(['errors' => $validator->errors()], 422);
 
         $uploadedFiles = [];
 
@@ -132,21 +134,21 @@ class LkhController extends Controller
 
             // 3. Simpan Data LKH Utama
             $lkh = LaporanHarian::create([
-                'user_id'            => $user->id,
-                'skp_id'             => $request->skp_id,
-                'tupoksi_id'         => $request->tupoksi_id,
-                'jenis_kegiatan'     => $request->jenis_kegiatan,
-                'tanggal_laporan'    => $request->tanggal_laporan,
-                'waktu_mulai'        => $request->waktu_mulai,
-                'waktu_selesai'      => $request->waktu_selesai,
-                'deskripsi_aktivitas'=> $request->deskripsi_aktivitas,
+                'user_id' => $user->id,
+                'skp_id' => $request->skp_id,
+                'tupoksi_id' => $request->tupoksi_id,
+                'jenis_kegiatan' => $request->jenis_kegiatan,
+                'tanggal_laporan' => $request->tanggal_laporan,
+                'waktu_mulai' => $request->waktu_mulai,
+                'waktu_selesai' => $request->waktu_selesai,
+                'deskripsi_aktivitas' => $request->deskripsi_aktivitas,
                 'output_hasil_kerja' => $request->output_hasil_kerja,
-                'volume'             => $request->volume,
-                'satuan'             => $request->satuan,
-                'status'             => $status,
-                'master_kelurahan_id'=> $request->master_kelurahan_id,
-                'is_luar_lokasi'     => $isLuarLokasi,
-                'atasan_id'          => $user->atasan_id,
+                'volume' => $request->volume,
+                'satuan' => $request->satuan,
+                'status' => $status,
+                'master_kelurahan_id' => $request->master_kelurahan_id,
+                'is_luar_lokasi' => $isLuarLokasi,
+                'atasan_id' => $user->atasan_id,
                 'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
@@ -157,14 +159,14 @@ class LkhController extends Controller
 
                 foreach ($request->file('bukti') as $file) {
                     $extension = strtolower($file->getClientOriginalExtension());
-                    $filename  = Str::uuid() . '.' . $extension;
+                    $filename = Str::uuid() . '.' . $extension;
                     $finalPath = "";
 
                     // A. Optimasi Gambar (JPG/PNG -> Resize & WebP)
                     if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                         $filename = Str::uuid() . '.webp'; // Ubah ekstensi jadi webp
                         $finalPath = "{$storagePath}/{$filename}";
-                        
+
                         // Pastikan folder ada
                         if (!Storage::disk('public')->exists($storagePath)) {
                             Storage::disk('public')->makeDirectory($storagePath);
@@ -188,11 +190,11 @@ class LkhController extends Controller
                     $uploadedFiles[] = $finalPath;
 
                     LkhBukti::create([
-                        'laporan_id'         => $lkh->id,
-                        'file_path'          => $finalPath,
+                        'laporan_id' => $lkh->id,
+                        'file_path' => $finalPath,
                         'file_name_original' => $file->getClientOriginalName(),
-                        'file_type'          => $extension,
-                        'file_size'          => $file->getSize()
+                        'file_type' => $extension,
+                        'file_size' => $file->getSize()
                     ]);
                 }
             }
@@ -202,13 +204,13 @@ class LkhController extends Controller
             if ($user->atasan_id) {
                 // Formatting tanggal agar lebih humanis
                 $tglIndo = Carbon::parse($request->tanggal_laporan)->format('d/m/Y');
-                
+
                 try {
                     NotificationService::send(
-                    $user->atasan_id,
-                    NotificationType::LKH_NEW_SUBMISSION->value, 
-                    "Pegawai {$user->name} mengajukan LKH baru kegiatan '{$request->jenis_kegiatan}' untuk tanggal {$tglIndo}.",
-                    $lkh // Object untuk Polymorphic Redirect)
+                        $user->atasan_id,
+                        NotificationType::LKH_NEW_SUBMISSION->value,
+                        "Pegawai {$user->name} mengajukan LKH baru kegiatan '{$request->jenis_kegiatan}' untuk tanggal {$tglIndo}.",
+                        $lkh // Object untuk Polymorphic Redirect)
                     );
                 } catch (\Exception $e) {
                     \Log::error("Gagal kirim notif LKH: " . $e->getMessage());
@@ -236,26 +238,27 @@ class LkhController extends Controller
             return response()->json(['message' => 'Gagal mengirim laporan', 'error' => $e->getMessage()], 500);
         }
     }
-    
+
     /**
      * 3. SHOW DETAIL LKH
      */
     public function show($id)
     {
         $user = Auth::user();
-        
+
         if (!is_numeric($id)) {
-             return response()->json(['message' => 'ID Laporan tidak valid.'], 400);
+            return response()->json(['message' => 'ID Laporan tidak valid.'], 400);
         }
 
-        $lkh = LaporanHarian::with(['tupoksi', 'skp', 'bukti', 'user.bidang', 'user.jabatan', 'atasan']) 
-            ->where(function($query) use ($user) {
+        $lkh = LaporanHarian::with(['tupoksi', 'skp', 'bukti', 'user.bidang', 'user.jabatan', 'atasan'])
+            ->where(function ($query) use ($user) {
                 $query->where('user_id', $user->id) // Laporan miliknya
-                      ->orWhere('atasan_id', $user->id); // Laporan bawahan
+                    ->orWhere('atasan_id', $user->id); // Laporan bawahan
             })
             ->find($id);
 
-        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+        if (!$lkh)
+            return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
 
         return response()->json(['data' => $lkh]);
     }
@@ -270,16 +273,16 @@ class LkhController extends Controller
         if (!$user) {
             return response()->json(['message' => 'User belum login'], 401);
         }
-        
+
         $query = LaporanHarian::with([
-            'tupoksi', 
-            'user:id,name', 
+            'tupoksi',
+            'user:id,name',
             'atasan:id,name',
             'bukti'
         ]);
-        
-        $mode = $request->input('mode', 'mine'); 
-        $isPenilai = $user->roles()->pluck('nama_role')->contains('Penilai'); 
+
+        $mode = $request->input('mode', 'mine');
+        $isPenilai = $user->roles()->pluck('nama_role')->contains('Penilai');
 
         // Filter Mode
         if ($isPenilai && $mode === 'subordinates') {
@@ -287,7 +290,7 @@ class LkhController extends Controller
         } else {
             $query->where('user_id', $user->id);
         }
-        
+
         // Filter Tanggal
         if ($request->filled('from_date')) {
             $query->whereDate('tanggal_laporan', '>=', $request->from_date);
@@ -297,10 +300,10 @@ class LkhController extends Controller
         }
 
         $data = $query->latest('tanggal_laporan')->paginate(15);
-        
+
         return response()->json($data);
     }
-    
+
     /**
      * 4. DELETE LKH
      */
@@ -308,7 +311,8 @@ class LkhController extends Controller
     {
         $lkh = LaporanHarian::where('user_id', Auth::id())->find($id);
 
-        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+        if (!$lkh)
+            return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
 
         if ($lkh->status === 'approved') {
             return response()->json(['message' => 'Laporan yang sudah disetujui tidak bisa dihapus'], 403);
@@ -324,16 +328,19 @@ class LkhController extends Controller
 
                 $file->delete();
             }
-                
-            $lkh->delete(); 
+
+            $lkh->delete();
 
             DB::commit();
 
             return response()->json(['message' => 'Laporan berhasil dihapus']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal menghapus laporan', 'error'
-             => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Gagal menghapus laporan',
+                'error'
+                => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -353,7 +360,8 @@ class LkhController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+        if (!$lkh)
+            return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
 
         if ($lkh->status === 'approved') {
             return response()->json(['message' => 'Laporan yang sudah disetujui tidak bisa diedit'], 403);
@@ -361,26 +369,26 @@ class LkhController extends Controller
 
         // VALIDASI — semua optional kecuali yang wajib
         $validator = Validator::make($request->all(), [
-            'tupoksi_id'        => 'sometimes|required|exists:tupoksi,id',
-            'jenis_kegiatan'    => 'sometimes|required|in:' . $validAktivitas,
-            'skp_id'            => 'nullable|exists:skp,id',
-            'tanggal_laporan'   => 'sometimes|required|date',
-            'waktu_mulai'       => 'sometimes|required',
-            'waktu_selesai'     => 'sometimes|required|after:waktu_mulai',
-            'deskripsi_aktivitas'=> 'sometimes|required|string',
-            'output_hasil_kerja'=> 'sometimes|required|string',
-            'volume'            => 'sometimes|required|integer|min:1',
-            'satuan'            => 'sometimes|required|string|max:50',
-            'latitude'          => 'nullable|numeric',
-            'longitude'         => 'nullable|numeric',
-            'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id',
+            'tupoksi_id' => 'sometimes|required|exists:tupoksi,id',
+            'jenis_kegiatan' => 'sometimes|required|in:' . $validAktivitas,
+            'skp_id' => 'nullable|exists:skp,id',
+            'tanggal_laporan' => 'sometimes|required|date',
+            'waktu_mulai' => 'sometimes|required',
+            'waktu_selesai' => 'sometimes|required|after:waktu_mulai',
+            'deskripsi_aktivitas' => 'sometimes|required|string',
+            'output_hasil_kerja' => 'sometimes|required|string',
+            'volume' => 'sometimes|required|integer|min:1',
+            'satuan' => 'sometimes|required|string|max:50',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'master_kelurahan_id' => 'nullable|exists:master_kelurahan,id',
 
             // upload optional
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240',
+            'bukti.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240',
 
             // jika ingin hapus bukti tertentu
-            'hapus_bukti'       => 'array',
-            'hapus_bukti.*'     => 'integer|exists:lkh_bukti,id',
+            'hapus_bukti' => 'array',
+            'hapus_bukti.*' => 'integer|exists:lkh_bukti,id',
         ]);
 
         if ($validator->fails()) {
@@ -392,9 +400,18 @@ class LkhController extends Controller
 
             // 1. Logika GIS (Hanya jalan jika ada input koordinat baru)
             $updateData = $request->only([
-                'skp_id', 'tupoksi_id', 'jenis_kegiatan', 'tanggal_laporan', 
-                'waktu_mulai', 'waktu_selesai', 'deskripsi_aktivitas', 
-                'output_hasil_kerja', 'volume', 'satuan', 'status', 'master_kelurahan_id'
+                'skp_id',
+                'tupoksi_id',
+                'jenis_kegiatan',
+                'tanggal_laporan',
+                'waktu_mulai',
+                'waktu_selesai',
+                'deskripsi_aktivitas',
+                'output_hasil_kerja',
+                'volume',
+                'satuan',
+                'status',
+                'master_kelurahan_id'
             ]);
 
             // Jika user mengirim koordinat baru, hitung ulang lokasi & geofencing
@@ -430,9 +447,9 @@ class LkhController extends Controller
             // 2. HAPUS BUKTI LAMA (Jika diminta)
             if ($request->filled('hapus_bukti')) {
                 $buktiToDelete = LkhBukti::whereIn('id', $request->hapus_bukti)
-                                    ->where('laporan_id', $lkh->id)
-                                    ->get();
-                
+                    ->where('laporan_id', $lkh->id)
+                    ->get();
+
                 foreach ($buktiToDelete as $bukti) {
                     // Hapus fisik
                     if (Storage::disk('public')->exists($bukti->file_path)) {
@@ -450,7 +467,7 @@ class LkhController extends Controller
 
                 foreach ($request->file('bukti') as $file) {
                     $extension = strtolower($file->getClientOriginalExtension());
-                    $filename  = Str::uuid() . '.' . $extension;
+                    $filename = Str::uuid() . '.' . $extension;
                     $finalPath = "";
 
                     // A. Optimasi Gambar
@@ -470,7 +487,7 @@ class LkhController extends Controller
                             ->encode('webp', 80);
 
                         Storage::disk('public')->put($finalPath, (string) $image);
-                    } 
+                    }
                     // B. Dokumen/Video
                     else {
                         $finalPath = $file->storeAs($storagePath, $filename, 'public');
@@ -481,11 +498,11 @@ class LkhController extends Controller
 
                     // Simpan DB
                     LkhBukti::create([
-                        'laporan_id'         => $lkh->id,
-                        'file_path'          => $finalPath,
+                        'laporan_id' => $lkh->id,
+                        'file_path' => $finalPath,
                         'file_name_original' => $file->getClientOriginalName(),
-                        'file_type'          => $extension,
-                        'file_size'          => $file->getSize()
+                        'file_type' => $extension,
+                        'file_size' => $file->getSize()
                     ]);
                 }
             }
@@ -527,4 +544,74 @@ class LkhController extends Controller
             ], 500);
         }
     }
+
+    public function exportPdf($id)
+    {
+        $lkh = LaporanHarian::with(['tupoksi', 'skp', 'user'])->findOrFail($id);
+
+        $pdf = \PDF::loadView('pdf.lkh', [
+            'pegawai_nama' => $lkh->user->name,
+            'pegawai_nip' => $lkh->user->nip,
+            'pegawai_unit' => optional($lkh->user->unit_kerja_id)->nama_unit ?? '-',
+
+            'tanggal' => $lkh->tanggal_laporan,
+            'jenis_kegiatan' => $lkh->jenis_kegiatan,
+            'tupoksi' => optional($lkh->tupoksi_id)->uraian_tugas,
+            'kategori' => $lkh->skp_id ? 'SKP' : 'Non-SKP',
+
+            'jam_mulai' => $lkh->waktu_mulai,
+            'jam_selesai' => $lkh->waktu_selesai,
+
+            'lokasi' => $lkh->lokasi,
+            'uraian_kegiatan' => $lkh->deskripsi_aktivitas,
+
+            'output' => $lkh->output_hasil_kerja,
+            'volume' => $lkh->volume,
+            'satuan' => $lkh->satuan,
+
+            'target_skp' => optional($lkh->skp)->rencana_aksi,
+        ]);
+
+        return $pdf->stream("LKH-{$id}.pdf");
+    }
+
+    public function exportPdfDirect(Request $request)
+    {
+        $user = auth()->user();
+
+        $data = [
+            'pegawai_nama' => $user->name,
+            'pegawai_nip' => $user->nip,
+            'pegawai_unit' => $user->unit_kerja_id->nama ?? '-',
+
+            'tanggal' => $request->tanggal_laporan,
+            'jenis_kegiatan' => $request->jenis_kegiatan,
+            'tupoksi' => $request->tupoksi_id,
+            'kategori' => $request->kategori,
+
+            'jam_mulai' => $request->waktu_mulai,
+            'jam_selesai' => $request->waktu_selesai,
+
+            'lokasi' => $request->lokasi,
+            'uraian_kegiatan' => $request->deskripsi_aktivitas,
+
+            'output' => $request->output_hasil_kerja,
+            'volume' => $request->volume,
+            'satuan' => $request->satuan,
+
+            // khusus SKP
+            'target_skp' => $request->kategori === 'SKP'
+                ? $request->target_skp
+                : null,
+
+            // placeholder bukti
+            'bukti_status' => "Bukti hanya tersedia setelah disimpan.",
+        ];
+
+        $pdf = Pdf::loadView('pdf.laporan-harian', $data)
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('laporan-harian.pdf');
+    }
+
 }

@@ -54,14 +54,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/input-lkh/{id?}', function ($id = null) {
             return view('staf.input-lkh', ['id' => $id]);
         })->name('input-lkh');
-
-        // 🔥 EXPORT PDF
-        Route::get('/lkh/{id}/export-pdf', [LkhController::class, 'exportPdf'])
-            ->name('lkh.export');
-
-        Route::post('/lkh/export-pdf', [LkhController::class, 'exportPdfDirect'])
-            ->name('lkh.export.direct');
-
         Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
         Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');

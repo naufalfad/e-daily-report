@@ -598,6 +598,10 @@
     method: "GET",
     headers: headers,
     });
+    const response = await fetch("/api/dashboard/stats", {
+    method: "GET",
+    headers: headers,
+    });
 
     if (response.ok) {
     const data = await response.json();
@@ -729,6 +733,10 @@
     limit: window.__draftsLimit || [],
     all: draftsAll
     }
+    detail: {
+    limit: window.__draftsLimit || [],
+    all: draftsAll
+    }
     }));
 
     window._ _draftsAll = draftsAll;
@@ -742,6 +750,10 @@
     document.querySelector('h2').innerText = "Edit LKH (Memuat...)";
 
     const res = await fetch(`/e-daily-report/api/lkh/${id}`, {
+    method: "GET",
+    headers: headers,
+    });
+    const res = await fetch(`/api/lkh/${id}`, {
     method: "GET",
     headers: headers,
     });
@@ -867,9 +879,9 @@
     }
     }
 
-    let url = "/e-daily-report/api/lkh";
+    let url = "/api/lkh";
 
-    if (lkhIdToE dit) url = `/e-daily-report/api/lkh/update/${lkhIdToEdit}`;
+    if (lkhIdToEdit) url = `/api/lkh/update/${lkhIdToEdit}`;
 
     try {
     const btn = event.target;
@@ -897,6 +909,9 @@
     });
 
     setTimeout(() => window.location.href = "/e-daily-report/penilai/dashboard", 1000);
+    return;
+    }
+    setTimeout(() => window.location.href = "/penilai/dashboard", 1000);
     return;
     }
 

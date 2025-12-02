@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async function () {
      * =======================================================*/
     let data;
     try {
-        const res = await fetch("/e-daily-report/api/dashboard/stats", {
+        const res = await fetch("/api/dashboard/stats", {
             method: "GET",
             headers
         });
@@ -290,7 +290,7 @@ window.deleteDraft = async function (id) {
     const token = localStorage.getItem("auth_token");
 
     try {
-        const res = await fetch(`/e-daily-report/api/lkh/${id}`, {
+        const res = await fetch(`/api/lkh/${id}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${token}`,

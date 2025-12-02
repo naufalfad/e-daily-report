@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </tr>`;
 
         const token = getToken();
-        const APP_URL = window.APP_URL;
 
         if (!token) {
             listContainer.innerHTML = `
@@ -97,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch(`${APP_URL}/api/validator/lkh`, {
+            const response = await fetch('/api/validator/lkh', {
                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
             });
 
@@ -323,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ==== SUBMIT VALIDATION ====
     async function submitValidation(status, note) {
-        const APP_URL = window.APP_URL;
         const lkhId = detailModal.dataset.lkhId;
         const token = getToken();
         const originalText = btn.innerHTML;
@@ -337,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </svg> Memproses...`;
 
         try {
-            const res = await fetch(`${APP_URL}/api/validator/lkh/${lkhId}/validate`, {
+            const res = await fetch(`/api/validator/lkh/${lkhId}/validate`, {
                 method: "POST",
                 headers: {
                     'Authorization': `Bearer ${token}`,

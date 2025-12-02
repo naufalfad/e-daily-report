@@ -8,9 +8,8 @@ export function logActivityPenilai() {
         filter: { from: "", to: "" },
 
         initLog() {
-            const APP_URL = window.APP_URL;
             console.log("INIT LOG PENILAI");
-            authFetch(`${APP_URL}/api/log-aktivitas`)
+            authFetch("/api/log-aktivitas")
                 .then(r => r.json())
                 .then(res => {
                     this.allItems = res.data.map(i => ({

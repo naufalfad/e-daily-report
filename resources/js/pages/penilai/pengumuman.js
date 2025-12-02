@@ -23,9 +23,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. LOAD LIST PENGUMUMAN (API TOKEN)
     // ======================================================
     async function fetchPengumuman() {
-        const APP_URL = window.APP_URL;
         try {
-            const response = await authFetch(`${APP_URL}/api/pengumuman`, {
+            const response = await authFetch("/api/pengumuman", {
                 method: "GET"
             });
 
@@ -99,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. CREATE / STORE
     // ======================================================
     async function storePengumuman() {
-        const APP_URL = window.APP_URL;
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
             alert("Judul dan isi wajib diisi.");
             return;
@@ -111,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnSubmit.textContent = "Menyimpan...";
 
         try {
-            const res = await authFetch(`${APP_URL}/api/pengumuman`, {
+            const res = await authFetch("/api/pengumuman", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -147,11 +145,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. DELETE
     // ======================================================
     async function deletePengumuman(id) {
-        const APP_URL = window.APP_URL;
         if (!confirm("Hapus pengumuman ini?")) return;
 
         try {
-            const res = await authFetch(`${APP_URL}/api/pengumuman/${id}`, {
+            const res = await authFetch(`/api/pengumuman/${id}`, {
                 method: "DELETE"
             });
 

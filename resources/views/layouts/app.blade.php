@@ -1,9 +1,5 @@
 <!doctype html>
 <html lang="id">
-<script>
-    window.APP_URL = "{{ env('APP_URL') }}";
-</script>
-
 
 <head>
     <meta charset="utf-8">

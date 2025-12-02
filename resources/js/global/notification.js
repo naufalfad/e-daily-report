@@ -58,7 +58,6 @@ export function showToast(message, type = 'info') {
 
 // --- LOGIKA NOTIFIKASI DROPDOWN (TETAP JALAN) ---
 document.addEventListener("DOMContentLoaded", async () => {
-    const APP_URL = window.APP_URL;
     const notifBadge = document.getElementById("notif-badge");
     const notifList = document.getElementById("notif-list");
 
@@ -81,7 +80,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const res = await fetch(`${APP_URL}/api/notifikasi`, { headers });
+        const res = await fetch('/api/notifikasi', { headers });
 
         if (!res.ok) return; // Silent fail kalau unauthorized
 

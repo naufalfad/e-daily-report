@@ -3,9 +3,8 @@ import Swal from "sweetalert2";
 export function manajemenPegawaiData() {
     // [KONFIGURASI]
     // Pastikan URL ini mengarah ke API yang benar (sesuai prefix sub-folder jika ada)
-    const APP_URL = window.APP_URL;
-    const BASE_URL = `${APP_URL}/api/admin/pegawai`;
-    const MASTER_URL = `${APP_URL}/api/admin/master-dropdown`; // Endpoint Helper
+    const BASE_URL = "/e-daily-report/api/admin/pegawai";
+    const MASTER_URL = "/e-daily-report/api/admin/master-dropdown"; // Endpoint Helper
 
     // Helper ambil token
     const getToken = () => localStorage.getItem("auth_token");

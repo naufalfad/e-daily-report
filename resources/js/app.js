@@ -76,7 +76,6 @@ window.Chart = Chart;
 
 document.addEventListener('DOMContentLoaded', function () {
     const logoutBtn = document.getElementById('btn-logout');
-    const APP_URL = window.APP_URL;
 
     // =========================
     // 1. LOGOUT FIX
@@ -102,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 try {
                     if (token) {
-                        await fetch(`${APP_URL}/api/logout`, {
+                        await fetch('/api/logout', {
                             method: 'POST',
                             headers: {
                                 'Authorization': `Bearer ${token}`,

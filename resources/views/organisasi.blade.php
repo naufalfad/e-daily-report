@@ -198,9 +198,8 @@
         document.addEventListener("DOMContentLoaded", () => {
             const chartContainer = document.getElementById("chart-container");
             const loadingEl = document.getElementById("loading");
-            const APP_URL = window.APP_URL;
 
-            fetch(`${APP_URL}/api/organisasi/tree`, {
+            fetch("/api/organisasi/tree", {
                 headers: {
                     Authorization: `Bearer ${API_TOKEN}`,
                     Accept: "application/json",

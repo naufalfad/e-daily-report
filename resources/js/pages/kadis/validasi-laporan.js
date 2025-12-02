@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     async function fetchLkhList() {
-        const APP_URL = window.APP_URL;
         listContainer.innerHTML =
             '<tr><td colspan="7" class="p-4 text-center text-slate-500">Memuat data...</td></tr>';
 
@@ -53,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!token) return;
 
         try {
-            const res = await fetch(`${APP_URL}/api/validator/lkh`, {
+            const res = await fetch('/api/validator/lkh', {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -177,13 +176,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========== SUBMIT VALIDASI ==========
     // ======================================
     async function submitValidation(status, note) {
-        const APP_URL = window.APP_URL;
         const lkhId = detailModal.dataset.lkhId;
 
         const token = getToken();
 
         try {
-            const res = await fetch(`${APP_URL}/api/validator/lkh/${lkhId}/validate`, {
+            const res = await fetch(`/api/validator/lkh/${lkhId}/validate`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

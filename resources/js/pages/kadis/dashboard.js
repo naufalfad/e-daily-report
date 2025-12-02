@@ -1,7 +1,6 @@
 import Chart from "chart.js/auto";
 
 document.addEventListener("DOMContentLoaded", async function () {
-    const APP_URL = window.APP_URL;
     const setText = (id, value = "-") => {
         const el = document.getElementById(id);
         if (el) el.innerText = value;
@@ -13,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     let data;
     try {
-        const res = await fetch(`${APP_URL}/api/dashboard/kadis`, {
+        const res = await fetch(`/api/dashboard/kadis`, {
             method: "GET",
             headers,
         });

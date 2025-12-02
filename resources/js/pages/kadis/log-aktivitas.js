@@ -3,7 +3,6 @@ console.log("KADIS LOG FILE LOADED!");
 import { authFetch } from "../../utils/auth-fetch";
 
 export function logActivityKadis() {
-    const APP_URL = window.APP_URL;
     return {
         allItems: [],
         filteredItems: [],
@@ -12,7 +11,7 @@ export function logActivityKadis() {
         initLog() {
             console.log("INIT LOG KADIS");
 
-            authFetch(`${APP_URL}/api/log-aktivitas`)
+            authFetch("/api/log-aktivitas")
                 .then(r => r.json())
                 .then(res => {
 

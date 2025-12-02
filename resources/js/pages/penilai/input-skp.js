@@ -41,10 +41,9 @@ window.skpPageData = function () {
 
         // Fetch Profile
         async fetchProfile() {
-            const APP_URL = window.APP_URL;
             const token = localStorage.getItem('auth_token');
             try {
-                const res = await fetch(`${APP_URL}/api/me`, {
+                const res = await fetch('/api/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -61,10 +60,9 @@ window.skpPageData = function () {
 
         // Fetch List SKP
         async fetchSkpList() {
-            const APP_URL = window.APP_URL;
             const token = localStorage.getItem('auth_token');
             try {
-                const res = await fetch(`${APP_URL}/api/skp`, {
+                const res = await fetch('/api/skp', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -83,7 +81,6 @@ window.skpPageData = function () {
         async submitCreate() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
-            const APP_URL = window.APP_URL;
 
             // Validasi sederhana sebelum kirim
             if (!this.formData.nama_skp || !this.formData.target) {
@@ -97,7 +94,7 @@ window.skpPageData = function () {
             }
 
             try {
-                const res = await fetch(`${APP_URL}/api/skp`, {
+                const res = await fetch('/api/skp', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -170,7 +167,6 @@ window.skpPageData = function () {
 
         // Submit Edit
         async submitEdit() {
-            const APP_URL = window.APP_URL;
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
 
@@ -184,7 +180,7 @@ window.skpPageData = function () {
             };
 
             try {
-                const res = await fetch(`${APP_URL}/api/skp/${this.editData.id}`, {
+                const res = await fetch(`/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,

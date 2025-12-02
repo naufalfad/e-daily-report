@@ -28,10 +28,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     /* =======================================================
      * 2. FETCH API
      * =======================================================*/
-    const APP_URL = window.APP_URL;
     let data;
     try {
-        const res = await fetch(`${APP_URL}/api/dashboard/stats`, {
+        const res = await fetch("/api/dashboard/stats", {
             method: "GET",
             headers
         });
@@ -326,13 +325,12 @@ document.addEventListener("DOMContentLoaded", async function () {
  * 8. DELETE DRAFT
  * =======================================================*/
 window.deleteDraft = async function (id) {
-    const APP_URL = window.APP_URL;
     if (!confirm("Apakah Anda yakin ingin menghapus draft laporan ini?")) return;
 
     const token = localStorage.getItem("auth_token");
 
     try {
-        const res = await fetch(`${APP_URL}/api/lkh/${id}`, {
+        const res = await fetch(`/api/lkh/${id}`, {
             method: "DELETE",
             headers: {
                 Authorization: `Bearer ${token}`,

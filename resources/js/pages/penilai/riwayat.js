@@ -2,10 +2,7 @@
 //   RIWAYAT LKH — PENILAI (SCRIPT TERPISAH)
 // =====================================================
 
-import { authFetch } from "../../utils/auth-fetch";
-
 export function riwayatData(role) {
-
     const TOKEN = localStorage.getItem('auth_token');
     const BASE_URL = '/api/lkh/riwayat';
 
@@ -25,6 +22,14 @@ export function riwayatData(role) {
         // ---------------------------
         // FORMAT UTILITIES
         // ---------------------------
+
+        //Edit Laporan
+        editLaporan(id) {
+            if (!id) return;
+            // Arahkan ke halaman input/edit dengan ID laporan
+            window.location.href = `/penilai/input-laporan/${id}`;
+        },
+
         formatDate(isoString) {
             if (!isoString) return '-';
             try {
@@ -83,7 +88,7 @@ export function riwayatData(role) {
             this.loading = true;
             this.items = [];
 
-            let url = `${BASE_URL}?role=${this.role}`;
+            let url = BASE_URL + `?role=${this.role}`;
 
             if (this.role === 'penilai') {
                 url += `&mode=${this.filter.mode}`;
@@ -100,14 +105,17 @@ export function riwayatData(role) {
             try {
                 const response = await fetch(url, {
                     headers: {
-                        'Authorization': `Bearer ${TOKEN}`,
-                        'Accept': 'application/json'
-                    }
+                        Authorization: `Bearer ${TOKEN}`,
+                        Accept: 'application/json'
+                    },
                 });
 
                 if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.message || 'Gagal memuat data');
+                    const errorData = await response.json();
+                    throw new Error(
+                        `Gagal memuat data. Status: ${response.status
+                        }. Pesan: ${errorData.message || "Unknown Error"}`
+                    );
                 }
 
                 const data = await response.json();
@@ -164,3 +172,6 @@ export function riwayatData(role) {
         }
     };
 }
+
+// Daftarkan fungsi ke Global Window agar dikenali oleh Alpine.js di HTML
+window.riwayatData = riwayatData;

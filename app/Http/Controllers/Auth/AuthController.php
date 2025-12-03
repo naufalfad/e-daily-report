@@ -7,11 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use App\Models\User; // Pastikan User Model di-import
 use Throwable;
 
 class AuthController extends Controller
 {
+    /**
+     * Menangani proses login API dan memberikan token Sanctum.
+     */
     public function login(Request $request)
     {
         // 1. Validasi input
@@ -31,24 +34,34 @@ class AuthController extends Controller
             $user = User::where('username', $username)->first();
 
             if (!$user) {
+                // Gunakan 401 Unauthorized untuk kegagalan kredensial
                 return response()->json(['message' => 'Kredensial tidak valid (Pengguna tidak ditemukan)'], 401);
             }
 
             // 3. Cek password
             if (!Hash::check($request->password, $user->password)) {
+                // Gunakan 401 Unauthorized untuk kegagalan password
                 return response()->json(['message' => 'Kredensial tidak valid (Password salah)'], 401);
             }
 
-            // 4. Login manual
+            // ======================================================================
+            // 4. SECURITY GATE: CEK STATUS AKTIF (Implementasi Suspend)
+            // ======================================================================
+            if ($user->is_active === false) {
+                // Jika akun dinonaktifkan, blokir login dan kirim kode 403 Forbidden
+                return response()->json([
+                    'message' => 'Akun Anda dinonaktifkan (Suspend). Silakan hubungi Administrator.',
+                    'status_code' => 403 
+                ], 403);
+            }
+            
+            // 5. Jika Lolos -> Login manual dan buat token
             Auth::login($user);
 
-            // 5. Muat relasi dan buat token
             $user->load(['roles', 'unitKerja', 'jabatan', 'atasan']);
             $token = $user->createToken('auth_token')->plainTextToken;
 
             // 6. Respon sukses
-
-
             return response()->json([
                 'message' => 'Login berhasil',
                 'access_token' => $token,
@@ -66,14 +79,19 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Menghapus token Sanctum pengguna saat ini.
+     */
     public function logout(Request $request)
     {
-
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout berhasil']);
     }
 
+    /**
+     * Mengambil data pengguna saat ini (untuk aplikasi web/client).
+     */
     public function user(Request $request)
     {
         return response()->json(
@@ -81,8 +99,10 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * Alias/helper untuk user data (bisa dihapus jika tidak digunakan, tapi kita biarkan).
+     */
     public function me(Request $request)
-
     {
         return response()->json($request->user());
     }

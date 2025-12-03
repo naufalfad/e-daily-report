@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Core\PengumumanController;
 use App\Http\Controllers\Core\SkpController;
+use App\Http\Controllers\Core\RiwayatController;
 use App\Http\Controllers\Core\LkhController;
 
 /*
@@ -41,6 +42,7 @@ Route::view('/tes-pohon-organisasi', 'organisasi');
 */
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('riwayat/export-pdf', [RiwayatController::class, 'exportPdf'])->name('riwayat.export.pdf');
 
     /*
     |--------------------------------------------------------------------------

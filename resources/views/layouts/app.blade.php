@@ -91,7 +91,7 @@
 
 </head>
 
-<body class="h-dvh bg-[#EFF0F5] text-slate-800">
+<body class="min-h-screen bg-[#EFF0F5] text-slate-800">
 
     <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
 
@@ -103,8 +103,8 @@
 
     </div>
 
-    <div class="h-full p-5">
-        <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
+    <div class="p-5 h-screen">
+        <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 overflow-hidden">
 
             {{-- Sidebar --}}
             @include('partials.sidebar', [
@@ -113,11 +113,11 @@
             ])
 
             {{-- KONTEN KANAN --}}
-            <div class="h-full flex flex-col pl-9 overflow-y-auto no-scrollbar">
+            <div class="h-full flex flex-col pl-9 overflow-hidden">
 
                 {{-- TOPBAR: hanya muncul di dashboard --}}
                 @if (($active ?? null) === 'dashboard')
-                <header>
+                <header class="sticky top-0 z-40 bg-[#EFF0F5]/80 backdrop-blur-xl">
                     <div class="py-1">
 
                         {{-- Burger (mobile) --}}
@@ -184,7 +184,7 @@
                 @endif
 
                 {{-- KONTEN --}}
-                <main class="pt-1 p-0 flex-1 flex flex-col">
+                <main class="pt-1 p-0 flex-1 flex flex-col overflow-y-auto no-scrollbar">
                     @yield('content')
                 </main>
 

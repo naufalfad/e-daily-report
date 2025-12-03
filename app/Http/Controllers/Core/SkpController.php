@@ -20,8 +20,9 @@ class SkpController extends Controller
         return response()->json(['message' => 'List SKP berhasil diambil', 'data' => $query->latest()->get()]);
     }
 
-    public function store(Request $request)
+	public function store(Request $request)
     {
+        // 1. Definisikan Rule Validasi
         $validator = Validator::make($request->all(), [
             'nama_skp'        => 'required|string|max:255',
             'periode_mulai'   => 'required|date',
@@ -29,12 +30,23 @@ class SkpController extends Controller
             'rencana_aksi'    => 'required|string', 
             'indikator'       => 'required|string', 
             'target'          => 'required|integer|min:1',
+            // Hapus 'satuan' jika memang sudah didrop dari DB, atau tambahkan jika perlu
         ]);
 
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
         try {
-            $skp = Skp::create(array_merge($request->all(), ['user_id' => Auth::id()]));
+            // [PERBAIKAN DISINI]
+            // Gunakan $validator->validated() agar HANYA data yang valid yang diambil.
+            // Data sampah seperti '/api/skp' akan otomatis terbuang.
+            $validatedData = $validator->validated();
+            
+            // Tambahkan User ID
+            $validatedData['user_id'] = Auth::id();
+
+            // Create menggunakan data bersih
+            $skp = Skp::create($validatedData);
+
             return response()->json(['message' => 'SKP berhasil dibuat', 'data' => $skp], 201);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal membuat SKP', 'error' => $e->getMessage()], 500);

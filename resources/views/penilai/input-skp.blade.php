@@ -488,7 +488,7 @@ document.addEventListener("alpine:init", () => {
             const token = localStorage.getItem('auth_token');
 
             if (!token) {
-                window.location.href = '/e-daily-report/login';
+                window.location.href = '/login';
                 return;
             }
 
@@ -504,7 +504,7 @@ document.addEventListener("alpine:init", () => {
 
 
             try {
-                const res = await fetch('/e-daily-report/api/me', {
+                const res = await fetch('/api/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -528,7 +528,7 @@ document.addEventListener("alpine:init", () => {
 
 
             try {
-                const res = await fetch('/e-daily-report/api/skp', {
+                const res = await fetch('/api/skp', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -571,7 +571,7 @@ document.addEventListener("alpine:init", () => {
             }
 
             try {
-                const res = await fetch('/e-daily-report/api/skp', {
+                const res = await fetch('/api/skp', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,

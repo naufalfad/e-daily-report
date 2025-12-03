@@ -68,8 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     : [];
 
                 setTimeout(() => {
-                    if (roles.includes("admin")) {
-                        window.location.href = "/admin/dashboard";
+                    if (roles.some(role => role.includes("admin"))) {
+                        window.location.href = "admin/dashboard";
                     } else if (
                         roles.includes("kepala dinas") ||
                         roles.includes("kadis")

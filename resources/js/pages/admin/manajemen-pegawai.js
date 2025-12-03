@@ -1,8 +1,11 @@
 import Swal from "sweetalert2";
 
 export function manajemenPegawaiData() {
-    const BASE_URL = "/e-daily-report/api/admin/pegawai";
-    const MASTER_URL = "/e-daily-report/api/admin/master-dropdown";
+    // [KONFIGURASI]
+    const BASE_URL = "/api/admin/pegawai";
+    const MASTER_URL = "/api/admin/master-dropdown";
+
+    // Helper ambil token
     const getToken = () => localStorage.getItem("auth_token");
 
     return {
@@ -33,23 +36,26 @@ export function manajemenPegawaiData() {
         unitKerjaList: [],
         bidangList: [],
         jabatanList: [],
-        roleList: [],
-        atasanList: [], // Dinamis dari API
+        // roleList: [], // DIHAPUS - Dipindah ke Akun Pengguna
+        atasanList: [],
 
         // Form Data
         formData: {
             name: '',
-            username: '',
+            // username: '', // DIHAPUS
             nip: '',
-            password: '',
+            // password: '', // DIHAPUS
             unit_kerja_id: '',
             bidang_id: '',
             jabatan_id: '',
-            role_id: '',
+            // role_id: '', // DIHAPUS
             atasan_id: ''
         },
+
+        // [WATCHER] Flag untuk mencegah looping
         isFetchingAtasan: false,
 
+        // --- INIT ---
         async initPage() {
             console.log("🚀 Manajemen Pegawai: Initializing...");
 
@@ -59,64 +65,81 @@ export function manajemenPegawaiData() {
             // Load Data Pegawai
             await this.fetchData();
 
-            // Watchers (Aktifkan setelah load awal agar tidak spam API)
-            this.$watch('formData.unit_kerja_id', (val) => { if(this.openAdd || this.openEdit) this.onUnitKerjaChange(); });
-            this.$watch('formData.bidang_id', (val) => { if(this.openAdd || this.openEdit) this.fetchCalonAtasan(); });
-            this.$watch('formData.jabatan_id', (val) => { if(this.openAdd || this.openEdit) this.fetchCalonAtasan(); });
+            // Setup Watcher Manual
+            this.$watch('formData.unit_kerja_id', () => this.onUnitKerjaChange());
+            this.$watch('formData.bidang_id', () => this.fetchCalonAtasan());
+            this.$watch('formData.jabatan_id', () => this.fetchCalonAtasan());
         },
 
+        // --- MASTER DATA FETCHING ---
         async fetchMasterData() {
             try {
                 const headers = { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" };
 
-                const [resUnit, resJab, resRole] = await Promise.all([
+                // [PERBAIKAN] Hanya fetch data HR: Unit Kerja dan Jabatan
+                const [resUnit, resJab] = await Promise.all([
                     fetch(`${MASTER_URL}/unit-kerja`, { headers }),
                     fetch(`${MASTER_URL}/jabatan`, { headers }),
-                    fetch(`${MASTER_URL}/roles`, { headers })
+                    // Endpoint roles dihapus dari sini
                 ]);
+
                 this.unitKerjaList = await resUnit.json();
                 this.jabatanList = await resJab.json();
-                this.roleList = await resRole.json();
-
+                // this.roleList = []; // Dikosongkan
             } catch (e) {
                 console.error("Gagal load master data", e);
             }
         },
 
+        // --- LOGIKA PINTAR: CHANGE HANDLERS (Tidak ada perubahan signifikan) ---
+
+        // 1. Saat Unit Kerja Berubah -> Ambil Bidang yang Sesuai
         async onUnitKerjaChange() {
             const unitId = this.formData.unit_kerja_id;
             this.bidangList = []; // Reset
 
             if (!unitId) return;
+
             try {
                 const res = await fetch(`${MASTER_URL}/bidang-by-unit-kerja/${unitId}`, {
                     headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
                 });
                 this.bidangList = await res.json();
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("Gagal load bidang", e);
+            }
         },
 
+        // 2. Saat Bidang/Jabatan Berubah -> Cari Calon Atasan
         async fetchCalonAtasan() {
             const { unit_kerja_id, bidang_id, jabatan_id } = this.formData;
+
             this.atasanList = [];
 
             // Jangan fetch kalau data belum lengkap
             if (!unit_kerja_id || !jabatan_id) return;
 
             this.isFetchingAtasan = true;
+
             try {
-                const params = new URLSearchParams({ unit_kerja_id, bidang_id: bidang_id || '', jabatan_id });
+                // Buat Query String
+                const params = new URLSearchParams({
+                    unit_kerja_id,
+                    bidang_id: bidang_id || '',
+                    jabatan_id
+                });
+
                 const res = await fetch(`${MASTER_URL}/calon-atasan?${params}`, {
                     headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
                 });
+
                 const candidates = await res.json();
                 this.atasanList = candidates;
-                
-                // Auto-select jika cuma 1 dan bukan mode edit (agar tidak menimpa data lama user)
-                if (!this.editId && candidates.length === 1) {
+
+                // [AUTO SELECT]
+                if (candidates.length === 1) {
                     this.formData.atasan_id = candidates[0].id;
                 }
-                // Jika kosong (misal Kepala Dinas), set null
                 else if (candidates.length === 0) {
                     this.formData.atasan_id = '';
                 }
@@ -128,11 +151,17 @@ export function manajemenPegawaiData() {
             }
         },
 
+        // --- 1. READ (FETCH DATA UTAMA) ---
         async fetchData(url = BASE_URL) {
             this.isLoading = true;
+
             let targetUrl = url;
-            if (this.search) targetUrl += (targetUrl.includes('?') ? '&' : '?') + `search=${encodeURIComponent(this.search)}`;
-            
+            // [PERBAIKAN] Hapus pencarian Username di client-side
+            if (this.search) {
+                const separator = targetUrl.includes('?') ? '&' : '?';
+                targetUrl += `${separator}search=${encodeURIComponent(this.search)}`;
+            }
+
             try {
                 const response = await fetch(targetUrl, {
                     headers: {
@@ -144,7 +173,6 @@ export function manajemenPegawaiData() {
                 if (!response.ok) throw new Error("Gagal mengambil data");
 
                 const json = await response.json();
-                console.log("Data Loaded:", json);
 
                 this.items = json.data || [];
 
@@ -157,21 +185,42 @@ export function manajemenPegawaiData() {
 
             } catch (error) {
                 console.error(error);
+                // Menampilkan error 404 dari console (asumsi BASE_URL sudah benar di server)
+                Swal.fire("Error API", "Gagal memuat data. Cek BASE_URL di JS dan Route API.", "error");
             } finally {
                 this.isLoading = false;
             }
         },
 
+        // --- 2. CREATE & UPDATE (SUBMIT FORM) ---
         async submitForm(type) {
             const isEdit = type === 'edit';
             const url = isEdit ? `${BASE_URL}/${this.editId}` : BASE_URL;
-            const method = isEdit ? 'PUT' : 'POST';
-            
+            // Gunakan method POST untuk Laravel PUT/PATCH jika form-data tidak mendukung PUT
+            const method = isEdit ? 'PUT' : 'POST'; 
+
+            // [PERBAIKAN UTAMA] Payload hanya berisi data HR (tanpa kredensial)
+            const payload = {
+                name: this.formData.name,
+                nip: this.formData.nip,
+                unit_kerja_id: this.formData.unit_kerja_id,
+                bidang_id: this.formData.bidang_id,
+                jabatan_id: this.formData.jabatan_id,
+                atasan_id: this.formData.atasan_id,
+                // Hilangkan role_id, username, password
+            };
+
             try {
-                const res = await fetch(url, {
+                const response = await fetch(url, {
                     method: method,
-                    headers: { "Authorization": `Bearer ${getToken()}`, "Content-Type": "application/json", "Accept": "application/json" },
-                    body: JSON.stringify(this.formData)
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        // Tambahkan header X-HTTP-METHOD-OVERRIDE jika menggunakan POST untuk PUT/PATCH
+                        ...(isEdit && { 'X-HTTP-Method-Override': 'PUT' })
+                    },
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
@@ -185,17 +234,18 @@ export function manajemenPegawaiData() {
                 }
 
                 Swal.fire("Berhasil", result.message, "success");
-                
+
                 if (isEdit) this.toggleEdit(false);
                 else this.toggleAdd(false);
-                
-                this.fetchData(); 
+
+                this.fetchData();
 
             } catch (error) {
                 Swal.fire("Gagal", error.message, "error");
             }
         },
 
+        // --- 3. DELETE ---
         async deleteItem(id) {
             const confirm = await Swal.fire({
                 title: 'Hapus Pegawai?',
@@ -227,44 +277,50 @@ export function manajemenPegawaiData() {
             }
         },
 
-        toggleAdd(val) { 
-            this.openAdd = val; 
-            if(val) {
-                this.editId = null;
-                this.formData = { name: '', username: '', nip: '', password: '', unit_kerja_id: '', bidang_id: '', jabatan_id: '', role_id: '', atasan_id: '' };
-                this.bidangList = []; this.atasanList = [];
+        // --- HELPER MODALS ---
+        toggleAdd(val) {
+            this.openAdd = val;
+            if (val) {
+                // [PERBAIKAN] Reset hanya field HR
+                this.formData = {
+                    name: '', nip: '',
+                    unit_kerja_id: '', bidang_id: '', jabatan_id: '',
+                    atasan_id: ''
+                };
+                this.bidangList = [];
+                this.atasanList = [];
             }
         },
-        toggleEdit(val) { this.openEdit = val; },
-        toggleUpload(val) { this.openUpload = val; },
+
+        toggleEdit(val) {
+            this.openEdit = val;
+            this.editId = null;
+        },
 
         async openModalEdit(item) {
             this.editId = item.id;
-            
-            // Pre-fill data dasar
+
+            // Populate Data Dasar (Hanya field HR)
             this.formData = {
                 name: item.name,
-                username: item.username,
                 nip: item.nip,
-                password: '',
                 unit_kerja_id: item.unit_kerja_id,
                 bidang_id: item.bidang_id,
                 jabatan_id: item.jabatan_id,
-                role_id: item.roles?.[0]?.id || '',
-                atasan_id: item.atasan_id
+                atasan_id: item.atasan_id,
+                // Kredensial lain tidak dimasukkan
             };
 
-            // Load Dependent Dropdowns (Sequential agar aman)
-            if (item.unit_kerja_id) await this.onUnitKerjaChange();
-            
-            // Restore Bidang ID setelah list terload
-            this.formData.bidang_id = item.bidang_id;
+            // Trigger manual load Bidang & Atasan
+            if (item.unit_kerja_id) {
+                await this.onUnitKerjaChange();
+                this.formData.bidang_id = item.bidang_id;
+            }
 
-            // Load Atasan Candidates
-            if (item.jabatan_id) await this.fetchCalonAtasan();
-            
-            // Restore Atasan ID setelah list terload
-            this.formData.atasan_id = item.atasan_id;
+            if (item.jabatan_id) {
+                await this.fetchCalonAtasan();
+                this.formData.atasan_id = item.atasan_id;
+            }
 
             this.openEdit = true;
         },

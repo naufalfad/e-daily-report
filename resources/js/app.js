@@ -14,8 +14,10 @@ import Alpine from 'alpinejs';
 // =========================
 // Import fungsi logika halaman manajemen pegawai (Eksisting)
 import { manajemenPegawaiData } from './pages/admin/manajemen-pegawai.js';
-// [PERBAIKAN UTAMA] Import fungsi logika halaman akun pengguna
+// Import fungsi logika halaman akun pengguna (Eksisting)
 import { akunPenggunaData } from './pages/admin/akun-pengguna.js';
+// [PERBAIKAN UTAMA] Import fungsi logika halaman pengaturan sistem
+import { systemSettingsData } from './pages/admin/setting-sistem.js';
 
 
 // =========================
@@ -24,8 +26,10 @@ import { akunPenggunaData } from './pages/admin/akun-pengguna.js';
 window.Alpine = Alpine;
 // Registrasi Manajemen Pegawai (Eksisting)
 window.manajemenPegawaiData = manajemenPegawaiData;
-// [PERBAIKAN UTAMA] Registrasi Akun Pengguna
+// Registrasi Akun Pengguna (Eksisting)
 window.akunPenggunaData = akunPenggunaData;
+// [PERBAIKAN UTAMA] Registrasi Pengaturan Sistem
+window.systemSettingsData = systemSettingsData;
 
 
 // =========================
@@ -68,9 +72,8 @@ import './pages/kadis/validasi-laporan.js'
 // =========================
 // ADMIN (Logic lain jika ada)
 // =========================
-// import './pages/admin/dashboard.js' // Dibiarkan jika tidak dipakai
-// import './pages/admin/log-aktivitas.js' // Dibiarkan jika tidak dipakai
-import './pages/admin/setting-sistem.js'
+// [CATATAN]: File ini sudah tidak perlu di-import di sini karena sudah di-import di Section 2
+// import './pages/admin/setting-sistem.js' 
 
 
 // Chart global (boleh)

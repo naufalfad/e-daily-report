@@ -1,100 +1,104 @@
-// =============================
-// PENGATURAN SISTEM - JS LOGIC
-// =============================
+import Swal from "sweetalert2";
 
-document.addEventListener('DOMContentLoaded', function () {
+export function systemSettingsData() {
+    const API_URL = "/api/admin/settings";
+    const getToken = () => localStorage.getItem("auth_token");
 
-    const buttons = document.querySelectorAll('.settings-menu-btn');
-    const panels = document.querySelectorAll('[data-settings-panel]');
+    return {
+        // --- STATE ---
+        activeTab: 'sistem',
+        openResetModal: false,
+        isLoading: false,
 
-    // --- 1. TAB SWITCHING LOGIC ---
-    function setActive(btn) {
-        // Reset semua tombol ke style default (inactive)
-        buttons.forEach(b => {
-            b.classList.remove('bg-slate-50', 'text-[#0E1726]', 'font-medium');
-            b.classList.add('text-[#5B687A]', 'font-normal', 'hover:bg-slate-50');
-        });
+        // Data Utama Settings
+        settings: {
+            maintenance_mode: false, // [FIX] Default ke Boolean FALSE
+            app_footer: '',
+            timezone: '',
+            session_timeout: '',
+            login_limit: ''
+        },
 
-        // Set tombol aktif
-        btn.classList.remove('text-[#5B687A]', 'font-normal', 'hover:bg-slate-50');
-        btn.classList.add('bg-slate-50', 'text-[#0E1726]', 'font-medium');
-    }
+        menus: [
+            { id: 'sistem', label: 'Pengaturan Sistem', title: 'Pengaturan Bawaan' },
+            { id: 'role', label: 'Pengaturan Role dan Jabatan', title: 'Pengaturan Role dan Jabatan' },
+            { id: 'keamanan', label: 'Pengaturan Keamanan', title: 'Pengaturan Keamanan' },
+            { id: 'jam_kerja', label: 'Pengaturan Jam Kerja', title: 'Pengaturan Jam Kerja' },
+            { id: 'reset', label: 'Reset Password', title: 'Reset Password' },
+        ],
+        
+        async init() {
+            console.log('System Settings: Initializing Alpine and fetching data...');
+            await this.fetchSettings();
+        },
+        
+        async fetchSettings() {
+            this.isLoading = true;
+            try {
+                const res = await fetch(API_URL, {
+                    headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    // Isi state settings dengan data yang dimuat
+                    this.settings = { ...this.settings, ...data };
+                    
+                    // [PERBAIKAN UTAMA] Konversi String "1"/"0" ke Boolean true/false
+                    // Agar toggle switch di UI menyala sesuai data DB
+                    this.settings.maintenance_mode = (String(data.maintenance_mode) === '1');
 
-    function showPanel(key) {
-        panels.forEach(p => {
-            if (p.dataset.settingsPanel === key) {
-                p.classList.remove('hidden');
-                // Efek fade-in sederhana
-                p.style.opacity = 0;
-                setTimeout(() => p.style.opacity = 1, 50);
-            } else {
-                p.classList.add('hidden');
+                } else {
+                    throw new Error("Gagal memuat pengaturan.");
+                }
+            } catch (e) {
+                console.error("Error loading settings:", e);
+                Swal.fire("Error", "Gagal memuat pengaturan sistem.", "error");
+            } finally {
+                this.isLoading = false;
             }
-        });
-    }
+        },
 
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const key = btn.getAttribute('data-settings-menu');
-            setActive(btn);
-            showPanel(key);
-        });
-    });
+        async submitGeneralSettings() {
+            this.isLoading = true;
 
-    // Default: Buka tab pertama ('sistem')
-    const defaultBtn = document.querySelector('[data-settings-menu="sistem"]');
-    if(defaultBtn) defaultBtn.click();
+            // [PERBAIKAN UTAMA] Konversi Boolean true/false kembali ke String "1"/"0" untuk DB
+            const payload = {
+                'maintenance_mode': this.settings.maintenance_mode ? '1' : '0',
+                'app_footer': this.settings.app_footer, 
+                'timezone': this.settings.timezone,
+            };
 
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 
+                        "Authorization": `Bearer ${getToken()}`, 
+                        "Content-Type": "application/json",
+                        "Accept": "application/json" 
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await res.json();
 
-    // --- 2. MODAL LOGIC ---
-    const resetAdminCard = document.getElementById('reset-admin-card');
-    const resetAdminModal = document.getElementById('reset-admin-modal');
-    const btnCancelReset = document.getElementById('btn-reset-admin-cancel');
-    const btnSaveReset = document.getElementById('btn-reset-admin-save');
-
-    function toggleModal(show) {
-        if(!resetAdminModal) return;
-        if(show) {
-            resetAdminModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden'); // Prevent scroll
-        } else {
-            resetAdminModal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
+                if (!res.ok) throw new Error(result.message || "Gagal menyimpan perubahan.");
+                
+                Swal.fire("Berhasil", result.message, "success");
+                
+                // Refresh data untuk memastikan sinkronisasi
+                await this.fetchSettings();
+                
+            } catch (e) {
+                 Swal.fire("Gagal", e.message || "Terjadi kesalahan pada server.", "error");
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        
+        toggleResetModal(show) {
+            this.openResetModal = show;
         }
     }
-
-    if (resetAdminCard) resetAdminCard.addEventListener('click', () => toggleModal(true));
-    if (btnCancelReset) btnCancelReset.addEventListener('click', () => toggleModal(false));
-    
-    // Close ketika klik di luar modal (overlay)
-    if (resetAdminModal) {
-        resetAdminModal.addEventListener('click', (e) => {
-            if (e.target === resetAdminModal) toggleModal(false);
-        });
-    }
-
-
-    // --- 3. PASSWORD VISIBILITY TOGGLE ---
-    const eyeButtons = document.querySelectorAll('[data-eye-target]');
-
-    eyeButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            const targetId = this.getAttribute('data-eye-target');
-            const input = document.getElementById(targetId);
-            const eyeShow = this.querySelector('.eye-show');
-            const eyeHide = this.querySelector('.eye-hide');
-
-            if (!input) return;
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeShow.classList.add('hidden');
-                eyeHide.classList.remove('hidden');
-            } else {
-                input.type = 'password';
-                eyeShow.classList.remove('hidden');
-                eyeHide.classList.add('hidden');
-            }
-        });
-    });
-});
+}

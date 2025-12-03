@@ -9,7 +9,7 @@ use App\Http\Controllers\Core\SkpController;
 
 /*
 |--------------------------------------------------------------------------
-| AUTH ROUTE
+| AUTH ROUTE (Global Access)
 |--------------------------------------------------------------------------
 */
 
@@ -19,7 +19,7 @@ Route::view('/login', 'auth.login')->name('login');
 // Redirect root → login
 Route::get('/', fn () => redirect()->route('login'));
 
-// Login (POST)
+// Login (POST) - API Route (Diobrolin di API.php)
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 // Logout
@@ -33,20 +33,41 @@ Route::post('/logout', function () {
 
 /*
 |--------------------------------------------------------------------------
-| GENERAL STATIC TEST / DEMO
+| GENERAL STATIC TEST / DEMO & ERROR PAGES (Guest Access)
 |--------------------------------------------------------------------------
 */
 
 Route::view('/tes-pohon-organisasi', 'organisasi');
 
+// === ROUTE HALAMAN ERROR & MAINTENANCE (WAJIB DILUAR MIDDLEWARE 'AUTH') ===
+// Blok ini harus berada di sini agar bisa diakses user yang belum login.
+
+Route::get('/error', function () {
+    return view('errors.error', ['message' => 'Contoh pesan error dari sistem.']);
+});
+
+Route::get('/maintenance', function () {
+    return view('errors.maintenance');
+})->name('maintenance'); // <--- INI ADALAH FIX YANG DIBUTUHKAN
+
+Route::get('/503', function () {
+    return view('errors.503');
+});
+
 
 /*
 |--------------------------------------------------------------------------
-| STAF ROUTES
+| PROTECTED ROUTES (WAJIB AUTH)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth'])->group(function () {
+    
+    /*
+    |--------------------------------------------------------------------------
+    | STAF ROUTES
+    |--------------------------------------------------------------------------
+    */
 
     Route::prefix('staf')->name('staf.')->group(function () {
 
@@ -130,19 +151,4 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
     });
-
-    // === ROUTE TESTING HALAMAN ERROR & MAINTENANCE ===
-
-    Route::get('/error', function () {
-        return view('errors.error', ['message' => 'Contoh pesan error dari sistem.']);
-    });
-
-    Route::get('/maintenance', function () {
-        return view('errors.maintenance');
-    });
-
-    Route::get('/503', function () {
-        return view('errors.503');
-    });
-
 });

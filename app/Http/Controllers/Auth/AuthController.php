@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User; // Pastikan User Model di-import
+use App\Models\User; 
+use App\Models\SystemSetting;
 use Throwable;
 
 class AuthController extends Controller
@@ -34,34 +35,49 @@ class AuthController extends Controller
             $user = User::where('username', $username)->first();
 
             if (!$user) {
-                // Gunakan 401 Unauthorized untuk kegagalan kredensial
                 return response()->json(['message' => 'Kredensial tidak valid (Pengguna tidak ditemukan)'], 401);
             }
 
             // 3. Cek password
             if (!Hash::check($request->password, $user->password)) {
-                // Gunakan 401 Unauthorized untuk kegagalan password
                 return response()->json(['message' => 'Kredensial tidak valid (Password salah)'], 401);
             }
 
             // ======================================================================
-            // 4. SECURITY GATE: CEK STATUS AKTIF (Implementasi Suspend)
+            // 4. SECURITY GATE 1: CEK STATUS SUSPEND (is_active)
             // ======================================================================
             if ($user->is_active === false) {
-                // Jika akun dinonaktifkan, blokir login dan kirim kode 403 Forbidden
                 return response()->json([
                     'message' => 'Akun Anda dinonaktifkan (Suspend). Silakan hubungi Administrator.',
                     'status_code' => 403 
                 ], 403);
             }
             
-            // 5. Jika Lolos -> Login manual dan buat token
+            // ======================================================================
+            // 5. SECURITY GATE 2: CEK MAINTENANCE MODE [PERBAIKAN UTAMA]
+            // ======================================================================
+            $isMaintenance = SystemSetting::where('setting_key', 'maintenance_mode')
+                                            ->where('setting_value', '1')
+                                            ->exists();
+
+            if ($isMaintenance) {
+                if (!$user->hasRole('Super Admin')) {
+                    // [PERBAIKAN] Tambahkan URL Redirect ke Response 403
+                    return response()->json([
+                        'message' => 'Sistem sedang dalam mode pemeliharaan. Akses dibatasi untuk Administrator.',
+                        'status_code' => 403,
+                        'redirect_url' => route('maintenance') // Kirim URL ke Frontend
+                    ], 403);
+                }
+            }
+            
+            // 6. Jika Lolos -> Login manual dan buat token
             Auth::login($user);
 
             $user->load(['roles', 'unitKerja', 'jabatan', 'atasan']);
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // 6. Respon sukses
+            // 7. Respon sukses
             return response()->json([
                 'message' => 'Login berhasil',
                 'access_token' => $token,
@@ -85,7 +101,6 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Logout berhasil']);
     }
 
@@ -94,16 +109,26 @@ class AuthController extends Controller
      */
     public function user(Request $request)
     {
+        // Pengecekan is_active untuk sesi yang sudah ada
+        if ($request->user() && $request->user()->is_active === false) {
+             return response()->json(['message' => 'Sesi dinonaktifkan.'], 403);
+        }
+        
         return response()->json(
             $request->user()->load(['roles', 'unitKerja', 'jabatan', 'atasan'])
         );
     }
 
     /**
-     * Alias/helper untuk user data (bisa dihapus jika tidak digunakan, tapi kita biarkan).
+     * Alias/helper untuk user data.
      */
     public function me(Request $request)
     {
+        // Pengecekan is_active untuk sesi yang sudah ada
+        if ($request->user() && $request->user()->is_active === false) {
+             return response()->json(['message' => 'Sesi dinonaktifkan.'], 403);
+        }
+        
         return response()->json($request->user());
     }
 }

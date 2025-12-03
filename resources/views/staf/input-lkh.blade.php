@@ -247,6 +247,7 @@
 
                         {{-- Kategori (Trigger Logika SKP) --}}
                         <div class="relative">
+                            <input type="hidden" name="kategori" x-model="kategori">
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Kategori</label>
 
                             <button type="button" @click="kategoriOpen = !kategoriOpen"

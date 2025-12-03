@@ -30,7 +30,7 @@ class User extends Authenticatable
     protected $appends = ['foto_profil_url'];
 
     // Eager load agar otomatis ikut saat query user
-    protected $with = ['atasan', 'jabatan', 'bidang'];
+    protected $with = ['atasan', 'jabatan', 'bidang', 'unitKerja'];
 
     // ---------------------------------------------------------------------
     // Accessor foto profil
@@ -58,7 +58,7 @@ class User extends Authenticatable
     public function bawahanRecursif()
     {
         return $this->hasMany(User::class, 'atasan_id')
-                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
+            ->with(['jabatan', 'bidang', 'bawahanRecursif']);
     }
 
     // ---------------------------------------------------------------------

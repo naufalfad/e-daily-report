@@ -547,23 +547,28 @@ class LkhController extends Controller
 
     public function exportPdf($id)
     {
-        $lkh = LaporanHarian::with(['tupoksi', 'skp', 'user'])->findOrFail($id);
+        $lkh = LaporanHarian::with([
+            'tupoksi',
+            'skp',
+            'user' => fn($q) => $q->with('unitKerja')
+        ])->findOrFail($id);
 
         $pdf = \PDF::loadView('pdf.lkh', [
             'pegawai_nama' => $lkh->user->name,
             'pegawai_nip' => $lkh->user->nip,
-            'pegawai_unit' => optional($lkh->user->unit_kerja_id)->nama_unit ?? '-',
+            'pegawai_unit' => $lkh->user->unitKerja->nama_unit ?? '-',
 
             'tanggal' => $lkh->tanggal_laporan,
             'jenis_kegiatan' => $lkh->jenis_kegiatan,
-            'tupoksi' => optional($lkh->tupoksi_id)->uraian_tugas,
+            'tupoksi' => $lkh->tupoksi->uraian_tugas ?? '-',
             'kategori' => $lkh->skp_id ? 'SKP' : 'Non-SKP',
 
             'jam_mulai' => $lkh->waktu_mulai,
             'jam_selesai' => $lkh->waktu_selesai,
 
-            'lokasi' => $lkh->lokasi,
-            'uraian_kegiatan' => $lkh->deskripsi_aktivitas,
+            'lokasi' => $lkh->lokasi ?? ($lkh->latitude && $lkh->longitude
+                ? $lkh->latitude . ', ' . $lkh->longitude
+                : '-'),
 
             'output' => $lkh->output_hasil_kerja,
             'volume' => $lkh->volume,
@@ -579,32 +584,47 @@ class LkhController extends Controller
     {
         $user = auth()->user();
 
+        // Ambil tupoksi
+        $tupoksi = \App\Models\Tupoksi::find($request->tupoksi_id);
+
+        // Ambil SKP jika kategori SKP
+        $skp = null;
+        if ($request->kategori === 'skp' && $request->skp_id) {
+            $skp = \App\Models\Skp::find($request->skp_id);
+        }
+
         $data = [
             'pegawai_nama' => $user->name,
             'pegawai_nip' => $user->nip,
-            'pegawai_unit' => $user->unit_kerja_id->nama ?? '-',
+            'pegawai_unit' => $user->unitKerja->nama_unit ?? '-',
 
             'tanggal' => $request->tanggal_laporan,
             'jenis_kegiatan' => $request->jenis_kegiatan,
-            'tupoksi' => $request->tupoksi_id,
-            'kategori' => $request->kategori,
+
+            // Tupoksi = uraian tugas, bukan ID
+            'tupoksi' => $tupoksi->uraian_tugas ?? '-',
+
+            // Fix kategori lowercase
+            'kategori' => $request->kategori === 'skp' ? 'SKP' : 'Non-SKP',
 
             'jam_mulai' => $request->waktu_mulai,
             'jam_selesai' => $request->waktu_selesai,
 
-            'lokasi' => $request->lokasi,
+            // Lokasi combine
+            'lokasi' => $request->lokasi
+                ?: ($request->latitude && $request->longitude
+                    ? "{$request->latitude}, {$request->longitude}"
+                    : '-'),
+
             'uraian_kegiatan' => $request->deskripsi_aktivitas,
 
             'output' => $request->output_hasil_kerja,
             'volume' => $request->volume,
             'satuan' => $request->satuan,
 
-            // khusus SKP
-            'target_skp' => $request->kategori === 'SKP'
-                ? $request->target_skp
-                : null,
+            // Target SKP
+            'target_skp' => $skp->rencana_aksi ?? null,
 
-            // placeholder bukti
             'bukti_status' => "Bukti hanya tersedia setelah disimpan.",
         ];
 

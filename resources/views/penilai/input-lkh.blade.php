@@ -489,7 +489,7 @@
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
 
-                    <a :href="'/staf/input-lkh/' + item.id" 
+                    <a :href="'/penilai/input-laporan/' + item.id" 
                         class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
                         Lanjutkan
                     </a>
@@ -535,7 +535,7 @@
                                 <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <a :href="'/staf/input-lkh/' + item.id"
+                                <a :href="'/penilai/input-laporan/' + item.id"
                                     class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">
                                     Lanjutkan
                                 </a>

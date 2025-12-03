@@ -23,6 +23,13 @@ function riwayatData(role) {
             mode: role === "penilai" ? "subordinates" : "mine",
         },
 
+        //Edit Laporan
+        editLaporan(id) {
+            if (!id) return;
+            // Arahkan ke halaman input/edit dengan ID laporan
+            window.location.href = `/staf/input-lkh/${id}`;
+        },
+
         // UTILS
         formatDate(isoString) {
             if (!isoString) return "-";

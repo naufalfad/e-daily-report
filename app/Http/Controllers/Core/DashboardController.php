@@ -103,7 +103,7 @@ class DashboardController extends Controller
 
         $recentActivities = LaporanHarian::with('skp')
             ->where('user_id', $userId)
-            ->latest('created_at')
+            ->latest('updated_at')
             ->limit(5)
             ->get();
 

@@ -64,18 +64,6 @@
                     </button>
                 </div>
             </div>
-
-            {{-- Filter Penilai --}}
-            <div x-show="role === 'penilai'" class="grid md:grid-cols-2 gap-3 mt-3">
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-normal text-slate-600 mb-2">Tampilkan Data LKH</label>
-                    <select x-model="filter.mode" @change="filterData()"
-                        class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
-                        <option value="mine">Hanya Laporan Saya</option>
-                        <option value="subordinates">Semua Laporan Bawahan</option>
-                    </select>
-                </div>
-            </div>
         </form>
 
         {{-- TABLE --}}

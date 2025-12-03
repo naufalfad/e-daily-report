@@ -142,7 +142,7 @@ function riwayatData(role) {
         exportPdf() {
             Swal.fire({
                 title: "Export PDF?",
-                text: "Apakah Anda yakin ingin mengekspor laporan ini ke PDF?",
+                text: "Apakah Anda yakin ingin mengekspor riwayat laporan ini ke PDF?",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonColor: "#155FA6",

@@ -90,7 +90,7 @@
                         this.isLoading = true;
                         try {
                             const token = localStorage.getItem('auth_token'); 
-                            const response = await fetch('/e-daily-report/api/lkh/referensi', {
+                            const response = await fetch('/api/lkh/referensi', {
                                 headers: {
                                     'Authorization': `Bearer ${token}`,
                                     'Accept': 'application/json'
@@ -535,7 +535,7 @@
                                 <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <a :href="'/staf/input-lkh/' + item.id"
+                                <a :href="'/penilai/input-lkh/' + item.id"
                                     class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">
                                     Lanjutkan
                                 </a>

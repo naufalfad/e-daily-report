@@ -23,6 +23,7 @@ class User extends Authenticatable
     protected $casts = [
         'username_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_active' => 'boolean',
     ];
 
     protected $spatialFields = [];

@@ -27,18 +27,21 @@ class LaporanHarian extends Model
         'volume',
         'satuan',
         'status',
-        'catatan_penilai',
+        
+        // [PERBAIKAN UTAMA] Menggunakan nama kolom dari Database Migration
+        'komentar_validasi', // sebelumnya 'catatan_penilai' atau 'komentar_validasi'
+        'waktu_validasi',    // sebelumnya 'validated_at'
+        
         'master_kelurahan_id',
         'is_luar_lokasi',
         'lokasi',
-        // 'validator_id' DIHAPUS
-        'validated_at',
         'atasan_id', // Tetap menggunakan atasan_id sebagai penilai awal
     ];
 
     protected $casts = [
         'tanggal_laporan' => 'date',
-        'validated_at' => 'datetime',
+        // [PERBAIKAN] Menggunakan nama kolom yang benar
+        'waktu_validasi' => 'datetime',
     ];
 
     // Hubungan ke Pengguna (Pembuat Laporan)
@@ -71,9 +74,6 @@ class LaporanHarian extends Model
         return $this->belongsTo(User::class, 'atasan_id');
     }
     
-    // RELASI VALIDATOR DIHAPUS KARENA KOLOM TIDAK ADA
-    // public function validator(): BelongsTo { ... }
-
     // Accessor untuk mendapatkan status laporan yang lebih deskriptif
     public function getStatusLabelAttribute(): string
     {

@@ -129,4 +129,9 @@ class User extends Authenticatable
         return $this->hasMany(Skp::class, 'user_id');
     }
 
+    public function lkh()
+    {
+        return $this->hasMany(\App\Models\LaporanHarian::class, 'user_id');
+    }
+
 }

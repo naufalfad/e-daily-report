@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Core;
-
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use Barryvdh\DomPDF\Facade\Pdf;

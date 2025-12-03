@@ -21,17 +21,18 @@ class TestingSeeder extends Seeder
     public function run()
     {
         DB::transaction(function () {
-            $this->command->info('Memulai Proses Seeding Master Data dan Simulasi Aktivitas...');
+            $this->command->info('Memulai Proses Seeding Master Data dan Simulasi Aktivitas (Final Fix)...');
 
-            // --- HAPUS DATA LAMA ---
+            // --- 1. CLEANUP DATA LAMA ---
             LaporanHarian::query()->delete();
             Skp::query()->delete();
             Pengumuman::query()->delete();
+            DB::table('user_roles')->delete();
             User::query()->delete(); 
             Role::query()->delete();
-            Jabatan::query()->delete();
             Tupoksi::query()->delete();
             Bidang::query()->delete();
+            Jabatan::query()->delete();
             UnitKerja::query()->delete();
             
             $globalPassword = Hash::make('password123');
@@ -39,322 +40,356 @@ class TestingSeeder extends Seeder
             $globalAlamat = 'Jl. Yos Sudarso, Nawaripi, Kec. Mimika Baru, Kabupaten Mimika, Papua Tengah 99971';
 
             // =================================================================
-            // 1. MASTER DATA
+            // 2. MASTER DATA (ROLES & STRUKTUR)
             // =================================================================
             $rAdmin   = Role::firstOrCreate(['nama_role' => 'Super Admin']);
             $rKadis   = Role::firstOrCreate(['nama_role' => 'Kadis']);
             $rPenilai = Role::firstOrCreate(['nama_role' => 'Penilai']); 
-            $rPegawai = Role::firstOrCreate(['nama_role' => 'Pegawai']); 
+            $rPegawai = Role::firstOrCreate(['nama_role' => 'Staf']); 
 
             $jKaban   = Jabatan::firstOrCreate(['nama_jabatan' => 'Kepala Badan']);
             $jSekban  = Jabatan::firstOrCreate(['nama_jabatan' => 'Sekretaris']);
             $jKabid   = Jabatan::firstOrCreate(['nama_jabatan' => 'Kepala Bidang']);
             $jKasub   = Jabatan::firstOrCreate(['nama_jabatan' => 'Kepala Sub Bagian/Bidang']);
             $jStaf    = Jabatan::firstOrCreate(['nama_jabatan' => 'Staf Pelaksana']);
+            $jAdmin   = Jabatan::firstOrCreate(['nama_jabatan' => 'Administrator Sistem']);
 
             $ukBapenda = UnitKerja::firstOrCreate(['nama_unit' => 'Badan Pendapatan Daerah']);
 
-            $bPimpinan    = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Unsur Pimpinan & Staf Khusus']);
             $bSekretariat = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Sekretariat']);
+            $bPimpinan    = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Unsur Pimpinan']);
             $bPbb         = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Bidang PBB dan BPHTB']);
-            $bDana        = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Bidang Dana Perimbangan & Lain-lain Pendapatan']);
-            
-            // Tupoksi
-            Tupoksi::firstOrCreate(['bidang_id' => $bPimpinan->id, 'uraian_tugas' => 'Penyelenggaraan kebijakan teknis Pendapatan daerah']);
-            Tupoksi::firstOrCreate(['bidang_id' => $bPbb->id, 'uraian_tugas' => 'Pelaksanaan perencanaan, pengendalian dan operasional PBB']);
-            Tupoksi::firstOrCreate(['bidang_id' => $bSekretariat->id, 'uraian_tugas' => 'Pelayanan administrasi umum dan kepegawaian']);
+            $bDana        = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Bidang Dana Perimbangan']);
+            $bIT          = Bidang::firstOrCreate(['unit_kerja_id' => $ukBapenda->id, 'nama_bidang' => 'Unit Teknologi Informasi']);
 
             // =================================================================
-            // 2. USER HIERARCHY & CREDENTIALS (USERNAME)
+            // 3. TUPOKSI
+            // =================================================================
+            Tupoksi::firstOrCreate(['bidang_id' => $bSekretariat->id, 'uraian_tugas' => 'Melaksanakan pengelolaan surat menyurat dan kearsipan']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bSekretariat->id, 'uraian_tugas' => 'Melaksanakan administrasi kepegawaian dan pengembangan SDM']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bSekretariat->id, 'uraian_tugas' => 'Menyusun rencana anggaran dan pelaporan keuangan badan']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bSekretariat->id, 'uraian_tugas' => 'Memfasilitasi kebutuhan rumah tangga dan perlengkapan kantor']);
+
+            Tupoksi::firstOrCreate(['bidang_id' => $bPbb->id, 'uraian_tugas' => 'Melaksanakan pendataan dan pendaftaran objek pajak baru']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bPbb->id, 'uraian_tugas' => 'Melakukan penilaian dan penetapan besaran pajak terutang']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bPbb->id, 'uraian_tugas' => 'Melaksanakan pemutakhiran data subjek dan objek pajak (SISMIOP)']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bPbb->id, 'uraian_tugas' => 'Melakukan pelayanan keberatan dan pengurangan pajak']);
+
+            Tupoksi::firstOrCreate(['bidang_id' => $bPimpinan->id, 'uraian_tugas' => 'Merumuskan kebijakan teknis di bidang pendapatan daerah']);
+            Tupoksi::firstOrCreate(['bidang_id' => $bPimpinan->id, 'uraian_tugas' => 'Mengoordinasikan pelaksanaan tugas seluruh bidang']);
+
+            // =================================================================
+            // 4. USER & HIERARCHY
             // =================================================================
             
-            // --- LEVEL 1: KABAN ---
-            $kaban = User::firstOrCreate(
-                ['username' => 'kaban'], // ganti email jadi username
+            // ADMIN
+            $adminUser = User::firstOrCreate(
+                ['username' => 'admin'],
                 [
-                    'name' => 'Darius Sabon Rain (Kaban)',
-                    'nip' => '197001011995011001',
-                    'password' => $globalPassword,
+                    'name'          => 'Administrator Sistem',
+                    'nip'           => 'admin_system',
+                    'password'      => $globalPassword,
                     'unit_kerja_id' => $ukBapenda->id,
-                    'jabatan_id' => $jKaban->id,
-                    'bidang_id' => $bPimpinan->id,
-                    'atasan_id' => null,
-                    'email' => null,
-                    'alamat' => $globalAlamat
+                    'jabatan_id'    => $jAdmin->id,
+                    'bidang_id'     => $bIT->id,
+                    'atasan_id'     => null,
+                    'email'         => 'admin@bapenda.mimika.go.id',
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
+                ]
+            );
+            $adminUser->roles()->sync([$rAdmin->id]);
+
+            // KABAN
+            $kaban = User::firstOrCreate(
+                ['username' => 'kaban'],
+                [
+                    'name'          => 'Darius Sabon Rain (Kaban)',
+                    'nip'           => '197301032007011031',
+                    'password'      => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id'    => $jKaban->id,
+                    'bidang_id'     => $bPimpinan->id,
+                    'atasan_id'     => null,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
                 ]
             );
             $kaban->roles()->sync([$rKadis->id, $rPenilai->id]);
 
-            // --- LEVEL 2: SEKRETARIS ---
+            // SEKBAN
             $sekban = User::firstOrCreate(
                 ['username' => 'sekban'],
                 [
-                    'name' => 'Sekretaris Bapenda',
-                    'nip' => '197501012000011001',
-                    'password' => $globalPassword,
+                    'name'          => 'Sekretaris Bapenda',
+                    'nip'           => '197501012000011001',
+                    'password'      => $globalPassword,
                     'unit_kerja_id' => $ukBapenda->id,
-                    'jabatan_id' => $jSekban->id,
-                    'bidang_id' => $bSekretariat->id,
-                    'atasan_id' => $kaban->id,
-                    'email' => null,
-                    'alamat' => $globalAlamat
+                    'jabatan_id'    => $jSekban->id,
+                    'bidang_id'     => $bSekretariat->id,
+                    'atasan_id'     => $kaban->id,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
                 ]
             );
             $sekban->roles()->sync([$rPenilai->id]);
 
-            // --- LEVEL 2: KABID PBB ---
+            // KABID PBB
             $kabidPbb = User::firstOrCreate(
                 ['username' => 'kabid.pbb'],
                 [
-                    'name' => 'Kabid PBB & BPHTB',
-                    'nip' => '198001012005011001',
-                    'password' => $globalPassword,
+                    'name'          => 'Kabid PBB & BPHTB',
+                    'nip'           => '198001012005011001',
+                    'password'      => $globalPassword,
                     'unit_kerja_id' => $ukBapenda->id,
-                    'jabatan_id' => $jKabid->id,
-                    'bidang_id' => $bPbb->id,
-                    'atasan_id' => $kaban->id,
-                    'email' => null,
-                    'alamat' => $globalAlamat
+                    'jabatan_id'    => $jKabid->id,
+                    'bidang_id'     => $bPbb->id,
+                    'atasan_id'     => $kaban->id,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
                 ]
             );
             $kabidPbb->roles()->sync([$rPenilai->id]);
             
-            // --- LEVEL 3: KASUBID PBB ---
+            // KASUBID DATA PBB
             $kasubPbbData = User::firstOrCreate(
                 ['username' => 'kasub.pbb.data'],
                 [
-                    'name' => 'Kasubid Pendataan PBB',
-                    'nip' => '198501012010011001',
-                    'password' => $globalPassword,
+                    'name'          => 'Kasubid Pendataan PBB',
+                    'nip'           => '198501012010011001',
+                    'password'      => $globalPassword,
                     'unit_kerja_id' => $ukBapenda->id,
-                    'jabatan_id' => $jKasub->id,
-                    'bidang_id' => $bPbb->id,
-                    'atasan_id' => $kabidPbb->id,
-                    'email' => null,
-                    'alamat' => $globalAlamat
+                    'jabatan_id'    => $jKasub->id,
+                    'bidang_id'     => $bPbb->id,
+                    'atasan_id'     => $kabidPbb->id,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
                 ]
             );
             $kasubPbbData->roles()->sync([$rPenilai->id]);
 
-            // --- LEVEL 4: STAF PBB ---
-            $stafPbbData = User::firstOrCreate(
-                ['username' => 'staf.pbb.data'],
-                [
-                    'name' => 'Staf Pendataan PBB',
-                    'nip' => '199501012020011001',
-                    'password' => $globalPassword,
-                    'unit_kerja_id' => $ukBapenda->id,
-                    'jabatan_id' => $jStaf->id,
-                    'bidang_id' => $bPbb->id,
-                    'atasan_id' => $kasubPbbData->id,
-                    'email' => null,
-                    'alamat' => $globalAlamat
-                ]
-            );
-            $stafPbbData->roles()->sync([$rPegawai->id]);
-            
-            // --- LEVEL 3: KASUBAG UMUM ---
+            // KASUBAG UMUM
             $kasubUmum = User::firstOrCreate(
                 ['username' => 'kasub.umum'],
                 [
-                    'name' => 'Kasubag Umum & Kepegawaian',
-                    'nip' => '199001012015011001',
-                    'password' => $globalPassword,
+                    'name'          => 'Kasubag Umum & Kepegawaian',
+                    'nip'           => '199001012015011001',
+                    'password'      => $globalPassword,
                     'unit_kerja_id' => $ukBapenda->id,
-                    'jabatan_id' => $jKasub->id,
-                    'bidang_id' => $bSekretariat->id,
-                    'atasan_id' => $sekban->id,
-                    'email' => null,
-                    'alamat' => $globalAlamat
+                    'jabatan_id'    => $jKasub->id,
+                    'bidang_id'     => $bSekretariat->id,
+                    'atasan_id'     => $sekban->id,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
                 ]
             );
             $kasubUmum->roles()->sync([$rPenilai->id]);
 
-            
+            // STAF PBB
+            $stafPbbData = User::firstOrCreate(
+                ['username' => 'staf.pbb.data'],
+                [
+                    'name'          => 'Staf Pendataan PBB',
+                    'nip'           => '199501012020011001',
+                    'password'      => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id'    => $jStaf->id,
+                    'bidang_id'     => $bPbb->id,
+                    'atasan_id'     => $kasubPbbData->id,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
+                ]
+            );
+            $stafPbbData->roles()->sync([$rPegawai->id]);
+
+            // STAF UMUM
+            $stafUmum = User::firstOrCreate(
+                ['username' => 'staf.umum'],
+                [
+                    'name'          => 'Staf Administrasi Umum',
+                    'nip'           => '199601012021011002',
+                    'password'      => $globalPassword,
+                    'unit_kerja_id' => $ukBapenda->id,
+                    'jabatan_id'    => $jStaf->id,
+                    'bidang_id'     => $bSekretariat->id,
+                    'atasan_id'     => $kasubUmum->id,
+                    'email'         => null,
+                    'alamat'        => $globalAlamat,
+                    'is_active'     => true
+                ]
+            );
+            $stafUmum->roles()->sync([$rPegawai->id]);
+
 
             // =================================================================
-            // 3. SIMULASI SKP (CREATE)
+            // 5. SIMULASI SKP
             // =================================================================
             
             $skpStaff = Skp::create([
-                'user_id'        => $stafPbbData->id,
-                'nama_skp'       => 'Melakukan pendataan objek pajak PBB sektor pedesaan dan perkotaan',
-                'periode_mulai'  => Carbon::now()->startOfYear(),
-                'periode_selesai'=> Carbon::now()->endOfYear(),
-                'rencana_aksi'   => 'Melakukan survei ke lapangan dan menginput SPOP',
-                'indikator'      => 'Jumlah objek pajak terdata',
-                'target'         => 100
+                'user_id'         => $stafPbbData->id,
+                'nama_skp'        => 'Melakukan pendataan objek pajak PBB sektor pedesaan dan perkotaan',
+                'periode_mulai'   => Carbon::now()->startOfYear(),
+                'periode_selesai' => Carbon::now()->endOfYear(),
+                'rencana_aksi'    => 'Melakukan survei ke lapangan dan menginput SPOP ke sistem',
+                'indikator'       => 'Jumlah objek pajak terdata secara akurat',
+                'target'          => 200
             ]);
 
             $skpKasubid = Skp::create([
-                'user_id'        => $kasubPbbData->id,
-                'nama_skp'       => 'Mengelola kegiatan pendataan dan pendaftaran PBB',
-                'periode_mulai'  => Carbon::now()->startOfYear(),
-                'periode_selesai'=> Carbon::now()->endOfYear(),
-                'rencana_aksi'   => 'Monitoring tim pendataan dan verifikasi berkas',
-                'indikator'      => 'Laporan monitoring',
-                'target'         => 12
+                'user_id'         => $kasubPbbData->id,
+                'nama_skp'        => 'Mengelola kegiatan pendataan dan pendaftaran PBB',
+                'periode_mulai'   => Carbon::now()->startOfYear(),
+                'periode_selesai' => Carbon::now()->endOfYear(),
+                'rencana_aksi'    => 'Monitoring kinerja tim pendataan dan verifikasi berkas masuk',
+                'indikator'       => 'Persentase validitas data PBB',
+                'target'          => 100
             ]);
 
             $skpKabid = Skp::create([
-                'user_id'        => $kabidPbb->id,
-                'nama_skp'       => 'Merumuskan kebijakan teknis bidang PBB dan BPHTB',
-                'periode_mulai'  => Carbon::now()->startOfYear(),
-                'periode_selesai'=> Carbon::now()->endOfYear(),
-                'rencana_aksi'   => 'Menyusun draf kebijakan',
-                'indikator'      => 'Draf Perbup',
-                'target'         => 1
+                'user_id'         => $kabidPbb->id,
+                'nama_skp'        => 'Merumuskan kebijakan teknis intensifikasi PBB dan BPHTB',
+                'periode_mulai'   => Carbon::now()->startOfYear(),
+                'periode_selesai' => Carbon::now()->endOfYear(),
+                'rencana_aksi'    => 'Menyusun draf Peraturan Bupati tentang Zona Nilai Tanah',
+                'indikator'       => 'Dokumen Kebijakan Tersedia',
+                'target'          => 1
             ]);
 
             $skpSekban = Skp::create([
-                'user_id'        => $sekban->id,
-                'nama_skp'       => 'Mengkoordinasikan urusan umum, kepegawaian, dan keuangan',
-                'periode_mulai'  => Carbon::now()->startOfYear(),
-                'periode_selesai'=> Carbon::now()->endOfYear(),
-                'rencana_aksi'   => 'Evaluasi serapan anggaran',
-                'indikator'      => 'Laporan realisasi fisik dan keuangan',
-                'target'         => 4
+                'user_id'         => $sekban->id,
+                'nama_skp'        => 'Mengoordinasikan pelayanan administratif dan fasilitasi kinerja',
+                'periode_mulai'   => Carbon::now()->startOfYear(),
+                'periode_selesai' => Carbon::now()->endOfYear(),
+                'rencana_aksi'    => 'Evaluasi disiplin dan kinerja pegawai melalui e-Daily Report',
+                'indikator'       => 'Laporan Kinerja Bulanan Pegawai',
+                'target'          => 12
             ]);
             
             $skpKasubag = Skp::create([
-                'user_id' => $kasubUmum->id, 
-                'nama_skp' => 'Urusan Rumah Tangga Kantor',
-                'periode_mulai' => Carbon::now()->startOfYear(),
+                'user_id'         => $kasubUmum->id, 
+                'nama_skp'        => 'Pengelolaan Urusan Umum dan Aset',
+                'periode_mulai'   => Carbon::now()->startOfYear(),
                 'periode_selesai' => Carbon::now()->endOfYear(),
-                'rencana_aksi' => 'Maintenance kendaraan dinas',
-                'indikator' => 'Kendaraan layak jalan',
-                'target' => 10
+                'rencana_aksi'    => 'Inventarisasi Barang Milik Daerah (BMD)',
+                'indikator'       => 'Laporan Hasil Sensus BMD',
+                'target'          => 1
             ]);
 
-            
             // =================================================================
-            // 4. SIMULASI LKH BERJENJANG (CREATE)
+            // 6. SIMULASI LKH
             // =================================================================
             
-            // -------------------------------------------------------------
-            // A. LKH STAF PBB (BAWAHAN KASUBID)
-            // -------------------------------------------------------------
-            
-            // LKH 1: Waiting Review (Menunggu Kasubid)
-            $this->createLkh($stafPbbData, $skpStaff, 'waiting_review', $kasubPbbData, 
-                'Melakukan survei lapangan di Distrik Mimika Baru (5 unit)', 
-                '5 Data objek pajak baru',
-                'Survey'
+            // LKH 1
+            $this->createLkh($stafPbbData, $skpStaff, 'waiting_review', 
+                'Melakukan survei lapangan di Distrik Mimika Baru (Jalan Budi Utomo)', 
+                '5 Formulir SPOP terisi lengkap',
+                'Survey',
+                null
             );
 
-            // LKH 2: Rejected (Ditolak Kasubid)
-            $this->createLkh($stafPbbData, $skpStaff, 'rejected', $kasubPbbData, 
-                'Menginput data SPPT PBB tahun berjalan', 
-                'Data terinput ke sistem SISMIOP',
-                'Rekapitulasi',
-                'Data tidak lengkap, mohon lampirkan foto lokasi, koordinat tidak sesuai.'
+            // LKH 2
+            $this->createLkh($stafPbbData, $skpStaff, 'rejected', 
+                'Menginput data SPPT PBB tahun berjalan ke Excel', 
+                'File Excel rekapitulasi',
+                'Penyusunan Dokumen',
+                $kasubPbbData,
+                'Mohon input langsung ke aplikasi SISMIOP, jangan pakai Excel manual.'
             );
 
-            // LKH 3: Approved (Diterima Kasubid)
-            $this->createLkh($stafPbbData, $skpStaff, 'approved', $kasubPbbData, 
+            // LKH 3
+            $this->createLkh($stafPbbData, $skpStaff, 'approved', 
                 'Mencetak DHKP untuk kelurahan Timika Indah', 
-                'Dokumen DHKP tercetak dan dijilid',
-                'Rutin', 
-                'Kerja bagus, lanjutkan.'
+                'Dokumen DHKP tercetak dan dijilid rapi',
+                'Pelayanan Publik', 
+                $kasubPbbData,
+                'Terima kasih, segera distribusikan ke kelurahan.'
             );
             
-            // -------------------------------------------------------------
-            // B. LKH KASUBID PBB (BAWAHAN KABID)
-            // -------------------------------------------------------------
-            
-            // LKH Kasubid 1: Approved (oleh Kabid PBB)
-            $this->createLkh($kasubPbbData, $skpKasubid, 'approved', $kabidPbb, 
-                'Memverifikasi hasil pendataan lapangan staf', 
-                '15 Berkas pendataan terverifikasi',
-                'Validasi',
+            // LKH Kasubid
+            $this->createLkh($kasubPbbData, $skpKasubid, 'approved', 
+                'Memverifikasi 50 berkas permohonan mutasi PBB', 
+                'Berkas terverifikasi dan diparaf',
+                'Penyusunan Dokumen',
+                $kabidPbb
             );
 
-            // LKH Pending untuk Validasi Kabid (Kasubid mengajukan)
-            $this->createLkh($kasubPbbData, $skpKasubid, 'waiting_review', $kabidPbb, 
-                'Menyusun jadwal petugas loket pelayanan PBB', 
-                'Jadwal piket bulan depan tersedia',
-                'Rutin',
-            );
-
-            // -------------------------------------------------------------
-            // C. LKH KABID PBB (BAWAHAN KABAN)
-            // -------------------------------------------------------------
-
-            // LKH Kabid: Approved (oleh Kaban)
-            $this->createLkh($kabidPbb, $skpKabid, 'approved', $kaban, 
-                'Rapat Pimpinan evaluasi PAD Sektor PBB', 
-                'Notulen rapat dan strategi percepatan realisasi',
+            // LKH Kabid
+            $this->createLkh($kabidPbb, $skpKabid, 'approved', 
+                'Rapat Koordinasi dengan BPN terkait BPHTB', 
+                'Berita Acara Kesepakatan NJOP',
                 'Rapat',
+                $kaban
             );
             
-            // -------------------------------------------------------------
-            // D. LKH KASUBAG UMUM (BAWAHAN SEKBAN) & VALIDASI SEKBAN
-            // -------------------------------------------------------------
+            // LKH Staf Umum
+            $this->createLkh($stafUmum, null, 'waiting_review', 
+                'Mengagendakan surat masuk dari Provinsi',
+                'Surat terdisposisi ke Sekretaris',
+                'Pelayanan Publik',
+                null
+            );
 
-            // LKH Pending untuk Validasi Sekban (Kasubag Umum mengajukan) -> Rejected
-            $lkhKasubagRejected = $this->createLkh($kasubUmum, $skpKasubag, 'waiting_review', $sekban,
-                'Pengecekan aset kendaraan dinas',
-                'Daftar kondisi kendaraan terkini',
-                'Inspeksi',
-            );
+            // =================================================================
+            // 7. PENGUMUMAN
+            // =================================================================
             
-            // Sekban Reject
-            $lkhKasubagRejected->update([
-                'status' => 'rejected',
-                'atasan_id' => $sekban->id,
-                'waktu_validasi' => Carbon::now(),
-                'komentar_validasi' => 'Cek ulang kendaraan nomor PA 1234 MM, sepertinya salah catat.'
-            ]);
-            
-            // -------------------------------------------------------------
-            // E. PENGUMUMAN
-            // -------------------------------------------------------------
-            
-            // Pengumuman Kasubid (Muncul di Staf PBB)
             Pengumuman::create([
                 'user_id_creator' => $kasubPbbData->id,
                 'unit_kerja_id'   => $kasubPbbData->unit_kerja_id,
-                'judul'           => 'Rapat Koordinasi Tim Pendataan',
-                'isi_pengumuman'  => 'Besok jam 08.00 WIT kumpul di ruang rapat untuk evaluasi target triwulan.',
+                'judul'           => 'Rapat Evaluasi Pendataan',
+                'isi_pengumuman'  => 'Besok seluruh staf pendata harap kumpul jam 08.00 WIT membawa laporan progres.',
             ]);
 
-            // Pengumuman Sekban (Global)
             Pengumuman::create([
                 'user_id_creator' => $sekban->id,
-                'unit_kerja_id'   => null, // Global
-                'judul'           => 'Pemberitahuan Libur Nasional',
-                'isi_pengumuman'  => 'Sehubungan dengan hari raya, kantor diliburkan pada tanggal berikut...',
+                'unit_kerja_id'   => null,
+                'judul'           => 'Sosialisasi Aplikasi e-Daily Report',
+                'isi_pengumuman'  => 'Diberitahukan kepada seluruh pegawai untuk mulai menginput LKH melalui sistem baru mulai tanggal 1 bulan depan.',
             ]);
 
-
-            $this->command->info('Simulasi Data Selesai. Kredensial: NIP & password123. System Ready.');
+            $this->command->info('Simulasi Data Selesai. Akun Admin: admin / password123. Akun Pegawai: NIP / password123.');
         });
     }
 
     /**
      * Helper untuk membuat LKH.
+     * Menggunakan nama kolom yang sesuai dengan Database Migration.
      */
-    private function createLkh($user, $skp, $status, $validator = null, $deskripsi, $output, $jenisKegiatan, $komentar = null)
+    private function createLkh($user, $skp, $status, $deskripsi, $output, $jenisKegiatan, $validatorUser = null, $komentar = null)
     {
-        $isLuarLokasi = in_array($jenisKegiatan, ['Survey', 'Inspeksi', 'Kunjungan']);
+        $isLuarLokasi = in_array($jenisKegiatan, ['Survey', 'Kunjungan Lapangan', 'Perjalanan Dinas']);
+        
+        $targetAtasanId = $validatorUser ? $validatorUser->id : $user->atasan_id;
+
+        $tupoksi = Tupoksi::where('bidang_id', $user->bidang_id)->inRandomOrder()->first();
+        $tupoksiId = $tupoksi ? $tupoksi->id : null;
 
         return LaporanHarian::create([
             'user_id'             => $user->id,
-            'skp_id'              => $skp->id,
+            'skp_id'              => $skp ? $skp->id : null,
+            'tupoksi_id'          => $tupoksiId, 
             'tanggal_laporan'     => Carbon::today()->format('Y-m-d'),
             'waktu_mulai'         => '08:00:00',
             'waktu_selesai'       => '16:00:00',
             'deskripsi_aktivitas' => $deskripsi,
             'output_hasil_kerja'  => $output,
             'jenis_kegiatan'      => $jenisKegiatan,
+            'volume'              => rand(1, 5),
+            'satuan'              => 'Dokumen/Kegiatan',
             'status'              => $status,
-            
             'lokasi'              => DB::raw("ST_GeomFromText('POINT(136.8851 -4.5461)')"),
             'is_luar_lokasi'      => $isLuarLokasi,
+            'atasan_id'           => $targetAtasanId,
             
-            'atasan_id'        => ($status !== 'waiting_review' && $validator) ? $validator->id : null,
+            // Kolom Validasi yang sudah diperbaiki
             'waktu_validasi'      => ($status !== 'waiting_review') ? Carbon::now() : null,
-            'komentar_validasi'   => $komentar,
+            'komentar_validasi'   => $komentar, 
         ]);
     }
 }

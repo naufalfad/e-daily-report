@@ -28,7 +28,8 @@
     </style>
 
     {{-- ROOT CONTAINER --}}
-    <div x-data="systemSettings()" x-init="init()" class="flex-1 flex flex-col min-h-0 bg-white rounded-2xl ring-1 ring-slate-200 m-0 overflow-hidden shadow-sm">
+    {{-- [PERBAIKAN] Menggunakan nama komponen Alpine dari JS: systemSettingsData() --}}
+    <div x-data="systemSettingsData()" x-init="init()" class="flex-1 flex flex-col min-h-0 bg-white rounded-2xl ring-1 ring-slate-200 m-0 overflow-hidden shadow-sm">
         
         <div class="flex flex-col lg:flex-row h-full">
             
@@ -77,11 +78,11 @@
                                 </div>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer">
+                                {{-- [PERBAIKAN] Hapus true-value/false-value. Gunakan boolean native. --}}
+                                <input type="checkbox" x-model="settings.maintenance_mode" class="sr-only peer">
                                 <div class="w-12 h-7 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1C7C54]"></div>
                             </label>
                         </div>
-
                         {{-- Backup Data --}}
                         <div class="p-5 rounded-2xl border-2 border-slate-100 hover:border-[#1C7C54]/30 transition-colors bg-white flex items-center justify-between group shadow-sm hover:shadow-md">
                             <div class="flex items-center gap-4">
@@ -100,7 +101,7 @@
                     </div>
 
                     <div class="space-y-6 pt-4">
-                        {{-- Logo --}}
+                        {{-- Logo (Biarkan Statis, fokus ke input data) --}}
                         <div>
                             <label class="form-label-tegas">Logo Instansi</label>
                             <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-[#1C7C54] hover:bg-emerald-50/30 transition group">
@@ -114,20 +115,20 @@
                             </div>
                         </div>
 
-                        {{-- Footer --}}
+                        {{-- Footer (Binding Input) --}}
                         <div>
                             <label class="form-label-tegas">Teks Footer Aplikasi</label>
-                            <input type="text" value="© 2025 Badan Pendapatan Daerah Kabupaten Mimika" class="form-input-tegas">
+                            <input type="text" x-model="settings.app_footer" class="form-input-tegas" placeholder="© 2025 Badan Pendapatan Daerah Kabupaten Mimika">
                         </div>
 
-                        {{-- Zona Waktu --}}
+                        {{-- Zona Waktu (Binding Select) --}}
                         <div>
                             <label class="form-label-tegas">Zona Waktu Sistem</label>
                             <div class="relative">
-                                <select class="form-input-tegas appearance-none cursor-pointer">
-                                    <option>Waktu Indonesia Timur (WIT - UTC+9)</option>
-                                    <option>Waktu Indonesia Tengah (WITA - UTC+8)</option>
-                                    <option>Waktu Indonesia Barat (WIB - UTC+7)</option>
+                                <select x-model="settings.timezone" class="form-input-tegas appearance-none cursor-pointer">
+                                    <option value="Asia/Jayapura">Waktu Indonesia Timur (WIT - UTC+9)</option>
+                                    <option value="Asia/Makassar">Waktu Indonesia Tengah (WITA - UTC+8)</option>
+                                    <option value="Asia/Jakarta">Waktu Indonesia Barat (WIB - UTC+7)</option>
                                 </select>
                                 <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-60 pointer-events-none">
                             </div>
@@ -135,8 +136,14 @@
 
                         {{-- Actions --}}
                         <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                            <button class="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">Reset</button>
-                            <button class="px-8 py-3 rounded-xl bg-[#128C60] text-white text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5">Simpan Perubahan</button>
+                            {{-- [PERBAIKAN] Tombol Reset hanya me-refresh data dari DB --}}
+                            <button @click.prevent="fetchSettings()" class="px-6 py-3 rounded-xl border-2 border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition">Reset</button>
+                            {{-- [PERBAIKAN] Tombol Simpan (Memanggil fungsi dari JS Component) --}}
+                            <button @click.prevent="submitGeneralSettings()" :disabled="isLoading" 
+                                :class="{'opacity-70 cursor-not-allowed': isLoading}" 
+                                class="px-8 py-3 rounded-xl bg-[#128C60] text-white text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5">
+                                <span x-text="isLoading ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -152,7 +159,7 @@
                             <label class="form-label-tegas">Nama Kepala Dinas / Badan</label>
                             <input type="text" placeholder="Masukkan nama lengkap beserta gelar" class="form-input-tegas">
                         </div>
-
+                        {{-- ... (Sisa form Role & Jabatan) ... --}}
                         <div class="grid grid-cols-2 gap-5">
                             <div>
                                 <label class="form-label-tegas">Pilih Bidang</label>
@@ -192,7 +199,7 @@
                     </div>
                 </div>
 
-                {{-- PANEL 3: JAM KERJA (NEW FEATURE REQUEST) --}}
+                {{-- PANEL 3: JAM KERJA --}}
                 <div x-show="activeTab === 'jam_kerja'" x-cloak class="space-y-8 max-w-2xl">
                     
                     {{-- Jam Kerja --}}
@@ -254,10 +261,11 @@
                                     <p class="text-[12px] text-slate-500">Durasi sesi inaktif sebelum logout otomatis.</p>
                                 </div>
                             </div>
-                            <select class="form-input-tegas w-32 py-2 text-center">
-                                <option>15 Menit</option>
-                                <option>30 Menit</option>
-                                <option>1 Jam</option>
+                            {{-- Binding Select Timeout --}}
+                            <select x-model="settings.session_timeout" class="form-input-tegas w-32 py-2 text-center">
+                                <option value="15">15 Menit</option>
+                                <option value="30">30 Menit</option>
+                                <option value="60">1 Jam</option>
                             </select>
                         </div>
 
@@ -269,10 +277,11 @@
                                     <p class="text-[12px] text-slate-500">Batas gagal login sebelum akun dikunci.</p>
                                 </div>
                             </div>
-                            <select class="form-input-tegas w-32 py-2 text-center">
-                                <option>3 Kali</option>
-                                <option>5 Kali</option>
-                                <option>10 Kali</option>
+                            {{-- Binding Select Login Limit --}}
+                            <select x-model="settings.login_limit" class="form-input-tegas w-32 py-2 text-center">
+                                <option value="3">3 Kali</option>
+                                <option value="5">5 Kali</option>
+                                <option value="10">10 Kali</option>
                             </select>
                         </div>
                     </div>
@@ -382,22 +391,12 @@
     </div>
 
     {{-- ALPINE JS COMPONENT --}}
+    {{-- [PERBAIKAN] Hapus defininsi fungsi lama dan bergantung pada JS file yang sudah di-import di app.js --}}
     <script>
-        function systemSettings() {
-            return {
-                activeTab: 'sistem',
-                openResetModal: false,
-                menus: [
-                    { id: 'sistem', label: 'Pengaturan Sistem', title: 'Pengaturan Bawaan' },
-                    { id: 'role', label: 'Pengaturan Role dan Jabatan', title: 'Pengaturan Role dan Jabatan' },
-                    { id: 'keamanan', label: 'Pengaturan Keamanan', title: 'Pengaturan Keamanan' },
-                    { id: 'jam_kerja', label: 'Pengaturan Jam Kerja', title: 'Pengaturan Jam Kerja' }, // NEW MENU
-                    { id: 'reset', label: 'Reset Password', title: 'Reset Password' },
-                ],
-                init() {
-                    console.log('System Settings Loaded with Alpine.js');
-                }
-            }
-        }
+        // Gunakan nama fungsi yang sudah diexport di setting-sistem.js
+        // window.systemSettingsData = systemSettingsData; 
+        
+        // Halaman ini sekarang sepenuhnya menggunakan logika dari resources/js/pages/admin/setting-sistem.js
+        // Pastikan Anda telah menjalankan 'npm run dev'
     </script>
 @endsection

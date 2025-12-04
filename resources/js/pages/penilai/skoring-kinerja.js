@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="py-4 px-6 text-left">
                         <div class="max-w-xs">
                             <p class="text-sm font-medium text-slate-700 truncate" title="${pegawai.rhk}">${pegawai.rhk || '-'}</p>
-                            <p class="text-[11px] text-slate-400 mt-1">Target: ${pegawai.target} ${pegawai.satuan}</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Total LKH yang dikirim: ${pegawai.target} ${pegawai.satuan}</p>
                         </div>
                     </td>
                     <td class="py-4 px-6 text-center">

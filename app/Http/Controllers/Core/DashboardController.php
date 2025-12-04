@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use App\Models\SkpRencana; // [PERBAIKAN] Ganti Skp jadi SkpRencana
 use App\Models\User;
+use App\Models\Bidang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -149,80 +150,77 @@ class DashboardController extends Controller
    public function getStatsKadis(Request $request)
     {
         $kadis = Auth::user();
+        
+        // Filter Tahun (Default: Tahun Ini)
+        $year = $request->input('year', date('Y'));
 
-        // [FIX] Definisi variable $pegawaiIds WAJIB ada di sini sebelum dipakai
-        $pegawaiIds = User::where('atasan_id', $kadis->id)->pluck('id');
+        // Validasi: Pastikan Kadis punya Unit Kerja
+        if (!$kadis->unit_kerja_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun Anda belum terhubung dengan Unit Kerja manapun.'
+            ], 400);
+        }
 
-        // =============================
-        // Statistik Dasar Dashboard Kadis
-        // =============================
+        // =====================================================================
+        // QUERY UTAMA (EAGER LOADING)
+        // Mengambil Bidang -> User -> LaporanHarian (Approved & Tahun Ini)
+        // =====================================================================
+        $dataBidang = \App\Models\Bidang::where('unit_kerja_id', $kadis->unit_kerja_id)
+            ->with(['users.laporanHarian' => function($query) use ($year) {
+                // Filter di level database untuk optimasi memori
+                $query->where('status', 'approved')
+                      ->whereYear('tanggal_laporan', $year)
+                      ->select('id', 'user_id', 'tanggal_laporan'); // Ambil kolom perlu saja
+            }])
+            ->get();
 
-        $today = now()->toDateString();
+        // =====================================================================
+        // DATA PROCESSING (MAPPING KE FORMAT GRAFIK)
+        // Output: Array of Objects per Bidang dengan data bulanan [Jan-Des]
+        // =====================================================================
+        $grafikKinerja = $dataBidang->map(function($bidang) {
+            // Inisialisasi array 12 bulan dengan nilai 0
+            // Index 0 = Januari, 11 = Desember
+            $monthlyStats = array_fill(0, 12, 0);
 
-        $totalHariIni = LaporanHarian::whereIn('user_id', $pegawaiIds)
-            ->whereDate('tanggal_laporan', $today)
-            ->whereNot('status', 'draft')
-            ->count();
+            // Loop Pegawai di Bidang tersebut
+            foreach ($bidang->users as $pegawai) {
+                // Loop LKH Pegawai yang sudah di-filter (Approved & Tahun ini)
+                foreach ($pegawai->laporanHarian as $lkh) {
+                    // Ambil bulan (1-12) dari tanggal_laporan
+                    // Karena array mulai dari 0, maka dikurang 1
+                    $bulanIndex = (int) $lkh->tanggal_laporan->format('n') - 1;
+                    
+                    if (isset($monthlyStats[$bulanIndex])) {
+                        $monthlyStats[$bulanIndex]++;
+                    }
+                }
+            }
 
-        $menunggu = LaporanHarian::whereIn('user_id', $pegawaiIds)
-            ->where('status', 'waiting_review')
-            ->count();
+            return [
+                'id_bidang' => $bidang->id,
+                'nama_bidang' => $bidang->nama_bidang,
+                // Kirim array angka saja [10, 20, 5, ...]
+                'data_bulanan' => array_values($monthlyStats) 
+            ];
+        });
 
-        $disetujui = LaporanHarian::whereIn('user_id', $pegawaiIds)
-            ->where('status', 'approved')
-            ->count();
-
-        $ditolak = LaporanHarian::whereIn('user_id', $pegawaiIds)
-            ->where('status', 'rejected')
-            ->count();
-
-        // =============================
-        // Aktivitas Terbaru
-        // =============================
-
-        $recentActivities = LaporanHarian::with('user')
-            ->whereIn('user_id', $pegawaiIds)
-            ->latest('created_at')
-            ->limit(5)
-            ->get()
-            ->map(function ($x) {
-                return [
-                    'deskripsi_aktivitas' => $x->deskripsi_aktivitas ?? '-', 
-                    'tanggal_laporan' => $x->tanggal_laporan,
-                    'status' => $x->status,
-                    'user' => $x->user->name ?? '-',
-                ];
-            });
-
-        // =============================
-        // Grafik
-        // =============================
-
-        // [FIX] Variable $pegawaiIds dijamin sudah ada dari baris atas
-        $grafik = LaporanHarian::whereIn('user_id', $pegawaiIds)
-            ->whereYear('tanggal_laporan', now()->year)
-            ->get(['tanggal_laporan', 'status']);
-
+        // =====================================================================
+        // RESPONSE JSON
+        // Bersih, Ringan, dan Siap Konsumsi Frontend
+        // =====================================================================
         return response()->json([
             'user_info' => [
                 'name' => $kadis->name,
                 'nip' => $kadis->nip,
-                'daerah' => $kadis->alamat ?? '-',
-                'jabatan' => $kadis->jabatan->nama_jabatan ?? '-',
-                'unit' => $kadis->unitKerja->nama_unit ?? '-',
+                'jabatan' => $kadis->jabatan->nama_jabatan ?? 'Kepala Dinas',
+                'unit_kerja' => $kadis->unitKerja->nama_unit ?? '-',
+                'foto' => $kadis->foto_profil_url, // Menggunakan Accessor di Model User
                 'alamat' => $kadis->alamat ?? '-',
             ],
-            'statistik' => [
-                'total_hari_ini' => $totalHariIni,
-                'total_menunggu' => $menunggu,
-                'total_disetujui' => $disetujui,
-                'total_ditolak' => $ditolak,
-                'rate_total' => 0,
-                'rate_disetujui' => 0,
-                'rate_ditolak' => 0,
-            ],
-            'aktivitas_terbaru' => $recentActivities,
-            'grafik' => $grafik,
+            'periode_tahun' => (int) $year,
+            'grafik_data' => $grafikKinerja,
         ]);
    }
 }

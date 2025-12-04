@@ -16,7 +16,7 @@ class LaporanHarian extends Model
 
     protected $fillable = [
         'user_id',
-        'skp_rencana_id', // [FIX] Ganti 'skp_id' jadi 'skp_rencana_id'
+        'skp_rencana_id',
         'tupoksi_id',
         'jenis_kegiatan',
         'tanggal_laporan',

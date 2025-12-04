@@ -16,7 +16,7 @@ class LaporanHarian extends Model
 
     protected $fillable = [
         'user_id',
-        'skp_id',
+        'skp_rencana_id', // [FIX] Ganti 'skp_id' jadi 'skp_rencana_id'
         'tupoksi_id',
         'jenis_kegiatan',
         'tanggal_laporan',
@@ -27,29 +27,26 @@ class LaporanHarian extends Model
         'volume',
         'satuan',
         'status',
-        
-        // [PERBAIKAN UTAMA] Menggunakan nama kolom dari Database Migration
-        'komentar_validasi', // sebelumnya 'catatan_penilai' atau 'komentar_validasi'
-        'waktu_validasi',    // sebelumnya 'validated_at'
-        
+        'komentar_validasi',
+        'waktu_validasi',
         'master_kelurahan_id',
         'is_luar_lokasi',
         'lokasi',
-        'atasan_id', // Tetap menggunakan atasan_id sebagai penilai awal
+        'atasan_id',
     ];
 
     protected $casts = [
         'tanggal_laporan' => 'date',
-        // [PERBAIKAN] Menggunakan nama kolom yang benar
         'waktu_validasi' => 'datetime',
     ];
 
-    // Hubungan ke Pengguna (Pembuat Laporan)
+    // Hubungan ke Pengguna
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    // [BENAR] Relasi ke Rencana (Pengganti SKP)
     public function rencana()
     {
         return $this->belongsTo(\App\Models\SkpRencana::class, 'skp_rencana_id');
@@ -67,13 +64,12 @@ class LaporanHarian extends Model
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
 
-    // Hubungan ke Atasan (Relasi yang digunakan sebagai penilai/validator di DB)
+    // Hubungan ke Atasan
     public function atasan(): BelongsTo
     {
         return $this->belongsTo(User::class, 'atasan_id');
     }
     
-    // Accessor untuk mendapatkan status laporan yang lebih deskriptif
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -85,7 +81,6 @@ class LaporanHarian extends Model
         };
     }
 
-    // Query Scope untuk memfilter yang menunggu review
     public function scopeWaitingReview(Builder $query): void
     {
         $query->where('status', 'waiting_review');

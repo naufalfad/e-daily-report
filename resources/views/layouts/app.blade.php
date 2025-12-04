@@ -207,7 +207,6 @@
     @case('admin')
     @vite('resources/js/pages/admin/dashboard.js')
     @vite('resources/js/pages/admin/manajemen-pegawai.js')
-    @vite('resources/js/pages/admin/log-aktivitas.js')
     @vite('resources/js/pages/admin/akun-pengguna.js')
     @vite('resources/js/pages/admin/setting-sistem.js')
     @break

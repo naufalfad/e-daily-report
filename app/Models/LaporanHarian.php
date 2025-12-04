@@ -50,10 +50,9 @@ class LaporanHarian extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Hubungan ke SKP (Jika kegiatan terkait SKP)
-    public function skp(): BelongsTo
+    public function rencana()
     {
-        return $this->belongsTo(Skp::class, 'skp_id');
+        return $this->belongsTo(\App\Models\SkpRencana::class, 'skp_rencana_id');
     }
 
     // Hubungan ke Tupoksi

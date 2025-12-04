@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use App\Services\RiwayatService;
 
 class RiwayatController extends Controller
 {
@@ -19,7 +20,24 @@ class RiwayatController extends Controller
 
         // Filter role
         if ($role === 'staf') {
+
+            // Ambil laporan yang tampil di halaman
             $query->where('user_id', $user->id);
+
+            // Jika UI TIDAK sedang melakukan filter tanggal
+            // Maka PDF harus mengikuti UI: hanya ambil data yang sedang ditampilkan
+            if (!$request->from_date && !$request->to_date) {
+
+                // Cari tanggal paling baru yang tampil pada UI
+                $latestDate = LaporanHarian::where('user_id', $user->id)
+                    ->orderBy('tanggal_laporan', 'desc')
+                    ->value('tanggal_laporan');
+
+                // Batasi hanya pada tanggal itu saja
+                if ($latestDate) {
+                    $query->whereDate('tanggal_laporan', $latestDate);
+                }
+            }
         }
 
         if ($role === 'penilai') {
@@ -38,7 +56,13 @@ class RiwayatController extends Controller
             $query->whereDate('tanggal_laporan', '<=', $request->to_date);
         }
 
-        $riwayat = $query->get();
+        $riwayat = RiwayatService::getRiwayat(
+            $user,
+            $role,
+            $request->mode,
+            $request->from_date,
+            $request->to_date
+        );
 
         // Jika tidak pakai filter, tampilkan "Semua Tanggal"
         $from = $request->from_date ?: 'Semua Tanggal';

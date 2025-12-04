@@ -4,7 +4,7 @@
 
 
 @section('content')
-<section x-data="riwayatData('{{ $role ?? 'pegawai' }}')" x-init="initPage()">
+<section x-data="riwayatData('staf')" x-init="initPage()">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 flex flex-col min-h-[100vh]">

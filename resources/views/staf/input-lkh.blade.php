@@ -3,7 +3,7 @@
 
 @section('content')
 
-{{-- GRID UTAMA: FORM + PANDUAN + DRAFT + STATUS --}}
+{{-- GRID UTAMA --}}
 <section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:auto-rows-min">
 
     {{-- KIRI ATAS: FORM INPUT LKH --}}
@@ -20,54 +20,39 @@
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
                         <div class="relative">
-                            <input id="tanggal_lkh" name="tanggal_laporan" type="date" class="tanggal-placeholder w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                            <button type="button" id="tanggal_lkh_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal"
-                                    class="h-4 w-4 opacity-80" />
+                            <input id="tanggal_lkh" name="tanggal_laporan" type="date" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                            <button type="button" id="tanggal_lkh_btn" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80" alt="Date" />
                             </button>
                         </div>
                     </div>
 
-                    {{-- Jenis Kegiatan --}}
+                    {{-- Jenis Kegiatan (Alpine Optimized) --}}
                     <div x-data="{
-                                    open: false,
-                                    value: '',
-                                    label: 'Pilih Jenis Kegiatan',
-                                    options: [
-                                        { value: 'Rapat',              label: 'Rapat' },
-                                        { value: 'Pelayanan Publik',   label: 'Pelayanan Publik' },
-                                        { value: 'Penyusunan Dokumen', label: 'Penyusunan Dokumen' },
-                                        { value: 'Kunjungan Lapangan', label: 'Kunjungan Lapangan' },
-                                        { value: 'Lainnya',            label: 'Lainnya' },
-                                    ],
-                                    select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                                }">
+                        open: false,
+                        value: '',
+                        label: 'Pilih Jenis Kegiatan',
+                        options: ['Rapat', 'Pelayanan Publik', 'Penyusunan Dokumen', 'Kunjungan Lapangan', 'Lainnya'],
+                        select(opt) { this.value = opt; this.label = opt; this.open = false; }
+                    }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
                         <input type="hidden" name="jenis_kegiatan" x-model="value">
 
                         <div class="relative">
-                            <button type="button" @click="open = !open"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                                   px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                                   focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
+                            <button type="button" @click="open = !open" @click.outside="open = false"
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between focus:ring-2 focus:ring-[#1C7C54]/30"
+                                :class="!value ? 'text-slate-400' : 'text-slate-700'">
                                 <span x-text="label"></span>
-                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70"
-                                    alt="">
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70" alt="">
                             </button>
 
-                            <div x-show="open" @click.outside="open = false" x-transition
-                                class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
-                                <template x-for="opt in options" :key="opt.value">
-                                    <button type="button"
-                                        class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between"
-                                        :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                            <div x-show="open" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1">
+                                <template x-for="opt in options" :key="opt">
+                                    <button type="button" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex justify-between"
+                                        :class="value === opt ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
                                         @click="select(opt)">
-                                        <span x-text="opt.label"></span>
-                                        <span x-show="opt.value === value" class="text-xs">✓</span>
+                                        <span x-text="opt"></span>
+                                        <span x-show="value === opt">✓</span>
                                     </button>
                                 </template>
                             </div>
@@ -75,72 +60,48 @@
                     </div>
                 </div>
 
-                {{-- Row 2: Referensi Tupoksi --}}
+                {{-- Row 2: Referensi Tupoksi (Fetch Logic Optimized) --}}
                 <div x-data="{
                     open: false,
                     value: '',
                     label: 'Pilih Referensi Tupoksi',
                     options: [],
-                    isLoading: false,
+                    loading: false,
                     async init() {
-                        this.isLoading = true;
+                        this.loading = true;
                         try {
-                            const token = localStorage.getItem('auth_token'); 
-                            const response = await fetch('/api/lkh/referensi', {
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Accept': 'application/json'
-                                }
+                            const res = await fetch('/api/lkh/referensi', {
+                                headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' }
                             });
-                            if(!response.ok) throw new Error('HTTP error ' + response.status);
-                            const data = await response.json();
-
-                                    // Pastikan key sesuai JSON
-                                    if(data.tupoksi && Array.isArray(data.tupoksi)) {
-                                        this.options = data.tupoksi.map(item => ({
-                                            value: item.id,
-                                            label: item.uraian_tugas
-                                        }));
-                                        if(this.options.length === 0) this.label = 'Data Tupoksi Kosong';
-                                    } else {
-                                        this.label = 'Format data tidak valid';
-                                    }
-                                } catch (error) {
-                                    console.error(error);
-                                    this.label = 'Gagal memuat data';
-                                } finally {
-                                    this.isLoading = false;
-                                }
-                            },
-                            select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                        }" x-init="init()">
-
+                            const data = await res.json();
+                            if(data.tupoksi) this.options = data.tupoksi.map(t => ({id: t.id, text: t.uraian_tugas}));
+                            if(!this.options.length) this.label = 'Data Tupoksi Kosong';
+                        } catch(e) { this.label = 'Gagal memuat data'; } 
+                        finally { this.loading = false; }
+                    },
+                    select(opt) { this.value = opt.id; this.label = opt.text; this.open = false; }
+                }" x-init="init()">
                     <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
                     <input type="hidden" name="tupoksi_id" x-model="value">
 
                     <div class="relative">
-                        <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                        px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                        focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                            :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
-                            <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
-                            <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                                class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
+                        <button type="button" @click="open = !open" @click.outside="open = false"
+                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between focus:ring-2 focus:ring-[#1C7C54]/30"
+                            :class="!value ? 'text-slate-400' : 'text-slate-700'">
+                            <span x-text="loading ? 'Memuat...' : label" class="truncate mr-2"></span>
+                            <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
                         </button>
 
-                        <div x-show="open" @click.outside="open = false" x-transition
-                            class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
-                            <template x-for="opt in options" :key="opt.value">
-                                <button type="button"
-                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex items-center justify-between gap-2"
-                                    :class="opt.value === value ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
+                        <div x-show="open" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto">
+                            <template x-for="opt in options" :key="opt.id">
+                                <button type="button" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex justify-between gap-2"
+                                    :class="value === opt.id ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"
                                     @click="select(opt)">
-                                    <span x-text="opt.label" class="line-clamp-2"></span>
-                                    <span x-show="opt.value === value" class="text-xs flex-shrink-0">✓</span>
+                                    <span x-text="opt.text" class="line-clamp-2"></span>
+                                    <span x-show="value === opt.id" class="shrink-0">✓</span>
                                 </button>
                             </template>
-                            <div x-show="options.length === 0 && !isLoading"
-                                class="px-3.5 py-2 text-sm text-slate-400 italic">Data kosong</div>
+                            <div x-show="!options.length && !loading" class="px-3 text-sm text-slate-400 italic py-2">Data kosong</div>
                         </div>
                     </div>
                 </div>
@@ -148,15 +109,11 @@
                 {{-- Row 3: Uraian Kegiatan --}}
                 <div>
                     <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
-                    <textarea name="deskripsi_aktivitas" rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                             px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
-                                             focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                    <textarea name="deskripsi_aktivitas" rows="3" 
+                        class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                         placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
                 </div>
-                {{-- 
-                    [MODIFIKASI LOGIC & UI - YANG MULIA RAJA RENO] 
-                    Alur: Output -> Kategori (SKP/Non) -> Pilih SKP (Jika SKP) -> Satuan & Volume 
-                --}}
+                {{-- MAIN LOGIC BLOCK: Output, Kategori, SKP, Satuan, Volume --}}
                 <div x-data="{
                     kategori: 'non-skp',
                     skpId: '',
@@ -164,188 +121,112 @@
                     skpOptions: [],
                     skpLoading: false,
                     satuanValue: '',
-                    satuanLabel: 'Satuan',
                     satuanOpen: false,
                     kategoriOpen: false,
                     skpOpen: false,
-                    isSatuanLocked: false, // Variable untuk mengunci satuan
+                    isSatuanLocked: false,
 
                     async fetchSkp() {
                         this.skpLoading = true;
                         try {
-                            const token = localStorage.getItem('auth_token');
-                            const response = await fetch('/api/lkh/referensi', {
-                                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                            const res = await fetch('/api/lkh/referensi', {
+                                headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' }
                             });
-                            const res = await response.json();
-                            
-                            if(res.list_skp) {
-                                this.skpOptions = res.list_skp.map(s => ({ 
-                                    value: s.id, 
-                                    label: s.rencana_hasil_kerja, 
-                                    satuan: s.satuan 
-                                }));
+                            const data = await res.json();
+                            if(data.list_skp) {
+                                this.skpOptions = data.list_skp.map(s => ({ value: s.id, label: s.rencana_hasil_kerja, satuan: s.satuan }));
                             }
-                        } catch (e) { console.error(e); } finally { this.skpLoading = false; }
+                        } catch(e) { console.error(e); } finally { this.skpLoading = false; }
                     },
-
                     pilihSkp(opt) {
                         this.skpId = opt.value;
                         this.skpLabel = opt.label;
                         this.skpOpen = false;
-                        
-                        // [LOGIC PENTING] Kunci satuan sesuai SKP
-                        if (opt.satuan && opt.satuan !== '-') {
+                        if(opt.satuan && opt.satuan !== '-') {
                             this.satuanValue = opt.satuan;
-                            this.isSatuanLocked = true; // LOCK!
+                            this.isSatuanLocked = true;
                         } else {
-                            this.isSatuanLocked = false; // Jaga-jaga jika SKP tidak punya satuan baku
+                            this.isSatuanLocked = false;
                         }
                     },
-
                     setKategori(val) {
                         this.kategori = val;
                         this.kategoriOpen = false;
-
-                        if (val === 'skp') {
-                            if (this.skpOptions.length === 0) this.fetchSkp();
+                        if(val === 'skp') {
+                            if(!this.skpOptions.length) this.fetchSkp();
                         } else {
-                            // Reset jika kembali ke Non-SKP
                             this.skpId = '';
                             this.skpLabel = 'Pilih Target SKP';
-                            this.isSatuanLocked = false; // UNLOCK
-                            this.satuanValue = ''; // Optional: Reset satuan atau biarkan
+                            this.isSatuanLocked = false;
                         }
                     }
                 }">
-
-                    {{-- Row 4: Output & Kategori (Satu Baris) --}}
+                    {{-- Row 4: Output & Kategori --}}
                     <div class="grid md:grid-cols-[2fr_1fr] gap-4">
-                        {{-- Output --}}
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
-                            <input type="text" name="output_hasil_kerja"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
-                                placeholder="Contoh: Notulensi">
+                            <input type="text" name="output_hasil_kerja" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="Contoh: Notulensi">
                         </div>
-
-                        {{-- Kategori --}}
                         <div class="relative">
-                            <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Satuan</label>
-                            <input type="hidden" name="satuan" x-model="satuanValue">
-
-                            <button type="button" @click="satuanOpen = !satuanOpen" @click.outside="satuanOpen = false"
-                                class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 pl-3.5 pr-3 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
-                                <span x-text="satuanValue ? satuanValue : 'Satuan'"
-                                    :class="!satuanValue ? 'text-[#9CA3AF]' : 'text-slate-700'" class="truncate"></span>
-                                <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                                    class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
-                            </button>
-
-                            <div x-show="satuanOpen" x-transition
-                                class="absolute left-0 mt-1 w-full rounded-[10px] border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
-                                <template x-for="opt in ['Jam', 'Dokumen', 'Kegiatan']">
-                                    <button type="button" @click="satuanValue = opt; satuanOpen = false"
-                                        class="w-full px-3.5 py-2 text-sm text-left hover:bg-slate-50">
-                                        <span x-text="opt"></span>
-                                    </button>
-                                </template>
-                            </div>
-                        </div>
-
-                        {{-- Kategori (Trigger Logika SKP) --}}
-                        <div class="relative">
-                            <input type="hidden" name="kategori" x-model="kategori">
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Kategori</label>
-                            <button type="button" @click="kategoriOpen = !kategoriOpen"
-                                @click.outside="kategoriOpen = false"
-                                class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
-                                <span x-text="kategori === 'skp' ? 'SKP' : 'Non-SKP'"
-                                    :class="kategori === 'skp' ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"></span>
-                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2"
-                                    alt="" />
+                            <input type="hidden" name="kategori" x-model="kategori">
+                            <button type="button" @click="kategoriOpen = !kategoriOpen" @click.outside="kategoriOpen = false"
+                                class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30">
+                                <span x-text="kategori === 'skp' ? 'SKP' : 'Non-SKP'" :class="kategori === 'skp' ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2">
                             </button>
-
-                            <div x-show="kategoriOpen" x-transition
-                                class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 overflow-hidden">
-                                <button type="button" @click="setKategori('skp')"
-                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">SKP</button>
-                                <button type="button" @click="setKategori('non-skp')"
-                                    class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">Non-SKP</button>
+                            <div x-show="kategoriOpen" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 overflow-hidden">
+                                <button type="button" @click="setKategori('skp')" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">SKP</button>
+                                <button type="button" @click="setKategori('non-skp')" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">Non-SKP</button>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Row 5: LIST SKP (Hanya muncul jika Kategori = SKP) --}}
+                    {{-- Row 5: List SKP (Conditional) --}}
                     <div x-show="kategori === 'skp'" x-transition class="mt-4">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target SKP</label>
                         <input type="hidden" name="skp_rencana_id" x-model="skpId">
-
                         <div class="relative">
                             <button type="button" @click="skpOpen = !skpOpen" @click.outside="skpOpen = false"
                                 class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
-                                <span x-text="skpLoading ? 'Memuat data...' : skpLabel"
-                                    class="truncate text-slate-700"></span>
-                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2"
-                                    alt="">
+                                <span x-text="skpLoading ? 'Memuat data...' : skpLabel" class="truncate text-slate-700"></span>
+                                <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2">
                             </button>
-
-                            <div x-show="skpOpen" x-transition
-                                class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
+                            <div x-show="skpOpen" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
                                 <template x-for="opt in skpOptions" :key="opt.value">
-                                    <button type="button" {{-- [PERBAIKAN 3] Panggil fungsi helper tadi --}}
-                                        @click="pilihSkp(opt)" <button type="button" @click="pilihSkp(opt)"
-                                        class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                                    <button type="button" @click="pilihSkp(opt)" class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 border-b border-slate-100">
                                         <span x-text="opt.label" class="line-clamp-2"></span>
-
-                                        {{-- Optional: Tampilkan info satuan kecil di samping --}}
-                                        <span x-show="opt.satuan" x-text="'(' + opt.satuan + ')'"
-                                            class="text-[10px] text-slate-400 ml-1"></span>
-                                        <span x-show="opt.satuan" x-text="'Target: ' + opt.satuan"
-                                            class="text-[10px] text-[#1C7C54] block mt-0.5"></span>
+                                        <span x-show="opt.satuan" x-text="'Target: ' + opt.satuan" class="text-[10px] text-[#1C7C54] block mt-0.5"></span>
                                     </button>
                                 </template>
-                                <div x-show="skpOptions.length === 0 && !skpLoading"
-                                    class="p-2 text-xs text-slate-400 text-center">
-                                    Tidak ada data SKP.
-                                </div>
+                                <div x-show="!skpOptions.length && !skpLoading" class="p-2 text-xs text-slate-400 text-center">Tidak ada data SKP.</div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Row 6: Satuan & Volume (Posisi dibawah SKP) --}}
+                    {{-- Row 6: Satuan & Volume --}}
                     <div class="grid md:grid-cols-2 gap-4 mt-4">
                         {{-- Satuan --}}
                         <div class="relative">
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Satuan</label>
                             <input type="hidden" name="satuan" x-model="satuanValue">
-
-                            {{-- Tampilan saat Satuan TERKUNCI (Mode SKP) --}}
-                            <div x-show="isSatuanLocked"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500 cursor-not-allowed flex items-center justify-between">
+                            
+                            {{-- State Locked --}}
+                            <div x-show="isSatuanLocked" class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500 cursor-not-allowed flex justify-between items-center">
                                 <span x-text="satuanValue"></span>
-                                <img src="{{ asset('assets/icon/lock.svg') }}" class="h-3.5 w-3.5 opacity-50"
-                                    alt="Locked">
+                                <img src="{{ asset('assets/icon/lock.svg') }}" class="h-3.5 w-3.5 opacity-50">
                             </div>
 
-                            {{-- Tampilan saat Satuan BEBAS (Mode Non-SKP) --}}
+                            {{-- State Unlocked --}}
                             <div x-show="!isSatuanLocked">
-                                <button type="button" @click="satuanOpen = !satuanOpen"
-                                    @click.outside="satuanOpen = false"
-                                    class="w-full flex items-center justify-between rounded-[10px] border border-slate-200 bg-slate-50/60 pl-3.5 pr-3 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
-                                    <span x-text="satuanValue ? satuanValue : 'Pilih Satuan'"
-                                        :class="!satuanValue ? 'text-[#9CA3AF]' : 'text-slate-700'"
-                                        class="truncate"></span>
-                                    <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                                        class="h-4 w-4 opacity-70 ml-2 flex-shrink-0" alt="" />
+                                <button type="button" @click="satuanOpen = !satuanOpen" @click.outside="satuanOpen = false"
+                                    class="w-full flex justify-between items-center rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30">
+                                    <span x-text="satuanValue || 'Pilih Satuan'" :class="!satuanValue ? 'text-slate-400' : 'text-slate-700'"></span>
+                                    <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70">
                                 </button>
-
-                                <div x-show="satuanOpen" x-transition
-                                    class="absolute left-0 mt-1 w-full rounded-[10px] border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                                <div x-show="satuanOpen" x-transition class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200">
                                     <template x-for="opt in ['Jam', 'Dokumen', 'Kegiatan', 'Laporan', 'Berkas']">
-                                        <button type="button" @click="satuanValue = opt; satuanOpen = false"
-                                            class="w-full px-3.5 py-2 text-sm text-left hover:bg-slate-50">
+                                        <button type="button" @click="satuanValue = opt; satuanOpen = false" class="w-full px-3.5 py-2 text-sm text-left hover:bg-slate-50">
                                             <span x-text="opt"></span>
                                         </button>
                                     </template>
@@ -356,385 +237,227 @@
                         {{-- Volume --}}
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
-                            <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
+                            <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
                         </div>
                     </div>
-
                 </div>
-                {{-- Row 7: Jam Mulai + Jam Selesai --}}
+
+                {{-- Row 7: Waktu --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
                         <div class="relative">
-                            <input id="jam_mulai" name="waktu_mulai" type="time"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
-                            <button type="button" id="jam_mulai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/time.svg') }}"
-                                    class="h-4 w-4 opacity-70 pointer-events-none" alt="Time">
-                            </button>
+                            <input id="jam_mulai" name="waktu_mulai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                            <button type="button" id="jam_mulai_btn" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"><img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70"></button>
                         </div>
                     </div>
-
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
                         <div class="relative">
-                            <input id="jam_selesai" name="waktu_selesai" type="time"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
-                            <button type="button" id="jam_selesai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/time.svg') }}"
-                                    class="h-4 w-4 opacity-70 pointer-events-none" alt="Time">
-                            </button>
+                            <input id="jam_selesai" name="waktu_selesai" type="time" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                            <button type="button" id="jam_selesai_btn" class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"><img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70"></button>
                         </div>
                     </div>
                 </div>
 
-                {{-- Row 8: Unggah Bukti + Lokasi --}}
+                {{-- Row 8: Bukti & Lokasi --}}
                 <div class="grid md:grid-cols-2 gap-4">
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
-                        <label class="w-full flex items-center justify-between rounded-[10px]
-                       border border-dashed border-slate-300 bg-slate-50/60
-                       px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            <!-- Nama file tampil di sini -->
+                        <label class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
                             <span id="bukti_filename" class="truncate">Pilih File</span>
-                            <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70" alt="Upload">
+                            <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70">
                             <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
                         </label>
                     </div>
-
-                    {{-- Input Lokasi dengan Geolocation --}}
                     <div x-data="{
-                                lat: '',
-                                lng: '',
-                                status: 'Klik tombol untuk ambil lokasi',
-                                loading: false,
-                                getLocation() {
-                                    this.loading = true;
-                                    this.status = 'Mencari koordinat...';
-                                    if (navigator.geolocation) {
-                                        navigator.geolocation.getCurrentPosition(
-                                            (position) => {
-                                                this.lat = position.coords.latitude;
-                                                this.lng = position.coords.longitude;
-                                                this.status = 'Terkunci: ' + this.lat.toFixed(5) + ', ' + this.lng.toFixed(5);
-                                                this.loading = false;
-                                            },
-                                            (error) => {
-                                                this.status = 'Gagal: Izin lokasi ditolak/error.';
-                                                this.loading = false;
-                                            }
-                                        );
-                                    } else {
-                                        this.status = 'Browser tidak support GPS.';
-                                        this.loading = false;
-                                    }
-                                }
-                            }">
+                        lat: '', lng: '', status: 'Klik tombol untuk ambil lokasi', loading: false,
+                        getLocation() {
+                            this.loading = true; this.status = 'Mencari koordinat...';
+                            if(navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(
+                                    (pos) => { this.lat = pos.coords.latitude; this.lng = pos.coords.longitude; this.status = `Terkunci: ${this.lat.toFixed(5)}, ${this.lng.toFixed(5)}`; this.loading = false; },
+                                    () => { this.status = 'Gagal mengambil lokasi.'; this.loading = false; }
+                                );
+                            } else { this.status = 'GPS tidak didukung.'; this.loading = false; }
+                        }
+                    }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
                         <input type="hidden" name="latitude" x-model="lat">
                         <input type="hidden" name="longitude" x-model="lng">
-
                         <div class="flex gap-2">
-                            {{-- Input Visual (Readonly) --}}
-                            <input type="text"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-100
-                                                  px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
-                                x-model="status" readonly>
-                            <button type="button" @click="getLocation()"
-                                class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center transition-colors"
-                                :disabled="loading">
-                                <img src="{{ asset('assets/icon/location.svg') }}"
-                                    class="h-5 w-5 filter brightness-0 invert" alt="GPS">
+                            <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed" x-model="status" readonly>
+                            <button type="button" @click="getLocation()" :disabled="loading" class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/location.svg') }}" class="h-5 w-5 brightness-0 invert">
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">*Pastikan izin lokasi browser aktif.</p>
+                        <p class="text-[11px] text-slate-400 mt-1">*Pastikan izin lokasi aktif.</p>
                     </div>
                 </div>
 
-                {{-- Tombol Aksi --}}
+                {{-- Action Buttons --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="exportPDF()"
-                        class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm font-normal text-white hover:bg-[#555]">
-                        Export PDF
-                    </button>
-                    <button type="button" onclick="submitForm('draft')"
-                        class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white">
-                        Simpan Draft
-                    </button>
-                    <button type="button" onclick="submitForm('waiting_review')"
-                        class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:bg-[#0b633b]">
-                        Kirim LKH
-                    </button>
+                    <button type="button" onclick="exportPDF()" class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555]">Export PDF</button>
+                    <button type="button" onclick="submitForm('draft')" class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white">Simpan Draft</button>
+                    <button type="button" onclick="submitForm('waiting_review')" class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b]">Kirim LKH</button>
                 </div>
             </div>
         </form>
     </div>
-
     {{-- KANAN ATAS: PANDUAN SINGKAT --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col h-full">
         <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
 
         <div class="mt-3 space-y-2 flex-1 overflow-y-auto pr-1">
             @foreach ([
-            ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan, bukan tanggal pengisian.'],
-            ['title' => 'Jenis Kegiatan', 'desc' => 'Pilih jenis kegiatan yang dilakukan.'],
-            ['title' => 'Referensi Tupoksi', 'desc' => 'Pilih jenis tupoksi yang sesuai.'],
-            ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
-            ['title' => 'Output', 'desc' => 'Sebutkan hasil nyata dari kegiatan.'],
-            ['title' => 'Volume', 'desc' => 'Masukkan jumlah output kegiatan yang sesuai.'],
-            ['title' => 'Satuan', 'desc' => 'Pilih satuan yang sesuai dengan output kegiatan.'],
-            ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP atau Non-SKP.'],
-            ['title' => 'Jam Mulai & Jam Selesai', 'desc' => 'Isi jam mulai dan jam selesai kegiatan.'],
-            ['title' => 'Unggah Bukti', 'desc' => 'Unggah bukti foto/dokumen kegiatan.'],
-            ['title' => 'Lokasi', 'desc' => 'Sistem akan otomatis membaca lokasi Anda.'],
+                ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan, bukan tanggal pengisian.'],
+                ['title' => 'Jenis Kegiatan', 'desc' => 'Pilih jenis kegiatan yang dilakukan.'],
+                ['title' => 'Referensi Tupoksi', 'desc' => 'Pilih jenis tupoksi yang sesuai.'],
+                ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
+                ['title' => 'Output', 'desc' => 'Sebutkan hasil nyata dari kegiatan.'],
+                ['title' => 'Volume', 'desc' => 'Masukkan jumlah output kegiatan yang sesuai.'],
+                ['title' => 'Satuan', 'desc' => 'Pilih satuan yang sesuai dengan output kegiatan.'],
+                ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP atau Non-SKP.'],
+                ['title' => 'Jam Mulai & Jam Selesai', 'desc' => 'Isi jam mulai dan jam selesai kegiatan.'],
+                ['title' => 'Unggah Bukti', 'desc' => 'Unggah bukti foto/dokumen kegiatan.'],
+                ['title' => 'Lokasi', 'desc' => 'Sistem akan otomatis membaca lokasi Anda.'],
             ] as $guide)
-            <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
-                <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
-                <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
-            </div>
+                <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
+                    <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
+                    <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
+                </div>
             @endforeach
         </div>
     </div>
 
-    {{-- KIRI BAWAH: DRAFT LKH (Tetap sama) --}}
-    <div x-data="{ 
-            openDraftModal: false, 
-            draftsLimit: [], 
-            draftsAll: [] 
-        }" @update-drafts.window="
-            draftsLimit = $event.detail.limit;
-            draftsAll = $event.detail.all;
-        " x-cloak class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
-
-        {{-- HEADER CARD --}}
+    {{-- KIRI BAWAH: DRAFT LKH --}}
+    <div x-data="{ openDraftModal: false, draftsLimit: [], draftsAll: [] }" 
+         @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" 
+         x-cloak class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
+        
         <div class="flex items-center justify-between mb-3 shrink-0">
             <h3 class="text-[15px] font-medium text-slate-800">Draft LKH</h3>
-
-            <button type="button" x-show="draftsAll.length > 0"
-                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
-                <button type="button" x-show="draftsAll.length > 0"
-                    class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
-                    Lihat Semua (<span x-text="draftsAll.length"></span>)
-                </button>
+            <button type="button" x-show="draftsAll.length > 0" class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
+                Lihat Semua (<span x-text="draftsAll.length"></span>)
+            </button>
         </div>
 
         <div class="space-y-3 flex-1 overflow-y-auto pr-1">
-            <template x-if="draftsLimit.length === 0">
-                <p class="text-sm text-slate-400 italic">Tidak ada draft.</p>
-            </template>
+            <template x-if="draftsLimit.length === 0"><p class="text-sm text-slate-400 italic">Tidak ada draft.</p></template>
             <template x-for="item in draftsLimit" :key="item.id">
-                <div
-                    class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
+                <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
-
-                    <a :href="'/e-daily-report/staf/input-lkh/' + item.id"
-                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
-                        Lanjutkan
-                    </a>
-                    <button @click="deleteDraft(item.id)"
-                        class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Hapus</button>
+                    <a :href="'/staf/input-lkh/' + item.id" class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Lanjut</a>
+                    <button @click="deleteDraft(item.id)" class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Hapus</button>
                 </div>
             </template>
         </div>
 
-        {{-- MODAL FULL LIST (Tetap sama) --}}
-        <div x-show="openDraftModal" x-transition.opacity
-            class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+        {{-- Modal Draft --}}
+        <div x-show="openDraftModal" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openDraftModal = false"></div>
             <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                    <h2 class="text-lg font-semibold text-slate-800">Semua Draft Laporan</h2>
-                    <button @click="openDraftModal = false"
-                        class="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200">
-                        <span class="text-slate-500 text-xl">&times;</span>
-                    </button>
+                    <h2 class="text-lg font-semibold text-slate-800">Semua Draft</h2>
+                    <button @click="openDraftModal = false" class="text-2xl text-slate-500">&times;</button>
                 </div>
                 <div class="overflow-y-auto p-6 space-y-3">
-                    <template x-if="draftsAll.length === 0">
-                        <div class="text-center py-10 text-slate-400">Tidak ada draft tersimpan saat ini.</div>
-                    </template>
                     <template x-for="item in draftsAll" :key="item.id">
-                        <div
-                            class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
-                            <div>
-                                <h4 class="text-[12px] font-medium text-slate-900" x-text="item.deskripsi"></h4>
-                                <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <a :href="'/staf/input-lkh/' + item.id"
-                                    class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition text-center">Lanjutkan</a>
-                                <button @click="deleteDraft(item.id)"
-                                    class="bg-[#B6241C] text-white text-[12px] px-2 py-1 rounded-[8px]">Hapus</button>
-                            </div>
+                        <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
+                            <div><h4 class="text-[12px] font-medium" x-text="item.deskripsi"></h4><p class="text-[10px] text-slate-500" x-text="item.waktu_simpan"></p></div>
+                            <div class="flex gap-2"><a :href="'/staf/input-lkh/' + item.id" class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">Lanjut</a></div>
                         </div>
                     </template>
-                </div>
-                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
-                    <button @click="openDraftModal = false"
-                        class="text-xs text-slate-500 hover:text-slate-700 font-medium">Tutup</button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- KANAN BAWAH: STATUS LAPORAN TERAKHIR --}}
+    {{-- KANAN BAWAH: STATUS --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
-        <h3 class="text-[18px] font-medium text-slate-800 mb-5">Status Laporan Terakhir</h3>
-        <ul class="space-y-3" id="aktivitas-list">
-            <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
-        </ul>
+        <h3 class="text-[18px] font-medium text-slate-800 mb-5">Status Laporan</h3>
+        <ul class="space-y-3" id="aktivitas-list"><li class="text-sm text-slate-400 italic">Memuat...</li></ul>
     </div>
 </section>
 
 @push('scripts')
 <script>
 const lkhIdToEdit = "{{ $id ?? '' }}";
-
 document.addEventListener("DOMContentLoaded", async function() {
     const token = localStorage.getItem("auth_token");
-    const headers = {
-        "Accept": "application/json"
-    };
-    if (token) headers["Authorization"] = "Bearer " + token;
+    const headers = { "Accept": "application/json", "Authorization": "Bearer " + token };
 
-    // FILE PREVIEW
+    // File Preview
     const fileInput = document.getElementById("bukti_input");
-    const fileLabel = document.getElementById("bukti_filename");
-    if (fileInput && fileLabel) {
+    if (fileInput) {
         fileInput.addEventListener("change", () => {
-            if (fileInput.files.length === 0) fileLabel.textContent = "Pilih File";
-            else if (fileInput.files.length === 1) fileLabel.textContent = fileInput.files[0].name;
-            else fileLabel.textContent = `${fileInput.files.length} file dipilih`;
+            const count = fileInput.files.length;
+            document.getElementById("bukti_filename").textContent = count === 0 ? "Pilih File" : (count === 1 ? fileInput.files[0].name : `${count} file dipilih`);
         });
     }
 
-    // LOAD DASHBOARD
+    // Load Dashboard Stats
     try {
-        const response = await fetch("/api/dashboard/stats", {
-            method: "GET",
-            headers: headers
-        });
-        if (response.ok) {
-            const data = await response.json();
+        const res = await fetch("/api/dashboard/stats", { headers });
+        if(res.ok) {
+            const data = await res.json();
             renderAktivitas(data.aktivitas_terbaru || []);
-            renderDraftAll(data.draft_terbaru || []);
-            renderDraftLimit(data.draft_limit || []);
+            renderDrafts(data.draft_terbaru || []);
         }
-    } catch (err) {
-        console.error("Gagal load dashboard stats:", err);
-    }
+    } catch(e) { console.error("Stats Error", e); }
 
-    // LOAD DATA EDIT LKH (Revised for new Logic)
-    if (lkhIdToEdit) {
-        loadEditLKH(lkhIdToEdit, headers);
-    }
+    // Edit Mode
+    if(lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
 
-    activatePickerButton("tanggal_lkh_btn", "tanggal_lkh");
-    activatePickerButton("jam_mulai_btn", "jam_mulai");
-    activatePickerButton("jam_selesai_btn", "jam_selesai");
+    // Pickers
+    ['tanggal_lkh', 'jam_mulai', 'jam_selesai'].forEach(id => {
+        document.getElementById(id+'_btn')?.addEventListener('click', () => document.getElementById(id).showPicker());
+    });
 });
 
-// Render Functions (Simplifikasi agar tidak terlalu panjang, logika sama)
-function renderAktivitas(aktivitas) {
-    const listContainer = document.getElementById("aktivitas-list");
-    listContainer.innerHTML = "";
-    if (aktivitas.length === 0) {
-        listContainer.innerHTML = `<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>`;
-        return;
-    }
-    aktivitas.forEach(item => {
-        let statusColor = item.status === 'approved' ? 'bg-[#128C60]/50' : (item.status.includes('reject') ?
-            'bg-[#B6241C]/50' : 'bg-slate-200');
-        let statusText = item.status === 'approved' ? 'Disetujui' : (item.status.includes('reject') ?
-            'Ditolak' : 'Menunggu Review');
-        listContainer.insertAdjacentHTML("beforeend", `
-                        <li class="flex items-start gap-3">
-                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                                <img src="${icon}" class="h-5 w-5 opacity-90">
-                                </div>
-                                <div class="flex-1 overflow-hidden">
-                                <div class="text-[13px] font-medium leading-snug truncate">
-                                        ${item.deskripsi_aktivitas}
-                                    </div>
-                                    <div class="flex justify-between mt-[2px]">
-                                        <span class="text-xs text-slate-500">${statusLabel}</span>
-                                    <span class="text-xs text-slate-500">${tanggal}</span>
-                                    </div>
-                                </div>
-                            </li>
-                        `);
+function renderAktivitas(list) {
+    const el = document.getElementById("aktivitas-list");
+    el.innerHTML = "";
+    if(!list.length) { el.innerHTML = '<li class="text-sm text-slate-500">Belum ada aktivitas.</li>'; return; }
+    
+    list.forEach(item => {
+        // [FIX] Define variables before using in template string
+        let color = item.status === 'approved' ? 'bg-[#128C60]/50' : (item.status.includes('reject') ? 'bg-[#B6241C]/50' : 'bg-slate-200');
+        let icon = item.status === 'approved' ? '{{ asset("assets/icon/approve.svg") }}' : '{{ asset("assets/icon/pending.svg") }}';
+        let text = item.status === 'approved' ? 'Disetujui' : (item.status.includes('reject') ? 'Ditolak' : 'Menunggu');
+        
+        el.insertAdjacentHTML("beforeend", `
+            <li class="flex items-start gap-3">
+                <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${color}">
+                    <img src="${icon}" class="h-5 w-5 opacity-90">
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <div class="text-[13px] font-medium truncate">${item.deskripsi_aktivitas}</div>
+                    <div class="flex justify-between mt-[2px] text-xs text-slate-500">
+                        <span>${text}</span><span>${new Date(item.tanggal_laporan).toLocaleDateString('id-ID')}</span>
+                    </div>
+                </div>
+            </li>`);
     });
 }
 
-function renderDraftLimit(rawDrafts) {
-    const drafts = rawDrafts.map(d => ({
-        id: d.id,
-        deskripsi: d.deskripsi_aktivitas || "Draft",
+function renderDrafts(data) {
+    const drafts = data.map(d => ({
+        id: d.id, deskripsi: d.deskripsi_aktivitas || "Draft", 
         waktu_simpan: new Date(d.updated_at).toLocaleString()
     }));
-    window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: {
-            limit: drafts.slice(0, 3),
-            all: window.__draftsAll || []
-        }
-    }));
-    window.__draftsLimit = drafts;
+    window.dispatchEvent(new CustomEvent("update-drafts", { detail: { limit: drafts.slice(0,3), all: drafts } }));
 }
 
-function renderDraftAll(rawDrafts) {
-
-    const draftsAll = rawDrafts.map(item => {
-        const d = new Date(item.updated_at);
-        return {
-            id: item.id,
-            deskripsi: item.deskripsi_aktivitas || "Draft tanpa judul",
-            waktu_simpan: `Disimpan: ${d.toLocaleDateString('id-ID', {day:'numeric', month:'long'})} | ${d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`
-        };
-    });
-
-    window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: {
-            limit: window.__draftsLimit || [],
-            all: draftsAll
-        }
-    }));
-
-    window.__draftsAll = draftsAll;
-    const drafts = rawDrafts.map(d => ({
-        id: d.id,
-        deskripsi: d.deskripsi_aktivitas || "Draft",
-        waktu_simpan: new Date(d.updated_at).toLocaleString()
-    }));
-    window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: {
-            limit: window.__draftsLimit || [],
-            all: drafts
-        }
-    }));
-    window.__draftsAll = drafts;
-}
-
-// [PENTING] LOAD EDIT LKH DENGAN LOGIC BARU
 async function loadEditLKH(id, headers) {
     try {
-        const res = await fetch(`/api/lkh/${id}`, {
-            method: "GET",
-            headers: headers
-        });
-        if (!res.ok) throw new Error("Gagal ambil detail");
+        const res = await fetch(`/api/lkh/${id}`, { headers });
         const data = (await res.json()).data;
-
+        
+        // Basic Fields
         document.getElementById("tanggal_lkh").value = data.tanggal_laporan;
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
@@ -742,173 +465,63 @@ async function loadEditLKH(id, headers) {
         document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja;
         document.querySelector('input[name="volume"]').value = data.volume;
 
-        if (data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
-        if (data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
-        updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi?.uraian_tugas);
+        // Alpine Components Injection
+        setAlpineValue('input[name="jenis_kegiatan"]', 'value', data.jenis_kegiatan);
+        setAlpineValue('input[name="jenis_kegiatan"]', 'label', data.jenis_kegiatan);
+        setAlpineValue('input[name="tupoksi_id"]', 'value', data.tupoksi_id);
+        if(data.tupoksi) setAlpineValue('input[name="tupoksi_id"]', 'label', data.tupoksi.uraian_tugas);
+        if(data.latitude) setAlpineValue('input[name="latitude"]', 'lat', data.latitude);
+        if(data.longitude) setAlpineValue('input[name="longitude"]', 'lng', data.longitude);
 
-        const skpEl = document.querySelector('input[name="skp_id"]');
-        if (skpEl) {
-            const wrapper = skpEl.closest('[x-data]');
-            if (wrapper) {
-                const scope = Alpine.$data(wrapper);
-                if (data.skp_id) {
-                    scope.setKategori('skp');
-                    scope.skpId = data.skp_id;
-                    scope.skpLabel = data.skp.nama_skp || 'SKP Terpilih';
-                } else {
-                    scope.setKategori('non-skp');
-                }
-            }
-        }
-
-        document.querySelector('h2').innerText = "Edit LKH";
-
-    } catch (err) {
-        console.error(err);
-        alert("Gagal memuat data edit.");
-    }
-    // Logic Load SKP/Satuan
-    const skpEl = document.querySelector('input[name="skp_rencana_id"]');
-    if (skpEl) {
-        const scope = Alpine.$data(skpEl.closest('[x-data]'));
-        if (data.skp_rencana_id) {
+        // SKP Logic
+        const skpEl = document.querySelector('input[name="skp_rencana_id"]');
+        if(skpEl && data.skp_rencana_id) {
+            const scope = Alpine.$data(skpEl.closest('[x-data]'));
             scope.setKategori('skp');
             scope.skpId = data.skp_rencana_id;
-            scope.skpLabel = data.rencana ? data.rencana.rencana_hasil_kerja : 'SKP Terpilih';
-            // Lock satuan karena ini SKP
+            scope.skpLabel = data.rencana?.rencana_hasil_kerja || 'SKP Terpilih';
             scope.satuanValue = data.satuan;
             scope.isSatuanLocked = true;
         } else {
-            scope.setKategori('non-skp');
-            scope.satuanValue = data.satuan; // Tetap isi tapi unlock
+            setAlpineValue('input[name="satuan"]', 'satuanValue', data.satuan);
         }
-    }
-} catch (err) {
-    console.error(err);
-}
+    } catch(e) { console.error("Edit Load Error", e); }
 }
 
-function setAlpineValue(sel, key, val) {
-    const el = document.querySelector(sel);
-    if (el) Alpine.$data(el.closest("[x-data]"))[key] = val;
-}
+function setAlpineValue(sel, key, val) { const el = document.querySelector(sel); if(el) Alpine.$data(el.closest('[x-data]'))[key] = val; }
 
-function updateAlpineDropdown(name, val, label) {
-    const el = document.querySelector(`input[name="${name}"]`);
-    if (el) {
-        const s = Alpine.$data(el.closest('[x-data]'));
-        s.value = val;
-        if (label) s.label = label;
-    }
-}
-
-function activatePickerButton(b, i) {
-    document.getElementById(b)?.addEventListener("click", () => document.getElementById(i).showPicker());
-}
-
-async function submitForm(statusType) {
+async function submitForm(type) {
     const form = document.getElementById("form-lkh");
     const formData = new FormData(form);
-    formData.set("status", statusType);
+    formData.set("status", type);
 
-    // Validasi sederhana
-    if (statusType === 'waiting_review' && (!formData.get('output_hasil_kerja') || !formData.get('satuan'))) {
-        return Swal.fire({
-            icon: "warning",
-            title: "Form Belum Lengkap",
-            text: "Mohon lengkapi Output dan Satuan"
-        });
+    if(type === 'waiting_review' && (!formData.get('output_hasil_kerja') || !formData.get('satuan'))) {
+        return Swal.fire({icon: "warning", title: "Belum Lengkap", text: "Output dan Satuan wajib diisi"});
     }
 
-    let url = lkhIdToEdit ? `/api/lkh/update/${lkhIdToEdit}` : "/api/lkh";
     try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-                "Accept": "application/json"
-            },
-            body: formData
+        const res = await fetch(lkhIdToEdit ? `/api/lkh/update/${lkhIdToEdit}` : "/api/lkh", {
+            method: "POST", headers: { "Authorization": `Bearer ${localStorage.getItem("auth_token")}`, "Accept": "application/json" }, body: formData
         });
         const json = await res.json();
-        if (res.ok) {
-            Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                showConfirmButton: false,
-                timer: 1500
-            });
+        if(res.ok) {
+            Swal.fire({icon: "success", title: "Berhasil", showConfirmButton: false, timer: 1500});
             setTimeout(() => window.location.href = "/staf/dashboard", 1000);
-            return;
-        }
-
-        Swal.fire({
-            icon: "error",
-            title: "Gagal Menyimpan",
-            text: json.message || "Terjadi kesalahan.",
-        });
-
-        btn.disabled = false;
-        btn.innerText = old;
-
-    } catch (err) {
-        console.error(err);
-        Swal.fire({
-            icon: "error",
-            title: "Kesalahan Koneksi",
-            text: "Periksa koneksi internet Anda.",
-        });
-    }
-
+        } else { throw new Error(json.message); }
+    } catch(e) { Swal.fire({icon: "error", title: "Gagal", text: e.message || "Terjadi kesalahan"}); }
 }
 
 async function exportPDF() {
-    Swal.fire({
-        title: "Export LKH ke PDF?",
-        text: "Pastikan data yang kamu isi sudah benar.",
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonColor: "#1C7C54",
-        cancelButtonColor: "#6B7280",
-        confirmButtonText: "Ya, Export!",
-        cancelButtonText: "Batal",
-    }).then(async (result) => {
-
-        if (!result.isConfirmed) return;
-
-        const form = document.getElementById("form-lkh");
-        const formData = new FormData(form);
-        const token = localStorage.getItem("auth_token");
-
-        try {
-            const response = await fetch("/api/lkh/export-pdf", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: formData,
-            });
-
-            if (!response.ok) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Gagal Export PDF",
-                    text: `Status: ${response.status}`,
+    Swal.fire({ title: "Export PDF?", icon: "question", showCancelButton: true, confirmButtonText: "Ya", confirmButtonColor: "#1C7C54" })
+    .then(async (res) => {
+        if(res.isConfirmed) {
+            try {
+                const resp = await fetch("/api/lkh/export-pdf", { 
+                    method: "POST", headers: { "Authorization": `Bearer ${localStorage.getItem("auth_token")}` }, body: new FormData(document.getElementById("form-lkh")) 
                 });
-                return;
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            window.open(url, "_blank");
-
-        } catch (err) {
-            Swal.fire({
-                icon: "error",
-                title: "Kesalahan Server",
-                text: "Tidak bisa menghubungi server untuk export PDF.",
-            });
+                if(resp.ok) window.open(window.URL.createObjectURL(await resp.blob()), "_blank");
+                else throw new Error("Gagal export");
+            } catch(e) { Swal.fire("Error", "Gagal export PDF", "error"); }
         }
     });
 }

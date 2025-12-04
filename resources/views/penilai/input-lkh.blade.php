@@ -164,42 +164,60 @@
                     [MODIFIKASI BESAR] Row 4 & 5: Output, Volume, Satuan, Kategori, dan SKP 
                     Kita bungkus dalam satu x-data besar agar logika Kategori & SKP terhubung 
                 --}}
-                <div x-data="{
-                    kategori: 'non-skp',
-                    skpId: '',
-                    skpLabel: 'Pilih Target SKP',
-                    skpOptions: [],
-                    skpLoading: false,
-                    satuanValue: '',
-                    satuanLabel: 'Satuan',
-                    satuanOpen: false,
-                    kategoriOpen: false,
-                    skpOpen: false,
+                {{-- GANTI BAGIAN INI --}}
+                    <div x-data="{
+                        kategori: 'non-skp',
+                        skpId: '',
+                        skpLabel: 'Pilih Target SKP',
+                        skpOptions: [],
+                        skpLoading: false,
+                        satuanValue: '',
+                        satuanLabel: 'Satuan',
+                        satuanOpen: false,
+                        kategoriOpen: false,
+                        skpOpen: false,
 
-                    // Fungsi fetch SKP
-                    async fetchSkp() {
-                        this.skpLoading = true;
-                        try {
-                            const token = localStorage.getItem('auth_token');
-                            const response = await fetch('/api/skp?year=' + new Date().getFullYear(), {
-                                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
-                            });
-                            const res = await response.json();
-                            if(res.data) {
-                                this.skpOptions = res.data.map(s => ({ value: s.id, label: s.rencana_aksi }));
+                        // [PERBAIKAN 1] Fetch ke API Referensi (bukan api/skp langsung)
+                        async fetchSkp() {
+                            this.skpLoading = true;
+                            try {
+                                const token = localStorage.getItem('auth_token');
+                                const response = await fetch('/api/lkh/referensi', {
+                                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+                                });
+                                const res = await response.json();
+                                
+                                // Ambil dari key 'list_skp' sesuai LkhController
+                                if(res.list_skp) {
+                                    this.skpOptions = res.list_skp.map(s => ({ 
+                                        value: s.id, 
+                                        label: s.rencana_hasil_kerja, // Tampilkan Rencana Kerja
+                                        satuan: s.satuan // Simpan satuan untuk otomatisasi
+                                    }));
+                                }
+                            } catch (e) { console.error(e); } finally { this.skpLoading = false; }
+                        },
+
+                        // [PERBAIKAN 2] Fungsi Helper saat SKP dipilih
+                        pilihSkp(opt) {
+                            this.skpId = opt.value;
+                            this.skpLabel = opt.label;
+                            this.skpOpen = false;
+                            
+                            // Otomatis isi Satuan jika ada datanya
+                            if (opt.satuan && opt.satuan !== '-') {
+                                this.satuanValue = opt.satuan;
                             }
-                        } catch (e) { console.error(e); } finally { this.skpLoading = false; }
-                    },
-                    // Saat kategori berubah
-                    setKategori(val) {
-                        this.kategori = val;
-                        this.kategoriOpen = false;
-                        if (val === 'skp' && this.skpOptions.length === 0) {
-                            this.fetchSkp();
-                        }
-                    }
-                }">
+                        },
 
+                        setKategori(val) {
+                            this.kategori = val;
+                            this.kategoriOpen = false;
+                            if (val === 'skp' && this.skpOptions.length === 0) {
+                                this.fetchSkp();
+                            }
+                        }
+                    }">
                     {{-- Baris Atas: Output, Volume, Satuan, Kategori --}}
                     <div
                         class="grid gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-start">
@@ -285,9 +303,13 @@
                                 class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
                                 <template x-for="opt in skpOptions" :key="opt.value">
                                     <button type="button"
-                                        @click="skpId = opt.value; skpLabel = opt.label; skpOpen = false"
+                                        {{-- [PERBAIKAN 3] Panggil fungsi helper tadi --}}
+                                        @click="pilihSkp(opt)"
                                         class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
                                         <span x-text="opt.label" class="line-clamp-2"></span>
+                                        
+                                        {{-- Optional: Tampilkan info satuan kecil di samping --}}
+                                        <span x-show="opt.satuan" x-text="'(' + opt.satuan + ')'" class="text-[10px] text-slate-400 ml-1"></span>
                                     </button>
                                 </template>
                                 <div x-show="skpOptions.length === 0 && !skpLoading"

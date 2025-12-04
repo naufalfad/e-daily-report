@@ -4,13 +4,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Core\ActivityLogController;
-// [BARU] Import Controller Pengumuman agar bisa dipanggil di route
 use App\Http\Controllers\Core\PengumumanController;
 use App\Http\Controllers\Core\SkpController;
 
 /*
 |--------------------------------------------------------------------------
-| AUTH ROUTE
+| AUTH ROUTE (Global Access)
 |--------------------------------------------------------------------------
 */
 
@@ -20,7 +19,7 @@ Route::view('/login', 'auth.login')->name('login');
 // Redirect root → login
 Route::get('/', fn () => redirect()->route('login'));
 
-// Login (POST)
+// Login (POST) - API Route (Diobrolin di API.php)
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 // Logout
@@ -34,28 +33,50 @@ Route::post('/logout', function () {
 
 /*
 |--------------------------------------------------------------------------
-| GENERAL STATIC TEST / DEMO
+| GENERAL STATIC TEST / DEMO & ERROR PAGES (Guest Access)
 |--------------------------------------------------------------------------
 */
 
 Route::view('/tes-pohon-organisasi', 'organisasi');
 
+// === ROUTE HALAMAN ERROR & MAINTENANCE (WAJIB DILUAR MIDDLEWARE 'AUTH') ===
+// Blok ini harus berada di sini agar bisa diakses user yang belum login.
+
+Route::get('/error', function () {
+    return view('errors.error', ['message' => 'Contoh pesan error dari sistem.']);
+});
+
+Route::get('/maintenance', function () {
+    return view('errors.maintenance');
+})->name('maintenance'); // <--- INI ADALAH FIX YANG DIBUTUHKAN
+
+Route::get('/503', function () {
+    return view('errors.503');
+});
+
 
 /*
 |--------------------------------------------------------------------------
-| STAF ROUTES
+| PROTECTED ROUTES (WAJIB AUTH)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth'])->group(function () {
+    
+    /*
+    |--------------------------------------------------------------------------
+    | STAF ROUTES
+    |--------------------------------------------------------------------------
+    */
 
     Route::prefix('staf')->name('staf.')->group(function () {
 
         Route::view('/dashboard', 'staf.dashboard')->name('dashboard');
-//        Route::view('/input-lkh', 'staf.input-lkh')->name('input-lkh');
+        
         Route::get('/input-lkh/{id?}', function ($id = null) {
             return view('staf.input-lkh', ['id' => $id]);
         })->name('input-lkh');
+        
         Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
         Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
@@ -65,21 +86,20 @@ Route::middleware(['auth'])->group(function () {
     });
 
 
-/*
-|--------------------------------------------------------------------------
-| PENILAI ROUTES
-|--------------------------------------------------------------------------
-*/
-
-
+    /*
+    |--------------------------------------------------------------------------
+    | PENILAI ROUTES
+    |--------------------------------------------------------------------------
+    */
 
     Route::prefix('penilai')->name('penilai.')->group(function () {
 
         Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
-//        Route::view('/input-laporan', 'penilai.input-lkh')->name('input-laporan');
+        
         Route::get('/input-laporan/{id?}', function ($id = null) {
             return view('penilai.input-lkh', ['id' => $id]);
         })->name('input-laporan');
+        
         Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
         Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
         Route::get('/skoring-kinerja', [SkpController::class, 'skoringKinerja'])->name('skoring-kinerja');
@@ -90,16 +110,12 @@ Route::middleware(['auth'])->group(function () {
         // Log Aktivitas Penilai
         Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');
 
-        // [PERBAIKAN 2] Route Pengumuman Lengkap untuk Penilai (CRUD)
-        // ---------------------------------------------------------
+        // Route Pengumuman Lengkap untuk Penilai (CRUD)
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
-            // Halaman Utama (View)
             Route::view('/', 'penilai.pengumuman')->name('index');
-            
-            // API endpoints (dipanggil via fetch/axios di JS)
-            Route::get('/list', [PengumumanController::class, 'index'])->name('list');   // Ambil Data
-            Route::post('/store', [PengumumanController::class, 'store'])->name('store'); // Simpan Baru
-            Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); // Hapus
+            Route::get('/list', [PengumumanController::class, 'index'])->name('list');   
+            Route::post('/store', [PengumumanController::class, 'store'])->name('store'); 
+            Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); 
         });
     });
 
@@ -118,44 +134,21 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ADMIN ROUTES
+    | ADMIN ROUTES (MODUL ROLE ADMIN - CLEAN VERSION)
     |--------------------------------------------------------------------------
     */
 
     Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+        
+        // 1. View HR: Manajemen Pegawai (Profile & Struktur)
         Route::view('/manajemen-pegawai', 'admin.manajemen-pegawai')->name('manajemen-pegawai');
+        
+        // 2. View IT: Akun Pengguna (Password & Akses)
         Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
+        
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
-
-        Route::get('/akun-pengguna', fn () => view('admin.akun-pengguna'))
-            ->name('akun-pengguna');
-
-        Route::get('/pengaturan-sistem', fn () => view('admin.pengaturan-sistem'))
-            ->name('pengaturan-sistem');
-
-        Route::get('/log-aktivitas', fn () => view('admin.log-aktivitas'))
-            ->name('log-aktivitas');
+        Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
     });
-
-    // === ROUTE TESTING HALAMAN ERROR & MAINTENANCE ===
-
-    // Test generic error page (error.blade.php)
-    Route::get('/error', function () {
-        return view('errors.error', [
-            'message' => 'Contoh pesan error dari sistem.'
-        ]);
-    });
-
-    // Test halaman maintenance (maintenance.blade.php)
-    Route::get('/maintenance', function () {
-        return view('errors.maintenance');
-    });
-
-    // Test halaman 503 (503.blade.php)
-    Route::get('/503', function () {
-        return view('errors.503');
-    });
-
 });

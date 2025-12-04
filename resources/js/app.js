@@ -12,14 +12,25 @@ import Alpine from 'alpinejs';
 // =========================
 // 2. IMPORT LOGIKA HALAMAN ADMIN
 // =========================
-// Import fungsi logika halaman manajemen pegawai
+// Import fungsi logika halaman manajemen pegawai (Eksisting)
 import { manajemenPegawaiData } from './pages/admin/manajemen-pegawai.js';
+// Import fungsi logika halaman akun pengguna (Eksisting)
+import { akunPenggunaData } from './pages/admin/akun-pengguna.js';
+// [PERBAIKAN UTAMA] Import fungsi logika halaman pengaturan sistem
+import { systemSettingsData } from './pages/admin/setting-sistem.js';
+
 
 // =========================
 // 3. REGISTRASI GLOBAL (Agar Blade Bisa Panggil)
 // =========================
 window.Alpine = Alpine;
+// Registrasi Manajemen Pegawai (Eksisting)
 window.manajemenPegawaiData = manajemenPegawaiData;
+// Registrasi Akun Pengguna (Eksisting)
+window.akunPenggunaData = akunPenggunaData;
+// [PERBAIKAN UTAMA] Registrasi Pengaturan Sistem
+window.systemSettingsData = systemSettingsData;
+
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -61,17 +72,16 @@ import './pages/kadis/validasi-laporan.js'
 // =========================
 // ADMIN (Logic lain jika ada)
 // =========================
-// import './pages/admin/dashboard.js'
-// import './pages/admin/log-aktivitas.js'
-// import './pages/admin/akun-pengguna.js'
-import './pages/admin/setting-sistem.js'
+// [CATATAN]: File ini sudah tidak perlu di-import di sini karena sudah di-import di Section 2
+// import './pages/admin/setting-sistem.js' 
+
 
 // Chart global (boleh)
 import Chart from 'chart.js/auto';
 window.Chart = Chart;
 
 // =========================
-// NOTIFIKASI GLOBAL FIX (KODE ASLI YANG MULIA)
+// NOTIFIKASI GLOBAL FIX (LOGIC BAWAAN)
 // =========================
 
 document.addEventListener('DOMContentLoaded', function () {

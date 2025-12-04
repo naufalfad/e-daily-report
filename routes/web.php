@@ -158,4 +158,5 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
     });
+    
 });

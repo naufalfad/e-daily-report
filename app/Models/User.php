@@ -31,7 +31,7 @@ class User extends Authenticatable
     protected $appends = ['foto_profil_url'];
 
     // Eager load agar otomatis ikut saat query user
-    protected $with = ['atasan', 'jabatan', 'bidang', 'unitKerja'];
+    protected $with = ['atasan', 'jabatan', 'bidang'];
 
     // ---------------------------------------------------------------------
     // Accessor foto profil
@@ -40,7 +40,7 @@ class User extends Authenticatable
     {
         return $this->foto_profil
             ? Storage::disk('public')->url($this->foto_profil)
-            : asset('images/default-user.png');
+            : asset('assets/icon/avatar.png'); // FIX: Default avatar path disesuaikan
     }
 
     // ---------------------------------------------------------------------
@@ -59,7 +59,7 @@ class User extends Authenticatable
     public function bawahanRecursif()
     {
         return $this->hasMany(User::class, 'atasan_id')
-            ->with(['jabatan', 'bidang', 'bawahanRecursif']);
+                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
     }
 
     // ---------------------------------------------------------------------
@@ -125,9 +125,10 @@ class User extends Authenticatable
         return $this->roles()->where('nama_role', $roleName)->exists();
     }
 
+    // [FIXED] Relasi SKP diarahkan ke SkpRencana (Model Baru)
     public function skp()
     {
-        return $this->hasMany(Skp::class, 'user_id');
+        return $this->hasMany(SkpRencana::class, 'user_id');
     }
 
     public function lkh()

@@ -228,9 +228,6 @@
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                                                   px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                                 placeholder="Contoh: Notulensi">
-                            px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30
-                            focus:border-[#1C7C54]"
-                            placeholder="Contoh: Notulensi / Laporan">
                         </div>
 
                         {{-- Kategori --}}
@@ -298,8 +295,7 @@
                                 class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
                                 <template x-for="opt in skpOptions" :key="opt.value">
                                     <button type="button" {{-- [PERBAIKAN 3] Panggil fungsi helper tadi --}}
-                                        @click="pilihSkp(opt)"
-                                    <button type="button" @click="pilihSkp(opt)"
+                                        @click="pilihSkp(opt)" <button type="button" @click="pilihSkp(opt)"
                                         class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
                                         <span x-text="opt.label" class="line-clamp-2"></span>
 
@@ -376,8 +372,6 @@
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                                                   px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
                                                   focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
-                                                px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                                focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
                             <button type="button" id="jam_mulai_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/time.svg') }}"

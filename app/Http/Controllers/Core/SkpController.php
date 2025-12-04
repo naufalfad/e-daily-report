@@ -202,8 +202,63 @@ class SkpController extends Controller
     }
     
     // --- Helper / Placeholder untuk fitur Skoring (jika diperlukan nanti) ---
-    public function skoringKinerja()
+    /**
+     * API: Data Skoring Kinerja Bawahan
+     * Logic: Ambil bawahan -> Ambil SKP Aktif -> Hitung % Realisasi LKH Approved
+     */
+    public function getSkoringData(Request $request)
     {
-        return response()->json(['message' => 'Fitur skoring sedang dalam pengembangan sesuai struktur baru.']);
+        $user = Auth::user();
+        
+        // 1. Cari Bawahan (User yang atasan_id-nya adalah user login)
+        $bawahan = \App\Models\User::where('atasan_id', $user->id)->get();
+
+        $data = $bawahan->map(function($staff) {
+            // 2. Ambil Rencana SKP Terbaru milik staf ini
+            $rencana = SkpRencana::with(['targets' => function($q) {
+                            $q->where('jenis_aspek', 'Kuantitas');
+                        }])
+                        ->where('user_id', $staff->id)
+                        ->latest()
+                        ->first();
+
+            if (!$rencana) {
+                return [
+                    'id' => $staff->id,
+                    'nama' => $staff->name,
+                    'nip' => $staff->nip,
+                    'status' => 'Belum buat SKP',
+                    'capaian' => 0
+                ];
+            }
+
+            // 3. Ambil Target Kuantitas
+            $targetObj = $rencana->targets->first();
+            $targetAngka = $targetObj ? $targetObj->target : 0;
+            $satuan = $targetObj ? $targetObj->satuan : '-';
+
+            // 4. Hitung Realisasi (Sum Volume LKH yang Approved)
+            $realisasi = \App\Models\LaporanHarian::where('skp_rencana_id', $rencana->id)
+                ->where('status', 'approved')
+                ->sum('volume');
+
+            // 5. Hitung Persentase
+            $persen = $targetAngka > 0 ? round(($realisasi / $targetAngka) * 100) : 0;
+
+            return [
+                'id' => $staff->id,
+                'nama' => $staff->name,
+                'nip' => $staff->nip,
+                'foto' => $staff->foto_profil_url ?? asset('images/default-user.png'),
+                'rhk' => $rencana->rencana_hasil_kerja,
+                'target' => $targetAngka,
+                'realisasi' => $realisasi,
+                'satuan' => $satuan,
+                'capaian' => $persen,
+                'status' => 'Aktif'
+            ];
+        });
+
+        return response()->json(['data' => $data]);
     }
 }

@@ -151,14 +151,12 @@ function riwayatData(role) {
                 cancelButtonText: "Batal",
             }).then((result) => {
                 if (result.isConfirmed) {
-                    let url = `/riwayat/export-pdf?role=${this.role}`;
+                    let url = `/riwayat/export-pdf?role=${this.role}&mode=${this.filter.mode}`;
 
-                    if (this.role === "penilai") {
-                        url += `&mode=${this.filter.mode}`;
-                    }
                     if (this.filter.from)
                         url += `&from_date=${this.filter.from}`;
-                    if (this.filter.to) url += `&to_date=${this.filter.to}`;
+                    if (this.filter.to) 
+                        url += `&to_date=${this.filter.to}`;
 
                     window.open(url, "_blank");
                 }

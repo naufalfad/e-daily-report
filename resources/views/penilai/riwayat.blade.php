@@ -2,7 +2,6 @@
 {{-- Asumsi $role tersedia dari @extends dan bernilai 'penilai' atau 'staf' --}}
 @extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'riwayat'])
 
-
 @section('content')
 <section x-data="riwayatData('penilai')" x-init="initPage()">
 

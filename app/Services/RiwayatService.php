@@ -20,11 +20,10 @@ class RiwayatService
 
         // === FILTER ROLE PENILAI ===
         if ($role === 'penilai') {
-            if ($mode === 'mine') {
-                $query->where('user_id', $user->id);
-            } else {
-                $query->where('atasan_id', $user->id);
-            }
+
+            // Laporan penilai sendiri yang divalidasi Kadis
+            $query->where('user_id', $user->id)
+                ->where('atasan_id', $user->atasan_id); // Kadis
         }
 
         // === FILTER TANGGAL ===

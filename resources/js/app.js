@@ -3,6 +3,7 @@
 // =========================
 import '../css/app.css';
 import '../js/pages/login.js';
+import '../js/profile-modal.js'
 
 // =========================
 // 1. IMPORT ENGINE ALPINE (WAJIB UNTUK MODAL)
@@ -84,7 +85,10 @@ window.Chart = Chart;
 // NOTIFIKASI GLOBAL FIX (LOGIC BAWAAN)
 // =========================
 
+
+
 document.addEventListener('DOMContentLoaded', function () {
+    
     const logoutBtn = document.getElementById('btn-logout');
 
     // =========================

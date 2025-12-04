@@ -7,65 +7,90 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str; // Tambahan Helper String
 
 class ProfileController extends Controller
 {
     /**
-     * Update Profil (Upload Foto ke MinIO)
+     * Menampilkan Halaman Edit Profil
+     * Memuat data user beserta relasi SK (Jabatan, Unit) dan ROLE.
      */
-    public function updateProfile(Request $request)
+    public function edit()
+    {
+        // 1. Load User + Relasi Roles (PENTING)
+        $user = Auth::user()->load(['jabatan', 'unitKerja', 'atasan', 'roles']);
+
+        // 2. Logika Deteksi Role (Untuk Layout app.blade.php)
+        // Ambil role pertama, jika tidak ada default ke 'staf'
+        $rawRole = $user->roles->first()->nama_role ?? 'staf';
+        
+        // Ubah jadi slug lowercase (Contoh: "Kepala Dinas" -> "kepala-dinas")
+        $role = Str::slug($rawRole);
+        
+        // Normalisasi khusus untuk layout (sesuai case di app.blade.php)
+        if ($role === 'kepala-dinas') {
+            $role = 'kadis';
+        }
+
+        // 3. Kirim variable $role ke View
+        return view('auth.profile', compact('user', 'role'));
+    }
+
+    /**
+     * Update Tab 1: Biodata (Foto, Kontak, Alamat)
+     */
+    public function updateBiodata(Request $request)
     {
         $user = Auth::user();
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'no_telp' => 'nullable|string|max:20',
-            'foto_profil' => 'nullable|image|max:2048',
+        $request->validate([
+            'foto_profil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', 
+            'no_telp'     => 'nullable|string|max:20',
+            'email'       => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'alamat'      => 'nullable|string|max:255',
         ]);
 
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
-
-        // Handle Upload Foto MinIO
         if ($request->hasFile('foto_profil')) {
-            // Hapus foto lama jika ada (dari MinIO)
-            if ($user->foto_profil) {
+            if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
                 Storage::disk('public')->delete($user->foto_profil);
             }
-            
-            // Simpan foto baru ke MinIO
-            $path = $request->file('foto_profil')->store('profil', 'public');
+            $path = $request->file('foto_profil')->store('uploads/profil', 'public');
             $user->foto_profil = $path;
         }
 
-        $user->name = $request->name;
         $user->no_telp = $request->no_telp;
+        $user->email   = $request->email;
+        $user->alamat  = $request->alamat;
         $user->save();
 
-        return response()->json([
-            'message' => 'Profil berhasil diperbarui',
-            'data' => $user // JSON ini akan otomatis mengandung 'foto_profil_url' karena accessor di Model User
-        ]);
+        return back()->with('success', 'Biodata berhasil diperbarui.');
     }
 
-    public function updatePassword(Request $request)
+    /**
+     * Update Tab 2: Akun (Username & Password)
+     */
+    public function updateAccount(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'current_password' => 'required',
-            'new_password' => 'required|min:6|confirmed',
-        ]);
-
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
-
         $user = Auth::user();
 
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json(['message' => 'Password lama salah'], 400);
+        $request->validate([
+            'username' => ['required', 'string', 'max:50', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:6|confirmed', 
+        ]);
+
+        $user->username = $request->username;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
         }
 
-        $user->password = Hash::make($request->new_password);
         $user->save();
 
-        return response()->json(['message' => 'Password berhasil diubah']);
+        if ($user->wasChanged('username')) {
+            return back()->with('warning', 'Username diperbarui! Gunakan username <b>' . $request->username . '</b> untuk login selanjutnya.');
+        }
+
+        return back()->with('success', 'Pengaturan akun berhasil disimpan.');
     }
 }

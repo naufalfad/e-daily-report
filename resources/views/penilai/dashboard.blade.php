@@ -133,7 +133,7 @@
                 <img src="{{ asset('assets/icon/pending.svg') }}" class="h-5 w-5 object-contain">
             </div>
         </div>
-        <div class="text-xs text-slate-500">Realisasi Tahunan</div>
+        <div class="text-xs text-slate-500">Realisasi Target SKP</div>
         <div class="text-xs text-emerald-600 font-medium" id="stat-desc-2">0% Capaian</div>
     </div>
 

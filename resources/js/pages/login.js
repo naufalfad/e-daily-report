@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 setTimeout(() => {
                     if (roles.some(role => role.includes("admin"))) {
-                        window.location.href = "/admin/dashboard";
+                        window.location.href = "/admin/manajemen-pegawai";
 
                     } else if (
                         roles.includes("kepala dinas") ||

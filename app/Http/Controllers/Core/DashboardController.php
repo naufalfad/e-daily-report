@@ -146,66 +146,48 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getStatsKadis()
+   public function getStatsKadis(Request $request)
     {
         $kadis = Auth::user();
 
-        // ======== PROFIL KADIS ========
-        $kadis->load(['jabatan', 'unitKerja']);
-        $dataKadis = [
-            'name' => $kadis->name,
-            'nip' => $kadis->nip,
-            'jabatan' => $kadis->jabatan->nama_jabatan ?? '-',
-            'unit' => $kadis->unitKerja->nama_unit ?? '-',
-            'alamat' => $kadis->alamat ?? '-',
-            'foto' => $kadis->foto_profil ? asset('storage/' . $kadis->foto_profil) : null
-        ];
+        // [FIX] Definisi variable $pegawaiIds WAJIB ada di sini sebelum dipakai
+        $pegawaiIds = User::where('atasan_id', $kadis->id)->pluck('id');
 
-        // ======== AMBIL KABID (BAWAHAN LANGSUNG KADIS) ========
-        $kabidIds = User::where('atasan_id', $kadis->id)->pluck('id');
+        // =============================
+        // Statistik Dasar Dashboard Kadis
+        // =============================
 
-        // ======== STATISTIK HARI INI ========
-        $today = today();
+        $today = now()->toDateString();
 
-        $totalHariIni = LaporanHarian::whereIn('user_id', $kabidIds)
+        $totalHariIni = LaporanHarian::whereIn('user_id', $pegawaiIds)
             ->whereDate('tanggal_laporan', $today)
+            ->whereNot('status', 'draft')
             ->count();
 
-        $totalMenunggu = LaporanHarian::whereIn('user_id', $kabidIds)
+        $menunggu = LaporanHarian::whereIn('user_id', $pegawaiIds)
             ->where('status', 'waiting_review')
             ->count();
 
-        $totalDisetujui = LaporanHarian::whereIn('user_id', $kabidIds)
+        $disetujui = LaporanHarian::whereIn('user_id', $pegawaiIds)
             ->where('status', 'approved')
             ->count();
 
-        $totalDitolak = LaporanHarian::whereIn('user_id', $kabidIds)
+        $ditolak = LaporanHarian::whereIn('user_id', $pegawaiIds)
             ->where('status', 'rejected')
             ->count();
 
-        $totalSemua = $totalMenunggu + $totalDisetujui + $totalDitolak;
+        // =============================
+        // Aktivitas Terbaru
+        // =============================
 
-        // ======== RATE ========
-        $rateDisetujui = $totalSemua > 0 ? round(($totalDisetujui / $totalSemua) * 100) : 0;
-        $rateDitolak = $totalSemua > 0 ? round(($totalDitolak / $totalSemua) * 100) : 0;
-
-        $kemarin = LaporanHarian::whereIn('user_id', $kabidIds)
-            ->whereDate('tanggal_laporan', today()->subDay())
-            ->count();
-
-        $rateTotal = $kemarin > 0
-            ? round((($totalHariIni - $kemarin) / $kemarin) * 100)
-            : 0;
-
-        // ======== AKTIVITAS TERBARU (HANYA Laporan Kabid) ========
-        $aktivitas = LaporanHarian::with('user')
-            ->whereIn('user_id', $kabidIds)
-            ->orderBy('tanggal_laporan', 'desc')
+        $recentActivities = LaporanHarian::with('user')
+            ->whereIn('user_id', $pegawaiIds)
+            ->latest('created_at')
             ->limit(5)
             ->get()
             ->map(function ($x) {
                 return [
-                    'deskripsi_aktivitas' => $x->deskripsi_aktivitas ?? '-', // [PERBAIKAN] nama_kegiatan -> deskripsi_aktivitas
+                    'deskripsi_aktivitas' => $x->deskripsi_aktivitas ?? '-', 
                     'tanggal_laporan' => $x->tanggal_laporan,
                     'status' => $x->status,
                     'user' => $x->user->name ?? '-',
@@ -216,29 +198,25 @@ class DashboardController extends Controller
         // Grafik
         // =============================
 
+        // [FIX] Variable $pegawaiIds dijamin sudah ada dari baris atas
         $grafik = LaporanHarian::whereIn('user_id', $pegawaiIds)
             ->whereYear('tanggal_laporan', now()->year)
             ->get(['tanggal_laporan', 'status']);
 
-        // ======== RETURN JSON KE JS ========
         return response()->json([
-            "user_info" => $dataKadis,
-
-            "statistik" => [
-                "total_hari_ini" => $totalHariIni,
-                "total_menunggu" => $totalMenunggu,
-                "total_disetujui" => $totalDisetujui,
-                "total_ditolak" => $totalDitolak,
-                "rate_total" => $rateTotal,
-                "rate_disetujui" => $rateDisetujui,
-                "rate_ditolak" => $rateDitolak,
+            'user_info' => [
+                'name' => $kadis->name,
+                'nip' => $kadis->nip,
+                'daerah' => $kadis->alamat ?? '-',
+                'jabatan' => $kadis->jabatan->nama_jabatan ?? '-',
+                'unit' => $kadis->unitKerja->nama_unit ?? '-',
+                'alamat' => $kadis->alamat ?? '-',
             ],
             'statistik' => [
                 'total_hari_ini' => $totalHariIni,
                 'total_menunggu' => $menunggu,
                 'total_disetujui' => $disetujui,
                 'total_ditolak' => $ditolak,
-                // Rate bisa dihitung di frontend atau backend jika perlu
                 'rate_total' => 0,
                 'rate_disetujui' => 0,
                 'rate_ditolak' => 0,
@@ -246,5 +224,5 @@ class DashboardController extends Controller
             'aktivitas_terbaru' => $recentActivities,
             'grafik' => $grafik,
         ]);
-    }
+   }
 }

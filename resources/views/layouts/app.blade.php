@@ -91,7 +91,7 @@
 
 </head>
 
-<body class="h-dvh bg-[#EFF0F5] text-slate-800">
+<body class="min-h-screen bg-[#EFF0F5] text-slate-800">
 
     <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
 
@@ -103,8 +103,8 @@
 
     </div>
 
-    <div class="h-full p-5">
-        <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
+    <div class="p-5 h-screen">
+        <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 overflow-hidden">
 
             {{-- Sidebar --}}
             @include('partials.sidebar', [
@@ -117,8 +117,8 @@
 
                 {{-- TOPBAR: hanya muncul di dashboard --}}
                 @if (($active ?? null) === 'dashboard')
-                <header class="sticky top-0 z-40">
-                    <div class="relative flex items-center gap-35 py-1">
+                <header class="sticky top-0 z-40 bg-[#EFF0F5]/80 backdrop-blur-xl">
+                    <div class="py-1">
 
                         {{-- Burger (mobile) --}}
                         <button id="sb-toggle"

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Core;
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use App\Models\SkpRencana; // [PERBAIKAN] Ganti Skp jadi SkpRencana
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -145,43 +146,61 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getStatsKadis(Request $request)
+    public function getStatsKadis()
     {
         $kadis = Auth::user();
 
-        // Ambil seluruh pegawai di bawah Kadis
-        $pegawaiIds = \App\Models\User::where('atasan_id', $kadis->id)->pluck('id');
+        // ======== PROFIL KADIS ========
+        $kadis->load(['jabatan', 'unitKerja']);
+        $dataKadis = [
+            'name' => $kadis->name,
+            'nip' => $kadis->nip,
+            'jabatan' => $kadis->jabatan->nama_jabatan ?? '-',
+            'unit' => $kadis->unitKerja->nama_unit ?? '-',
+            'alamat' => $kadis->alamat ?? '-',
+            'foto' => $kadis->foto_profil ? asset('storage/' . $kadis->foto_profil) : null
+        ];
 
-        // =============================
-        // Statistik Dasar Dashboard Kadis
-        // =============================
+        // ======== AMBIL KABID (BAWAHAN LANGSUNG KADIS) ========
+        $kabidIds = User::where('atasan_id', $kadis->id)->pluck('id');
 
-        $today = now()->toDateString();
+        // ======== STATISTIK HARI INI ========
+        $today = today();
 
-        $totalHariIni = LaporanHarian::whereIn('user_id', $pegawaiIds)
+        $totalHariIni = LaporanHarian::whereIn('user_id', $kabidIds)
             ->whereDate('tanggal_laporan', $today)
-            ->whereNot('status', 'draft')
             ->count();
 
-        $menunggu = LaporanHarian::whereIn('user_id', $pegawaiIds)
+        $totalMenunggu = LaporanHarian::whereIn('user_id', $kabidIds)
             ->where('status', 'waiting_review')
             ->count();
 
-        $disetujui = LaporanHarian::whereIn('user_id', $pegawaiIds)
+        $totalDisetujui = LaporanHarian::whereIn('user_id', $kabidIds)
             ->where('status', 'approved')
             ->count();
 
-        $ditolak = LaporanHarian::whereIn('user_id', $pegawaiIds)
+        $totalDitolak = LaporanHarian::whereIn('user_id', $kabidIds)
             ->where('status', 'rejected')
             ->count();
 
-        // =============================
-        // Aktivitas Terbaru
-        // =============================
+        $totalSemua = $totalMenunggu + $totalDisetujui + $totalDitolak;
 
-        $recentActivities = LaporanHarian::with('user')
-            ->whereIn('user_id', $pegawaiIds)
-            ->latest('created_at')
+        // ======== RATE ========
+        $rateDisetujui = $totalSemua > 0 ? round(($totalDisetujui / $totalSemua) * 100) : 0;
+        $rateDitolak = $totalSemua > 0 ? round(($totalDitolak / $totalSemua) * 100) : 0;
+
+        $kemarin = LaporanHarian::whereIn('user_id', $kabidIds)
+            ->whereDate('tanggal_laporan', today()->subDay())
+            ->count();
+
+        $rateTotal = $kemarin > 0
+            ? round((($totalHariIni - $kemarin) / $kemarin) * 100)
+            : 0;
+
+        // ======== AKTIVITAS TERBARU (HANYA Laporan Kabid) ========
+        $aktivitas = LaporanHarian::with('user')
+            ->whereIn('user_id', $kabidIds)
+            ->orderBy('tanggal_laporan', 'desc')
             ->limit(5)
             ->get()
             ->map(function ($x) {
@@ -201,14 +220,18 @@ class DashboardController extends Controller
             ->whereYear('tanggal_laporan', now()->year)
             ->get(['tanggal_laporan', 'status']);
 
+        // ======== RETURN JSON KE JS ========
         return response()->json([
-            'user_info' => [
-                'name' => $kadis->name,
-                'nip' => $kadis->nip,
-                'daerah' => $kadis->alamat ?? '-',
-                'jabatan' => $kadis->jabatan->nama_jabatan ?? '-',
-                'unit' => $kadis->unitKerja->nama_unit ?? '-',
-                'alamat' => $kadis->alamat ?? '-',
+            "user_info" => $dataKadis,
+
+            "statistik" => [
+                "total_hari_ini" => $totalHariIni,
+                "total_menunggu" => $totalMenunggu,
+                "total_disetujui" => $totalDisetujui,
+                "total_ditolak" => $totalDitolak,
+                "rate_total" => $rateTotal,
+                "rate_disetujui" => $rateDisetujui,
+                "rate_ditolak" => $rateDitolak,
             ],
             'statistik' => [
                 'total_hari_ini' => $totalHariIni,

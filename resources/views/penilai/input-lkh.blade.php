@@ -10,10 +10,10 @@
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
         <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
 
-        {{-- 
-            [PENTING] Kita tambahkan tag <form> di sini agar tombol submit berfungsi normal 
-            Action kosong karena kita asumsikan handle via JS atau default submit 
-        --}}
+        {{--
+            [PENTING] Kita tambahkan tag <form> di sini agar tombol submit berfungsi normal
+                Action kosong karena kita asumsikan handle via JS atau default submit
+                --}}
         <form id="form-lkh">
             <input type="hidden" name="status" id="status_input" value="draft">
             <div class="space-y-4">
@@ -25,8 +25,8 @@
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
                         <div class="relative">
                             <input id="tanggal_lkh" name="tanggal_laporan" type="date" class="tanggal-placeholder w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                          focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
                             <button type="button" id="tanggal_lkh_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/tanggal.svg') }}" alt="Pilih tanggal"
@@ -37,26 +37,26 @@
 
                     {{-- Jenis Kegiatan (SUDAH DIPERBAIKI: Value Title Case) --}}
                     <div x-data="{
-                            open: false,
-                            value: '',
-                            label: 'Pilih Jenis Kegiatan',
-                            options: [
-                                { value: 'Rapat',              label: 'Rapat' },
-                                { value: 'Pelayanan Publik',   label: 'Pelayanan Publik' },
-                                { value: 'Penyusunan Dokumen', label: 'Penyusunan Dokumen' },
-                                { value: 'Kunjungan Lapangan', label: 'Kunjungan Lapangan' },
-                                { value: 'Lainnya',            label: 'Lainnya' },
-                            ],
-                            select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                        }">
+                                    open: false,
+                                    value: '',
+                                    label: 'Pilih Jenis Kegiatan',
+                                    options: [
+                                        { value: 'Rapat',              label: 'Rapat' },
+                                        { value: 'Pelayanan Publik',   label: 'Pelayanan Publik' },
+                                        { value: 'Penyusunan Dokumen', label: 'Penyusunan Dokumen' },
+                                        { value: 'Kunjungan Lapangan', label: 'Kunjungan Lapangan' },
+                                        { value: 'Lainnya',            label: 'Lainnya' },
+                                    ],
+                                    select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                                }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
                         <input type="hidden" name="jenis_kegiatan" x-model="value">
 
                         <div class="relative">
                             <button type="button" @click="open = !open"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                           px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                           focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                                   px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                                   focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                                 :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
                                 <span x-text="label"></span>
                                 <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70"
@@ -81,51 +81,51 @@
 
                 {{-- Row 2: Referensi Tupoksi (SUDAH DIPERBAIKI: Dynamic Fetching) --}}
                 <div x-data="{
-                    open: false,
-                    value: '',
-                    label: 'Pilih Referensi Tupoksi',
-                    options: [],
-                    isLoading: false,
-                    async init() {
-                        this.isLoading = true;
-                        try {
-                            const token = localStorage.getItem('auth_token'); 
-                            const response = await fetch('/api/lkh/referensi', {
-                                headers: {
-                                    'Authorization': `Bearer ${token}`,
-                                    'Accept': 'application/json'
-                                }
-                            });
-                            if(!response.ok) throw new Error('HTTP error ' + response.status);
-                            const data = await response.json();
+                            open: false,
+                            value: '',
+                            label: 'Pilih Referensi Tupoksi',
+                            options: [],
+                            isLoading: false,
+                            async init() {
+                                this.isLoading = true;
+                                try {
+                                    const token = localStorage.getItem('auth_token'); 
+                                    const response = await fetch('/api/lkh/referensi', {
+                                        headers: {
+                                            'Authorization': `Bearer ${token}`,
+                                            'Accept': 'application/json'
+                                        }
+                                    });
+                                    if(!response.ok) throw new Error('HTTP error ' + response.status);
+                                    const data = await response.json();
 
-                            // Pastikan key sesuai JSON
-                            if(data.tupoksi && Array.isArray(data.tupoksi)) {
-                                this.options = data.tupoksi.map(item => ({
-                                    value: item.id,
-                                    label: item.uraian_tugas
-                                }));
-                                if(this.options.length === 0) this.label = 'Data Tupoksi Kosong';
-                            } else {
-                                this.label = 'Format data tidak valid';
-                            }
-                        } catch (error) {
-                            console.error(error);
-                            this.label = 'Gagal memuat data';
-                        } finally {
-                            this.isLoading = false;
-                        }
-                    },
-                    select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
-                }" x-init="init()">
+                                    // Pastikan key sesuai JSON
+                                    if(data.tupoksi && Array.isArray(data.tupoksi)) {
+                                        this.options = data.tupoksi.map(item => ({
+                                            value: item.id,
+                                            label: item.uraian_tugas
+                                        }));
+                                        if(this.options.length === 0) this.label = 'Data Tupoksi Kosong';
+                                    } else {
+                                        this.label = 'Format data tidak valid';
+                                    }
+                                } catch (error) {
+                                    console.error(error);
+                                    this.label = 'Gagal memuat data';
+                                } finally {
+                                    this.isLoading = false;
+                                }
+                            },
+                            select(opt) { this.value = opt.value; this.label = opt.label; this.open = false; },
+                        }" x-init="init()">
 
                     <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Referensi Tupoksi</label>
                     <input type="hidden" name="tupoksi_id" x-model="value">
 
                     <div class="relative">
                         <button type="button" @click="open = !open" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
-                                focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                        px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between
+                                        focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                             :class="value === '' ? 'text-slate-400' : 'text-slate-700'">
                             <span x-text="isLoading ? 'Memuat data...' : label" class="truncate mr-2"></span>
                             <img src="{{ asset('assets/icon/chevron-down.svg') }}"
@@ -155,8 +155,8 @@
                     <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Uraian Kegiatan</label>
                     {{-- [FIX] Name ditambahkan --}}
                     <textarea name="deskripsi_aktivitas" rows="3" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                     px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
-                                     focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                             px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2
+                                             focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                         placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
                 </div>
 
@@ -165,7 +165,7 @@
                     Kita bungkus dalam satu x-data besar agar logika Kategori & SKP terhubung 
                 --}}
                 {{-- GANTI BAGIAN INI --}}
-                    <div x-data="{
+                <div x-data="{
                         kategori: 'non-skp',
                         skpId: '',
                         skpLabel: 'Pilih Target SKP',
@@ -227,7 +227,7 @@
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
                             <input type="text" name="output_hasil_kerja"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                                 placeholder="Contoh: Notulensi">
                         </div>
 
@@ -235,8 +235,8 @@
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
                             <input type="number" name="volume" min="0" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                            px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                            focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
+                                px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" placeholder="0">
                         </div>
 
                         {{-- Satuan --}}
@@ -265,6 +265,7 @@
 
                         {{-- Kategori (Trigger Logika SKP) --}}
                         <div class="relative">
+                            <input type="hidden" name="kategori" x-model="kategori">
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Kategori</label>
 
                             <button type="button" @click="kategoriOpen = !kategoriOpen"
@@ -302,14 +303,14 @@
                             <div x-show="skpOpen" x-transition
                                 class="absolute z-20 mt-1 w-full rounded-[10px] bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto">
                                 <template x-for="opt in skpOptions" :key="opt.value">
-                                    <button type="button"
-                                        {{-- [PERBAIKAN 3] Panggil fungsi helper tadi --}}
+                                    <button type="button" {{-- [PERBAIKAN 3] Panggil fungsi helper tadi --}}
                                         @click="pilihSkp(opt)"
                                         class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 border-b border-slate-100 last:border-0">
                                         <span x-text="opt.label" class="line-clamp-2"></span>
-                                        
+
                                         {{-- Optional: Tampilkan info satuan kecil di samping --}}
-                                        <span x-show="opt.satuan" x-text="'(' + opt.satuan + ')'" class="text-[10px] text-slate-400 ml-1"></span>
+                                        <span x-show="opt.satuan" x-text="'(' + opt.satuan + ')'"
+                                            class="text-[10px] text-slate-400 ml-1"></span>
                                     </button>
                                 </template>
                                 <div x-show="skpOptions.length === 0 && !skpLoading"
@@ -328,8 +329,8 @@
                         <div class="relative">
                             <input id="jam_mulai" name="waktu_mulai" type="time"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                          focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
                             <button type="button" id="jam_mulai_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/time.svg') }}"
@@ -343,8 +344,8 @@
                         <div class="relative">
                             <input id="jam_selesai" name="waktu_selesai" type="time"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                                          px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
-                                          focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
+                                                  px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2
+                                                  focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none time-placeholder">
                             <button type="button" id="jam_selesai_btn"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
                                 <img src="{{ asset('assets/icon/time.svg') }}"
@@ -360,9 +361,8 @@
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
 
                         <label class="w-full flex items-center justify-between rounded-[10px]
-                   border border-dashed border-slate-300 bg-slate-50/60
-                   px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-
+                       border border-dashed border-slate-300 bg-slate-50/60
+                       px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
                             <!-- Nama file tampil di sini -->
                             <span id="bukti_filename" class="truncate">Pilih File</span>
 
@@ -375,32 +375,32 @@
 
                     {{-- Input Lokasi dengan Geolocation --}}
                     <div x-data="{
-                        lat: '',
-                        lng: '',
-                        status: 'Klik tombol untuk ambil lokasi',
-                        loading: false,
-                        getLocation() {
-                            this.loading = true;
-                            this.status = 'Mencari koordinat...';
-                            if (navigator.geolocation) {
-                                navigator.geolocation.getCurrentPosition(
-                                    (position) => {
-                                        this.lat = position.coords.latitude;
-                                        this.lng = position.coords.longitude;
-                                        this.status = 'Terkunci: ' + this.lat.toFixed(5) + ', ' + this.lng.toFixed(5);
-                                        this.loading = false;
-                                    },
-                                    (error) => {
-                                        this.status = 'Gagal: Izin lokasi ditolak/error.';
+                                lat: '',
+                                lng: '',
+                                status: 'Klik tombol untuk ambil lokasi',
+                                loading: false,
+                                getLocation() {
+                                    this.loading = true;
+                                    this.status = 'Mencari koordinat...';
+                                    if (navigator.geolocation) {
+                                        navigator.geolocation.getCurrentPosition(
+                                            (position) => {
+                                                this.lat = position.coords.latitude;
+                                                this.lng = position.coords.longitude;
+                                                this.status = 'Terkunci: ' + this.lat.toFixed(5) + ', ' + this.lng.toFixed(5);
+                                                this.loading = false;
+                                            },
+                                            (error) => {
+                                                this.status = 'Gagal: Izin lokasi ditolak/error.';
+                                                this.loading = false;
+                                            }
+                                        );
+                                    } else {
+                                        this.status = 'Browser tidak support GPS.';
                                         this.loading = false;
                                     }
-                                );
-                            } else {
-                                this.status = 'Browser tidak support GPS.';
-                                this.loading = false;
-                            }
-                        }
-                    }">
+                                }
+                            }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
 
                         {{-- Hidden Input untuk Backend --}}
@@ -409,8 +409,9 @@
 
                         <div class="flex gap-2">
                             {{-- Input Visual (Readonly) --}}
-                            <input type="text" class="w-full rounded-[10px] border border-slate-200 bg-slate-100
-                                          px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
+                            <input type="text"
+                                class="w-full rounded-[10px] border border-slate-200 bg-slate-100
+                                                  px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
                                 x-model="status" readonly>
 
                             {{-- Tombol Trigger GPS --}}
@@ -428,6 +429,10 @@
 
                 {{-- Tombol Aksi --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="exportPDF()"
+                        class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm font-normal text-white hover:bg-[#555]">
+                        Export PDF
+                    </button>
                     <button type="button" onclick="submitForm('draft')"
                         class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm font-normal text-white">
                         Simpan Draft
@@ -472,27 +477,23 @@
             openDraftModal: false, 
             draftsLimit: [], 
             draftsAll: [] 
-        }" 
-
-        @update-drafts.window="
+        }" @update-drafts.window="
             draftsLimit = $event.detail.limit;
             draftsAll = $event.detail.all;
-        "
-
-        x-cloak
-        class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col"
-    >
+        " x-cloak class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
 
         {{-- HEADER CARD --}}
         <div class="flex items-center justify-between mb-3 shrink-0">
             <h3 class="text-[15px] font-medium text-slate-800">Draft LKH</h3>
 
-            <button type="button" 
-                x-show="draftsAll.length > 0"
-                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" 
-                @click="openDraftModal = true">
+            <button type="button" x-show="draftsAll.length > 0"
+                class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
                 Lihat Semua (<span x-text="draftsAll.length"></span>)
-            </button>
+
+                <button type="button" x-show="draftsAll.length > 0"
+                    class="text-[11px] text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
+                    Lihat Semua (<span x-text="draftsAll.length"></span>)
+                </button>
         </div>
 
         {{-- LIST PREVIEW LIMIT (MAKS 3) --}}
@@ -510,37 +511,49 @@
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
+                    {{-- LIST PREVIEW LIMIT (MAKS 3) --}}
+                    <div class="space-y-3 flex-1 overflow-y-auto pr-1">
 
-                    <a :href="'/staf/input-lkh/' + item.id" 
-                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
-                        Lanjutkan
-                    </a>
-                    <button @click="deleteDraft(item.id)"
-                        class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
-                        Hapus
-                    </button>
-                </div>
-            </template>
-        </div>
+                        <template x-if="draftsLimit.length === 0">
+                            <p class="text-sm text-slate-400 italic">Tidak ada draft.</p>
+                        </template>
 
-        {{-- MODAL FULL LIST --}}
-        <div x-show="openDraftModal" x-transition.opacity
-            class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+                        <template x-for="item in draftsLimit" :key="item.id">
+                            <div
+                                class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
 
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openDraftModal = false"></div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi">
+                                    </h4>
+                                    <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
+                                </div>
 
-            <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+                                {{-- MODAL DRAFT LENGKAP --}}
+                                <div x-show="openDraftModal" x-transition.opacity
+                                    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                    style="display: none;">
 
-                {{-- Header --}}
-                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                    <h2 class="text-lg font-semibold text-slate-800">Semua Draft Laporan</h2>
-                    <button @click="openDraftModal = false" 
-                        class="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200">
-                        <span class="text-slate-500 text-xl">&times;</span>
-                    </button>
-                </div>
+                                    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                                        @click="openDraftModal = false">
+                                    </div>
 
-                {{-- Body --}}
+                                    <div
+                                        class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+
+                                        {{-- Header Modal --}}
+                                        <div
+                                            class="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+                                            <h2 class="text-lg font-semibold text-slate-800">
+                                                Semua Draft Laporan
+                                            </h2>
+                                            <button type="button"
+                                                class="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors"
+                                                @click="openDraftModal = false">
+                                                <span class="text-slate-500 text-xl leading-none">&times;</span>
+                                            </button>
+                                        </div>
+
+                {{-- Isi Modal (Scrollable & Full List) --}}
                 <div class="overflow-y-auto p-6 space-y-3">
 
                     <template x-if="draftsAll.length === 0">
@@ -568,30 +581,35 @@
                             </div>
                         </div>
                     </template>
-                </div>
 
-                {{-- Footer --}}
-                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
-                    <button @click="openDraftModal = false"
-                        class="text-xs text-slate-500 hover:text-slate-700 font-medium">
-                        Tutup
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                                            {{-- Empty State di Modal --}}
+                                            <div x-show="drafts.length === 0" class="text-center py-10 text-slate-400">
+                                                Tidak ada draft tersimpan saat ini.
+                                            </div>
+                                        </div>
 
-    {{-- KANAN BAWAH: STATUS LAPORAN TERAKHIR --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
-        <h3 class="text-[18px] font-medium text-slate-800 mb-5">
-            Status Laporan Terakhir
-        </h3>
+                                        {{-- Footer --}}
+                                        <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
+                                            <button @click="openDraftModal = false"
+                                                class="text-xs text-slate-500 hover:text-slate-700 font-medium">
+                                                Tutup
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-        <ul class="space-y-3" id="aktivitas-list">
-            {{-- Diisi via JS --}}
-            <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
-        </ul>
-    </div>
+                            {{-- KANAN BAWAH: STATUS LAPORAN TERAKHIR --}}
+                            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
+                                <h3 class="text-[18px] font-medium text-slate-800 mb-5">
+                                    Status Laporan Terakhir
+                                </h3>
+
+                                <ul class="space-y-3" id="aktivitas-list">
+                                    {{-- Diisi via JS --}}
+                                    <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
+                                </ul>
+                            </div>
 </section>
 
 @push('scripts')
@@ -602,7 +620,6 @@
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
-
     const token = localStorage.getItem("auth_token");
 
     const headers = {
@@ -719,21 +736,21 @@ function renderAktivitas(aktivitas) {
         }
 
         listContainer.insertAdjacentHTML("beforeend", `
-            <li class="flex items-start gap-3">
-                <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                    <img src="${icon}" class="h-5 w-5 opacity-90">
-                </div>
-                <div class="flex-1 overflow-hidden">
-                    <div class="text-[13px] font-medium leading-snug truncate">
-                        ${item.deskripsi_aktivitas}
-                    </div>
-                    <div class="flex justify-between mt-[2px]">
-                        <span class="text-xs text-slate-500">${statusLabel}</span>
-                        <span class="text-xs text-slate-500">${tanggal}</span>
-                    </div>
-                </div>
-            </li>
-        `);
+                        <li class="flex items-start gap-3">
+                            <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
+                                <img src="${icon}" class="h-5 w-5 opacity-90">
+                                </div>
+                                <div class="flex-1 overflow-hidden">
+                                <div class="text-[13px] font-medium leading-snug truncate">
+                                        ${item.deskripsi_aktivitas}
+                                    </div>
+                                    <div class="flex justify-between mt-[2px]">
+                                        <span class="text-xs text-slate-500">${statusLabel}</span>
+                                    <span class="text-xs text-slate-500">${tanggal}</span>
+                                    </div>
+                                </div>
+                            </li>
+                        `);
     });
 }
 
@@ -774,7 +791,7 @@ function renderDraftAll(rawDrafts) {
 
     window.dispatchEvent(new CustomEvent("update-drafts", {
         detail: {
-            limit: window.__draftsLimit || [], 
+            limit: window.__draftsLimit || [],
             all: draftsAll
         }
     }));
@@ -814,11 +831,11 @@ async function loadEditLKH(id, headers) {
         updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
 
         const skpEl = document.querySelector('input[name="skp_id"]');
-        if(skpEl) {
+        if (skpEl) {
             const wrapper = skpEl.closest('[x-data]');
-            if(wrapper) {
+            if (wrapper) {
                 const scope = Alpine.$data(wrapper);
-                if(data.skp_id) {
+                if (data.skp_id) {
                     scope.setKategori('skp');
                     scope.skpId = data.skp_id;
                     scope.skpLabel = data.skp.nama_skp || 'SKP Terpilih';
@@ -980,6 +997,57 @@ async function submitForm(statusType) {
             text: "Periksa koneksi internet Anda.",
         });
     }
+
+}
+
+async function exportPDF() {
+    Swal.fire({
+        title: "Export LKH ke PDF?",
+        text: "Pastikan data yang kamu isi sudah benar.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#1C7C54",
+        cancelButtonColor: "#6B7280",
+        confirmButtonText: "Ya, Export!",
+        cancelButtonText: "Batal",
+    }).then(async (result) => {
+
+        if (!result.isConfirmed) return;
+
+        const form = document.getElementById("form-lkh");
+        const formData = new FormData(form);
+        const token = localStorage.getItem("auth_token");
+
+        try {
+            const response = await fetch("/api/lkh/export-pdf", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Gagal Export PDF",
+                    text: `Status: ${response.status}`,
+                });
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, "_blank");
+
+        } catch (err) {
+            Swal.fire({
+                icon: "error",
+                title: "Kesalahan Server",
+                text: "Tidak bisa menghubungi server untuk export PDF.",
+            });
+        }
+    });
 }
 </script>
 @endpush

@@ -134,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Export
     Route::get('export/excel', [ExportController::class, 'exportExcel']);
     Route::get('export/pdf', [ExportController::class, 'exportPdf']);
+    Route::post('/lkh/export-pdf', [LkhController::class, 'exportPdfDirect']);
 
     // Pengumuman
     Route::get('pengumuman', [PengumumanController::class, 'index']);

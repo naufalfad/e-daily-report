@@ -2,10 +2,7 @@
 //   RIWAYAT LKH — PENILAI (SCRIPT TERPISAH)
 // =====================================================
 
-import { authFetch } from "../../utils/auth-fetch";
-
 export function riwayatData(role) {
-
     const TOKEN = localStorage.getItem('auth_token');
     const BASE_URL = '/api/lkh/riwayat';
 
@@ -28,7 +25,17 @@ export function riwayatData(role) {
             mode: role === "penilai" ? "mine" : "mine",
         },
 
-        // UTILS
+        // ---------------------------
+        // FORMAT UTILITIES
+        // ---------------------------
+
+        //Edit Laporan
+        editLaporan(id) {
+            if (!id) return;
+            // Arahkan ke halaman input/edit dengan ID laporan
+            window.location.href = `/penilai/input-laporan/${id}`;
+        },
+
         formatDate(isoString) {
             if (!isoString) return "-";
             try {
@@ -101,19 +108,19 @@ export function riwayatData(role) {
                 const response = await fetch(url, {
                     headers: {
                         Authorization: `Bearer ${TOKEN}`,
-                        Accept: "application/json",
+                        Accept: 'application/json'
                     },
                 });
 
-                let data = {};
-
-                // ====== ANTI ERROR JSON PARSE ======
-                try {
-                    data = await response.clone().json();
-                } catch (e) {
-                    data = {}; // fallback
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(
+                        `Gagal memuat data. Status: ${response.status
+                        }. Pesan: ${errorData.message || "Unknown Error"}`
+                    );
                 }
 
+                const data = await response.json();
                 this.items = data.data || [];
             } catch (e) {
                 console.error("Gagal memuat data riwayat LKH:", e);
@@ -161,7 +168,7 @@ export function riwayatData(role) {
 
                     if (this.filter.from)
                         url += `&from_date=${this.filter.from}`;
-                    if (this.filter.to) 
+                    if (this.filter.to)
                         url += `&to_date=${this.filter.to}`;
 
                     window.open(url, "_blank");
@@ -189,6 +196,5 @@ export function riwayatData(role) {
     };
 }
 
-// [CRITICAL FIX]
 // Daftarkan fungsi ke Global Window agar dikenali oleh Alpine.js di HTML
 window.riwayatData = riwayatData;

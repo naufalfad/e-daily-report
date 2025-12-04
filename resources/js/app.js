@@ -73,6 +73,7 @@ import './pages/kadis/validasi-laporan.js'
 // =========================
 // ADMIN (Logic lain jika ada)
 // =========================
+import './pages/admin/log-aktivitas.js'
 // [CATATAN]: File ini sudah tidak perlu di-import di sini karena sudah di-import di Section 2
 // import './pages/admin/setting-sistem.js' 
 

@@ -350,8 +350,13 @@
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
-                    <a :href="'/penilai/input-lkh/' + item.id" class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Lanjut</a>
-                    <button @click="deleteDraft(item.id)" class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Hapus</button>
+
+                    <a :href="'/penilai/input-laporan/' + item.id" 
+                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
+                        Lanjutkan
+                    </a>
+                    <button @click="deleteDraft(item.id)"
+                        class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Hapus</button>
                 </div>
             </template>
         </div>
@@ -367,8 +372,16 @@
                 <div class="overflow-y-auto p-6 space-y-3">
                     <template x-for="item in draftsAll" :key="item.id">
                         <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
-                            <div><h4 class="text-[12px] font-medium" x-text="item.deskripsi"></h4><p class="text-[10px] text-slate-500" x-text="item.waktu_simpan"></p></div>
-                            <div class="flex gap-2"><a :href="'/penilai/input-lkh/' + item.id" class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">Lanjut</a></div>
+                            <div>
+                                <h4 class="text-[12px] font-medium text-slate-900" x-text="item.deskripsi"></h4>
+                                <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <a :href="'/penilai/input-laporan/' + item.id"
+                                    class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-[12px] font-medium px-2 py-1 rounded-[8px] transition text-center">Lanjutkan</a>
+                                <button @click="deleteDraft(item.id)"
+                                    class="bg-[#B6241C] text-white text-[12px] px-2 py-1 rounded-[8px]">Hapus</button>
+                            </div>
                         </div>
                     </template>
                 </div>

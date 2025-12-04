@@ -90,7 +90,7 @@ class DashboardController extends Controller
         // [PERBAIKAN] Relasi 'skp' diganti 'rencana'
         $recentActivities = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
-            ->latest('created_at')
+            ->latest('updated_at')
             ->limit(5)
             ->get();
 

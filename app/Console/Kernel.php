@@ -1,69 +1,41 @@
 <?php
 
-namespace App\Http\Kernel;
+namespace App\Console;
 
-use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
-class Kernel extends HttpKernel
+class Kernel extends ConsoleKernel
 {
     /**
-     * The application's global HTTP middleware stack.
+     * Define the application's command schedule.
      *
-     * These middleware are run during every request to your application.
-     *
-     * @var array<int, class-string>
+     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      */
-    protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
-        \Illuminate\Http\Middleware\HandleCors::class,
-        \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
-        \Illuminate\Http\Middleware\ValidatePostSize::class,
-        \App\Http\Middleware\TrimStrings::class,
-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        
-        // [PERBAIKAN UTAMA] Check Maintenance Mode: Harus diletakkan di sini (Global)
-        // Ini memastikan pemeriksaan maintenance terjadi sebelum otentikasi atau validasi lainnya.
-        \App\Http\Middleware\CheckMaintenanceMode::class, 
-    ];
+
+    protected function schedule(Schedule $schedule): void
+    {
+        // [BARU] Pasang Jadwal Pengingat Di Sini
+        $schedule->command('lkh:send-reminder')
+                 ->weekdays() // Hanya Senin-Jumat
+                 ->at('16:00') // Jam 4 Sore
+                 ->timezone('Asia/Jayapura'); // Waktu Mimika
+    }
 
     /**
-     * The application's route middleware groups.
-     *
-     * @var array<string, array<int, class-string>>
+     * Register the commands for the application.
      */
-    protected $middlewareGroups = [
-        'web' => [
-            \App\Http\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\RedirectIfAuthenticated::class,
-        ],
+    protected function commands(): void
+    {
+        // Mendaftarkan semua command yang ada di folder Commands
+        $this->load(__DIR__.'/Commands');
 
-        'api' => [
-            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ],
-    ];
+        // Bisa juga memuat command yang didefinisikan di routes/console.php
+        require base_path('routes/console.php');
+    }
 
-    /**
-     * The application's route middleware.
-     *
-     * These middleware may be assigned to groups or used individually.
-     *
-     * @var array<string, class-string>
-     */
-    protected $routeMiddleware = [
-        'auth' => \App\Http\Middleware\Authenticate::class,
-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        'can' => \Illuminate\Auth\Middleware\Authorize::class,
-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        'role' => \App\Http\Middleware\CheckUserRole::class, // Asumsi middleware role Anda bernama CheckUserRole
-    ];
+//    protected $commands = [
+//        // DAFTARKAN DI SINI MANUAL
+//        \App\Console\Commands\FetchAllWilayah::class,
+//    ];
 }

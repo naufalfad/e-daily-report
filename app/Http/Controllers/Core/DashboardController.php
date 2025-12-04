@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Core;
 
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
-use App\Models\Skp;
+use App\Models\SkpRencana; // [PERBAIKAN] Ganti Skp jadi SkpRencana
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,15 +24,22 @@ class DashboardController extends Controller
         // 1. SKORING CAPAIAN SKP (Target vs Realisasi)
         // ==========================================
 
-        $totalTargetTahunan = Skp::where('user_id', $userId)
-            ->whereYear('periode_mulai', $year)
-            ->sum('target');
+        // [LOGIKA BARU] Hitung total target dari tabel child (skp_target) via parent (skp_rencana)
+        // Kita asumsikan yang dihitung adalah target Kuantitas agar angkanya relevan
+        $totalTargetTahunan = SkpRencana::where('user_id', $userId)
+            ->whereYear('periode_awal', $year) // [PERBAIKAN] periode_mulai -> periode_awal
+            ->withSum(['targets' => function($q) {
+                $q->where('jenis_aspek', 'Kuantitas');
+            }], 'target')
+            ->get()
+            ->sum('targets_sum_target');
 
+        // [LOGIKA BARU] Cek realisasi berdasarkan skp_rencana_id
         $realisasiSkp = LaporanHarian::where('user_id', $userId)
-            ->whereNotNull('skp_id')
+            ->whereNotNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
             ->where('status', 'approved')
             ->whereYear('tanggal_laporan', $year)
-            ->count();
+            ->count(); // Asumsi: 1 LKH = 1 Poin Realisasi (atau bisa sum('volume'))
 
         $persenCapaian = $totalTargetTahunan > 0
             ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1)
@@ -43,7 +50,7 @@ class DashboardController extends Controller
         // ==========================================
 
         $queryLkhSkp = LaporanHarian::where('user_id', $userId)
-            ->whereNotNull('skp_id')
+            ->whereNotNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
             ->whereYear('tanggal_laporan', $year);
 
         if ($request->has('month')) {
@@ -62,7 +69,7 @@ class DashboardController extends Controller
         // ==========================================
 
         $queryNonSkp = LaporanHarian::where('user_id', $userId)
-            ->whereNull('skp_id')
+            ->whereNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
             ->whereYear('tanggal_laporan', $year);
 
         if ($request->has('month')) {
@@ -76,50 +83,29 @@ class DashboardController extends Controller
         $persenNonSkpDiterima = $totalNonSkp > 0 ? round(($nonSkpApproved / $totalNonSkp) * 100, 1) : 0;
 
         // ==========================================
-        // 4. GRAFIK KINERJA BULANAN
+        // 4. GRAFIK AKTIVITAS & DRAFT
         // ==========================================
 
-        // $chartData = LaporanHarian::select(
-        //         DB::raw('COUNT(id) as count'), 
-        //         DB::raw('EXTRACT(MONTH FROM tanggal_laporan) AS month')
-        //     )
-        //     ->where('user_id', $userId)
-        //     ->where('status', 'approved')
-        //     ->whereYear('tanggal_laporan', $year)
-        //     ->groupBy('month')
-        //     ->orderBy('month')
-        //     ->pluck('count', 'month')
-        //     ->toArray();
-
-        // // Mapping ke array 1-12
-        // $monthlyChart = [];
-        // for ($i = 1; $i <= 12; $i++) {
-        //     $monthlyChart[] = isset($chartData[$i]) ? (int) $chartData[$i] : 0;
-        // }
-
-        // ==========================================
-        // 5. AKTIVITAS TERBARU
-        // ==========================================
-
-        $recentActivities = LaporanHarian::with('skp')
+        // [PERBAIKAN] Relasi 'skp' diganti 'rencana'
+        $recentActivities = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
             ->latest('created_at')
             ->limit(5)
             ->get();
 
-        $graphActivities = LaporanHarian::with('skp')
+        $graphActivities = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
-            ->whereNotNull('skp_id')
+            ->whereNotNull('skp_rencana_id')
             ->latest('created_at')
             ->get();
 
-        $recentDrafts = LaporanHarian::with('skp')
+        $recentDrafts = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
             ->where('status', 'draft')
             ->latest('created_at')
             ->get();
 
-        $draftsLimit = LaporanHarian::with('skp')
+        $draftsLimit = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
             ->where('status', 'draft')
             ->latest('created_at')
@@ -152,7 +138,6 @@ class DashboardController extends Controller
                 'total_diajukan' => $totalNonSkp,
                 'persen_diterima' => $persenNonSkpDiterima,
             ],
-            //'grafik_kinerja' => $monthlyChart,
             'grafik_aktivitas' => $graphActivities,
             'aktivitas_terbaru' => $recentActivities,
             'draft_terbaru' => $recentDrafts,
@@ -201,7 +186,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($x) {
                 return [
-                    'deskripsi_aktivitas' => $x->nama_kegiatan ?? '-',
+                    'deskripsi_aktivitas' => $x->deskripsi_aktivitas ?? '-', // [PERBAIKAN] nama_kegiatan -> deskripsi_aktivitas
                     'tanggal_laporan' => $x->tanggal_laporan,
                     'status' => $x->status,
                     'user' => $x->user->name ?? '-',
@@ -209,7 +194,7 @@ class DashboardController extends Controller
             });
 
         // =============================
-        // Grafik (ambil seluruh laporan navigasi 1 tahun)
+        // Grafik
         // =============================
 
         $grafik = LaporanHarian::whereIn('user_id', $pegawaiIds)
@@ -225,21 +210,18 @@ class DashboardController extends Controller
                 'unit' => $kadis->unitKerja->nama_unit ?? '-',
                 'alamat' => $kadis->alamat ?? '-',
             ],
-
             'statistik' => [
                 'total_hari_ini' => $totalHariIni,
                 'total_menunggu' => $menunggu,
                 'total_disetujui' => $disetujui,
                 'total_ditolak' => $ditolak,
-
+                // Rate bisa dihitung di frontend atau backend jika perlu
                 'rate_total' => 0,
                 'rate_disetujui' => 0,
                 'rate_ditolak' => 0,
             ],
-
             'aktivitas_terbaru' => $recentActivities,
             'grafik' => $grafik,
         ]);
     }
-
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Core\SkpController;
 use App\Http\Controllers\Core\RiwayatController;
 use App\Http\Controllers\Core\SkoringController;
 use App\Http\Controllers\Core\LkhController;
+use App\Http\Controllers\Auth\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +64,20 @@ Route::get('/503', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('riwayat/export-pdf', [RiwayatController::class, 'exportPdf'])->name('riwayat.export.pdf');
     Route::get('/penilai/skoring/export-pdf', [App\Http\Controllers\Core\SkoringController::class, 'exportPdf']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROFIL ROUTES (Manajemen Akun Mandiri)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('profil')->name('profil.')->group(function () {
+        // Halaman Edit Profil
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        
+        // Proses Update Data
+        Route::put('/update-biodata', [ProfileController::class, 'updateBiodata'])->name('update-biodata');
+        Route::put('/update-account', [ProfileController::class, 'updateAccount'])->name('update-account');
+    });
 
     /*
     |--------------------------------------------------------------------------

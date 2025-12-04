@@ -41,6 +41,8 @@ export default defineConfig({
                 'resources/js/pages/staf/log-aktivitas.js',
                 'resources/js/pages/staf/input-lkh.js',
                 'resources/js/pages/staf/riwayat.js',
+
+                'resources/js/profile-modal.js',
             ],
             refresh: true,
         }),

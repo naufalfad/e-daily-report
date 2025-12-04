@@ -520,17 +520,12 @@
             draftsLimit: [], 
             draftsAll: [] 
         }" @update-drafts.window="
-        }" 
-        @update-drafts.window="
+        }" @update-drafts.window="
             draftsLimit = $event.detail.limit;
             draftsAll = $event.detail.all;
         " x-cloak class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
 
         {{-- HEADER CARD --}}
-        "
-        x-cloak
-        class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
-        
         <div class="flex items-center justify-between mb-3 shrink-0">
             <h3 class="text-[15px] font-medium text-slate-800">Draft LKH</h3>
 
@@ -602,34 +597,34 @@
                         </div>
                     </template>
 
-                                            {{-- Empty State di Modal --}}
-                                            <div x-show="drafts.length === 0" class="text-center py-10 text-slate-400">
-                                                Tidak ada draft tersimpan saat ini.
-                                            </div>
-                                        </div>
+                    {{-- Empty State di Modal --}}
+                    <div x-show="drafts.length === 0" class="text-center py-10 text-slate-400">
+                        Tidak ada draft tersimpan saat ini.
+                    </div>
+                </div>
 
-                                        {{-- Footer --}}
-                                        <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
-                                            <button @click="openDraftModal = false"
-                                                class="text-xs text-slate-500 hover:text-slate-700 font-medium">
-                                                Tutup
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                {{-- Footer --}}
+                <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-right">
+                    <button @click="openDraftModal = false"
+                        class="text-xs text-slate-500 hover:text-slate-700 font-medium">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            {{-- KANAN BAWAH: STATUS LAPORAN TERAKHIR --}}
-                            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
-                                <h3 class="text-[18px] font-medium text-slate-800 mb-5">
-                                    Status Laporan Terakhir
-                                </h3>
+    {{-- KANAN BAWAH: STATUS LAPORAN TERAKHIR --}}
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
+        <h3 class="text-[18px] font-medium text-slate-800 mb-5">
+            Status Laporan Terakhir
+        </h3>
 
-                                <ul class="space-y-3" id="aktivitas-list">
-                                    {{-- Diisi via JS --}}
-                                    <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
-                                </ul>
-                            </div>
+        <ul class="space-y-3" id="aktivitas-list">
+            {{-- Diisi via JS --}}
+            <li class="text-sm text-slate-400 italic">Memuat aktivitas...</li>
+        </ul>
+    </div>
 </section>
 
 @push('scripts')
@@ -791,23 +786,25 @@ async function loadEditLKH(id, headers) {
         console.error(err);
         alert("Gagal memuat data edit.");
     }
-        // Logic Load SKP/Satuan
-        const skpEl = document.querySelector('input[name="skp_rencana_id"]');
-        if(skpEl) {
-            const scope = Alpine.$data(skpEl.closest('[x-data]'));
-            if(data.skp_rencana_id) {
-                scope.setKategori('skp');
-                scope.skpId = data.skp_rencana_id;
-                scope.skpLabel = data.rencana ? data.rencana.rencana_hasil_kerja : 'SKP Terpilih';
-                // Lock satuan karena ini SKP
-                scope.satuanValue = data.satuan;
-                scope.isSatuanLocked = true;
-            } else {
-                scope.setKategori('non-skp');
-                scope.satuanValue = data.satuan; // Tetap isi tapi unlock
-            }
+    // Logic Load SKP/Satuan
+    const skpEl = document.querySelector('input[name="skp_rencana_id"]');
+    if (skpEl) {
+        const scope = Alpine.$data(skpEl.closest('[x-data]'));
+        if (data.skp_rencana_id) {
+            scope.setKategori('skp');
+            scope.skpId = data.skp_rencana_id;
+            scope.skpLabel = data.rencana ? data.rencana.rencana_hasil_kerja : 'SKP Terpilih';
+            // Lock satuan karena ini SKP
+            scope.satuanValue = data.satuan;
+            scope.isSatuanLocked = true;
+        } else {
+            scope.setKategori('non-skp');
+            scope.satuanValue = data.satuan; // Tetap isi tapi unlock
         }
-    } catch (err) { console.error(err); }
+    }
+} catch (err) {
+    console.error(err);
+}
 }
 
 function setAlpineValue(sel, key, val) {

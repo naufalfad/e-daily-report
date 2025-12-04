@@ -138,6 +138,12 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/dashboard', 'kadis.dashboard')->name('dashboard');
         Route::view('/validasi-laporan', 'kadis.validasi-laporan')->name('validasi-laporan');
         Route::view('/log-aktivitas', 'kadis.log-aktivitas')->name('log-aktivitas');
+
+        // [BARU] Integrasi Fitur Pengumuman untuk Kadis
+        Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
+            // Halaman Utama
+            Route::view('/', 'kadis.pengumuman')->name('index');
+        });
     });
 
     /*

@@ -149,6 +149,17 @@ Route::middleware('auth:sanctum')->group(function () {
     // Activity Log
     Route::get('log-aktivitas', [ActivityLogController::class, 'index'])->name('api.log.aktivitas');
 
+    Route::prefix('kadis')->group(function () {
+        
+        // Fitur Pengumuman Kadis
+        Route::prefix('pengumuman')->group(function () {
+            Route::get('/list', [PengumumanController::class, 'index']);
+            Route::post('/store', [PengumumanController::class, 'store']);
+            Route::delete('/{id}', [PengumumanController::class, 'destroy']);
+        });
+
+    });
+
     // Organisasi
     Route::get('organisasi/tree', [OrganisasiController::class, 'getTree']);
 

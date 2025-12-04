@@ -3,18 +3,13 @@
 
 @section('content')
 
-{{-- 
-    LAYOUT BARU (T-SHAPE):
-    1. Container Utama: Flex Column (Vertical).
-    2. Baris Atas: Grid 2 Kolom (Form Input vs Sidebar).
-    3. Baris Bawah: Full Width (Tabel Daftar SKP).
---}}
-<section x-data="skpPageData()" x-init="initPage()" class="flex flex-col gap-6 flex-1">
+<section x-data="skpPageData()" x-init="initPage()"
+    class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 flex-1">
 
     {{-- ================================================== --}}
-    {{-- BAGIAN ATAS: FORM & SIDEBAR (GRID) --}}
+    {{-- KOLOM KIRI: FORM & DAFTAR SKP --}}
     {{-- ================================================== --}}
-    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-6">
+    <div class="space-y-4">
 
         {{-- KOLOM KIRI: HANYA FORM INPUT --}}
         <div class="space-y-4">
@@ -133,143 +128,333 @@
                             <span x-show="isLoading">Menyimpan...</span>
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
 
-        {{-- KOLOM KANAN: SIDEBAR INFO --}}
-        <div class="space-y-4 flex flex-col">
-            {{-- Panduan Singkat --}}
-            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
-                <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
-                <div class="mt-3 space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
-                    @foreach ([
-                    ['title' => 'Periode Awal', 'desc' => 'Pilih tanggal penetapan awal SKP.'],
-                    ['title' => 'Periode Akhir', 'desc' => 'Pilih tanggal penetapan akhir SKP.'],
-                    ['title' => 'RHK Intervensi', 'desc' => 'Ketik manual RHK Atasan yang Anda dukung.'],
-                    ['title' => 'Rencana Hasil Kerja', 'desc' => 'Tuliskan rencana kinerja utama Anda.'],
-                    ['title' => 'Target Kuantitas', 'desc' => 'Wajib diisi. Ini output fisik untuk Laporan Harian.'],
-                    ['title' => 'Target Waktu', 'desc' => 'Wajib diisi. Estimasi lama pengerjaan.'],
-                    ['title' => 'Target Kualitas', 'desc' => 'Opsional. Standar mutu hasil kerja.'],
-                    ] as $guide)
-                    <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
-                        <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
-                        <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Status Laporan Terakhir --}}
-            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex-1">
-                <h3 class="text-sm font-semibold text-slate-800 mb-3">Status Laporan Terakhir</h3>
-                <div class="space-y-2 text-xs max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-                    <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-[11px] font-semibold">P</span>
-                            <div>
-                                <p class="font-medium text-slate-800">Rapat Koordinasi</p>
-                                <p class="text-[11px] text-slate-500">Menunggu Validasi</p>
-                            </div>
-                        </div>
-                        <span class="text-[11px] text-slate-400 whitespace-nowrap">07 Nov</span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-semibold">D</span>
-                            <div>
-                                <p class="font-medium text-slate-800">Rekapitulasi Pajak</p>
-                                <p class="text-[11px] text-slate-500">Laporan Disetujui</p>
-                            </div>
-                        </div>
-                        <span class="text-[11px] text-slate-400 whitespace-nowrap">09 Nov</span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 text-[11px] font-semibold">T</span>
-                            <div>
-                                <p class="font-medium text-slate-800">Dinas Luar Kota</p>
-                                <p class="text-[11px] text-slate-500">Laporan Ditolak</p>
-                            </div>
-                        </div>
-                        <span class="text-[11px] text-slate-400 whitespace-nowrap">10 Nov</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ================================================== --}}
-    {{-- BAGIAN BAWAH: DAFTAR SKP (FULL WIDTH) --}}
-    {{-- ================================================== --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 w-full">
-        <h2 class="text-[20px] font-normal mb-4">Daftar Rencana SKP Saya</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[900px] text-sm">
-                <thead>
-                    <tr class="text-left text-xs text-slate-500 uppercase bg-slate-50/50">
-                        <th class="px-3 py-3 font-medium w-[15%]">Periode</th>
-                        <th class="px-3 py-3 font-medium w-[35%]">Rencana Hasil Kerja</th>
-                        <th class="px-3 py-3 font-medium w-[30%]">RHK Pimpinan</th>
-                        <th class="px-3 py-3 font-medium text-center w-[20%]">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="text-slate-700 divide-y divide-slate-100">
-                    <template x-for="rencana in skpList" :key="rencana.id">
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-3 py-4 align-top text-xs whitespace-nowrap">
-                                <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_awal)"></div>
-                                <div class="text-slate-400 text-[10px]">s.d.</div>
-                                <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_akhir)"></div>
-                            </td>
-                            <td class="px-3 py-4 align-top">
-                                <p class="font-bold text-slate-800 mb-1" x-text="rencana.rencana_hasil_kerja"></p>
-                                <div class="flex items-center gap-1.5 mt-2">
-                                    <span
-                                        class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded border border-blue-100 font-medium">Kuantitas</span>
-                                    <span class="text-xs text-slate-500"
-                                        x-text="getKuantitasLabel(rencana.targets)"></span>
+                    <<<<<<< HEAD {{-- KOLOM KANAN: SIDEBAR INFO --}} <div class="space-y-4 flex flex-col">
+                        {{-- Panduan Singkat --}}
+                        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
+                            <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
+                            <div class="mt-3 space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                                @foreach ([
+                                ['title' => 'Periode Awal', 'desc' => 'Pilih tanggal penetapan awal SKP.'],
+                                ['title' => 'Periode Akhir', 'desc' => 'Pilih tanggal penetapan akhir SKP.'],
+                                ['title' => 'RHK Intervensi', 'desc' => 'Ketik manual RHK Atasan yang Anda dukung.'],
+                                ['title' => 'Rencana Hasil Kerja', 'desc' => 'Tuliskan rencana kinerja utama Anda.'],
+                                ['title' => 'Target Kuantitas', 'desc' => 'Wajib diisi. Ini output fisik untuk Laporan
+                                Harian.'],
+                                ['title' => 'Target Waktu', 'desc' => 'Wajib diisi. Estimasi lama pengerjaan.'],
+                                ['title' => 'Target Kualitas', 'desc' => 'Opsional. Standar mutu hasil kerja.'],
+                                ] as $guide)
+                                <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
+                                    <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
+                                    <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
                                 </div>
-                            </td>
-                            <td class="px-3 py-4 align-top text-xs text-slate-500 italic"
-                                x-text="rencana.rhk_intervensi || '-'"></td>
-                            <td class="px-3 py-4 align-top text-center">
-                                <div class="flex justify-center gap-2">
-                                    <button @click.prevent="openDetailModal(rencana)"
-                                        class="rounded-[8px] bg-[#155FA6]/10 text-[#155FA6] border border-[#155FA6]/20 text-xs px-3 py-1.5 font-medium hover:bg-[#155FA6] hover:text-white transition-all">Detail</button>
-                                    <button @click.prevent="openEditModal(rencana)"
-                                        class="p-2 rounded-lg hover:bg-amber-50 text-amber-600 transition"><svg
-                                            xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00 2 2h11a2 2 0 00 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg></button>
-                                    <button @click.prevent="deleteSkp(rencana.id)"
-                                        class="p-2 rounded-lg hover:bg-red-50 text-red-600 transition"><svg
-                                            xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg></button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Status Laporan Terakhir --}}
+                        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex-1">
+                            <h3 class="text-sm font-semibold text-slate-800 mb-3">Status Laporan Terakhir</h3>
+                            <div class="space-y-2 text-xs max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
+                                <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-[11px] font-semibold">P</span>
+                                        <div>
+                                            <p class="font-medium text-slate-800">Rapat Koordinasi</p>
+                                            <p class="text-[11px] text-slate-500">Menunggu Validasi</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400 whitespace-nowrap">07 Nov</span>
+                                </div>
+                                <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-semibold">D</span>
+                                        <div>
+                                            <p class="font-medium text-slate-800">Rekapitulasi Pajak</p>
+                                            <p class="text-[11px] text-slate-500">Laporan Disetujui</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400 whitespace-nowrap">09 Nov</span>
+                                </div>
+                                <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                                    <div class="flex items-center gap-2">
+                                        <span
+                                            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 text-[11px] font-semibold">T</span>
+                                        <div>
+                                            <p class="font-medium text-slate-800">Dinas Luar Kota</p>
+                                            <p class="text-[11px] text-slate-500">Laporan Ditolak</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400 whitespace-nowrap">10 Nov</span>
+                                </div>
+                            </div>
+                        </div>
+            </div>
+        </div>
+
+        {{-- ================================================== --}}
+        {{-- BAGIAN BAWAH: DAFTAR SKP (FULL WIDTH) --}}
+        {{-- ================================================== --}}
+        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 w-full">
+            <h2 class="text-[20px] font-normal mb-4">Daftar Rencana SKP Saya</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[900px] text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-slate-500 uppercase bg-slate-50/50">
+                            <th class="px-3 py-3 font-medium w-[15%]">Periode</th>
+                            <th class="px-3 py-3 font-medium w-[35%]">Rencana Hasil Kerja</th>
+                            <th class="px-3 py-3 font-medium w-[30%]">RHK Pimpinan</th>
+                            <th class="px-3 py-3 font-medium text-center w-[20%]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-700 divide-y divide-slate-100">
+                        <template x-for="rencana in skpList" :key="rencana.id">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-3 py-4 align-top text-xs whitespace-nowrap">
+                                    <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_awal)">
+                                    </div>
+                                    <div class="text-slate-400 text-[10px]">s.d.</div>
+                                    <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_akhir)">
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 align-top">
+                                    <p class="font-bold text-slate-800 mb-1" x-text="rencana.rencana_hasil_kerja"></p>
+                                    <div class="flex items-center gap-1.5 mt-2">
+                                        <span
+                                            class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded border border-blue-100 font-medium">Kuantitas</span>
+                                        <span class="text-xs text-slate-500"
+                                            x-text="getKuantitasLabel(rencana.targets)"></span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 align-top text-xs text-slate-500 italic"
+                                    x-text="rencana.rhk_intervensi || '-'"></td>
+                                <td class="px-3 py-4 align-top text-center">
+                                    <div class="flex justify-center gap-2">
+                                        <button @click.prevent="openDetailModal(rencana)"
+                                            class="rounded-[8px] bg-[#155FA6]/10 text-[#155FA6] border border-[#155FA6]/20 text-xs px-3 py-1.5 font-medium hover:bg-[#155FA6] hover:text-white transition-all">Detail</button>
+                                        <button @click.prevent="openEditModal(rencana)"
+                                            class="p-2 rounded-lg hover:bg-amber-50 text-amber-600 transition"><svg
+                                                xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00 2 2h11a2 2 0 00 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg></button>
+                                        <button @click.prevent="deleteSkp(rencana.id)"
+                                            class="p-2 rounded-lg hover:bg-red-50 text-red-600 transition"><svg
+                                                xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="skpList.length === 0" style="display: none;">
+                            <td colspan="4"
+                                class="px-3 py-12 text-center text-slate-400 italic bg-slate-50/30 rounded-lg border border-dashed border-slate-200 m-4">
+                                <div class="flex flex-col items-center">
+                                    <img src="{{ asset('assets/icon/doc-skp.svg') }}" class="w-10 h-10 mb-2 opacity-50">
+                                    <span>Belum ada Rencana SKP yang dibuat.</span>
                                 </div>
                             </td>
                         </tr>
-                    </template>
-                    <tr x-show="skpList.length === 0" style="display: none;">
-                        <td colspan="4"
-                            class="px-3 py-12 text-center text-slate-400 italic bg-slate-50/30 rounded-lg border border-dashed border-slate-200 m-4">
-                            <div class="flex flex-col items-center">
-                                <img src="{{ asset('assets/icon/doc-skp.svg') }}" class="w-10 h-10 mb-2 opacity-50">
-                                <span>Belum ada Rencana SKP yang dibuat.</span>
+                    </tbody>
+                </table>
+                =======
+                <div class="space-y-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
+                    <template x-for="(item, index) in formData.targets" :key="index">
+                        <div
+                            class="grid grid-cols-12 gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative group hover:border-[#1C7C54]/40 transition-colors">
+                            <div class="col-span-3 md:col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Aspek</label>
+                                <select x-model="item.jenis_aspek"
+                                    class="w-full rounded-[8px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#1C7C54]">
+                                    <option value="Kuantitas">Kuantitas</option>
+                                    <option value="Kualitas">Kualitas</option>
+                                    <option value="Waktu">Waktu</option>
+                                    <option value="Biaya">Biaya</option>
+                                </select>
                             </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                            <div class="col-span-9 md:col-span-5">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Indikator</label>
+                                <input type="text" x-model="item.indikator" placeholder="Contoh: Jumlah Laporan"
+                                    class="w-full rounded-[8px] border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:border-[#1C7C54]">
+                            </div>
+                            <div class="col-span-4 md:col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Target</label>
+                                <input type="number" x-model="item.target" placeholder="0"
+                                    class="w-full rounded-[8px] border border-slate-200 px-3 py-2 text-xs font-bold text-center focus:outline-none focus:border-[#1C7C54]">
+                            </div>
+                            <div class="col-span-6 md:col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-400 mb-1">Satuan</label>
+                                <input type="text" x-model="item.satuan" placeholder="Dokumen"
+                                    class="w-full rounded-[8px] border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:border-[#1C7C54]">
+                            </div>
+                            <div class="col-span-2 md:col-span-1 flex items-end justify-center pb-1">
+                                <button type="button" @click="removeTarget(index)"
+                                    class="text-slate-300 hover:text-red-500 transition-colors"
+                                    :class="{'invisible': index < 2}" title="Hapus">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            {{-- ACTIONS --}}
+            <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                <button type="button" @click="resetForm"
+                    class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">Reset</button>
+                <button type="submit"
+                    class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95 disabled:opacity-50"
+                    :disabled="isLoading">
+                    <span x-show="!isLoading">Tambahkan SKP</span>
+                    <span x-show="isLoading">Menyimpan...</span>
+                </button>
+            </div>
+            </form>
         </div>
+
+        {{-- 2. DAFTAR SKP SAYA --}}
+        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
+            <h2 class="text-[20px] font-normal mb-4">Daftar SKP Saya</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[900px] text-sm">
+                    <thead>
+                        <tr class="text-left text-xs text-slate-500 uppercase bg-slate-50/50">
+                            <th class="px-3 py-3 font-medium w-[15%]">Periode</th>
+                            <th class="px-3 py-3 font-medium w-[35%]">Rencana Hasil Kerja</th>
+                            <th class="px-3 py-3 font-medium w-[30%]">RHK Pimpinan</th>
+                            <th class="px-3 py-3 font-medium text-center w-[20%]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-700 divide-y divide-slate-100">
+                        <template x-for="rencana in skpList" :key="rencana.id">
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-3 py-4 align-top text-xs whitespace-nowrap">
+                                    <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_awal)">
+                                    </div>
+                                    <div class="text-slate-400 text-[10px]">s.d.</div>
+                                    <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_akhir)">
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 align-top">
+                                    <p class="font-bold text-slate-800 mb-1" x-text="rencana.rencana_hasil_kerja"></p>
+                                    <div class="flex items-center gap-1.5 mt-2">
+                                        <span
+                                            class="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded border border-blue-100 font-medium">Kuantitas</span>
+                                        <span class="text-xs text-slate-500"
+                                            x-text="getKuantitasLabel(rencana.targets)"></span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 align-top text-xs text-slate-500 italic"
+                                    x-text="rencana.rhk_intervensi || '-'"></td>
+                                <td class="px-3 py-4 align-top text-center">
+                                    <div class="flex justify-center gap-2">
+                                        <button @click.prevent="openDetailModal(rencana)"
+                                            class="rounded-[8px] bg-[#155FA6]/10 text-[#155FA6] border border-[#155FA6]/20 text-xs px-3 py-1.5 font-medium hover:bg-[#155FA6] hover:text-white transition-all">Detail</button>
+                                        <button @click.prevent="openEditModal(rencana)"
+                                            class="p-2 rounded-lg hover:bg-amber-50 text-amber-600 transition"><svg
+                                                xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00 2 2h11a2 2 0 00 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg></button>
+                                        <button @click.prevent="deleteSkp(rencana.id)"
+                                            class="p-2 rounded-lg hover:bg-red-50 text-red-600 transition"><svg
+                                                xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="skpList.length === 0" style="display: none;">
+                            <td colspan="4"
+                                class="px-3 py-12 text-center text-slate-400 italic bg-slate-50/30 rounded-lg border border-dashed border-slate-200 m-4">
+                                <div class="flex flex-col items-center">
+                                    <img src="{{ asset('assets/icon/doc-skp.svg') }}" class="w-10 h-10 mb-2 opacity-50">
+                                    <span>Belum ada Rencana SKP yang dibuat.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            >>>>>>> 8bd18de89f6a4deb8564eca29dc7fd610ed6738d
+        </div>
+
+    </div>
+
+
+    {{-- ================================================== --}}
+    {{-- KOLOM KANAN: SIDEBAR INFO (PANDUAN & STATUS) --}}
+    {{-- ================================================== --}}
+    <div class="space-y-4 flex flex-col">
+
+        {{-- PANDUAN SINGKAT --}}
+        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
+            <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
+
+            <div class="mt-3 space-y-2 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                @foreach ([
+                ['title' => 'Periode Awal', 'desc' => 'Pilih tanggal penetapan awal SKP.'],
+                ['title' => 'Periode Akhir', 'desc' => 'Pilih tanggal penetapan akhir SKP.'],
+                ['title' => 'RHK Intervensi', 'desc' => 'Ketik manual RHK Atasan yang Anda dukung.'],
+                ['title' => 'Rencana Hasil Kerja', 'desc' => 'Tuliskan rencana kinerja utama Anda.'],
+                ['title' => 'Target Kuantitas', 'desc' => 'Wajib diisi. Ini output fisik untuk Laporan Harian.'],
+                ['title' => 'Target Waktu', 'desc' => 'Wajib diisi. Estimasi lama pengerjaan.'],
+                ['title' => 'Target Kualitas', 'desc' => 'Opsional. Standar mutu hasil kerja.'],
+                ] as $guide)
+                <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
+                    <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
+                    <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- STATUS LAPORAN TERAKHIR --}}
+        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex-1">
+            <h3 class="text-sm font-semibold text-slate-800 mb-3">Status Laporan Terakhir</h3>
+            <div class="space-y-2 text-xs max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                {{-- Item 1 --}}
+                <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-[11px] font-semibold">P</span>
+                        <div>
+                            <p class="font-medium text-slate-800">Rapat Koordinasi</p>
+                            <p class="text-[11px] text-slate-500">Menunggu Validasi</p>
+                        </div>
+                    </div>
+                    <span class="text-[11px] text-slate-400 whitespace-nowrap">07 Nov</span>
+                </div>
+                {{-- Item 2 --}}
+                <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-semibold">D</span>
+                        <div>
+                            <p class="font-medium text-slate-800">Rekapitulasi Pajak</p>
+                            <p class="text-[11px] text-slate-500">Laporan Disetujui</p>
+                        </div>
+                    </div>
+                    <span class="text-[11px] text-slate-400 whitespace-nowrap">09 Nov</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     {{-- ================================================== --}}
@@ -287,7 +472,6 @@
 
             <template x-if="detailData">
                 <div class="p-6 overflow-y-auto">
-                    {{-- Header Info --}}
                     <div class="grid grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Periode</label>
@@ -310,7 +494,6 @@
                             x-text="detailData.rencana_hasil_kerja"></div>
                     </div>
 
-                    {{-- Tabel Target --}}
                     <div>
                         <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Detail
                             Target & Indikator</label>
@@ -473,69 +656,91 @@
 
 </section>
 
-{{-- SCRIPT JS LOGIC (SAMA DENGAN STAF) --}}
+{{-- SCRIPT JS LOGIC --}}
 <script>
 document.addEventListener("alpine:init", () => {
+            <<
+            << << < HEAD
             Alpine.data("skpPageData", () => ({
-
-                            skpList: [],
-                            isLoading: false,
-                            <<
-                            << << < HEAD
-
-                            // State Form
-                            formData: {
-                                periode_awal: '',
-                                periode_akhir: '',
-                                rhk_intervensi: '',
-                                rencana_hasil_kerja: '',
-                                // Default 2 Target
-                                targets: [{
-                                        jenis_aspek: 'Kuantitas',
-                                        indikator: '',
-                                        target: '',
-                                        satuan: ''
-                                    },
-                                    {
-                                        jenis_aspek: 'Waktu',
-                                        indikator: '',
-                                        target: '',
-                                        satuan: ''
-                                    }
-                                ]
-                            },
-
                             ===
                             === =
+                            Alpine.data("skpPageData", () => ({
 
-                            // Modal State
-                            >>>
-                            >>> > origin / jek
-                            openDetail: false,
-                            openEdit: false,
-                            detailData: null,
-                            editData: null,
+                                        skpList: [],
+                                        atasanName: 'Memuat...',
+                                        isLoading: false,
 
-                            initPage() {
-                                this.fetchSkpList();
-                            },
+                                        // State Form (Nested)
+                                        formData: {
+                                            periode_awal: '',
+                                            periode_akhir: '',
+                                            rhk_intervensi: '',
+                                            rencana_hasil_kerja: '',
+                                            targets: [{
+                                                    jenis_aspek: 'Kuantitas',
+                                                    indikator: '',
+                                                    target: '',
+                                                    satuan: ''
+                                                },
+                                                {
+                                                    jenis_aspek: 'Waktu',
+                                                    indikator: '',
+                                                    target: '',
+                                                    satuan: ''
+                                                }
+                                            ]
+                                        },
+                                        >>>
+                                        >>> > 8 bd18de89f6a4deb8564eca29dc7fd610ed6738d
 
-                            <<
-                            << << < HEAD
-                            async fetchSkpList() {
-                                const token = localStorage.getItem('auth_token');
-                                try {
-                                    const res = await fetch('/api/skp', {
-                                        headers: {
-                                            'Authorization': `Bearer ${token}`,
-                                            'Accept': 'application/json'
-                                        } ===
+                                        skpList: [],
+                                        isLoading: false,
+                                        <<
+                                        <<
+                                        << < HEAD
+
+                                        <<
+                                        << << < HEAD
+                                        // State Form
+                                        formData: {
+                                            periode_awal: '',
+                                            periode_akhir: '',
+                                            rhk_intervensi: '',
+                                            rencana_hasil_kerja: '',
+                                            // Default 2 Target
+                                            targets: [{
+                                                    jenis_aspek: 'Kuantitas',
+                                                    indikator: '',
+                                                    target: '',
+                                                    satuan: ''
+                                                },
+                                                {
+                                                    jenis_aspek: 'Waktu',
+                                                    indikator: '',
+                                                    target: '',
+                                                    satuan: ''
+                                                }
+                                            ]
+                                        },
+
+                                        ===
+                                        ===
+                                        = ===
                                         === =
-                                        // API Calls
+                                        initPage() {
+                                            const token = localStorage.getItem('auth_token');
+                                            if (!token) {
+                                                window.location.href = '/login';
+                                                return;
+                                            }
+                                            this.fetchProfile();
+                                            this.fetchSkpList();
+                                        },
+
                                         async fetchProfile() {
                                             const token = localStorage.getItem('auth_token');
                                             try {
-                                                const res = await fetch('/e-daily-report/api/me', {
+                                                const res = await fetch('/api/me', {
                                                     headers: {
                                                         'Authorization': `Bearer ${token}`,
                                                         'Accept': 'application/json'
@@ -544,7 +749,8 @@ document.addEventListener("alpine:init", () => {
                                                 const json = await res.json();
                                                 this.atasanName = json.atasan ? json.atasan.name :
                                                     '- Tidak Ada Atasan -';
-                                            } catch (e) {
+                                            } catch (err) {
+                                                console.error(err);
                                                 this.atasanName = 'Gagal memuat';
                                             }
                                         },
@@ -552,12 +758,11 @@ document.addEventListener("alpine:init", () => {
                                         async fetchSkpList() {
                                             const token = localStorage.getItem('auth_token');
                                             try {
-                                                const res = await fetch('/e-daily-report/api/skp', {
+                                                const res = await fetch('/api/skp', {
                                                     headers: {
                                                         'Authorization': `Bearer ${token}`,
                                                         'Accept': 'application/json'
-                                                    } >>>
-                                                    >>> > origin / jek
+                                                    }
                                                 });
                                                 const json = await res.json();
                                                 if (res.ok) this.skpList = json.data || [];
@@ -565,186 +770,385 @@ document.addEventListener("alpine:init", () => {
                                                 console.error(e);
                                             }
                                         },
+                                        >>>
+                                        >>> > 8 bd18de89f6a4deb8564eca29dc7fd610ed6738d
 
-                                        addTarget() {
-                                            this.formData.targets.push({
-                                                jenis_aspek: 'Kualitas',
-                                                indikator: '',
-                                                target: '',
-                                                satuan: ''
-                                            });
-                                        },
-                                        removeTarget(index) {
-                                            if (this.formData.targets.length > 1) {
-                                                this.formData.targets.splice(index, 1);
-                                            }
-                                        },
-                                        resetForm() {
-                                            this.formData = {
-                                                periode_awal: '',
-                                                periode_akhir: '',
-                                                rhk_intervensi: '',
-                                                rencana_hasil_kerja: '',
-                                                targets: [{
-                                                        jenis_aspek: 'Kuantitas',
-                                                        indikator: '',
-                                                        target: '',
-                                                        satuan: ''
-                                                    },
-                                                    {
-                                                        jenis_aspek: 'Waktu',
-                                                        indikator: '',
-                                                        target: '',
-                                                        satuan: ''
-                                                    }
-                                                ]
-                                            };
+                                        // Modal State
+                                        >>>
+                                        >>>
+                                        > origin / jek
+                                        openDetail: false,
+                                        openEdit: false,
+                                        detailData: null,
+                                        editData: null,
+
+                                        initPage() {
+                                            this.fetchSkpList();
                                         },
 
-                                        getKuantitasLabel(targets) {
-                                            const t = targets.find(x => x.jenis_aspek === 'Kuantitas');
-                                            return t ? `${t.target} ${t.satuan}` : '-';
-                                        },
-                                        formatDate(d) {
-                                            if (!d) return '-';
-                                            return new Date(d).toLocaleDateString('id-ID', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                                year: 'numeric'
-                                            });
-                                        },
-
-                                        async submitCreate() {
-                                            this.isLoading = true;
+                                        <<
+                                        << << < HEAD <<
+                                        <<
+                                        << < HEAD
+                                        async fetchSkpList() {
                                             const token = localStorage.getItem('auth_token');
                                             try {
                                                 const res = await fetch('/api/skp', {
-                                                    method: 'POST',
                                                     headers: {
                                                         'Authorization': `Bearer ${token}`,
-                                                        'Content-Type': 'application/json',
                                                         'Accept': 'application/json'
+                                                    } ===
+                                                    ===
+                                                    =
+                                                    // API Calls
+                                                    async fetchProfile() {
+                                                        const token = localStorage.getItem(
+                                                        'auth_token');
+                                                        try {
+                                                            const res = await fetch(
+                                                                '/e-daily-report/api/me', {
+                                                                    headers: {
+                                                                        'Authorization': `Bearer ${token}`,
+                                                                        'Accept': 'application/json'
+                                                                    }
+                                                                });
+                                                            const json = await res.json();
+                                                            this.atasanName = json.atasan ? json.atasan
+                                                                .name :
+                                                                '- Tidak Ada Atasan -';
+                                                        } catch (e) {
+                                                            this.atasanName = 'Gagal memuat';
+                                                        }
                                                     },
-                                                    body: JSON.stringify(this.formData)
-                                                });
-                                                const json = await res.json();
-                                                if (res.ok) {
-                                                    Swal.fire('Sukses', 'Rencana SKP berhasil dibuat!',
-                                                        'success');
-                                                    this.resetForm();
-                                                    this.fetchSkpList();
-                                                } else {
-                                                    Swal.fire('Gagal', json.message || 'Validasi Gagal',
-                                                        'error');
-                                                }
-                                            } catch (e) {
-                                                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                                            }
-                                            this.isLoading = false;
-                                        },
+                                                    ===
+                                                    === =
+                                                    async submitCreate() {
+                                                        this.isLoading = true;
+                                                        const token = localStorage.getItem(
+                                                        'auth_token');
 
-                                        openDetailModal(data) {
-                                            this.detailData = data;
-                                            this.openDetail = true;
-                                        },
-                                        openEditModal(data) {
-                                            this.editData = JSON.parse(JSON.stringify(data));
-                                            this.openEdit = true;
-                                        },
-                                        async submitEdit() {
-                                            this.isLoading = true;
-                                            const token = localStorage.getItem('auth_token');
-                                            try {
-                                                const res = await fetch(
-                                                `/api/skp/${this.editData.id}`, {
-                                                    method: 'PUT',
-                                                    headers: {
-                                                        'Authorization': `Bearer ${token}`,
-                                                        'Content-Type': 'application/json',
-                                                        'Accept': 'application/json'
+                                                        // Validasi Manual
+                                                        if (!this.formData.periode_mulai || !this
+                                                            .formData.rhk_intervensi || !this.formData
+                                                            .rencana_hasil_kerja) {
+                                                            Swal.fire('Warning',
+                                                                'Mohon lengkapi data utama',
+                                                                'warning');
+                                                            this.isLoading = false;
+                                                            return;
+                                                        }
+
+                                                        try {
+                                                            const res = await fetch('/api/skp', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Authorization': `Bearer ${token}`,
+                                                                    'Content-Type': 'application/json',
+                                                                    'Accept': 'application/json'
+                                                                },
+                                                                body: JSON.stringify(this
+                                                                    .formData)
+                                                            });
+
+                                                            const json = await res.json();
+
+                                                            if (res.ok) {
+                                                                Swal.fire('Sukses',
+                                                                    'Rencana SKP berhasil dibuat!',
+                                                                    'success');
+                                                                this.resetForm();
+                                                                this.fetchSkpList();
+                                                            } else {
+                                                                Swal.fire('Gagal', json.message ||
+                                                                    'Validasi Gagal', 'error');
+                                                            }
+                                                        } catch (e) {
+                                                            Swal.fire('Error',
+                                                                'Terjadi kesalahan sistem', 'error');
+                                                        }
+                                                        this.isLoading = false;
                                                     },
-                                                    body: JSON.stringify(this.editData)
-                                                });
-                                                if (res.ok) {
-                                                    Swal.fire('Sukses', 'SKP diperbarui!', 'success');
-                                                    this.openEdit = false;
-                                                    this.fetchSkpList();
-                                                } else {
-                                                    const json = await res.json();
-                                                    Swal.fire('Gagal', json.message, 'error');
-                                                }
-                                            } catch (e) {
-                                                Swal.fire('Error', 'Koneksi error', 'error');
-                                            }
-                                            this.isLoading = false;
-                                        },
-                                        async deleteSkp(id) {
-                                            const c = await Swal.fire({
-                                                title: 'Hapus?',
-                                                text: 'Data tidak bisa kembali',
-                                                icon: 'warning',
-                                                showCancelButton: true,
-                                                confirmButtonColor: '#d33'
-                                            });
-                                            if (c.isConfirmed) {
-                                                const token = localStorage.getItem('auth_token');
-                                                await fetch(`/api/skp/${id}`, {
-                                                    method: 'DELETE',
-                                                    headers: {
-                                                        'Authorization': `Bearer ${token}`
+
+                                                    openDetailModal(data) {
+                                                        this.detailData = data;
+                                                        this.openDetail = true;
+                                                    },
+                                                    openEditModal(data) {
+                                                        this.editData = JSON.parse(JSON.stringify(data));
+                                                        this.openEdit = true;
+                                                    },
+                                                    async submitEdit() {
+                                                        this.isLoading = true;
+                                                        const token = localStorage.getItem(
+                                                        'auth_token');
+                                                        try {
+                                                            const res = await fetch(
+                                                                `/api/skp/${this.editData.id}`, {
+                                                                    method: 'PUT',
+                                                                    headers: {
+                                                                        'Authorization': `Bearer ${token}`,
+                                                                        'Content-Type': 'application/json',
+                                                                        'Accept': 'application/json'
+                                                                    },
+                                                                    body: JSON.stringify(this
+                                                                        .editData)
+                                                                });
+                                                            if (res.ok) {
+                                                                Swal.fire('Sukses', 'SKP diperbarui!',
+                                                                    'success');
+                                                                this.openEdit = false;
+                                                                this.fetchSkpList();
+                                                            } else {
+                                                                const json = await res.json();
+                                                                Swal.fire('Gagal', json.message,
+                                                                    'error');
+                                                            }
+                                                        } catch (e) {
+                                                            Swal.fire('Error', 'Koneksi error',
+                                                            'error');
+                                                        }
+                                                        this.isLoading = false;
+                                                    },
+                                                    async deleteSkp(id) {
+                                                            const c = await Swal.fire({
+                                                                title: 'Hapus?',
+                                                                text: 'Data tidak bisa kembali',
+                                                                icon: 'warning',
+                                                                showCancelButton: true,
+                                                                confirmButtonColor: '#d33'
+                                                            });
+                                                            if (c.isConfirmed) {
+                                                                const token = localStorage.getItem(
+                                                                    'auth_token');
+                                                                await fetch(`/api/skp/${id}`, {
+                                                                    method: 'DELETE',
+                                                                    headers: {
+                                                                        'Authorization': `Bearer ${token}`
+                                                                    }
+                                                                });
+                                                                this.fetchSkpList();
+                                                                Swal.fire('Terhapus', '', 'success');
+                                                            }
+                                                        } >>>
+                                                        >>> > 8 bd18de89f6a4deb8564eca29dc7fd610ed6738d
+
+                                                    async fetchSkpList() {
+                                                        const token = localStorage.getItem(
+                                                        'auth_token');
+                                                        try {
+                                                            const res = await fetch(
+                                                                '/e-daily-report/api/skp', {
+                                                                    headers: {
+                                                                        'Authorization': `Bearer ${token}`,
+                                                                        'Accept': 'application/json'
+                                                                    } >>>
+                                                                    >>>
+                                                                    > origin / jek
+                                                                });
+                                                            const json = await res.json();
+                                                            if (res.ok) this.skpList = json.data || [];
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                        }
+                                                    },
+
+                                                    addTarget() {
+                                                        this.formData.targets.push({
+                                                            jenis_aspek: 'Kualitas',
+                                                            indikator: '',
+                                                            target: '',
+                                                            satuan: ''
+                                                        });
+                                                    },
+                                                    removeTarget(index) {
+                                                        if (this.formData.targets.length > 1) {
+                                                            this.formData.targets.splice(index, 1);
+                                                        }
+                                                    },
+                                                    resetForm() {
+                                                        this.formData = {
+                                                            periode_awal: '',
+                                                            periode_akhir: '',
+                                                            rhk_intervensi: '',
+                                                            rencana_hasil_kerja: '',
+                                                            targets: [{
+                                                                    jenis_aspek: 'Kuantitas',
+                                                                    indikator: '',
+                                                                    target: '',
+                                                                    satuan: ''
+                                                                },
+                                                                {
+                                                                    jenis_aspek: 'Waktu',
+                                                                    indikator: '',
+                                                                    target: '',
+                                                                    satuan: ''
+                                                                }
+                                                            ]
+                                                        };
+                                                    },
+
+                                                    getKuantitasLabel(targets) {
+                                                        const t = targets.find(x => x.jenis_aspek ===
+                                                            'Kuantitas');
+                                                        return t ? `${t.target} ${t.satuan}` : '-';
+                                                    },
+                                                    formatDate(d) {
+                                                        if (!d) return '-';
+                                                        return new Date(d).toLocaleDateString('id-ID', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric'
+                                                        });
+                                                    },
+
+                                                    async submitCreate() {
+                                                        this.isLoading = true;
+                                                        const token = localStorage.getItem(
+                                                        'auth_token');
+                                                        try {
+                                                            const res = await fetch('/api/skp', {
+                                                                method: 'POST',
+                                                                headers: {
+                                                                    'Authorization': `Bearer ${token}`,
+                                                                    'Content-Type': 'application/json',
+                                                                    'Accept': 'application/json'
+                                                                },
+                                                                body: JSON.stringify(this
+                                                                    .formData)
+                                                            });
+                                                            const json = await res.json();
+                                                            if (res.ok) {
+                                                                Swal.fire('Sukses',
+                                                                    'Rencana SKP berhasil dibuat!',
+                                                                    'success');
+                                                                this.resetForm();
+                                                                this.fetchSkpList();
+                                                            } else {
+                                                                Swal.fire('Gagal', json.message ||
+                                                                    'Validasi Gagal',
+                                                                    'error');
+                                                            }
+                                                        } catch (e) {
+                                                            Swal.fire('Error',
+                                                                'Terjadi kesalahan sistem', 'error');
+                                                        }
+                                                        this.isLoading = false;
+                                                    },
+
+                                                    openDetailModal(data) {
+                                                        this.detailData = data;
+                                                        this.openDetail = true;
+                                                    },
+                                                    openEditModal(data) {
+                                                        this.editData = JSON.parse(JSON.stringify(data));
+                                                        this.openEdit = true;
+                                                    },
+                                                    async submitEdit() {
+                                                        this.isLoading = true;
+                                                        const token = localStorage.getItem(
+                                                        'auth_token');
+                                                        try {
+                                                            const res = await fetch(
+                                                                `/api/skp/${this.editData.id}`, {
+                                                                    method: 'PUT',
+                                                                    headers: {
+                                                                        'Authorization': `Bearer ${token}`,
+                                                                        'Content-Type': 'application/json',
+                                                                        'Accept': 'application/json'
+                                                                    },
+                                                                    body: JSON.stringify(this
+                                                                        .editData)
+                                                                });
+                                                            if (res.ok) {
+                                                                Swal.fire('Sukses', 'SKP diperbarui!',
+                                                                    'success');
+                                                                this.openEdit = false;
+                                                                this.fetchSkpList();
+                                                            } else {
+                                                                const json = await res.json();
+                                                                Swal.fire('Gagal', json.message,
+                                                                    'error');
+                                                            }
+                                                        } catch (e) {
+                                                            Swal.fire('Error', 'Koneksi error',
+                                                            'error');
+                                                        }
+                                                        this.isLoading = false;
+                                                    },
+                                                    async deleteSkp(id) {
+                                                        const c = await Swal.fire({
+                                                            title: 'Hapus?',
+                                                            text: 'Data tidak bisa kembali',
+                                                            icon: 'warning',
+                                                            showCancelButton: true,
+                                                            confirmButtonColor: '#d33'
+                                                        });
+                                                        if (c.isConfirmed) {
+                                                            const token = localStorage.getItem(
+                                                                'auth_token');
+                                                            await fetch(`/api/skp/${id}`, {
+                                                                method: 'DELETE',
+                                                                headers: {
+                                                                    'Authorization': `Bearer ${token}`
+                                                                }
+                                                            });
+                                                            this.fetchSkpList();
+                                                            Swal.fire('Terhapus', '', 'success');
+                                                        } <<
+                                                        <<
+                                                        << < HEAD
+                                                            ===
+                                                            ===
+                                                            =
+                                                            this.isLoading = false;
+                                                    },
+
+                                                    // Utilities
+                                                    resetForm() {
+                                                        this.formData = {
+                                                            nama_skp: '',
+                                                            periode_mulai: '',
+                                                            periode_selesai: '',
+                                                            indikator: '',
+                                                            rencana_aksi: '',
+                                                            target: ''
+                                                        };
+                                                    },
+                                                    openDetailModal(item) {
+                                                        this.detailData = item;
+                                                        this.openDetail = true;
+                                                    },
+                                                    openEditModal() {
+                                                        this.editData = JSON.parse(JSON.stringify(this
+                                                            .detailData));
+                                                        // Format date for input type=date
+                                                        if (this.editData.periode_mulai) this.editData
+                                                            .periode_mulai =
+                                                            this.editData
+                                                            .periode_mulai.substring(0, 10);
+                                                        if (this.editData.periode_selesai) this.editData
+                                                            .periode_selesai = this.editData
+                                                            .periode_selesai.substring(0, 10);
+                                                        this.openDetail = false;
+                                                        this.openEdit = true;
+                                                    },
+                                                    formatDate(date) {
+                                                        if (!date) return '-';
+                                                        try {
+                                                            return new Date(date).toLocaleDateString(
+                                                                'id-ID', {
+                                                                    day: '2-digit',
+                                                                    month: 'short',
+                                                                    year: 'numeric'
+                                                                });
+                                                        } catch (e) {
+                                                            return date;
+                                                        } >>>
+                                                        >>>
+                                                        > origin / jek
                                                     }
-                                                });
-                                                this.fetchSkpList();
-                                                Swal.fire('Terhapus', '', 'success');
-                                            } <<
-                                            << << < HEAD
-                                                ===
-                                                === =
-                                                this.isLoading = false;
-                                        },
 
-                                        // Utilities
-                                        resetForm() {
-                                            this.formData = {
-                                                nama_skp: '',
-                                                periode_mulai: '',
-                                                periode_selesai: '',
-                                                indikator: '',
-                                                rencana_aksi: '',
-                                                target: ''
-                                            };
-                                        },
-                                        openDetailModal(item) {
-                                            this.detailData = item;
-                                            this.openDetail = true;
-                                        },
-                                        openEditModal() {
-                                            this.editData = JSON.parse(JSON.stringify(this.detailData));
-                                            // Format date for input type=date
-                                            if (this.editData.periode_mulai) this.editData.periode_mulai =
-                                                this.editData
-                                                .periode_mulai.substring(0, 10);
-                                            if (this.editData.periode_selesai) this.editData
-                                                .periode_selesai = this.editData
-                                                .periode_selesai.substring(0, 10);
-                                            this.openDetail = false;
-                                            this.openEdit = true;
-                                        },
-                                        formatDate(date) {
-                                            if (!date) return '-';
-                                            try {
-                                                return new Date(date).toLocaleDateString('id-ID', {
-                                                    day: '2-digit',
-                                                    month: 'short',
-                                                    year: 'numeric'
-                                                });
-                                            } catch (e) {
-                                                return date;
-                                            } >>>
-                                            >>> > origin / jek
-                                        }
-
-                                    }));
-                            });
+                                                }));
+                                        });
 </script>
 @endsection

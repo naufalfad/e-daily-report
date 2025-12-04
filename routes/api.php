@@ -151,4 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Organisasi
     Route::get('organisasi/tree', [OrganisasiController::class, 'getTree']);
+
+    // API untuk mengambil data skoring bawahan
+    Route::get('/skoring-kinerja', [\App\Http\Controllers\Core\SkpController::class, 'getSkoringData']);
 });

@@ -40,7 +40,7 @@ class DashboardController extends Controller
             ->whereNotNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
             ->where('status', 'approved')
             ->whereYear('tanggal_laporan', $year)
-            ->count(); // Asumsi: 1 LKH = 1 Poin Realisasi (atau bisa sum('volume'))
+            ->sum('volume'); // Asumsi: 1 LKH = 1 Poin Realisasi (atau bisa sum('volume'))
 
         $persenCapaian = $totalTargetTahunan > 0
             ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1)

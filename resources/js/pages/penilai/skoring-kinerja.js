@@ -14,19 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let subordinateData = [];
 
-    // --- 1. FETCH DATA DENGAN DEBUGGING ---
+    // --- 1. FETCH DATA ---
     async function fetchData() {
         try {
-            console.log("%c[1] MEMULAI FETCH DATA...", "color: blue; font-weight: bold;");
-
             loadingState.classList.remove('hidden');
             tableBody.innerHTML = '';
             emptyState.classList.add('hidden');
 
-            // Tambahkan timestamp agar browser TIDAK menggunakan Cache
-            const url = `/penilai/skoring-kinerja?t=${new Date().getTime()}`;
-            console.log("[2] URL Target:", url);
-
+            // [PERBAIKAN UTAMA] Gunakan URL API (/api/...), bukan URL Web (/penilai/...)
+            const url = `/api/skoring-kinerja?t=${new Date().getTime()}`;
+            
             const response = await fetch(url, {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest",
@@ -110,11 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const avatar = pegawai.avatar_url || '/assets/icon/avatar.png';
 
             const row = `
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
-                    <td class="py-3 px-6 text-left whitespace-nowrap">
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                    <td class="py-4 px-6 text-left whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="mr-3">
-                                <img class="w-8 h-8 rounded-full border border-gray-200 object-cover bg-gray-100" 
+                                <img class="w-10 h-10 rounded-full border border-slate-200 object-cover bg-slate-100" 
                                      src="${avatar}" 
                                      onerror="this.src='/assets/icon/avatar.png'"/>
                             </div>
@@ -140,8 +137,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="text-gray-400 mx-1">/</span> 
                         ${pegawai.total_lkh ?? 0}
                     </td>
-                    <td class="py-3 px-6 text-center font-bold text-blue-600 text-lg">
-                        ${pegawai.total_nilai ?? 0}%
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-slate-100 rounded-full h-2 w-24 overflow-hidden">
+                                <div class="bg-[#1C7C54] h-2 rounded-full transition-all duration-500" 
+                                     style="width: ${Math.min(pegawai.capaian, 100)}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-[#1C7C54]">${pegawai.capaian}%</span>
+                        </div>
                     </td>
                     <td class="py-3 px-6 text-center">
                         <span class="${badgeColor} py-1 px-3 rounded-full text-xs font-bold shadow-sm inline-block min-w-[80px]">
@@ -195,10 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getBadgeColor(predikat) {
         switch (predikat) {
-            case 'Sangat Baik': return 'bg-green-100 text-green-800 border border-green-200';
-            case 'Baik': return 'bg-blue-100 text-blue-800 border border-blue-200';
-            case 'Cukup': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-            default: return 'bg-red-100 text-red-800 border border-red-200';
+            case 'Sangat Baik': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            case 'Baik': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'Cukup': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+            default: return 'bg-red-50 text-red-700 border-red-200';
         }
     }
 

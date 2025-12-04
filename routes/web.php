@@ -102,7 +102,7 @@ Route::middleware(['auth'])->group(function () {
         
         Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
         Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
-        Route::get('/skoring-kinerja', [SkpController::class, 'skoringKinerja'])->name('skoring-kinerja');
+        Route::view('/skoring-kinerja', 'penilai.skoring-kinerja')->name('skoring-kinerja');
         Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
         Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
         Route::view('/pengumuman', 'penilai.pengumuman')->name('pengumuman');

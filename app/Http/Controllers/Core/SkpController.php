@@ -25,7 +25,7 @@ class SkpController extends Controller
             ->where('user_id', $user->id)
             ->latest();
 
-        // Filter Tahun (Opsional, jika ada request ?year=2025)
+        // Filter Tahun (Opsional)
         if ($request->has('year')) {
             $query->whereYear('periode_awal', $request->year);
         }
@@ -44,16 +44,16 @@ class SkpController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validasi Input Kompleks
+        // 1. Validasi Input Kompleks (Header + Array Targets)
         $validator = Validator::make($request->all(), [
             // Validasi Header (Rencana)
             'periode_awal'   => 'required|date',
             'periode_akhir'  => 'required|date|after_or_equal:periode_awal',
-            'rhk_intervensi' => 'required|string', // Input Manual
-            'rencana_hasil_kerja' => 'required|string', // Input Manual
+            'rhk_intervensi' => 'required|string', // Input Manual RHK Atasan
+            'rencana_hasil_kerja' => 'required|string', // Input Manual RHK Sendiri
             
             // Validasi Detail Targets (Array of Objects)
-            'targets'        => 'required|array|min:1', // Minimal 1 target (biasanya Kuantitas)
+            'targets'        => 'required|array|min:1', // Minimal ada 1 target
             'targets.*.jenis_aspek' => 'required|in:Kuantitas,Kualitas,Waktu,Biaya',
             'targets.*.indikator'   => 'required|string',
             'targets.*.target'      => 'required|integer',
@@ -121,14 +121,13 @@ class SkpController extends Controller
     /**
      * UPDATE SKP
      * Strategi: Update Header -> Hapus Target Lama -> Insert Target Baru
-     * (Cara paling aman untuk data dinamis agar ID child tidak konflik)
      */
     public function update(Request $request, $id)
     {
         $rencana = SkpRencana::where('user_id', Auth::id())->find($id);
         if (!$rencana) return response()->json(['message' => 'Data tidak ditemukan'], 404);
 
-        // Validasi (Sama dengan Store)
+        // Validasi
         $validator = Validator::make($request->all(), [
             'periode_awal'   => 'required|date',
             'periode_akhir'  => 'required|date|after_or_equal:periode_awal',
@@ -194,20 +193,72 @@ class SkpController extends Controller
         if (!$rencana) return response()->json(['message' => 'Data tidak ditemukan'], 404);
 
         try {
-            // Karena kita set onDelete('cascade') di migrasi, 
-            // menghapus parent otomatis menghapus children (targets) di DB.
-            $rencana->delete(); 
+            $rencana->delete(); // Cascade delete akan menghapus targets otomatis
             
             return response()->json(['message' => 'SKP berhasil dihapus']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal menghapus', 'error' => $e->getMessage()], 500);
         }
     }
-
-    // --- HELPER untuk Penilaian (Opsional/Future Dev) ---
-    public function skoringKinerja()
+    
+    // --- Helper / Placeholder untuk fitur Skoring (jika diperlukan nanti) ---
+    /**
+     * API: Data Skoring Kinerja Bawahan
+     * Logic: Ambil bawahan -> Ambil SKP Aktif -> Hitung % Realisasi LKH Approved
+     */
+    public function getSkoringData(Request $request)
     {
-        // Logika ini nanti disesuaikan dengan struktur baru jika fitur penilaian diaktifkan
-        return response()->json(['message' => 'Fitur skoring sedang disesuaikan']);
+        $user = Auth::user();
+        
+        // 1. Cari Bawahan (User yang atasan_id-nya adalah user login)
+        $bawahan = \App\Models\User::where('atasan_id', $user->id)->get();
+
+        $data = $bawahan->map(function($staff) {
+            // 2. Ambil Rencana SKP Terbaru milik staf ini
+            $rencana = SkpRencana::with(['targets' => function($q) {
+                            $q->where('jenis_aspek', 'Kuantitas');
+                        }])
+                        ->where('user_id', $staff->id)
+                        ->latest()
+                        ->first();
+
+            if (!$rencana) {
+                return [
+                    'id' => $staff->id,
+                    'nama' => $staff->name,
+                    'nip' => $staff->nip,
+                    'status' => 'Belum buat SKP',
+                    'capaian' => 0
+                ];
+            }
+
+            // 3. Ambil Target Kuantitas
+            $targetObj = $rencana->targets->first();
+            $targetAngka = $targetObj ? $targetObj->target : 0;
+            $satuan = $targetObj ? $targetObj->satuan : '-';
+
+            // 4. Hitung Realisasi (Sum Volume LKH yang Approved)
+            $realisasi = \App\Models\LaporanHarian::where('skp_rencana_id', $rencana->id)
+                ->where('status', 'approved')
+                ->sum('volume');
+
+            // 5. Hitung Persentase
+            $persen = $targetAngka > 0 ? round(($realisasi / $targetAngka) * 100) : 0;
+
+            return [
+                'id' => $staff->id,
+                'nama' => $staff->name,
+                'nip' => $staff->nip,
+                'foto' => $staff->foto_profil_url ?? asset('images/default-user.png'),
+                'rhk' => $rencana->rencana_hasil_kerja,
+                'target' => $targetAngka,
+                'realisasi' => $realisasi,
+                'satuan' => $satuan,
+                'capaian' => $persen,
+                'status' => 'Aktif'
+            ];
+        });
+
+        return response()->json(['data' => $data]);
     }
 }

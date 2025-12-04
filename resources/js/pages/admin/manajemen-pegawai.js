@@ -1,11 +1,11 @@
 import Swal from "sweetalert2";
 
 export function manajemenPegawaiData() {
-    // [KONFIGURASI]
+
+    // Helper ambil token
     const BASE_URL = "/api/admin/pegawai";
     const MASTER_URL = "/api/admin/master-dropdown";
 
-    // Helper ambil token
     const getToken = () => localStorage.getItem("auth_token");
 
     return {

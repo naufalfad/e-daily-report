@@ -7,10 +7,10 @@ use App\Models\LaporanHarian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB; // Import DB untuk Transaksi
+use Illuminate\Support\Facades\DB; 
 use App\Services\NotificationService;
 use App\Enums\NotificationType; 
-use Carbon\Carbon; // Import Carbon untuk format tanggal cantik
+use Carbon\Carbon; 
 
 class ValidatorController extends Controller
 {
@@ -21,11 +21,11 @@ class ValidatorController extends Controller
     {
         $atasanId = Auth::id();
 
-        // PERBAIKAN: Ubah 'user_id' menjadi 'atasan_id'
-        // Logic: Tampilkan laporan yang 'atasan_id'-nya adalah Saya (User yang login)
-        $query = LaporanHarian::with(['user', 'skp', 'bukti'])
+        // [PERBAIKAN UTAMA] Ganti 'skp' menjadi 'rencana'
+        // Karena di Model LaporanHarian, relasinya bernama: public function rencana()
+        $query = LaporanHarian::with(['user', 'rencana', 'bukti']) 
             ->where('atasan_id', $atasanId) 
-            ->where('status', '!=', 'draft'); // SARAN TAMBAHAN: Jangan tampilkan status Draft
+            ->where('status', '!=', 'draft'); 
 
         // Filter status
         if ($request->has('status') && $request->status != 'all') {
@@ -52,7 +52,8 @@ class ValidatorController extends Controller
     {
         $atasanId = Auth::id();
 
-        $lkh = LaporanHarian::with(['user', 'skp', 'bukti'])
+        // [PERBAIKAN UTAMA] Ganti 'skp' menjadi 'rencana'
+        $lkh = LaporanHarian::with(['user', 'rencana', 'bukti'])
             ->where('atasan_id', $atasanId) // Pastikan hanya akses milik bawahannya
             ->find($id);
 
@@ -66,7 +67,7 @@ class ValidatorController extends Controller
     }
 
     /**
-     * 3. VALIDASI LKH (approve/reject) - BEST PRACTICE
+     * 3. VALIDASI LKH (approve/reject)
      */
     public function validateLkh(Request $request, $id)
     {
@@ -96,36 +97,34 @@ class ValidatorController extends Controller
             // Update Data LKH
             $lkh->update([
                 'status'            => $request->status,
-                // 'atasan_id'      => $atasanId, // Tidak perlu update atasan_id jika orangnya sama
                 'waktu_validasi'    => now(),
                 'komentar_validasi' => $request->komentar_validasi
             ]);
 
-            // 4. Logika Notifikasi Cerdas
+            // 4. Logika Notifikasi
             $tglIndo = Carbon::parse($lkh->tanggal_laporan)->translatedFormat('d F Y');
             
             if ($request->status == 'approved') {
-                // Skenario: Diterima
-                $type = NotificationType::LKH_APPROVED; // Pastikan Enum ini ada
+                $type = NotificationType::LKH_APPROVED->value; // Pastikan ambil value dari Enum
                 $msg  = "Selamat! Laporan Harian tanggal {$tglIndo} telah DISETUJUI.";
             } else {
-                // Skenario: Ditolak
-                $type = NotificationType::LKH_REJECTED; // Pastikan Enum ini ada
-                // Sertakan sedikit komentar di notif agar efisien (truncate jika kepanjangan)
+                $type = NotificationType::LKH_REJECTED->value;
                 $previewKomentar = \Illuminate\Support\Str::limit($request->komentar_validasi, 50);
                 $msg  = "Mohon revisi. Laporan tanggal {$tglIndo} DITOLAK. Catatan: {$previewKomentar}";
             }
 
-            // Kirim ke Pembuat Laporan ($lkh->user_id)
-            // Pass Object $lkh agar notifikasi bersifat Polymorphic (bisa diklik lari ke detail)
-            NotificationService::send(
-                $lkh->user_id,
-                $type,
-                $msg,
-                $lkh 
-            );
+            // Kirim Notifikasi
+            try {
+                NotificationService::send(
+                    $lkh->user_id,
+                    $type,
+                    $msg,
+                    $lkh 
+                );
+            } catch (\Exception $e) {
+                // Silent fail notif
+            }
 
-            // 5. Commit Transaksi (Simpan Permanen)
             DB::commit();
 
             return response()->json([
@@ -134,7 +133,6 @@ class ValidatorController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // 6. Rollback jika terjadi error
             DB::rollBack();
             return response()->json([
                 'message' => 'Terjadi kesalahan saat memproses validasi', 

@@ -14,9 +14,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
-use App\Services\NotificationService; 
-use App\Enums\NotificationType; 
-use Carbon\Carbon;
+use App\Services\NotificationService;
+use App\Enums\NotificationType;
+use Carbon\Carbon; // Tambahan untuk formatting tanggal di pesan
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LkhController extends Controller
 {
@@ -134,7 +135,8 @@ class LkhController extends Controller
             'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
         ]);
 
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails())
+            return response()->json(['errors' => $validator->errors()], 422);
 
         $uploadedFiles = [];
 
@@ -187,7 +189,7 @@ class LkhController extends Controller
 
                 foreach ($request->file('bukti') as $file) {
                     $extension = strtolower($file->getClientOriginalExtension());
-                    $filename  = Str::uuid() . '.' . $extension;
+                    $filename = Str::uuid() . '.' . $extension;
                     $finalPath = "";
 
                     // Optimasi Gambar
@@ -214,11 +216,11 @@ class LkhController extends Controller
                     $uploadedFiles[] = $finalPath;
 
                     LkhBukti::create([
-                        'laporan_id'         => $lkh->id,
-                        'file_path'          => $finalPath,
+                        'laporan_id' => $lkh->id,
+                        'file_path' => $finalPath,
                         'file_name_original' => $file->getClientOriginalName(),
-                        'file_type'          => $extension,
-                        'file_size'          => $file->getSize()
+                        'file_type' => $extension,
+                        'file_size' => $file->getSize()
                     ]);
                 }
             }
@@ -255,7 +257,7 @@ class LkhController extends Controller
             return response()->json(['message' => 'Gagal mengirim laporan', 'error' => $e->getMessage()], 500);
         }
     }
-    
+
     /**
      * 3. SHOW DETAIL LKH
      */
@@ -271,7 +273,8 @@ class LkhController extends Controller
             })
             ->find($id);
 
-        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+        if (!$lkh)
+            return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
 
         return response()->json(['data' => $lkh]);
     }
@@ -292,9 +295,9 @@ class LkhController extends Controller
             'atasan:id,name',
             'bukti'
         ]);
-        
-        $mode = $request->input('mode', 'mine'); 
-        $isPenilai = $user->roles()->pluck('nama_role')->contains('Penilai'); 
+
+        $mode = $request->input('mode', 'mine');
+        $isPenilai = $user->roles()->pluck('nama_role')->contains('Penilai');
 
         if ($isPenilai && $mode === 'subordinates') {
             $query->where('atasan_id', $user->id);
@@ -310,10 +313,10 @@ class LkhController extends Controller
         }
 
         $data = $query->latest('tanggal_laporan')->paginate(15);
-        
+
         return response()->json($data);
     }
-    
+
     /**
      * 4. DELETE LKH
      */
@@ -336,7 +339,11 @@ class LkhController extends Controller
             return response()->json(['message' => 'Laporan berhasil dihapus']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal menghapus', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Gagal menghapus laporan',
+                'error'
+                => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -399,4 +406,94 @@ class LkhController extends Controller
             return response()->json(['message' => 'Gagal update', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function exportPdf($id)
+    {
+        $lkh = LaporanHarian::with([
+            'tupoksi',
+            'skp',
+            'user' => fn($q) => $q->with('unitKerja')
+        ])->findOrFail($id);
+
+        $pdf = \PDF::loadView('pdf.lkh', [
+            'pegawai_nama' => $lkh->user->name,
+            'pegawai_nip' => $lkh->user->nip,
+            'pegawai_unit' => $lkh->user->unitKerja->nama_unit ?? '-',
+
+            'tanggal' => $lkh->tanggal_laporan,
+            'jenis_kegiatan' => $lkh->jenis_kegiatan,
+            'tupoksi' => $lkh->tupoksi->uraian_tugas ?? '-',
+            'kategori' => $lkh->skp_id ? 'SKP' : 'Non-SKP',
+
+            'jam_mulai' => $lkh->waktu_mulai,
+            'jam_selesai' => $lkh->waktu_selesai,
+
+            'lokasi' => $lkh->lokasi ?? ($lkh->latitude && $lkh->longitude
+                ? $lkh->latitude . ', ' . $lkh->longitude
+                : '-'),
+
+            'output' => $lkh->output_hasil_kerja,
+            'volume' => $lkh->volume,
+            'satuan' => $lkh->satuan,
+
+            'target_skp' => optional($lkh->skp)->rencana_aksi,
+        ]);
+
+        return $pdf->stream("LKH-{$id}.pdf");
+    }
+
+    public function exportPdfDirect(Request $request)
+    {
+        $user = auth()->user();
+
+        // Ambil tupoksi
+        $tupoksi = \App\Models\Tupoksi::find($request->tupoksi_id);
+
+        // Ambil SKP jika kategori SKP
+        $skp = null;
+        if ($request->kategori === 'skp' && $request->skp_id) {
+            $skp = \App\Models\Skp::find($request->skp_id);
+        }
+
+        $data = [
+            'pegawai_nama' => $user->name,
+            'pegawai_nip' => $user->nip,
+            'pegawai_unit' => $user->unitKerja->nama_unit ?? '-',
+
+            'tanggal' => $request->tanggal_laporan,
+            'jenis_kegiatan' => $request->jenis_kegiatan,
+
+            // Tupoksi = uraian tugas, bukan ID
+            'tupoksi' => $tupoksi->uraian_tugas ?? '-',
+
+            // Fix kategori lowercase
+            'kategori' => $request->kategori === 'skp' ? 'SKP' : 'Non-SKP',
+
+            'jam_mulai' => $request->waktu_mulai,
+            'jam_selesai' => $request->waktu_selesai,
+
+            // Lokasi combine
+            'lokasi' => $request->lokasi
+                ?: ($request->latitude && $request->longitude
+                    ? "{$request->latitude}, {$request->longitude}"
+                    : '-'),
+
+            'uraian_kegiatan' => $request->deskripsi_aktivitas,
+
+            'output' => $request->output_hasil_kerja,
+            'volume' => $request->volume,
+            'satuan' => $request->satuan,
+
+            // Target SKP
+            'target_skp' => $skp->rencana_aksi ?? null,
+
+            'bukti_status' => "Bukti hanya tersedia setelah disimpan.",
+        ];
+
+        $pdf = Pdf::loadView('pdf.laporan-harian', $data)
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream('laporan-harian.pdf');
+    }
+
 }

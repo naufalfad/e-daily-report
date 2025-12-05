@@ -206,7 +206,14 @@
     {{-- BAGIAN BAWAH: DAFTAR SKP (FULL WIDTH) --}}
     {{-- ================================================== --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 w-full">
-        <h2 class="text-[20px] font-normal mb-4">Daftar Rencana SKP Saya</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-[20px] font-normal">Daftar Rencana SKP Saya</h2>
+
+            <button @click="previewPdf()"
+                class="rounded-lg bg-red-600 text-white px-4 py-2 text-sm shadow hover:bg-red-700 transition">
+                <i class="fas fa-file-pdf mr-1"></i> Export PDF
+            </button>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full min-w-[900px] text-sm">
                 <thead>
@@ -630,7 +637,50 @@ document.addEventListener("alpine:init", () => {
                 this.fetchSkpList();
                 Swal.fire('Terhapus', '', 'success');
             }
-        }
+        },
+
+        async previewPdf() {
+
+            // 1. Konfirmasi dulu
+            const confirm = await Swal.fire({
+                title: "Export Rencana SKP?",
+                text: "Dokumen akan dibuat dalam format PDF dan dapat Anda preview.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Lanjutkan",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return; // user batal
+
+            // 2. Jika user setuju → load PDF
+            const token = localStorage.getItem('auth_token');
+
+            try {
+                const res = await fetch('/skp/export/pdf', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/pdf'
+                    }
+                });
+
+                if (!res.ok) {
+                    Swal.fire("Gagal", "Gagal memuat PDF", "error");
+                    return;
+                }
+
+                // Convert response ke Blob
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                // Preview PDF di tab baru
+                window.open(url, "_blank");
+
+            } catch (e) {
+                Swal.fire("Error", e.message, "error");
+            }
+        },
 
     }));
 });

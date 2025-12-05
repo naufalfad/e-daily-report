@@ -33,6 +33,8 @@ class LaporanHarian extends Model
         'is_luar_lokasi',
         'lokasi',
         'atasan_id',
+        'mode_lokasi',
+        'lokasi_teks',
     ];
 
     protected $casts = [

@@ -3,6 +3,23 @@
 
 @section('content')
 
+{{-- Style Tambahan untuk Hasil Pencarian Peta --}}
+<style>
+    .search-results::-webkit-scrollbar {
+        width: 6px;
+    }
+    .search-results::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .search-results::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+    .search-results::-webkit-scrollbar-thumb:hover {
+        background: #aaa;
+    }
+</style>
+
 {{-- GRID UTAMA --}}
 <section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:auto-rows-min">
 
@@ -12,6 +29,10 @@
 
         <form id="form-lkh">
             <input type="hidden" name="status" id="status_input" value="draft">
+            
+            {{-- Mode Lokasi Hidden Input (Default: geofence) --}}
+            <input type="hidden" name="mode_lokasi" id="mode_lokasi_input" value="geofence">
+
             <div class="space-y-4">
 
                 {{-- Row 1: Tanggal + Jenis Kegiatan --}}
@@ -65,7 +86,6 @@
                         </div>
                     </div>
                 </div>
-
                 {{-- Row 2: Referensi Tupoksi (Fetch Logic Optimized) --}}
                 <div x-data="{
                             open: false,
@@ -123,7 +143,8 @@
                         class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]"
                         placeholder="Tulis uraian kegiatan yang dilakukan..."></textarea>
                 </div>
-                {{-- MAIN LOGIC BLOCK: Output, Kategori, SKP, Satuan, Volume --}}
+
+                {{-- Logic Kategori SKP/Non-SKP + Satuan & Volume --}}
                 <div x-data="{
                             kategori: 'non-skp',
                             skpId: '',
@@ -167,7 +188,6 @@
                             setKategori(val) {
                                 this.kategori = val;
                                 this.kategoriOpen = false;
-
                                 if(val === 'skp') {
                                     if(!this.skpOptions.length) this.fetchSkp();
                                 } else {
@@ -206,7 +226,7 @@
                         </div>
                     </div>
 
-                    {{-- Row 5: List SKP (Conditional) --}}
+                    {{-- Row 5: List SKP --}}
                     <div x-show="kategori === 'skp'" x-transition class="mt-4">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Target SKP</label>
                         <input type="hidden" name="skp_rencana_id" x-model="skpId">
@@ -235,19 +255,14 @@
 
                     {{-- Row 6: Satuan & Volume --}}
                     <div class="grid md:grid-cols-2 gap-4 mt-4">
-                        {{-- Satuan --}}
                         <div class="relative">
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Satuan</label>
                             <input type="hidden" name="satuan" x-model="satuanValue">
-
-                            {{-- State Locked --}}
                             <div x-show="isSatuanLocked"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500 cursor-not-allowed flex justify-between items-center">
                                 <span x-text="satuanValue"></span>
                                 <img src="{{ asset('assets/icon/lock.svg') }}" class="h-3.5 w-3.5 opacity-50">
                             </div>
-
-                            {{-- State Unlocked --}}
                             <div x-show="!isSatuanLocked">
                                 <button type="button" @click="satuanOpen = !satuanOpen"
                                     @click.outside="satuanOpen = false"
@@ -267,8 +282,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        {{-- Volume --}}
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Volume</label>
                             <input type="number" name="volume" min="0"
@@ -301,9 +314,9 @@
                         </div>
                     </div>
                 </div>
-
-                {{-- Row 8: Bukti & Lokasi --}}
+                {{-- Row 8: Bukti & Lokasi Modern --}}
                 <div class="grid md:grid-cols-2 gap-4">
+                    {{-- Upload Bukti --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
                         <label
@@ -313,31 +326,156 @@
                             <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
                         </label>
                     </div>
+
+                    {{-- Modul Input Lokasi Dual Mode --}}
                     <div x-data="{
-                                lat: '', lng: '', status: 'Klik tombol untuk ambil lokasi', loading: false,
-                                getLocation() {
-                                    this.loading = true; this.status = 'Mencari koordinat...';
-                                    if(navigator.geolocation) {
-                                        navigator.geolocation.getCurrentPosition(
-                                            (pos) => { this.lat = pos.coords.latitude; this.lng = pos.coords.longitude; this.status = `Terkunci: ${this.lat.toFixed(5)}, ${this.lng.toFixed(5)}`; this.loading = false; },
-                                            () => { this.status = 'Gagal mengambil lokasi.'; this.loading = false; }
-                                        );
-                                    } else { this.status = 'GPS tidak didukung.'; this.loading = false; }
+                            mode: 'geofence', // geofence or geocoding
+                            status: 'Klik tombol untuk ambil lokasi',
+                            lat: '',
+                            lng: '',
+                            loading: false,
+                            searchText: '',
+                            searchResults: [],
+                            showResults: false,
+                            lokasiTeksFinal: '',
+
+                            init() {
+                                // Sinkronisasi mode ke input hidden utama
+                                this.$watch('mode', value => {
+                                    document.getElementById('mode_lokasi_input').value = value;
+                                    // Reset nilai saat ganti mode
+                                    if(value === 'geofence') {
+                                        this.searchText = '';
+                                        this.lokasiTeksFinal = '';
+                                        this.status = 'Klik tombol untuk ambil lokasi';
+                                    } else {
+                                        this.status = 'Cari lokasi pada kolom input';
+                                    }
+                                    this.lat = '';
+                                    this.lng = '';
+                                });
+                            },
+
+                            // Logic Geofence (GPS)
+                            getGPS() {
+                                this.loading = true; this.status = 'Mencari koordinat GPS...';
+                                if(navigator.geolocation) {
+                                    navigator.geolocation.getCurrentPosition(
+                                        (pos) => { 
+                                            this.lat = pos.coords.latitude; 
+                                            this.lng = pos.coords.longitude; 
+                                            this.status = `Terkunci: ${this.lat.toFixed(5)}, ${this.lng.toFixed(5)}`; 
+                                            this.loading = false; 
+                                        },
+                                        () => { this.status = 'Gagal mengambil GPS.'; this.loading = false; }
+                                    );
+                                } else { this.status = 'Browser tidak mendukung GPS.'; this.loading = false; }
+                            },
+
+                            // Logic Geocoding (Nominatim API)
+                            async searchLocation() {
+                                if(this.searchText.length < 3) return;
+                                this.loading = true;
+                                try {
+                                    // Menggunakan OpenStreetMap Nominatim (Gratis, No Key)
+                                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchText)}&limit=5`;
+                                    const res = await fetch(url);
+                                    const data = await res.json();
+                                    this.searchResults = data;
+                                    this.showResults = true;
+                                } catch(e) {
+                                    console.error(e);
+                                    this.status = 'Gagal mencari lokasi';
+                                } finally {
+                                    this.loading = false;
                                 }
-                            }">
-                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi</label>
+                            },
+
+                            selectLocation(item) {
+                                this.lat = item.lat;
+                                this.lng = item.lon;
+                                this.lokasiTeksFinal = item.display_name;
+                                this.searchText = item.display_name; // Tampilkan nama di input
+                                this.showResults = false;
+                                this.status = `Dipilih: ${item.display_name.substring(0, 30)}...`;
+                            }
+                        }">
+                        
+                        {{-- Header Label + Switcher Mode --}}
+                        <div class="flex items-center justify-between mb-[10px]">
+                            <label class="block font-normal text-[15px] text-[#5B687A]">Lokasi</label>
+                            
+                            {{-- Switcher --}}
+                            <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                                <button type="button" @click="mode = 'geofence'"
+                                    class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
+                                    :class="mode === 'geofence' ? 'bg-white text-[#1C7C54] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                                    GPS (Otomatis)
+                                </button>
+                                <button type="button" @click="mode = 'geocoding'"
+                                    class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
+                                    :class="mode === 'geocoding' ? 'bg-white text-[#1C7C54] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                                    Cari Peta
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Hidden Inputs untuk Form Submission --}}
                         <input type="hidden" name="latitude" x-model="lat">
                         <input type="hidden" name="longitude" x-model="lng">
-                        <div class="flex gap-2">
+                        <input type="hidden" name="lokasi_teks" x-model="lokasiTeksFinal">
+
+                        {{-- Tampilan Mode Geofence --}}
+                        <div x-show="mode === 'geofence'" class="flex gap-2">
                             <input type="text"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
                                 x-model="status" readonly>
-                            <button type="button" @click="getLocation()" :disabled="loading"
-                                class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/location.svg') }}" class="h-5 w-5 brightness-0 invert">
+                            <button type="button" @click="getGPS()" :disabled="loading"
+                                class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center transition-colors"
+                                :class="loading ? 'opacity-70 cursor-wait' : ''">
+                                <template x-if="!loading">
+                                    <img src="{{ asset('assets/icon/location.svg') }}" class="h-5 w-5 brightness-0 invert">
+                                </template>
+                                <template x-if="loading">
+                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                </template>
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">*Pastikan izin lokasi aktif.</p>
+
+                        {{-- Tampilan Mode Geocoding (Search) --}}
+                        <div x-show="mode === 'geocoding'" class="relative">
+                            <div class="relative">
+                                <input type="text" x-model="searchText"
+                                    @keydown.enter.prevent="searchLocation()"
+                                    class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#155FA6]/30 focus:border-[#155FA6]"
+                                    placeholder="Ketik nama lokasi (misal: Hotel Horison)...">
+                                
+                                <button type="button" @click="searchLocation()"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-md text-slate-500 transition-colors">
+                                    <img src="{{ asset('assets/icon/search.svg') }}" class="h-4 w-4 opacity-60">
+                                </button>
+                            </div>
+
+                            {{-- Dropdown Hasil Pencarian --}}
+                            <div x-show="showResults && searchResults.length" @click.outside="showResults = false"
+                                class="search-results absolute z-30 mt-1 w-full bg-white rounded-[10px] shadow-xl border border-slate-200 max-h-60 overflow-y-auto">
+                                <template x-for="item in searchResults" :key="item.place_id">
+                                    <button type="button" @click="selectLocation(item)"
+                                        class="w-full text-left px-4 py-3 text-xs hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors">
+                                        <div class="font-medium text-slate-800" x-text="item.display_name.split(',')[0]"></div>
+                                        <div class="text-slate-500 truncate mt-0.5" x-text="item.display_name"></div>
+                                    </button>
+                                </template>
+                            </div>
+                            
+                            {{-- Pesan Status Search --}}
+                            <div x-show="loading" class="absolute right-10 top-3 text-xs text-slate-400">Mencari...</div>
+                        </div>
+
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            <span x-show="mode === 'geofence'">*Pastikan GPS aktif.</span>
+                            <span x-show="mode === 'geocoding'">*Gunakan pencarian untuk lokasi spesifik.</span>
+                        </p>
                     </div>
                 </div>
 
@@ -347,7 +485,7 @@
                         class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555]">Export
                         PDF</button>
                     <button type="button" onclick="submitForm('draft')"
-                        class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white">Simpan Draft</button>
+                        class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87]">Simpan Draft</button>
                     <button type="button" onclick="submitForm('waiting_review')"
                         class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b]">Kirim
                         LKH</button>
@@ -355,23 +493,19 @@
             </div>
         </form>
     </div>
+
     {{-- KANAN ATAS: PANDUAN SINGKAT --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col h-full">
         <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
 
         <div class="mt-3 space-y-2 flex-1 overflow-y-auto pr-1">
             @foreach ([
-            ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan, bukan tanggal pengisian.'],
-            ['title' => 'Jenis Kegiatan', 'desc' => 'Pilih jenis kegiatan yang dilakukan.'],
-            ['title' => 'Referensi Tupoksi', 'desc' => 'Pilih jenis tupoksi yang sesuai.'],
-            ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
-            ['title' => 'Output', 'desc' => 'Sebutkan hasil nyata dari kegiatan.'],
-            ['title' => 'Volume', 'desc' => 'Masukkan jumlah output kegiatan yang sesuai.'],
-            ['title' => 'Satuan', 'desc' => 'Pilih satuan yang sesuai dengan output kegiatan.'],
-            ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP atau Non-SKP.'],
-            ['title' => 'Jam Mulai & Jam Selesai', 'desc' => 'Isi jam mulai dan jam selesai kegiatan.'],
-            ['title' => 'Unggah Bukti', 'desc' => 'Unggah bukti foto/dokumen kegiatan.'],
-            ['title' => 'Lokasi', 'desc' => 'Sistem akan otomatis membaca lokasi Anda.'],
+                ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan.'],
+                ['title' => 'Jenis Kegiatan', 'desc' => 'Pilih jenis kegiatan yang dilakukan.'],
+                ['title' => 'Lokasi (Baru)', 'desc' => 'Gunakan "Cari Peta" jika lokasi Anda berbeda dengan posisi GPS saat ini.'],
+                ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
+                ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP jika kegiatan terkait target kinerja.'],
+                ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan foto kegiatan.'],
             ] as $guide)
             <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
                 <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
@@ -381,7 +515,7 @@
         </div>
     </div>
 
-    {{-- KIRI BAWAH: DRAFT LKH --}}
+    {{-- KIRI BAWAH: DRAFT LKH (Tidak berubah banyak) --}}
     <div x-data="{ openDraftModal: false, draftsLimit: [], draftsAll: [] }"
         @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" x-cloak
         class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
@@ -399,16 +533,13 @@
                 <p class="text-sm text-slate-400 italic">Tidak ada draft.</p>
             </template>
             <template x-for="item in draftsLimit" :key="item.id">
-                <div
-                    class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
+                <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
                     <a :href="'/staf/input-lkh/' + item.id"
-                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Lanjut</a>
-                    <button @click="deleteDraft(item.id)"
-                        class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">Hapus</button>
+                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px] hover:bg-[#0b633b]">Lanjut</a>
                 </div>
             </template>
         </div>
@@ -424,14 +555,14 @@
                 </div>
                 <div class="overflow-y-auto p-6 space-y-3">
                     <template x-for="item in draftsAll" :key="item.id">
-                        <div
-                            class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
+                        <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
                             <div>
                                 <h4 class="text-[12px] font-medium" x-text="item.deskripsi"></h4>
                                 <p class="text-[10px] text-slate-500" x-text="item.waktu_simpan"></p>
                             </div>
-                            <div class="flex gap-2"><a :href="'/staf/input-lkh/' + item.id"
-                                    class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">Lanjut</a></div>
+                            <div class="flex gap-2">
+                                <a :href="'/staf/input-lkh/' + item.id" class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">Lanjut</a>
+                            </div>
                         </div>
                     </template>
                 </div>
@@ -473,22 +604,18 @@ document.addEventListener("DOMContentLoaded", async function() {
 
     // Load dashboard stats
     try {
-        const res = await fetch("/api/dashboard/stats", {
-            headers
-        });
+        const res = await fetch("/api/dashboard/stats", { headers });
         if (res.ok) {
             const data = await res.json();
             renderAktivitas(data.aktivitas_terbaru || []);
             renderDrafts(data.draft_terbaru || []);
         }
-    } catch (e) {
-        console.error("Stats Error", e);
-    }
+    } catch (e) { console.error("Stats Error", e); }
 
-    // Edit mode
+    // Edit mode logic
     if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
 
-    // Date/Time pickers
+    // Date/Time pickers trigger
     ["tanggal_lkh", "jam_mulai", "jam_selesai"].forEach(id => {
         document.getElementById(id + "_btn")?.addEventListener("click", () =>
             document.getElementById(id).showPicker()
@@ -499,29 +626,14 @@ document.addEventListener("DOMContentLoaded", async function() {
 function renderAktivitas(list) {
     const el = document.getElementById("aktivitas-list");
     el.innerHTML = "";
-
     if (!list.length) {
         el.innerHTML = `<li class="text-sm text-slate-500">Belum ada aktivitas.</li>`;
         return;
     }
-
     list.forEach(item => {
-        const color = item.status === "approved" ?
-            "bg-[#128C60]/50" :
-            item.status.includes("reject") ?
-            "bg-[#B6241C]/50" :
-            "bg-slate-200";
-
-        const icon = item.status === "approved" ?
-            "{{ asset('assets/icon/approve.svg') }}" :
-            "{{ asset('assets/icon/pending.svg') }}";
-
-        const text = item.status === "approved" ?
-            "Disetujui" :
-            item.status.includes("reject") ?
-            "Ditolak" :
-            "Menunggu";
-
+        const color = item.status === "approved" ? "bg-[#128C60]/50" : item.status.includes("reject") ? "bg-[#B6241C]/50" : "bg-slate-200";
+        const icon = item.status === "approved" ? "{{ asset('assets/icon/approve.svg') }}" : "{{ asset('assets/icon/pending.svg') }}";
+        const text = item.status === "approved" ? "Disetujui" : item.status.includes("reject") ? "Ditolak" : "Menunggu";
         el.insertAdjacentHTML("beforeend", `
             <li class="flex items-start gap-3">
                 <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${color}">
@@ -545,128 +657,98 @@ function renderDrafts(data) {
         deskripsi: d.deskripsi_aktivitas || "Draft",
         waktu_simpan: new Date(d.updated_at).toLocaleString()
     }));
-
-    window.dispatchEvent(new CustomEvent("update-drafts", {
-        detail: {
-            limit: drafts.slice(0, 3),
-            all: drafts
-        }
-    }));
+    window.dispatchEvent(new CustomEvent("update-drafts", { detail: { limit: drafts.slice(0, 3), all: drafts } }));
 }
 
 async function loadEditLKH(id, headers) {
     try {
-        const res = await fetch(`/api/lkh/${id}`, {
-            headers
-        });
+        const res = await fetch(`/api/lkh/${id}`, { headers });
         const json = await res.json();
         const data = json.data;
 
-        // ===============================
-        // 1. SET INPUT BIASA
-        // ===============================
+        // Populate Standard Inputs
         document.getElementById("tanggal_lkh").value = data.tanggal_laporan;
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
+        document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas ?? "";
+        document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja ?? "";
+        document.querySelector('input[name="volume"]').value = data.volume ?? "";
 
-        document.querySelector('textarea[name="deskripsi_aktivitas"]').value =
-            data.deskripsi_aktivitas ?? "";
-        document.querySelector('input[name="output_hasil_kerja"]').value =
-            data.output_hasil_kerja ?? "";
-        document.querySelector('input[name="volume"]').value =
-            data.volume ?? "";
+        // Populate Mode Lokasi & Koordinat
+        const modeLokasi = data.mode_lokasi || 'geofence';
+        // Trigger Alpine Logic untuk set mode & values
+        const lokasiContainer = document.querySelector('[x-data*="mode:"]');
+        if(lokasiContainer && lokasiContainer.__x) {
+            const alpine = lokasiContainer.__x.$data;
+            alpine.mode = modeLokasi;
+            alpine.lat = data.lat; // dari backend Accessor
+            alpine.lng = data.lng;
+            alpine.lokasiTeksFinal = data.lokasi_teks || '';
+            
+            if(modeLokasi === 'geocoding') {
+                alpine.searchText = data.lokasi_teks || '';
+                alpine.status = `Tersimpan: ${data.lokasi_teks}`;
+            } else {
+                alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
+            }
+        }
 
-        // ===============================
-        // 2. SET KATEGORI (SKP vs NON-SKP)
-        // ===============================
+        // Logic Kategori & SKP (Sama seperti sebelumnya)
         const kategoriInput = document.querySelector('input[name="kategori"]');
-
-        if (data.skp_rencana_id) {
-            kategoriInput.value = "skp";
-        } else {
-            kategoriInput.value = "non-skp";
-        }
-
-        // ===============================
-        // 3. SET TARGET SKP (Jika kategori SKP)
-        // ===============================
-        const skpInput = document.querySelector('input[name="skp_rencana_id"]');
-
-        if (data.rencana) {
-            skpInput.value = data.skp_rencana_id;
-
-            // Tunggu dropdown Alpine sudah ready
-            setTimeout(() => {
-                const el = document.querySelector('[x-model="skpLabel"]');
-                if (el && el.__x) {
-                    el.__x.$data.skpLabel = data.rencana.rencana_hasil_kerja;
-                    el.__x.$data.skpId = data.skp_rencana_id;
-
-                    // Jika SKP punya satuan → Lock satuan otomatis
-                    if (data.rencana.targets && data.rencana.targets.length) {
-                        el.__x.$data.satuanValue = data.rencana.targets[0].satuan;
-                        el.__x.$data.isSatuanLocked = true;
+        kategoriInput.value = data.skp_rencana_id ? "skp" : "non-skp";
+        
+        // Trigger Alpine update untuk Kategori
+        const mainLogicDiv = document.querySelector('[x-data*="kategori:"]');
+        if(mainLogicDiv && mainLogicDiv.__x) {
+            mainLogicDiv.__x.$data.setKategori(data.skp_rencana_id ? "skp" : "non-skp");
+            if(data.skp_rencana_id && data.rencana) {
+                setTimeout(() => {
+                    mainLogicDiv.__x.$data.skpId = data.skp_rencana_id;
+                    mainLogicDiv.__x.$data.skpLabel = data.rencana.rencana_hasil_kerja;
+                    if (data.rencana.targets?.length) {
+                        mainLogicDiv.__x.$data.satuanValue = data.rencana.targets[0].satuan;
+                        mainLogicDiv.__x.$data.isSatuanLocked = true;
                     }
-                }
-            }, 300);
-
-        } else {
-            skpInput.value = "";
+                }, 500); // Delay for fetch
+            }
         }
 
-    } catch (e) {
-        console.error("Edit Load Error", e);
-    }
+    } catch (e) { console.error("Edit Load Error", e); }
 }
 
-document.querySelectorAll('[name="kategori"]').forEach(el => el.value = Alpine.$data(el.closest("[x-data]")).kategori);
 async function submitForm(type) {
     const form = document.getElementById("form-lkh");
     const formData = new FormData(form);
     formData.set("status", type);
 
-    if (type === "waiting_review" &&
-        (!formData.get("output_hasil_kerja") || !formData.get("satuan"))
-    ) {
-        return Swal.fire({
-            icon: "warning",
-            title: "Belum Lengkap",
-            text: "Output dan Satuan wajib diisi"
-        });
+    // Validasi Sederhana
+    if (type === "waiting_review") {
+        if (!formData.get("output_hasil_kerja") || !formData.get("satuan")) {
+            return Swal.fire({ icon: "warning", title: "Belum Lengkap", text: "Output dan Satuan wajib diisi" });
+        }
+        // Validasi Lokasi
+        if (!formData.get("latitude") || !formData.get("longitude")) {
+            return Swal.fire({ icon: "warning", title: "Lokasi Kosong", text: "Mohon ambil lokasi GPS atau cari lokasi di peta." });
+        }
     }
 
     try {
         const url = lkhIdToEdit ? `/api/lkh/update/${lkhIdToEdit}` : "/api/lkh";
-
         const res = await fetch(url, {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-                "Accept": "application/json"
-            },
+            headers: { "Authorization": `Bearer ${localStorage.getItem("auth_token")}`, "Accept": "application/json" },
             body: formData
         });
-
         const json = await res.json();
 
         if (res.ok) {
-            Swal.fire({
-                icon: "success",
-                title: "Berhasil",
-                showConfirmButton: false,
-                timer: 1500
-            });
+            Swal.fire({ icon: "success", title: "Berhasil", showConfirmButton: false, timer: 1500 });
             setTimeout(() => window.location.href = "/staf/dashboard", 1000);
         } else {
-            throw new Error(json.message);
+            throw new Error(json.message || "Gagal menyimpan data");
         }
-
     } catch (e) {
-        Swal.fire({
-            icon: "error",
-            title: "Gagal",
-            text: e.message
-        });
+        Swal.fire({ icon: "error", title: "Gagal", text: e.message });
     }
 }
 

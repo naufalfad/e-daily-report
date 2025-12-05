@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
 use App\Models\LkhBukti;
 use App\Models\Tupoksi;
-use App\Models\SkpRencana; // [BARU] Gunakan Model Parent SKP
+use App\Models\SkpRencana;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,14 +16,13 @@ use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
 use App\Services\NotificationService;
 use App\Enums\NotificationType;
-use Carbon\Carbon; // Tambahan untuk formatting tanggal di pesan
+use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class LkhController extends Controller
 {
     /**
      * Mengambil Data Referensi untuk Form Input
-     * Update: Mengambil SKP dari tabel skp_rencana dan target kuantitasnya.
      */
     public function getReferensi(Request $request)
     {
@@ -32,7 +31,6 @@ class LkhController extends Controller
             return response()->json(['message' => 'User belum login / token invalid'], 401);
         }
 
-        // 1. Ambil Tupoksi (Tetap sama)
         $listTupoksi = [];
         if ($user->bidang_id) {
             $listTupoksi = Tupoksi::where('bidang_id', $user->bidang_id)
@@ -40,40 +38,29 @@ class LkhController extends Controller
                 ->get();
         }
 
-        // 2. [LOGIKA BARU] Ambil Rencana SKP + Target Kuantitas
-        // Tujuannya: Agar saat user pilih RHK, satuan otomatis terisi 'Dokumen', 'Laporan', dll.
-        $listSkp = SkpRencana::with([
-            'targets' => function ($q) {
+        $listSkp = SkpRencana::with(['targets' => function ($q) {
                 $q->where('jenis_aspek', 'Kuantitas');
-            }
-        ])
+            }])
             ->where('user_id', $user->id)
-            // Opsional: Filter periode aktif
-            // ->where('periode_akhir', '>=', now()) 
             ->latest()
             ->get()
             ->map(function ($item) {
-                $qty = $item->targets->first(); // Ambil target kuantitas pertama
+                $qty = $item->targets->first();
                 return [
                     'id' => $item->id,
                     'rencana_hasil_kerja' => $item->rencana_hasil_kerja,
-                    // Data helper untuk frontend otomatisasi
                     'satuan' => $qty ? $qty->satuan : '-',
                     'target_qty' => $qty ? $qty->target : 0
                 ];
             });
 
         $jenisAktivitas = [
-            'Rapat',
-            'Pelayanan Publik',
-            'Penyusunan Dokumen',
-            'Kunjungan Lapangan',
-            'Lainnya'
+            'Rapat', 'Pelayanan Publik', 'Penyusunan Dokumen', 'Kunjungan Lapangan', 'Lainnya'
         ];
 
         return response()->json([
             'tupoksi' => $listTupoksi,
-            'list_skp' => $listSkp, // [UPDATE] Mengirim list rencana SKP
+            'list_skp' => $listSkp,
             'jenis_aktivitas' => $jenisAktivitas,
             'user_bidang_info' => $user->bidang ? $user->bidang->nama_bidang : 'User belum memiliki bidang'
         ]);
@@ -86,7 +73,6 @@ class LkhController extends Controller
     {
         $userId = Auth::id();
 
-        // [UPDATE] load 'rencana' (relasi ke SkpRencana), bukan 'skp'
         $query = LaporanHarian::with(['tupoksi', 'rencana', 'bukti'])
             ->where('user_id', $userId);
 
@@ -104,14 +90,12 @@ class LkhController extends Controller
     }
 
     /**
-     * 2. CREATE LKH
+     * 2. CREATE LKH (Updated with Geocoding Logic)
      */
     public function store(Request $request)
     {
         $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
         $user = Auth::user();
-
-        // Default status
         $status = 'waiting_review';
 
         if (!$user) {
@@ -120,26 +104,28 @@ class LkhController extends Controller
 
         // 1. Validasi Input
         $validator = Validator::make($request->all(), [
-            'tupoksi_id' => 'nullable|exists:tupoksi,id', // Tupoksi opsional jika sudah ada SKP
-            'jenis_kegiatan' => 'required|in:' . $validAktivitas,
+            'tupoksi_id'        => 'nullable|exists:tupoksi,id',
+            'jenis_kegiatan'    => 'required|in:' . $validAktivitas,
+            
+            // Validasi Relasi SKP (Sesuai update terakhir Anda)
+            'skp_rencana_id'    => 'nullable|exists:skp_rencana,id',
+            'kategori'          => 'required|in:skp,non-skp',
 
-            // [UPDATE] Validasi ke tabel skp_rencana
-            'skp_rencana_id' => 'nullable|exists:skp_rencana,id',
-            'kategori' => 'required|in:skp,non-skp',
+            'tanggal_laporan'   => 'required|date',
+            'waktu_mulai'       => 'required',
+            'waktu_selesai'     => 'required|after:waktu_mulai',
+            'deskripsi_aktivitas'=> 'required|string',
+            'output_hasil_kerja'=> 'required|string',
+            'volume'            => 'required|integer|min:1',
+            'satuan'            => 'required|string|max:50',
+            'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id',
+            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
 
-            'tanggal_laporan' => 'required|date',
-            'waktu_mulai' => 'required',
-            'waktu_selesai' => 'required|after:waktu_mulai',
-            'deskripsi_aktivitas' => 'required|string',
-            'output_hasil_kerja' => 'required|string',
-            'volume' => 'required|integer|min:1',
-            'satuan' => 'required|string|max:50',
-
-            // Geotagging
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
-            'master_kelurahan_id' => 'nullable|exists:master_kelurahan,id',
-            'bukti.*' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
+            // [BARU] Validasi Mode & Lokasi
+            'mode_lokasi'       => 'required|in:geofence,geocoding',
+            'latitude'          => 'nullable|numeric',
+            'longitude'         => 'nullable|numeric',
+            'lokasi_teks'       => 'required_if:mode_lokasi,geocoding|nullable|string|max:255',
         ]);
 
         if ($validator->fails())
@@ -150,44 +136,57 @@ class LkhController extends Controller
         try {
             DB::beginTransaction();
 
-            // Logika Geofencing Sederhana
+            // 2. Logika Penentuan Lokasi (Conditional)
             $finalLat = $request->latitude;
             $finalLng = $request->longitude;
-            $isLuarLokasi = true;
+            $isLuarLokasi = true; // Default
 
-            // Cek jarak kantor jika koordinat ada
-            if (config('services.office.lat') && $finalLat) {
-                $distanceQuery = DB::selectOne("
-                    SELECT ST_DistanceSphere(
-                        ST_Point(?, ?), 
-                        ST_Point(?, ?)  
-                    ) as distance
-                ", [$finalLng, $finalLat, config('services.office.lng'), config('services.office.lat')]);
-
-                if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
-                    $isLuarLokasi = false;
+            if ($request->mode_lokasi === 'geofence') {
+                // --- MODE A: Geofencing (Real-time GPS) ---
+                if (config('services.office.lat') && $finalLat) {
+                     $distanceQuery = DB::selectOne("
+                        SELECT ST_DistanceSphere(
+                            ST_Point(?, ?), 
+                            ST_Point(?, ?)  
+                        ) as distance
+                    ", [$finalLng, $finalLat, config('services.office.lng'), config('services.office.lat')]);
+    
+                    if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
+                        $isLuarLokasi = false; // User berada di kantor
+                    }
                 }
+            } else {
+                // --- MODE B: Geocoding (POI Search) ---
+                // Jika user cari lokasi, diasumsikan dinas luar / tidak perlu validasi jarak kantor
+                $isLuarLokasi = true; 
             }
 
             // 3. Simpan Data LKH Utama
             $lkh = LaporanHarian::create([
-                'user_id' => $user->id,
-                'skp_rencana_id' => $request->kategori === 'skp' ? $request->skp_rencana_id : null,
-
-                'tupoksi_id' => $request->tupoksi_id,
-                'jenis_kegiatan' => $request->jenis_kegiatan,
-                'tanggal_laporan' => $request->tanggal_laporan,
-                'waktu_mulai' => $request->waktu_mulai,
-                'waktu_selesai' => $request->waktu_selesai,
-                'deskripsi_aktivitas' => $request->deskripsi_aktivitas,
+                'user_id'            => $user->id,
+                // Kondisional SKP ID (Sesuai update Anda)
+                'skp_rencana_id'     => $request->kategori === 'skp' ? $request->skp_rencana_id : null,
+                
+                'tupoksi_id'         => $request->tupoksi_id,
+                'jenis_kegiatan'     => $request->jenis_kegiatan,
+                'tanggal_laporan'    => $request->tanggal_laporan,
+                'waktu_mulai'        => $request->waktu_mulai,
+                'waktu_selesai'      => $request->waktu_selesai,
+                'deskripsi_aktivitas'=> $request->deskripsi_aktivitas,
                 'output_hasil_kerja' => $request->output_hasil_kerja,
-                'volume' => $request->volume,
-                'satuan' => $request->satuan,
-                'status' => $status,
-                'master_kelurahan_id' => $request->master_kelurahan_id,
-                'is_luar_lokasi' => $isLuarLokasi,
-                'atasan_id' => $user->atasan_id,
-                'lokasi' => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
+                'volume'             => $request->volume,
+                'satuan'             => $request->satuan,
+                'status'             => $status,
+                'master_kelurahan_id'=> $request->master_kelurahan_id,
+                'atasan_id'          => $user->atasan_id,
+                
+                // Fields Baru
+                'is_luar_lokasi'     => $isLuarLokasi,
+                'mode_lokasi'        => $request->mode_lokasi,
+                'lokasi_teks'        => $request->lokasi_teks, 
+                
+                // Simpan Spatial Point
+                'lokasi'             => ($finalLat && $finalLng) ? DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)") : null
             ]);
 
             // 4. Proses Upload Bukti
@@ -200,11 +199,10 @@ class LkhController extends Controller
                     $filename = Str::uuid() . '.' . $extension;
                     $finalPath = "";
 
-                    // Optimasi Gambar
                     if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                         $filename = Str::uuid() . '.webp';
                         $finalPath = "{$storagePath}/{$filename}";
-
+                        
                         if (!Storage::disk('public')->exists($storagePath)) {
                             Storage::disk('public')->makeDirectory($storagePath);
                         }
@@ -239,12 +237,11 @@ class LkhController extends Controller
                 try {
                     NotificationService::send(
                         $user->atasan_id,
-                        NotificationType::LKH_NEW_SUBMISSION->value, // Pastikan Enum ini ada
+                        NotificationType::LKH_NEW_SUBMISSION->value, 
                         "{$user->name} mengajukan LKH: {$request->jenis_kegiatan} ({$tglIndo})",
                         $lkh
                     );
                 } catch (\Exception $e) {
-                    // Silent fail notif
                     \Log::warning("Gagal kirim notif LKH: " . $e->getMessage());
                 }
             }
@@ -258,7 +255,6 @@ class LkhController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            // Cleanup file jika DB gagal
             foreach ($uploadedFiles as $path) {
                 Storage::disk('public')->delete($path);
             }
@@ -272,12 +268,11 @@ class LkhController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-
-        // [UPDATE] Relasi 'rencana'
-        $lkh = LaporanHarian::with(['tupoksi', 'rencana', 'bukti', 'user.bidang', 'user.jabatan', 'atasan'])
-            ->where(function ($query) use ($user) {
+        
+        $lkh = LaporanHarian::with(['tupoksi', 'rencana', 'bukti', 'user.bidang', 'user.jabatan', 'atasan']) 
+            ->where(function($query) use ($user) {
                 $query->where('user_id', $user->id)
-                    ->orWhere('atasan_id', $user->id);
+                      ->orWhere('atasan_id', $user->id); 
             })
             ->find($id);
 
@@ -293,13 +288,11 @@ class LkhController extends Controller
     public function getRiwayat(Request $request)
     {
         $user = Auth::user();
-
-        // [UPDATE] Relasi 'rencana' menggantikan 'skp'
-        // Jika Anda ingin menampilkan nama rencana di tabel riwayat
+        
         $query = LaporanHarian::with([
-            'tupoksi',
-            'rencana:id,rencana_hasil_kerja', // [BARU] Eager load rencana SKP
-            'user:id,name',
+            'tupoksi', 
+            'rencana:id,rencana_hasil_kerja', 
+            'user:id,name', 
             'atasan:id,name',
             'bukti'
         ]);
@@ -312,7 +305,7 @@ class LkhController extends Controller
         } else {
             $query->where('user_id', $user->id);
         }
-
+        
         if ($request->filled('from_date')) {
             $query->whereDate('tanggal_laporan', '>=', $request->from_date);
         }
@@ -332,10 +325,8 @@ class LkhController extends Controller
     {
         $lkh = LaporanHarian::where('user_id', Auth::id())->find($id);
 
-        if (!$lkh)
-            return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
-        if ($lkh->status === 'approved')
-            return response()->json(['message' => 'Laporan Approved tidak bisa dihapus'], 403);
+        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+        if ($lkh->status === 'approved') return response()->json(['message' => 'Laporan Approved tidak bisa dihapus'], 403);
 
         try {
             DB::beginTransaction();
@@ -343,7 +334,7 @@ class LkhController extends Controller
                 Storage::disk('public')->delete($file->file_path);
                 $file->delete();
             }
-            $lkh->delete();
+            $lkh->delete(); 
             DB::commit();
 
             return response()->json(['message' => 'Laporan berhasil dihapus']);
@@ -351,14 +342,13 @@ class LkhController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Gagal menghapus laporan',
-                'error'
-                => $e->getMessage()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * 5. UPDATE LKH
+     * 5. UPDATE LKH (Updated with Geocoding Logic)
      */
     public function update(Request $request, $id)
     {
@@ -366,36 +356,73 @@ class LkhController extends Controller
         $user = Auth::user();
 
         $lkh = LaporanHarian::where('id', $id)->where('user_id', $user->id)->first();
-        if (!$lkh)
-            return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
-        if ($lkh->status === 'approved')
-            return response()->json(['message' => 'Laporan Approved tidak bisa diedit'], 403);
+        if (!$lkh) return response()->json(['message' => 'Laporan tidak ditemukan'], 404);
+        if ($lkh->status === 'approved') return response()->json(['message' => 'Laporan Approved tidak bisa diedit'], 403);
 
         $validator = Validator::make($request->all(), [
-            'tupoksi_id' => 'sometimes|nullable|exists:tupoksi,id',
-            'jenis_kegiatan' => 'sometimes|required|in:' . $validAktivitas,
-            'skp_rencana_id' => 'nullable|exists:skp_rencana,id', // [UPDATE]
-            'tanggal_laporan' => 'sometimes|required|date',
-            'waktu_mulai' => 'sometimes|required',
-            'waktu_selesai' => 'sometimes|required|after:waktu_mulai',
-            'deskripsi_aktivitas' => 'sometimes|required|string',
-            'output_hasil_kerja' => 'sometimes|required|string',
-            'volume' => 'sometimes|required|integer|min:1',
-            'satuan' => 'sometimes|required|string|max:50',
-            'hapus_bukti' => 'array',
+            'tupoksi_id'        => 'sometimes|nullable|exists:tupoksi,id',
+            'jenis_kegiatan'    => 'sometimes|required|in:' . $validAktivitas,
+            'skp_rencana_id'    => 'nullable|exists:skp_rencana,id',
+            'tanggal_laporan'   => 'sometimes|required|date',
+            'waktu_mulai'       => 'sometimes|required',
+            'waktu_selesai'     => 'sometimes|required|after:waktu_mulai',
+            'deskripsi_aktivitas'=> 'sometimes|required|string',
+            'output_hasil_kerja'=> 'sometimes|required|string',
+            'volume'            => 'sometimes|required|integer|min:1',
+            'satuan'            => 'sometimes|required|string|max:50',
+            'hapus_bukti'       => 'array',
+            
+            // [UPDATE] Validasi untuk update lokasi
+            'mode_lokasi'       => 'sometimes|required|in:geofence,geocoding',
+            'lokasi_teks'       => 'required_if:mode_lokasi,geocoding|nullable|string|max:255',
+            'latitude'          => 'nullable|numeric',
+            'longitude'         => 'nullable|numeric',
         ]);
 
-        if ($validator->fails())
-            return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
         try {
             DB::beginTransaction();
 
-            // Update Data
-            $lkh->update($request->except(['bukti', 'hapus_bukti', 'latitude', 'longitude']));
+            // Prepare Data Update (Excluding location fields that need processing)
+            $updateData = $request->except(['bukti', 'hapus_bukti', 'latitude', 'longitude']);
 
-            // Jika ada update lokasi (Geofencing ulang bisa ditambahkan di sini)
+            // [LOGIKA UPDATE LOKASI]
+            // Jika user mengirim latitude & longitude baru, kita update spatial + status
+            if ($request->has('latitude') && $request->has('longitude') && $request->latitude && $request->longitude) {
+                
+                $finalLat = $request->latitude;
+                $finalLng = $request->longitude;
+                $modeLokasi = $request->mode_lokasi ?? $lkh->mode_lokasi;
+                $isLuarLokasi = true;
 
+                if ($modeLokasi === 'geofence') {
+                    // Re-calculate Geofence
+                    if (config('services.office.lat')) {
+                        $distanceQuery = DB::selectOne("
+                            SELECT ST_DistanceSphere(
+                                ST_Point(?, ?), 
+                                ST_Point(?, ?)  
+                            ) as distance
+                        ", [$finalLng, $finalLat, config('services.office.lng'), config('services.office.lat')]);
+
+                        if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
+                            $isLuarLokasi = false;
+                        }
+                    }
+                } else {
+                    // Mode Geocoding/POI
+                    $isLuarLokasi = true;
+                }
+
+                // Override / Tambahkan data lokasi ke array update
+                $updateData['lokasi'] = DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)");
+                $updateData['is_luar_lokasi'] = $isLuarLokasi;
+            }
+
+            // Update Data Utama
+            $lkh->update($updateData);
+            
             // Hapus Bukti
             if ($request->filled('hapus_bukti')) {
                 $buktiToDelete = LkhBukti::whereIn('id', $request->hapus_bukti)->where('laporan_id', $lkh->id)->get();
@@ -405,10 +432,44 @@ class LkhController extends Controller
                 }
             }
 
-            // Tambah Bukti (Sama seperti store, disederhanakan)
+            // Tambah Bukti Baru
             if ($request->hasFile('bukti')) {
-                // ... (Logika upload sama seperti store) ...
-                // Bisa di-extract jadi private function uploadBukti() agar DRY
+                $folderDate = date('Y/m');
+                $storagePath = "uploads/lkh/{$folderDate}";
+
+                foreach ($request->file('bukti') as $file) {
+                    $extension = strtolower($file->getClientOriginalExtension());
+                    $filename = Str::uuid() . '.' . $extension;
+                    $finalPath = "";
+
+                    if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                        $filename = Str::uuid() . '.webp';
+                        $finalPath = "{$storagePath}/{$filename}";
+                        
+                        if (!Storage::disk('public')->exists($storagePath)) {
+                            Storage::disk('public')->makeDirectory($storagePath);
+                        }
+
+                        $image = Image::make($file)
+                            ->resize(1280, null, function ($constraint) {
+                                $constraint->aspectRatio();
+                                $constraint->upsize();
+                            })
+                            ->encode('webp', 80);
+
+                        Storage::disk('public')->put($finalPath, (string) $image);
+                    } else {
+                        $finalPath = $file->storeAs($storagePath, $filename, 'public');
+                    }
+
+                    LkhBukti::create([
+                        'laporan_id' => $lkh->id,
+                        'file_path' => $finalPath,
+                        'file_name_original' => $file->getClientOriginalName(),
+                        'file_type' => $extension,
+                        'file_size' => $file->getSize()
+                    ]);
+                }
             }
 
             DB::commit();
@@ -424,11 +485,11 @@ class LkhController extends Controller
     {
         $lkh = LaporanHarian::with([
             'tupoksi',
-            'rencana', // ← PERHATIKAN INI
+            'rencana', 
             'user' => fn($q) => $q->with('unitKerja')
         ])->findOrFail($id);
 
-        $pdf = \PDF::loadView('pdf.lkh', [
+        $pdf = Pdf::loadView('pdf.lkh', [
             'pegawai_nama' => $lkh->user->name,
             'pegawai_nip' => $lkh->user->nip,
             'pegawai_unit' => $lkh->user->unitKerja->nama_unit ?? '-',
@@ -436,26 +497,25 @@ class LkhController extends Controller
             'tanggal' => $lkh->tanggal_laporan,
             'jenis_kegiatan' => $lkh->jenis_kegiatan,
             'tupoksi' => $lkh->tupoksi->uraian_tugas ?? '-',
-
-            // FIX KATEGORI
+            
+            // Fix Kategori Logic
             'kategori' => $lkh->skp_rencana_id ? 'SKP' : 'Non-SKP',
 
-            // WAKTU
             'jam_mulai' => $lkh->waktu_mulai,
             'jam_selesai' => $lkh->waktu_selesai,
 
-            // LOKASI
             'lokasi' => $lkh->lokasi
                 ?? ($lkh->latitude && $lkh->longitude
                     ? "{$lkh->latitude}, {$lkh->longitude}"
                     : '-'),
+            
+            // [UPDATE] Tampilkan nama tempat
+            'lokasi_teks' => $lkh->lokasi_teks,
 
-            // OUTPUT
             'output' => $lkh->output_hasil_kerja,
             'volume' => $lkh->volume,
             'satuan' => $lkh->satuan,
 
-            // **INI FIX PALING PENTING**
             'target_skp' => optional($lkh->rencana)->rencana_hasil_kerja ?? '-',
         ]);
 
@@ -469,13 +529,12 @@ class LkhController extends Controller
         // Ambil Tupoksi
         $tupoksi = Tupoksi::find($request->tupoksi_id);
 
-        // Ambil SKP Rencana jika kategori SKP
+        // Ambil SKP Rencana jika kategori SKP (Sesuai update Anda)
         $rencana = null;
         $targetQty = null;
         $targetSatuan = null;
 
         if ($request->kategori === 'skp' && $request->skp_rencana_id) {
-
             $rencana = SkpRencana::with('targets')->find($request->skp_rencana_id);
 
             if ($rencana && $rencana->targets->count()) {
@@ -501,16 +560,17 @@ class LkhController extends Controller
                 ?: ($request->latitude && $request->longitude
                     ? "{$request->latitude}, {$request->longitude}"
                     : '-'),
+            
+            // [UPDATE] Sertakan teks lokasi di PDF
+            'lokasi_teks' => $request->lokasi_teks,
 
-            // ✔ Uraian Kegiatan
             'uraian_kegiatan' => $request->deskripsi_aktivitas,
 
-            // ✔ Output
             'output' => $request->output_hasil_kerja,
             'volume' => $request->volume,
             'satuan' => $request->satuan,
 
-            // ✔ Target SKP (PERBAIKAN)
+            // Data SKP Lengkap
             'target_skp' => $rencana ? $rencana->rencana_hasil_kerja : null,
             'target_qty' => $targetQty,
             'target_satuan' => $targetSatuan,
@@ -522,5 +582,4 @@ class LkhController extends Controller
             ->setPaper('a4', 'portrait')
             ->stream('laporan-harian.pdf');
     }
-
 }

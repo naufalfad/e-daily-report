@@ -25,7 +25,7 @@
                         BARU</span>
                 </div>
 
-                <form class="space-y-6" @submit.prevent="submitCreate">
+                <form class="space-y-6" @submit.prevent.stop="submitCreate">
 
                     {{-- A. HEADER RENCANA --}}
                     <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-4">
@@ -140,11 +140,9 @@
                             class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                             Reset
                         </button>
-                        <button type="submit"
-                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95 disabled:opacity-50"
-                            :disabled="isLoading">
-                            <span x-show="!isLoading">Tambahkan SKP</span>
-                            <span x-show="isLoading">Menyimpan...</span>
+                        <button type="button" @click="submitCreate"
+                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
+                            Tambahkan SKP
                         </button>
                     </div>
                 </form>
@@ -470,7 +468,6 @@ document.addEventListener("alpine:init", () => {
     Alpine.data("skpPageData", () => ({
 
         skpList: [],
-        isLoading: false,
 
         // State Form
         formData: {
@@ -567,11 +564,20 @@ document.addEventListener("alpine:init", () => {
         },
 
         async submitCreate() {
-            this.isLoading = true; // Mulai Loading
+
+            const confirm = await Swal.fire({
+                title: "Tambah SKP?",
+                text: "Pastikan semua data sudah benar.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Tambahkan",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return;
+
             const token = localStorage.getItem('auth_token');
 
-            // NORMALISASI PAYLOAD
-            // Pastikan target dikonversi ke integer yang aman
             const payload = {
                 periode_awal: this.formData.periode_awal,
                 periode_akhir: this.formData.periode_akhir,
@@ -580,7 +586,6 @@ document.addEventListener("alpine:init", () => {
                 targets: this.formData.targets.map(t => ({
                     jenis_aspek: t.jenis_aspek,
                     indikator: t.indikator || '-',
-                    // Fix: Pastikan jadi angka, jika kosong/NaN jadi 0
                     target: parseInt(t.target) || 0,
                     satuan: t.satuan || '-'
                 }))
@@ -591,8 +596,7 @@ document.addEventListener("alpine:init", () => {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
@@ -600,23 +604,17 @@ document.addEventListener("alpine:init", () => {
                 const json = await res.json();
 
                 if (!res.ok) {
-                    // Jika validasi Laravel gagal (422) atau Server Error (500)
-                    throw new Error(json.message || JSON.stringify(json.errors) ||
-                        'Gagal menyimpan');
+                    Swal.fire("Gagal", json?.message || JSON.stringify(json.errors), "error");
+                    return;
                 }
 
-                // Jika Sukses
-                Swal.fire('Sukses', 'Rencana SKP berhasil dibuat!', 'success');
+                Swal.fire("Sukses", "Rencana SKP berhasil ditambahkan!", "success");
+
                 this.resetForm();
-                this.fetchSkpList();
+                await this.fetchSkpList();
 
             } catch (e) {
-                console.error("Error submit:", e);
-                // Tampilkan pesan error yang lebih jelas
-                Swal.fire('Gagal', e.message, 'error');
-            } finally {
-                // PENTING: Matikan loading di sini agar tombol kembali normal dalam kondisi apapun
-                this.isLoading = false;
+                Swal.fire("Error", e.message, "error");
             }
         },
 
@@ -629,10 +627,20 @@ document.addEventListener("alpine:init", () => {
             this.openEdit = true;
         },
         async submitEdit() {
-            this.isLoading = true;
+
+            const confirm = await Swal.fire({
+                title: "Simpan Perubahan?",
+                text: "Perubahan akan menggantikan data SKP sebelumnya.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Simpan",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return;
+
             const token = localStorage.getItem('auth_token');
 
-            // NORMALISASI PAYLOAD EDIT
             const payload = {
                 periode_awal: this.editData.periode_awal,
                 periode_akhir: this.editData.periode_akhir,
@@ -641,7 +649,7 @@ document.addEventListener("alpine:init", () => {
                 targets: this.editData.targets.map(t => ({
                     jenis_aspek: t.jenis_aspek,
                     indikator: t.indikator || '-',
-                    target: parseInt(t.target || 0),
+                    target: parseInt(t.target) || 0,
                     satuan: t.satuan || '-'
                 }))
             };
@@ -651,28 +659,26 @@ document.addEventListener("alpine:init", () => {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
 
                 const json = await res.json();
 
-                if (res.ok) {
-                    Swal.fire('Sukses', 'SKP diperbarui!', 'success');
-                    this.openEdit = false;
-                    this.fetchSkpList();
-                } else {
-                    Swal.fire('Gagal', json?.errors ? JSON.stringify(json.errors) : json
-                        .message, 'error');
+                if (!res.ok) {
+                    Swal.fire("Gagal", json?.message || JSON.stringify(json.errors), "error");
+                    return;
                 }
 
-            } catch (e) {
-                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-            }
+                Swal.fire("Sukses", "SKP berhasil diperbarui!", "success");
 
-            this.isLoading = false;
+                this.openEdit = false;
+                await this.fetchSkpList();
+
+            } catch (e) {
+                Swal.fire("Error", e.message, "error");
+            }
         },
 
         async deleteSkp(id) {

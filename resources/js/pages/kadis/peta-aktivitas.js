@@ -1,7 +1,7 @@
-// resources/js/pages/penilai/peta-aktivitas.js
+// resources/js/pages/kadis/peta-aktivitas.js
 
 // FIX: Menggunakan export function untuk pendaftaran global Alpine
-export function stafMapData() {
+export function kadisMapData() {
     return {
 
         map: null,
@@ -62,7 +62,7 @@ export function stafMapData() {
         // ---------------- LOGIC DATA ----------------
         loadData() {
             // ENDPOINT BENAR untuk Penilai: Mengambil aktivitas bawahan (atasan_id = Auth::id())
-            fetch('/api/peta-aktivitas', {
+            fetch('/api/all-aktivitas', {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
                     'Accept': 'application/json'

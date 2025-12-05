@@ -25,7 +25,7 @@
                         BARU</span>
                 </div>
 
-                <form class="space-y-6" @submit.prevent="submitCreate">
+                <form class="space-y-6" @submit.prevent.stop="submitCreate">
 
                     {{-- A. HEADER RENCANA --}}
                     <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-4">
@@ -140,11 +140,9 @@
                             class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                             Reset
                         </button>
-                        <button type="submit"
-                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95 disabled:opacity-50"
-                            :disabled="isLoading">
-                            <span x-show="!isLoading">Tambahkan SKP</span>
-                            <span x-show="isLoading">Menyimpan...</span>
+                        <button type="button" @click="submitCreate"
+                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
+                            Tambahkan SKP
                         </button>
                     </div>
                 </form>
@@ -223,7 +221,14 @@
     {{-- BAGIAN BAWAH: DAFTAR SKP (FULL WIDTH) --}}
     {{-- ================================================== --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 w-full">
-        <h2 class="text-[20px] font-normal mb-4">Daftar Rencana SKP Saya</h2>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-[20px] font-normal">Daftar Rencana SKP Saya</h2>
+
+            <button @click="previewPdf()"
+                class="rounded-lg bg-red-600 text-white px-4 py-2 text-sm shadow hover:bg-red-700 transition">
+                <i class="fas fa-file-pdf mr-1"></i> Export PDF
+            </button>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full min-w-[900px] text-sm">
                 <thead>
@@ -470,7 +475,6 @@ document.addEventListener("alpine:init", () => {
     Alpine.data("skpPageData", () => ({
 
         skpList: [],
-        isLoading: false,
 
         // State Form
         formData: {
@@ -481,13 +485,13 @@ document.addEventListener("alpine:init", () => {
             targets: [{
                     jenis_aspek: 'Kuantitas',
                     indikator: '',
-                    target: '',
+                    target: 0,
                     satuan: ''
                 },
                 {
                     jenis_aspek: 'Waktu',
                     indikator: '',
-                    target: '',
+                    target: 0,
                     satuan: ''
                 }
             ]
@@ -522,7 +526,7 @@ document.addEventListener("alpine:init", () => {
             this.formData.targets.push({
                 jenis_aspek: 'Kualitas',
                 indikator: '',
-                target: '',
+                target: 0,
                 satuan: ''
             });
         },
@@ -540,13 +544,13 @@ document.addEventListener("alpine:init", () => {
                 targets: [{
                         jenis_aspek: 'Kuantitas',
                         indikator: '',
-                        target: '',
+                        target: 0,
                         satuan: ''
                     },
                     {
                         jenis_aspek: 'Waktu',
                         indikator: '',
-                        target: '',
+                        target: 0,
                         satuan: ''
                     }
                 ]
@@ -567,30 +571,58 @@ document.addEventListener("alpine:init", () => {
         },
 
         async submitCreate() {
-            this.isLoading = true;
+
+            const confirm = await Swal.fire({
+                title: "Tambah SKP?",
+                text: "Pastikan semua data sudah benar.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Tambahkan",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return;
+
             const token = localStorage.getItem('auth_token');
+
+            const payload = {
+                periode_awal: this.formData.periode_awal,
+                periode_akhir: this.formData.periode_akhir,
+                rhk_intervensi: this.formData.rhk_intervensi,
+                rencana_hasil_kerja: this.formData.rencana_hasil_kerja,
+                targets: this.formData.targets.map(t => ({
+                    jenis_aspek: t.jenis_aspek,
+                    indikator: t.indikator || '-',
+                    target: parseInt(t.target) || 0,
+                    satuan: t.satuan || '-'
+                }))
+            };
+
             try {
                 const res = await fetch('/api/skp', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(this.formData)
+                    body: JSON.stringify(payload)
                 });
+
                 const json = await res.json();
-                if (res.ok) {
-                    Swal.fire('Sukses', 'Rencana SKP berhasil dibuat!', 'success');
-                    this.resetForm();
-                    this.fetchSkpList();
-                } else {
-                    Swal.fire('Gagal', json.message || 'Validasi Gagal', 'error');
+
+                if (!res.ok) {
+                    Swal.fire("Gagal", json?.message || JSON.stringify(json.errors), "error");
+                    return;
                 }
+
+                Swal.fire("Sukses", "Rencana SKP berhasil ditambahkan!", "success");
+
+                this.resetForm();
+                await this.fetchSkpList();
+
             } catch (e) {
-                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                Swal.fire("Error", e.message, "error");
             }
-            this.isLoading = false;
         },
 
         openDetailModal(data) {
@@ -602,31 +634,60 @@ document.addEventListener("alpine:init", () => {
             this.openEdit = true;
         },
         async submitEdit() {
-            this.isLoading = true;
+
+            const confirm = await Swal.fire({
+                title: "Simpan Perubahan?",
+                text: "Perubahan akan menggantikan data SKP sebelumnya.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Simpan",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return;
+
             const token = localStorage.getItem('auth_token');
+
+            const payload = {
+                periode_awal: this.editData.periode_awal,
+                periode_akhir: this.editData.periode_akhir,
+                rhk_intervensi: this.editData.rhk_intervensi,
+                rencana_hasil_kerja: this.editData.rencana_hasil_kerja,
+                targets: this.editData.targets.map(t => ({
+                    jenis_aspek: t.jenis_aspek,
+                    indikator: t.indikator || '-',
+                    target: parseInt(t.target) || 0,
+                    satuan: t.satuan || '-'
+                }))
+            };
+
             try {
                 const res = await fetch(`/api/skp/${this.editData.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(this.editData)
+                    body: JSON.stringify(payload)
                 });
-                if (res.ok) {
-                    Swal.fire('Sukses', 'SKP diperbarui!', 'success');
-                    this.openEdit = false;
-                    this.fetchSkpList();
-                } else {
-                    const json = await res.json();
-                    Swal.fire('Gagal', json.message, 'error');
+
+                const json = await res.json();
+
+                if (!res.ok) {
+                    Swal.fire("Gagal", json?.message || JSON.stringify(json.errors), "error");
+                    return;
                 }
+
+                Swal.fire("Sukses", "SKP berhasil diperbarui!", "success");
+
+                this.openEdit = false;
+                await this.fetchSkpList();
+
             } catch (e) {
-                Swal.fire('Error', 'Koneksi error', 'error');
+                Swal.fire("Error", e.message, "error");
             }
-            this.isLoading = false;
         },
+
         async deleteSkp(id) {
             const c = await Swal.fire({
                 title: 'Hapus?',
@@ -646,8 +707,50 @@ document.addEventListener("alpine:init", () => {
                 this.fetchSkpList();
                 Swal.fire('Terhapus', '', 'success');
             }
-        }
+        },
 
+        async previewPdf() {
+
+            // 1. Konfirmasi dulu
+            const confirm = await Swal.fire({
+                title: "Export Rencana SKP?",
+                text: "Dokumen akan dibuat dalam format PDF dan dapat Anda preview.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonText: "Lanjutkan",
+                cancelButtonText: "Batal"
+            });
+
+            if (!confirm.isConfirmed) return; // user batal
+
+            // 2. Jika user setuju → load PDF
+            const token = localStorage.getItem('auth_token');
+
+            try {
+                const res = await fetch('/skp/export/pdf', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/pdf'
+                    }
+                });
+
+                if (!res.ok) {
+                    Swal.fire("Gagal", "Gagal memuat PDF", "error");
+                    return;
+                }
+
+                // Convert response ke Blob
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                // Preview PDF di tab baru
+                window.open(url, "_blank");
+
+            } catch (e) {
+                Swal.fire("Error", e.message, "error");
+            }
+        },
     }));
 });
 </script>

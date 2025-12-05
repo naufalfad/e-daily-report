@@ -1,7 +1,7 @@
 @php($title = 'Peta Aktivitas')
 @extends('layouts.app', [
     'title' => $title,
-    'role' => 'penilai',
+    'role' => 'kadis',
     'active' => 'map'
 ])
 
@@ -49,7 +49,7 @@
 
 @section('content')
 
-<section x-data="penilaiMapData" x-init="initMap()" class="relative">
+<section x-data="kadisMapData" x-init="initMap()" class="relative">
 
     {{-- CARD CONTENT --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">

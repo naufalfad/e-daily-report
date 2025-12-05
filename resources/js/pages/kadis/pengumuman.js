@@ -135,21 +135,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // ======================================================
     async function storePengumuman() {
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
-            alert("Judul dan isi wajib diisi.");
+            Swal.fire({
+                icon: "warning",
+                title: "Judul dan Isi wajib diisi!",
+                timer: 1800,
+                showConfirmButton: false,
+            });
             return;
         }
 
-        // Lock UI
         btnSubmit.disabled = true;
         btnSubmit.dataset.processing = "true";
-        const originalText = btnSubmit.innerHTML;
-        btnSubmit.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Menyimpan...`;
-
-        // [PERBEDAAN 2] Endpoint Store Khusus Kadis
-        const endpoint = "/api/kadis/pengumuman/store";
+        btnSubmit.innerHTML = "Menyimpan...";
 
         try {
-            const res = await authFetch(endpoint, {
+            const res = await authFetch("/api/pengumuman", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -157,35 +157,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     judul: inputJudul.value,
                     isi_pengumuman: inputIsi.value,
-                    // [CATATAN KADIS]
-                    // Jika null, controller akan menganggap Global. 
-                    // Controller 'store' bisa dimodifikasi backend-nya agar jika role Kadis dan null,
-                    // otomatis set ke unit_kerja_id user.
-                    // Untuk sekarang kita kirim null (Global) sesuai kode referensi.
-                    unit_kerja_id: null 
-                })
+                    unit_kerja_id: null,
+                }),
             });
 
             const data = await res.json();
+
             if (!res.ok) throw new Error(data.message || "Gagal menyimpan");
 
             closeModal();
             inputJudul.value = "";
             inputIsi.value = "";
-            
-            // Reset Preview
-            updatePreview();
 
-            // Refresh List
+            // SWEETALERT BERHASIL
+            Swal.fire({
+                icon: "success",
+                title: "Pengumuman berhasil dibuat!",
+                showConfirmButton: false,
+                timer: 1600,
+            });
+
             fetchPengumuman();
-
         } catch (err) {
-            alert(err.message);
+            // SWEETALERT GAGAL
+            Swal.fire({
+                icon: "error",
+                title: "Gagal menyimpan!",
+                text: err.message,
+            });
         } finally {
-            // Unlock UI
             btnSubmit.disabled = false;
             btnSubmit.dataset.processing = "false";
-            btnSubmit.innerHTML = originalText;
+            btnSubmit.innerHTML = `
+            <span>Terbitkan</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+        `;
         }
     }
 
@@ -193,22 +202,41 @@ document.addEventListener("DOMContentLoaded", () => {
     // 4. DELETE
     // ======================================================
     async function deletePengumuman(id) {
-        if (!confirm("Hapus pengumuman ini?")) return;
+        const confirm = await Swal.fire({
+            title: "Hapus pengumuman ini?",
+            text: "Tindakan ini tidak dapat dibatalkan.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Ya, hapus",
+            cancelButtonText: "Batal",
+        });
 
-        // [PERBEDAAN 3] Endpoint Delete Khusus Kadis
-        const endpoint = `/api/kadis/pengumuman/${id}`;
+        if (!confirm.isConfirmed) return;
 
         try {
-            const res = await authFetch(endpoint, {
-                method: "DELETE"
+            const res = await authFetch(`/api/pengumuman/${id}`, {
+                method: "DELETE",
             });
 
             if (!res.ok) throw new Error("Gagal menghapus");
 
-            fetchPengumuman();
+            // SUCCESS
+            Swal.fire({
+                icon: "success",
+                title: "Berhasil dihapus!",
+                timer: 1500,
+                showConfirmButton: false,
+            });
 
+            fetchPengumuman();
         } catch (err) {
-            alert(err.message);
+            Swal.fire({
+                icon: "error",
+                title: "Gagal menghapus",
+                text: err.message,
+            });
         }
     }
 

@@ -8,8 +8,8 @@
 {{-- STYLES --}}
 @push('styles')
 
-<!-- LEAFLET CSS (TANPA integrity — WAJIB) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!-- LEAFLET CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
     .map-container {
@@ -19,9 +19,10 @@
         z-index: 1;
     }
 
-    #map {
+    #map, .leaflet-container {
         width: 100%;
         height: 100%;
+        z-index: 1 !important;
     }
 
     .leaflet-popup-content-wrapper {
@@ -40,24 +41,22 @@
 
 {{-- SCRIPTS --}}
 @push('scripts')
-
-<!-- LEAFLET JS (TANPA integrity — WAJIB) -->
+<!-- LEAFLET JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 @endpush
 
 
 
 @section('content')
 
-<section x-data="mapPageData()" x-init="initMap()">
+<section x-data="penilaiMapData" x-init="initMap()" class="relative">
 
+    {{-- CARD CONTENT --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">
         <h2 class="text-[20px] font-normal mb-1">Peta Aktivitas Pegawai</h2>
 
         {{-- FILTER --}}
         <form class="mt-4" @submit.prevent="applyFilter()">
-
             <label class="block text-xs text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
 
             <div class="grid md:grid-cols-[1fr_1fr_auto] gap-3">
@@ -65,9 +64,14 @@
                 {{-- Dari --}}
                 <div>
                     <div class="relative">
-                        <input x-model="filter.from" id="tgl_dari" type="date"
+                        <input 
+                            x-model="filter.from"
+                            @change="applyFilter()"
+                            id="tgl_dari"
+                            type="date"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                            px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
+                                   px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 
+                                   focus:border-[#1C7C54]">
 
                         <button type="button" id="tgl_dari_btn"
                             class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
@@ -79,10 +83,15 @@
                 {{-- Sampai --}}
                 <div>
                     <div class="relative">
-                        <input x-model="filter.to" id="tgl_sampai" type="date"
+                        <input 
+                            x-model="filter.to"
+                            @change="applyFilter()"
+                            id="tgl_sampai"
+                            type="date"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                                    px-3.5 py-2.5 text-sm focus:ring-2
                                    focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
+
                         <button type="button" id="tgl_sampai_btn"
                             class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
                             <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-70">
@@ -124,15 +133,19 @@
     </div>
 
 
+
+
     {{-- MODAL --}}
-    <div x-show="showModal"
+    <div 
+        x-show="showModal"
+        x-transition.opacity
         class="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-        x-transition>
-        
+    >
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeModal()"></div>
 
         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
 
+            {{-- HEADER --}}
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                 <h3 class="font-semibold text-slate-800 text-lg">Detail Aktivitas</h3>
                 <button @click="closeModal()" class="text-slate-400 hover:text-rose-500 p-1">
@@ -140,24 +153,28 @@
                 </button>
             </div>
 
+            {{-- CONTENT --}}
             <div class="p-6 overflow-y-auto max-h-[70vh]">
 
                 <template x-if="selectedActivity">
 
                     <div>
 
+                        {{-- Kategori --}}
                         <span class="text-xs font-bold uppercase text-emerald-600"
                               x-text="selectedActivity.kategori_aktivitas"></span>
 
+                        {{-- Judul --}}
                         <h2 class="text-xl font-bold text-slate-800 mt-1 mb-3"
                             x-text="selectedActivity.kegiatan"></h2>
 
+                        {{-- Status + User --}}
                         <div class="flex items-center gap-3">
                             <span class="px-2 py-1 text-xs rounded-md font-semibold border"
                                 :class="{
                                     'bg-emerald-50 text-emerald-600 border-emerald-200': selectedActivity.status === 'approved',
                                     'bg-rose-50 text-rose-600 border-rose-200': selectedActivity.status === 'rejected',
-                                    'bg-amber-50 text-amber-600 border-amber-200': selectedActivity.status === 'pending'
+                                    'bg-amber-50 text-amber-600 border-amber-200': selectedActivity.status === 'waiting_review'
                                 }"
                                 x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
                                         (selectedActivity.status === 'rejected' ? 'Ditolak' : 'Menunggu Validasi')">
@@ -168,6 +185,7 @@
                             </span>
                         </div>
 
+                        {{-- Detail --}}
                         <div class="grid grid-cols-2 gap-4 mt-4 text-sm">
                             <div>
                                 <label class="text-xs text-slate-400">Tanggal</label>
@@ -186,6 +204,7 @@
                             </div>
                         </div>
 
+                        {{-- BUTTON --}}
                         <div class="mt-4 text-right">
                             <button @click="closeModal()"
                                 class="px-5 py-2 bg-white border border-slate-300 rounded-lg text-slate-600 text-sm">
@@ -200,8 +219,8 @@
             </div>
 
         </div>
-
     </div>
+
 
 </section>
 

@@ -1,7 +1,8 @@
-// resources/js/pages/staf/peta-aktivitas.js
+// resources/js/pages/penilai/peta-aktivitas.js
 
-document.addEventListener('alpine:init', () => {
-    Alpine.data('mapPageData', () => ({
+// FIX: Menggunakan export function untuk pendaftaran global Alpine
+export function stafMapData() {
+    return {
 
         map: null,
         markersLayer: null,
@@ -60,6 +61,7 @@ document.addEventListener('alpine:init', () => {
 
         // ---------------- LOGIC DATA ----------------
         loadData() {
+            // ENDPOINT BENAR untuk Penilai: Mengambil aktivitas bawahan (atasan_id = Auth::id())
             fetch('/api/peta-aktivitas', {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
@@ -199,5 +201,5 @@ document.addEventListener('alpine:init', () => {
                 });
             });
         }
-    }));
-});
+    }
+}

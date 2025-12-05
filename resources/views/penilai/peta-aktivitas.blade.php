@@ -1,8 +1,8 @@
 @php($title = 'Peta Aktivitas')
 @extends('layouts.app', [
-    'title' => $title,
-    'role' => 'penilai',
-    'active' => 'map'
+'title' => $title,
+'role' => 'penilai',
+'active' => 'map'
 ])
 
 {{-- STYLES --}}
@@ -12,28 +12,29 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
-    .map-container {
-        height: min(60vh, 500px);
-        width: 100%;
-        position: relative;
-        z-index: 1;
-    }
+.map-container {
+    height: min(60vh, 500px);
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
 
-    #map, .leaflet-container {
-        width: 100%;
-        height: 100%;
-        z-index: 1 !important;
-    }
+#map,
+.leaflet-container {
+    width: 100%;
+    height: 100%;
+    z-index: 1 !important;
+}
 
-    .leaflet-popup-content-wrapper {
-        border-radius: 10px;
-        padding: 0;
-    }
+.leaflet-popup-content-wrapper {
+    border-radius: 10px;
+    padding: 0;
+}
 
-    .leaflet-popup-content {
-        margin: 0 !important;
-        font-family: 'Poppins', sans-serif;
-    }
+.leaflet-popup-content {
+    margin: 0 !important;
+    font-family: 'Poppins', sans-serif;
+}
 </style>
 
 @endpush
@@ -55,6 +56,11 @@
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">
         <h2 class="text-[20px] font-normal mb-1">Peta Aktivitas Pegawai</h2>
 
+        <button @click="exportMap()"
+            class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
+            Export Peta ke PDF
+        </button>
+
         {{-- FILTER --}}
         <form class="mt-4" @submit.prevent="applyFilter()">
             <label class="block text-xs text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
@@ -64,12 +70,7 @@
                 {{-- Dari --}}
                 <div>
                     <div class="relative">
-                        <input 
-                            x-model="filter.from"
-                            @change="applyFilter()"
-                            id="tgl_dari"
-                            type="date"
-                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                        <input x-model="filter.from" @change="applyFilter()" id="tgl_dari" type="date" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                                    px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 
                                    focus:border-[#1C7C54]">
 
@@ -83,12 +84,7 @@
                 {{-- Sampai --}}
                 <div>
                     <div class="relative">
-                        <input 
-                            x-model="filter.to"
-                            @change="applyFilter()"
-                            id="tgl_sampai"
-                            type="date"
-                            class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
+                        <input x-model="filter.to" @change="applyFilter()" id="tgl_sampai" type="date" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
                                    px-3.5 py-2.5 text-sm focus:ring-2
                                    focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
 
@@ -136,11 +132,7 @@
 
 
     {{-- MODAL --}}
-    <div 
-        x-show="showModal"
-        x-transition.opacity
-        class="fixed inset-0 z-[9999] flex items-center justify-center px-4"
-    >
+    <div x-show="showModal" x-transition.opacity class="fixed inset-0 z-[9999] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeModal()"></div>
 
         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
@@ -162,21 +154,18 @@
 
                         {{-- Kategori --}}
                         <span class="text-xs font-bold uppercase text-emerald-600"
-                              x-text="selectedActivity.kategori_aktivitas"></span>
+                            x-text="selectedActivity.kategori_aktivitas"></span>
 
                         {{-- Judul --}}
-                        <h2 class="text-xl font-bold text-slate-800 mt-1 mb-3"
-                            x-text="selectedActivity.kegiatan"></h2>
+                        <h2 class="text-xl font-bold text-slate-800 mt-1 mb-3" x-text="selectedActivity.kegiatan"></h2>
 
                         {{-- Status + User --}}
                         <div class="flex items-center gap-3">
-                            <span class="px-2 py-1 text-xs rounded-md font-semibold border"
-                                :class="{
+                            <span class="px-2 py-1 text-xs rounded-md font-semibold border" :class="{
                                     'bg-emerald-50 text-emerald-600 border-emerald-200': selectedActivity.status === 'approved',
                                     'bg-rose-50 text-rose-600 border-rose-200': selectedActivity.status === 'rejected',
                                     'bg-amber-50 text-amber-600 border-amber-200': selectedActivity.status === 'waiting_review'
-                                }"
-                                x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
+                                }" x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
                                         (selectedActivity.status === 'rejected' ? 'Ditolak' : 'Menunggu Validasi')">
                             </span>
 
@@ -200,7 +189,7 @@
                             <div class="col-span-2">
                                 <label class="text-xs text-slate-400">Deskripsi</label>
                                 <div class="bg-slate-50 p-3 border rounded-lg italic text-slate-600"
-                                     x-text="selectedActivity.deskripsi"></div>
+                                    x-text="selectedActivity.deskripsi"></div>
                             </div>
                         </div>
 

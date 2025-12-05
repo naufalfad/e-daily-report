@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                <button onclick="window.location.href='/staf/input-lkh/${item.id}'"
+                <button onclick="window.location.href='/penilai/input-laporan/${item.id}'"
                     class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] shadow-sm hover:brightness-95">
                     Lanjutkan
                 </button>
@@ -244,39 +244,44 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     /* =======================================================
-     * 7. GRAFIK (ANTI DOUBLE RENDER)
-     * =======================================================*/
-    let chartKinerja = window.chartKinerja || null;
-
-    const aktivitasAll = data.grafik_aktivitas || [];
-
-    let monthlyTotal = Array(12).fill(0);
-    let monthlyApproved = Array(12).fill(0);
-    let monthlyRejected = Array(12).fill(0);
-
-    aktivitasAll.forEach(item => {
-        const month = new Date(item.tanggal_laporan).getMonth();
-
-        monthlyTotal[month]++;
-
-        if (item.status === "approved") monthlyApproved[month]++;
-        else if (item.status === "rejected" || item.status.includes("reject")) monthlyRejected[month]++;
-        else if (item.status === "draft") monthlyTotal[month]--;
-    });
-
+         * 7. GRAFIK — FIXED VERSION (ANTI ERROR CANVAS)
+         * =======================================================*/
     const canvas = document.getElementById("kinerjaBulananChart");
 
+    // Pastikan data grafik ada
+    const aktivitasAll = data.grafik_aktivitas || [];
+
     if (canvas) {
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Cek apakah canvas ini sudah punya chart instance dari Chart.js
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) {
+            existingChart.destroy();
+        }
+        // -------------------------------
+
+        // Proses Data Grafik
+        let monthlyTotal = Array(12).fill(0);
+        let monthlyApproved = Array(12).fill(0);
+        let monthlyRejected = Array(12).fill(0);
+
+        aktivitasAll.forEach(item => {
+            const dateObj = new Date(item.tanggal_laporan);
+            const month = dateObj.getMonth();
+
+            monthlyTotal[month]++;
+            if (item.status === "draft") monthlyTotal[month]--;
+            else if (item.status === "rejected") monthlyRejected[month]++;
+            else if (item.status === "approved") monthlyApproved[month]++;
+        });
+
         const ctx = canvas.getContext("2d");
-
-        // FIX ERROR: destroy chart sebelumnya
-        if (chartKinerja) chartKinerja.destroy();
-
         const gradientTotal = ctx.createLinearGradient(0, 0, 0, 260);
         gradientTotal.addColorStop(0, "rgba(30, 64, 175, 0.25)");
         gradientTotal.addColorStop(1, "rgba(30, 64, 175, 0)");
 
-        chartKinerja = new Chart(ctx, {
+        // Buat Chart Baru
+        new Chart(ctx, {
             type: "line",
             data: {
                 labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
@@ -311,43 +316,45 @@ document.addEventListener("DOMContentLoaded", async function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: "bottom" } },
-                scales: { y: { beginAtZero: true } }
+                plugins: {
+                    legend: { position: "bottom" }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
         });
+    }
 
-        // simpan chart global
-        window.chartKinerja = chartKinerja;
+    /* =======================================================
+     * 8. DELETE DRAFT GLOBAL
+     * =======================================================*/
+    window.deleteDraft = async function (id) {
+
+        if (!confirm('Apakah Anda yakin ingin menghapus draft laporan ini?')) return;
+
+        const token = localStorage.getItem("auth_token");
+
+        try {
+            const res = await fetch(`/api/lkh/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!res.ok) {
+                const json = await res.json();
+                alert("Gagal menghapus: " + (json.message || "Error"));
+                return;
+            }
+
+            alert("Draft berhasil dihapus!");
+            window.location.reload();
+
+        } catch (err) {
+            alert("Terjadi kesalahan koneksi.");
+        }
     }
 });
-
-/* =======================================================
- * 8. DELETE DRAFT
- * =======================================================*/
-window.deleteDraft = async function (id) {
-    if (!confirm("Apakah Anda yakin ingin menghapus draft laporan ini?")) return;
-
-    const token = localStorage.getItem("auth_token");
-
-    try {
-        const res = await fetch(`/api/lkh/${id}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json"
-            }
-        });
-
-        if (!res.ok) {
-            const json = await res.json();
-            alert("Gagal menghapus: " + (json.message || "Error"));
-            return;
-        }
-
-        alert("Draft berhasil dihapus!");
-        window.location.reload();
-
-    } catch (err) {
-        alert("Terjadi kesalahan koneksi.");
-    }
-};

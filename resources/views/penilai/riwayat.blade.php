@@ -244,6 +244,7 @@
 
                     <div x-show="modalData.status === 'rejected' && role === 'pegawai'" class="flex justify-end pt-2">
                         <button
+                            @click="editLaporan(modalData.id)"
                             class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
                             Perbaiki Laporan
                         </button>

@@ -27,10 +27,10 @@
     {{-- App utama --}}
     @vite(['resources/js/app.js'])
 
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     @stack('styles')
 
@@ -201,20 +201,24 @@
 
     @stack('scripts')
 
-    {{-- Load script sesuai role --}}
+    {{-- Load script sesuai role (INI SUDAH BENAR) --}}
     @switch($role)
 
     @case('admin')
     @vite('resources/js/pages/admin/dashboard.js')
     @vite('resources/js/pages/admin/manajemen-pegawai.js')
-    @vite('resources/js/pages/admin/log-aktivitas.js')
     @vite('resources/js/pages/admin/akun-pengguna.js')
     @vite('resources/js/pages/admin/setting-sistem.js')
+    @vite('resources/js/pages/admin/log-aktivitas.js')
     @break
 
     @case('staf')
     @vite('resources/js/pages/staf/dashboard.js')
     @vite('resources/js/pages/staf/input-lkh.js')
+    @vite('resources/js/pages/staf/input-skp.js')
+    @vite('resources/js/pages/staf/peta-aktivitas.js') 
+    @vite('resources/js/pages/staf/log-aktivitas.js')
+    @vite('resources/js/pages/staf/riwayat.js')
     @break
 
     @case('penilai')
@@ -222,6 +226,18 @@
     @vite('resources/js/pages/penilai/input-lkh.js')
     @vite('resources/js/pages/penilai/pengumuman.js')
     @vite('resources/js/pages/penilai/validasi-laporan.js')
+    @vite('resources/js/pages/penilai/input-skp.js')
+    @vite('resources/js/pages/penilai/skoring-kinerja.js')
+    @vite('resources/js/pages/penilai/peta-aktivitas.js') 
+    @vite('resources/js/pages/penilai/log-aktivitas.js')
+    @vite('resources/js/pages/penilai/riwayat.js')
+    @break
+    
+    @case('kadis')
+    @vite('resources/js/pages/kadis/dashboard.js')
+    @vite('resources/js/pages/kadis/log-aktivitas.js')
+    @vite('resources/js/pages/kadis/validasi-laporan.js')
+    @vite('resources/js/pages/kadis/skoring-bidang.js')
     @break
 
     @endswitch

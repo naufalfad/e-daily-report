@@ -20,6 +20,10 @@ use App\Http\Controllers\Core\NotifikasiController;
 use App\Http\Controllers\Core\ActivityLogController; 
 use App\Http\Controllers\Core\OrganisasiController; 
 use App\Http\Controllers\Core\KadisValidatorController;
+use App\Http\Controllers\Core\PetaAktivitasController;
+// [BARU] TAHAP 3.2: Import Controller untuk Skoring Per Bidang
+use App\Http\Controllers\Core\BidangSkoringController; 
+
 
 /*
 |--------------------------------------------------------------------------
@@ -149,9 +153,27 @@ Route::middleware('auth:sanctum')->group(function () {
     // Activity Log
     Route::get('log-aktivitas', [ActivityLogController::class, 'index'])->name('api.log.aktivitas');
 
+    Route::prefix('kadis')->group(function () {
+        
+        // [BARU] TAHAP 3.2: API Skoring Kinerja Per Bidang
+        Route::get('/skoring-bidang', [BidangSkoringController::class, 'index']);
+        
+        // Fitur Pengumuman Kadis
+        Route::prefix('pengumuman')->group(function () {
+            Route::get('/list', [PengumumanController::class, 'index']);
+            Route::post('/store', [PengumumanController::class, 'store']);
+            Route::delete('/{id}', [PengumumanController::class, 'destroy']);
+        });
+
+    });
+
     // Organisasi
     Route::get('organisasi/tree', [OrganisasiController::class, 'getTree']);
 
     // API untuk mengambil data skoring bawahan
     Route::get('/skoring-kinerja', [\App\Http\Controllers\Core\SkpController::class, 'getSkoringData']);
+
+    //API mengambil lokasi peta aktivitas
+    Route::get('peta-aktivitas', [PetaAktivitasController::class, 'getPetaAktivitas']);
+    Route::get('staf-aktivitas', [PetaAktivitasController::class, 'getStafAktivitas']);
 });

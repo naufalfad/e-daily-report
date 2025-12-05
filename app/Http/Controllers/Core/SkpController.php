@@ -208,8 +208,8 @@ class SkpController extends Controller
 
     // --- Helper / Placeholder untuk fitur Skoring (jika diperlukan nanti) ---
     /**
-     * API: Data Skoring Kinerja Bawahan
-     * Logic: Ambil bawahan -> Ambil SKP Aktif -> Hitung % Realisasi LKH Approved
+     * API: Data Skoring Kinerja (Revisi: Unit Kerja diutamakan)
+     * Rumus: (Approved / (Total Uploaded - Draft)) * 100
      */
     public function getSkoringData(Request $request)
     {
@@ -244,29 +244,48 @@ class SkpController extends Controller
             $targetAngka = $targetObj ? $targetObj->target : 0;
             $satuan = $targetObj ? $targetObj->satuan : '-';
 
-            // 4. Hitung Realisasi (Sum Volume LKH yang Approved)
-            $realisasi = \App\Models\LaporanHarian::where('skp_rencana_id', $rencana->id)
+            // 3. Hitung Pembilang: Total LKH yang DISETUJUI (Approved)
+            $totalApproved = \App\Models\LaporanHarian::where('user_id', $staff->id)
                 ->where('status', 'approved')
-                ->sum('volume');
+                ->count();
 
-            // 5. Hitung Persentase
-            $persen = $targetAngka > 0 ? round(($realisasi / $targetAngka) * 100) : 0;
+            // 4. Kalkulasi Persentase
+            $skor = $totalSubmitted > 0 
+                ? round(($totalApproved / $totalSubmitted) * 100) 
+                : 0;
 
+            // 5. Tentukan Predikat
+            $predikat = 'Kurang';
+            if ($skor >= 90) $predikat = 'Sangat Baik';
+            else if ($skor >= 75) $predikat = 'Baik';
+            else if ($skor >= 60) $predikat = 'Cukup';
+
+            // 6. Return Data Structure
             return [
                 'id' => $staff->id,
                 'nama' => $staff->name,
-                'nip' => $staff->nip,
-                'foto' => $staff->foto_profil_url ?? asset('images/default-user.png'),
-                'rhk' => $rencana->rencana_hasil_kerja,
-                'target' => $targetAngka,
-                'realisasi' => $realisasi,
-                'satuan' => $satuan,
-                'capaian' => $persen,
-                'status' => 'Aktif'
+                'nip'  => $staff->nip,
+                'foto' => $staff->foto_profil_url ?? asset('assets/icon/avatar.png'),
+                
+                // [FIX] Masukkan UNIT KERJA ke key 'rhk' 
+                // Karena JS di frontend (skoring-kinerja.js) merender kolom ke-2 menggunakan key 'rhk'
+                'rhk' => $staff->unitKerja->nama_unit ?? 'Non-Unit', 
+                
+                // Statistik LKH
+                'target' => $totalSubmitted,   // Total yang diajukan
+                'realisasi' => $totalApproved, // Total yang di-approve
+                'satuan' => 'LKH',
+                
+                // Hasil Akhir
+                'capaian' => $skor,
+                'predikat' => $predikat
             ];
         });
 
-        return response()->json(['data' => $data]);
+        return response()->json([
+            'message' => 'Data skoring kinerja berhasil diambil',
+            'data' => $data
+        ]);
     }
 
     public function exportPdf()

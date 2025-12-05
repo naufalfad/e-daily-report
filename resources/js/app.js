@@ -3,6 +3,7 @@
 // =========================
 import '../css/app.css';
 import '../js/pages/login.js';
+import '../js/profile-modal.js'
 
 // =========================
 // 1. IMPORT ENGINE ALPINE (WAJIB UNTUK MODAL)
@@ -18,6 +19,8 @@ import { manajemenPegawaiData } from './pages/admin/manajemen-pegawai.js';
 import { akunPenggunaData } from './pages/admin/akun-pengguna.js';
 // [PERBAIKAN UTAMA] Import fungsi logika halaman pengaturan sistem
 import { systemSettingsData } from './pages/admin/setting-sistem.js';
+import { penilaiMapData } from './pages/penilai/peta-aktivitas.js'; 
+import { stafMapData } from './pages/staf/peta-aktivitas.js';
 
 
 // =========================
@@ -30,7 +33,9 @@ window.manajemenPegawaiData = manajemenPegawaiData;
 window.akunPenggunaData = akunPenggunaData;
 // [PERBAIKAN UTAMA] Registrasi Pengaturan Sistem
 window.systemSettingsData = systemSettingsData;
-
+// [PERBAIKAN MAP] Registrasi Peta Aktivitas (Penilai)
+window.penilaiMapData = penilaiMapData; 
+window.stafMapData = stafMapData;
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -50,7 +55,7 @@ import './utils/auth-fetch';
 // =========================
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
-import './pages/staf/peta-aktivitas.js';
+import './pages/staf/peta-aktivitas.js'; // <-- Biarkan, asumsikan ini untuk staf. Jika ada error, ini perlu diekspor dan didaftarkan global juga.
 import './pages/staf/riwayat.js';
 
 // =========================
@@ -59,19 +64,20 @@ import './pages/staf/riwayat.js';
 import './pages/penilai/input-skp.js';
 import './pages/penilai/log-aktivitas.js';
 import './pages/penilai/pengumuman.js';
-import './pages/penilai/peta-aktivitas.js';
+// import './pages/penilai/peta-aktivitas.js'; // <-- HAPUS/KOMENTARI: Sudah di-import di Section 2
 import './pages/penilai/riwayat.js';
+// =========================
+// KADIS - BARIS INI DIHAPUS UNTUK FIX KONFLIK
+// =========================
+// import './pages/kadis/dashboard.js'
+// import './pages/kadis/log-aktivitas.js'
+// import './pages/kadis/validasi-laporan.js'
+// import './pages/kadis/skoring-bidang.js'
 
 // =========================
-// KADIS
+// ADMIN (Logic lain jika ada) - BARIS INI DIHAPUS UNTUK FIX KONFLIK
 // =========================
-import './pages/kadis/dashboard.js'
-import './pages/kadis/log-aktivitas.js'
-import './pages/kadis/validasi-laporan.js'
-
-// =========================
-// ADMIN (Logic lain jika ada)
-// =========================
+// import './pages/admin/log-aktivitas.js'
 // [CATATAN]: File ini sudah tidak perlu di-import di sini karena sudah di-import di Section 2
 // import './pages/admin/setting-sistem.js' 
 
@@ -83,8 +89,11 @@ window.Chart = Chart;
 // =========================
 // NOTIFIKASI GLOBAL FIX (LOGIC BAWAAN)
 // =========================
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 document.addEventListener('DOMContentLoaded', function () {
+    
     const logoutBtn = document.getElementById('btn-logout');
 
     // =========================

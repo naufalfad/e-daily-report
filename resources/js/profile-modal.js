@@ -1,37 +1,99 @@
-// resources/js/profile-modal.js
+document.addEventListener('DOMContentLoaded', function () {
+    
+    // --- 1. LOGIKA TAB SWITCHING (Manual Tailwind) ---
+    window.switchTab = function(tabName) {
+        // Hide semua konten tab
+        document.getElementById('tab-content-biodata').classList.add('hidden');
+        document.getElementById('tab-content-account').classList.add('hidden');
+        document.getElementById('tab-content-biodata').classList.remove('block');
+        document.getElementById('tab-content-account').classList.remove('block');
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Sidebar toggle (mobile)
-    const sidebarToggle = document.getElementById('sb-toggle');
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-            // Di sini ikuti cara kamu sekarang untuk buka/tutup sidebar.
-            // Misal: document.documentElement.classList.toggle('sidebar-open');
-            document.documentElement.classList.toggle('sidebar-open');
+        // Reset style tombol tab jadi default (abu-abu)
+        const btnBio = document.getElementById('tab-btn-biodata');
+        const btnAcc = document.getElementById('tab-btn-account');
+        
+        const activeClass = ['border-[#1C7C54]', 'text-[#1C7C54]', 'bg-green-50/50', 'border-b-2'];
+        const inactiveClass = ['border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:bg-gray-50', 'border-b-2'];
+
+        // Hapus kelas aktif dari keduanya dulu
+        btnBio.classList.remove(...activeClass);
+        btnAcc.classList.remove(...activeClass);
+        btnBio.classList.add(...inactiveClass);
+        btnAcc.classList.add(...inactiveClass);
+
+        // Aktifkan tab yang dipilih
+        const selectedContent = document.getElementById('tab-content-' + tabName);
+        const selectedBtn = document.getElementById('tab-btn-' + tabName);
+
+        if (selectedContent && selectedBtn) {
+            selectedContent.classList.remove('hidden');
+            selectedContent.classList.add('block'); // Pastikan muncul
+
+            selectedBtn.classList.remove(...inactiveClass);
+            selectedBtn.classList.add(...activeClass);
+        }
+    };
+
+    // --- 2. LOGIKA UPLOAD FILE PREVIEW ---
+    const fileInput = document.getElementById('foto_profil');
+    const fileNameDisplay = document.getElementById('file-name-display');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const name = e.target.files[0].name;
+                fileNameDisplay.textContent = "File terpilih: " + name;
+                fileNameDisplay.classList.remove('hidden');
+            }
         });
     }
 
-    // Modal profil (masih ada di layout, walau icon profile di topbar dihapus)
-    const modal = document.getElementById('profile-modal');
-    const openBtn = document.getElementById('btn-open-profile-modal');
-    const closeBtn = document.getElementById('btn-close-profile-modal');
+    // --- 3. LOGIKA MODAL TAILWIND ---
+    const modal = document.getElementById('tailwind-modal');
+    const btnTrigger = document.getElementById('btn-trigger-modal');
+    const btnCancel = document.getElementById('btn-cancel-modal');
+    const btnConfirm = document.getElementById('btn-confirm-final');
+    const formAccount = document.getElementById('form-account');
 
-    if (!modal) return;
-
-    const openModal = () => modal.classList.remove('hidden');
-    const closeModal = () => modal.classList.add('hidden');
-
-    if (openBtn) {
-        openBtn.addEventListener('click', openModal);
+    // Buka Modal
+    if (btnTrigger) {
+        btnTrigger.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+        });
     }
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', closeModal);
+    // Tutup Modal
+    if (btnCancel) {
+        btnCancel.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
     }
 
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
+    // Eksekusi Simpan
+    if (btnConfirm) {
+        btnConfirm.addEventListener('click', () => {
+            // Loading State
+            btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+            btnConfirm.disabled = true;
+            btnCancel.disabled = true;
+
+            formAccount.submit();
+        });
+    }
+
+    // --- 4. LOGIKA TOGGLE PASSWORD (EYE ICON) ---
+    window.togglePassword = function(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = input.nextElementSibling.querySelector('i');
+        
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
-    });
+    };
 });

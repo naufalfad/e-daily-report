@@ -22,6 +22,7 @@ export default defineConfig({
                 'resources/js/pages/kadis/dashboard.js',
                 'resources/js/pages/kadis/log-aktivitas.js',
                 'resources/js/pages/kadis/validasi-laporan.js',
+                'resources/js/pages/kadis/skoring-bidang.js',
 
                 // Penilai
                 'resources/js/pages/penilai/dashboard.js',
@@ -41,6 +42,8 @@ export default defineConfig({
                 'resources/js/pages/staf/log-aktivitas.js',
                 'resources/js/pages/staf/input-lkh.js',
                 'resources/js/pages/staf/riwayat.js',
+
+                'resources/js/profile-modal.js',
             ],
             refresh: true,
         }),

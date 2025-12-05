@@ -9,6 +9,10 @@ use Laravel\Sanctum\HasApiTokens;
 use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait;
 use Illuminate\Support\Facades\Storage;
 
+use App\Models\Jabatan;
+use App\Models\Bidang;
+use App\Models\LaporanHarian; // Pastikan Model LaporanHarian ter-import
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SpatialTrait;
@@ -31,7 +35,7 @@ class User extends Authenticatable
     protected $appends = ['foto_profil_url'];
 
     // Eager load agar otomatis ikut saat query user
-    protected $with = ['atasan', 'jabatan', 'bidang', 'unitKerja'];
+    protected $with = ['atasan', 'jabatan', 'bidang'];
 
     // ---------------------------------------------------------------------
     // Accessor foto profil
@@ -40,7 +44,7 @@ class User extends Authenticatable
     {
         return $this->foto_profil
             ? Storage::disk('public')->url($this->foto_profil)
-            : asset('images/default-user.png');
+            : asset('assets/icon/avatar.png'); // FIX: Default avatar path disesuaikan
     }
 
     // ---------------------------------------------------------------------
@@ -59,7 +63,7 @@ class User extends Authenticatable
     public function bawahanRecursif()
     {
         return $this->hasMany(User::class, 'atasan_id')
-            ->with(['jabatan', 'bidang', 'bawahanRecursif']);
+                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
     }
 
     // ---------------------------------------------------------------------
@@ -73,30 +77,46 @@ class User extends Authenticatable
     // ---------------------------------------------------------------------
     // Relasi ke core business
     // ---------------------------------------------------------------------
-    public function laporanHarian()
-    {
-        return $this->hasMany(LaporanHarian::class, 'user_id');
-    }
-
+    
     // laporan yang harus divalidasi oleh user sebagai atasan
     public function laporanValidasi()
     {
         return $this->hasMany(LaporanHarian::class, 'atasan_id');
     }
+    
+    // [FIXED] Relasi SKP diarahkan ke SkpRencana (Model Baru)
+    public function skp()
+    {
+        return $this->hasMany(SkpRencana::class, 'user_id');
+    }
+
+    /**
+     * Relasi LKH (Laporan Harian) yang dibuat oleh user
+     */
+    public function lkh()
+    {
+        return $this->hasMany(LaporanHarian::class, 'user_id');
+    }
 
     // ---------------------------------------------------------------------
-    // Unit kerja / jabatan / bidang
+    // Unit kerja / jabatan / bidang (TAHAP 1.2: Relasi Dasar Skoring)
     // ---------------------------------------------------------------------
     public function unitKerja()
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
 
+    /**
+     * Relasi Bidang. Penting untuk mengelompokkan user dalam perhitungan skoring per Bidang.
+     */
     public function bidang()
     {
         return $this->belongsTo(Bidang::class, 'bidang_id');
     }
 
+    /**
+     * Relasi Jabatan. Penting untuk mengidentifikasi Kepala Bidang secara dinamis.
+     */
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
@@ -125,14 +145,8 @@ class User extends Authenticatable
         return $this->roles()->where('nama_role', $roleName)->exists();
     }
 
-    public function skp()
+    public function laporanHarian()
     {
-        return $this->hasMany(Skp::class, 'user_id');
+        return $this->hasMany(LaporanHarian::class, 'user_id');
     }
-
-    public function lkh()
-    {
-        return $this->hasMany(\App\Models\LaporanHarian::class, 'user_id');
-    }
-
 }

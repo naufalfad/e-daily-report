@@ -19,8 +19,9 @@ import { manajemenPegawaiData } from './pages/admin/manajemen-pegawai.js';
 import { akunPenggunaData } from './pages/admin/akun-pengguna.js';
 // [PERBAIKAN UTAMA] Import fungsi logika halaman pengaturan sistem
 import { systemSettingsData } from './pages/admin/setting-sistem.js';
-import { penilaiMapData } from './pages/penilai/peta-aktivitas.js'; 
+import { penilaiMapData } from './pages/penilai/peta-aktivitas.js';
 import { stafMapData } from './pages/staf/peta-aktivitas.js';
+import { kadisMapData } from './pages/kadis/peta-aktivitas.js';
 
 
 // =========================
@@ -34,8 +35,9 @@ window.akunPenggunaData = akunPenggunaData;
 // [PERBAIKAN UTAMA] Registrasi Pengaturan Sistem
 window.systemSettingsData = systemSettingsData;
 // [PERBAIKAN MAP] Registrasi Peta Aktivitas (Penilai)
-window.penilaiMapData = penilaiMapData; 
+window.penilaiMapData = penilaiMapData;
 window.stafMapData = stafMapData;
+window.kadisMapData = kadisMapData;
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -94,7 +96,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
 document.addEventListener('DOMContentLoaded', function () {
-    
+
     const logoutBtn = document.getElementById('btn-logout');
 
     // =========================

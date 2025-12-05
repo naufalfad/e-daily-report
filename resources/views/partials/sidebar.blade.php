@@ -33,6 +33,7 @@ $menusByRole = [
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'kadis.log-aktivitas'],
 ['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'kadis.pengumuman.index'],
 ['key' => 'skoring-bidang','label' => 'Skoring Kinerja Per Bidang','icon'=>'skoring','route'=>'kadis.skoring-bidang'],
+['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'kadis.peta-aktivitas'],
 ],
 
 // ==================== ROLE ADMIN ====================

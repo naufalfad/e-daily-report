@@ -221,7 +221,6 @@
     @vite('resources/js/pages/staf/dashboard.js')
     @vite('resources/js/pages/staf/input-lkh.js')
     @vite('resources/js/pages/staf/input-skp.js')
-    @vite('resources/js/pages/staf/peta-aktivitas.js')
     @vite('resources/js/pages/staf/log-aktivitas.js')
     @vite('resources/js/pages/staf/riwayat.js')
     @break
@@ -234,20 +233,11 @@
     @vite('resources/js/pages/penilai/input-skp.js')
     @vite('resources/js/pages/penilai/skoring-kinerja.js')
     @vite('resources/js/pages/penilai/peta-aktivitas.js')
-    @vite('resources/js/pages/penilai/log-aktivitas.js')
-    @vite('resources/js/pages/penilai/riwayat.js')
-    @break
-
-    @case('kadis')
-    @vite('resources/js/pages/kadis/dashboard.js')
-    @vite('resources/js/pages/kadis/log-aktivitas.js')
-    @vite('resources/js/pages/kadis/validasi-laporan.js')
-    @vite('resources/js/pages/kadis/skoring-bidang.js')
-    @break
-
-    @endswitch
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @vite('resources/js/pages/penilai/log-aktivitas.js') @vite('resources/js/pages/penilai/riwayat.js') @break
+    @case('kadis') @vite('resources/js/pages/kadis/dashboard.js') @vite('resources/js/pages/kadis/log-aktivitas.js')
+    @vite('resources/js/pages/kadis/validasi-laporan.js') @vite('resources/js/pages/kadis/skoring-bidang.js') @break
+    @endswitch <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+    </script>
 </body>
 
 </html>

@@ -1,11 +1,14 @@
 import { authFetch } from "../../utils/auth-fetch";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Pastikan kita berada di halaman pengumuman (cek elemen root)
     const root = document.getElementById("pengumuman-root");
     if (!root) return;
 
+    // --- DOM ELEMENTS ---
     const listEl = document.getElementById("announcement-list");
     const emptyEl = document.getElementById("announcement-empty");
+    const loadingEl = document.getElementById("loading-indicator");
 
     const modal = document.getElementById("modal-pengumuman");
     const btnOpen = document.getElementById("btn-open-pengumuman");
@@ -19,30 +22,68 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewTitle = document.getElementById("preview-title");
     const previewBody = document.getElementById("preview-body");
 
+    // --- VARIABLES ---
+    let currentUserId = null;
+
     // ======================================================
-    // 1. LOAD LIST PENGUMUMAN (API TOKEN)
+    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN
+    // ======================================================
+    function initUser() {
+        // Cek Meta Tag (Prioritas Utama)
+        const metaId = document.querySelector('meta[name="user-id"]');
+        if (metaId) {
+            currentUserId = parseInt(metaId.content);
+            return;
+        }
+
+        // Fallback: Cek LocalStorage
+        try {
+            const storedUser = localStorage.getItem('user'); 
+            if (storedUser) {
+                const userObj = JSON.parse(storedUser);
+                currentUserId = userObj.id;
+            }
+        } catch (e) {
+            console.error("Gagal mengambil user ID", e);
+        }
+    }
+
+    // ======================================================
+    // 1. LOAD LIST PENGUMUMAN
     // ======================================================
     async function fetchPengumuman() {
+        // Menggunakan endpoint umum yang sudah difilter oleh Controller
+        const endpoint = "/api/pengumuman"; 
+
         try {
-            const response = await authFetch("/api/pengumuman", {
+            if (loadingEl) {
+                loadingEl.classList.remove("hidden");
+                listEl.classList.add("hidden");
+                emptyEl.classList.add("hidden");
+            }
+
+            const response = await authFetch(endpoint, {
                 method: "GET"
             });
 
             if (!response.ok) throw new Error("Gagal memuat data");
 
             const result = await response.json();
-            const data = result.data ?? result; // paginate vs non paginate
+            // Handle pagination vs raw array
+            const data = result.data ?? result;
 
             renderList(data);
 
         } catch (err) {
             console.error(err);
-            alert("Terjadi kesalahan saat memuat pengumuman.");
+            if (listEl) listEl.innerHTML = `<p class="text-rose-500 text-center py-4 bg-rose-50 rounded-lg border border-rose-100">Gagal memuat data.</p>`;
+        } finally {
+            if (loadingEl) loadingEl.classList.add("hidden");
         }
     }
 
     // ======================================================
-    // 2. RENDER LIST
+    // 2. RENDER LIST (Strict Ownership)
     // ======================================================
     function renderList(data) {
         listEl.innerHTML = "";
@@ -63,33 +104,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function createCard(item) {
         const article = document.createElement("article");
+        // Style Card Konsisten
         article.className =
-            "rounded-[18px] border border-[#BFD4FF] bg-[#F4F8FF] px-5 py-4 shadow-sm relative group hover:shadow-md transition-all";
+            "rounded-[18px] border border-[#BFD4FF] bg-[#F4F8FF] px-5 py-4 shadow-sm relative group hover:shadow-md transition-all h-full flex flex-col justify-between";
 
-        const dateStr = new Date(item.created_at).toLocaleDateString("id-ID");
+        const dateStr = new Date(item.created_at).toLocaleDateString("id-ID", {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        // Badge Logic
+        const badge = item.unit_kerja_id
+            ? `<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mb-2 inline-block font-medium">Unit Kerja</span>`
+            : `<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full mb-2 inline-block font-medium">Global</span>`;
+
+        // [LOGIC STRICT OWNERSHIP]
+        // Tombol hapus HANYA jika User Login == Pembuat
+        let deleteBtnHtml = '';
+        if (currentUserId && item.user_id_creator === currentUserId) {
+            deleteBtnHtml = `
+                <button class="btn-delete opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-rose-600 p-1 rounded-full hover:bg-rose-50" 
+                        title="Hapus Pengumuman" data-id="${item.id}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            `;
+        }
 
         article.innerHTML = `
-            <div class="flex justify-between items-start gap-4">
-                <div>
-                    <h3 class="text-[14px] font-semibold text-slate-800 mb-1">${item.judul}</h3>
-                    <p class="text-[12px] text-slate-700 leading-snug mb-4 whitespace-pre-line">${item.isi_pengumuman}</p>
-                    <p class="text-[11px] text-slate-400">
-                        Diumumkan ${dateStr}
-                        <span class="ml-1 text-slate-300">• Oleh ${item.creator?.name || "Admin"}</span>
-                    </p>
+            <div>
+                <div class="flex justify-between items-start">
+                    ${badge}
+                    ${deleteBtnHtml}
                 </div>
+                
+                <h3 class="text-[15px] font-bold text-slate-800 mb-2 leading-snug break-words">${item.judul}</h3>
+                <p class="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line line-clamp-4">${item.isi_pengumuman}</p>
+            </div>
 
-                <button class="btn-delete hidden group-hover:flex items-center justify-center 
-                        w-8 h-8 rounded-full bg-white text-red-500 shadow-sm hover:bg-red-50"
-                        data-id="${item.id}">
-                    🗑
-                </button>
+            <div class="mt-4 pt-3 border-t border-slate-200/60 flex justify-between items-center">
+                <p class="text-[11px] text-slate-400 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    ${dateStr}
+                </p>
+                <p class="text-[11px] font-medium text-slate-500 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    ${item.creator?.name || "Admin"}
+                </p>
             </div>
         `;
 
-        article.querySelector(".btn-delete").addEventListener("click", () => {
-            deletePengumuman(item.id);
-        });
+        // Attach Event Listener
+        const delBtn = article.querySelector(".btn-delete");
+        if (delBtn) {
+            delBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                deletePengumuman(item.id);
+            });
+        }
 
         return article;
     }
@@ -101,8 +173,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
             Swal.fire({
                 icon: "warning",
-                title: "Judul dan Isi wajib diisi!",
-                timer: 1800,
+                title: "Belum Lengkap",
+                text: "Judul dan Isi pengumuman wajib diisi!",
+                timer: 2000,
                 showConfirmButton: false,
             });
             return;
@@ -110,7 +183,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         btnSubmit.disabled = true;
         btnSubmit.dataset.processing = "true";
-        btnSubmit.innerHTML = "Menyimpan...";
+        const originalText = btnSubmit.innerHTML;
+        btnSubmit.innerHTML = `<svg class="animate-spin h-4 w-4 text-white inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...`;
 
         try {
             const res = await authFetch("/api/pengumuman", {
@@ -121,7 +195,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     judul: inputJudul.value,
                     isi_pengumuman: inputIsi.value,
-                    unit_kerja_id: null,
+                    // Penilai biasanya membuat pengumuman untuk Unit Kerjanya sendiri
+                    // Backend akan otomatis assign unit_kerja_id user jika tidak dikirim (sesuai logic controller)
+                    // Atau kita bisa set null jika ingin global (tergantung hak akses)
+                    // Di sini kita biarkan backend yang handle defaultnya.
                 }),
             });
 
@@ -133,37 +210,30 @@ document.addEventListener("DOMContentLoaded", () => {
             inputJudul.value = "";
             inputIsi.value = "";
 
-            // SWEETALERT BERHASIL
             Swal.fire({
                 icon: "success",
-                title: "Pengumuman berhasil dibuat!",
+                title: "Berhasil!",
+                text: "Pengumuman berhasil diterbitkan.",
                 showConfirmButton: false,
                 timer: 1600,
             });
 
             fetchPengumuman();
         } catch (err) {
-            // SWEETALERT GAGAL
             Swal.fire({
                 icon: "error",
-                title: "Gagal menyimpan!",
+                title: "Gagal Menyimpan",
                 text: err.message,
             });
         } finally {
             btnSubmit.disabled = false;
             btnSubmit.dataset.processing = "false";
-            btnSubmit.innerHTML = `
-            <span>Terbitkan</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-        `;
+            btnSubmit.innerHTML = originalText;
         }
     }
 
     // ======================================================
-    // 4. DELETE
+    // 4. DELETE (Handling Security)
     // ======================================================
     async function deletePengumuman(id) {
         const confirm = await Swal.fire({
@@ -173,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
             showCancelButton: true,
             confirmButtonColor: "#d33",
             cancelButtonColor: "#3085d6",
-            confirmButtonText: "Ya, hapus",
+            confirmButtonText: "Ya, Hapus",
             cancelButtonText: "Batal",
         });
 
@@ -184,12 +254,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "DELETE",
             });
 
-            if (!res.ok) throw new Error("Gagal menghapus");
+            const data = await res.json();
 
-            // SUCCESS
+            if (!res.ok) {
+                // Handling 403 Forbidden dari Backend
+                if (res.status === 403) {
+                    throw new Error("Anda tidak berhak menghapus pengumuman ini.");
+                }
+                throw new Error(data.message || "Gagal menghapus");
+            }
+
             Swal.fire({
                 icon: "success",
-                title: "Berhasil dihapus!",
+                title: "Terhapus",
+                text: "Pengumuman berhasil dihapus.",
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -198,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
             Swal.fire({
                 icon: "error",
-                title: "Gagal menghapus",
+                title: "Gagal Menghapus",
                 text: err.message,
             });
         }
@@ -209,8 +287,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // ======================================================
     function openModal() {
         modal.classList.remove("hidden");
-        modal.classList.add("flex");
+        modal.classList.add("flex"); // Flex untuk centering
         inputJudul.focus();
+        updatePreview();
     }
 
     function closeModal() {
@@ -219,35 +298,36 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updatePreview() {
-        previewTitle.textContent = inputJudul.value || "Judul...";
-        previewBody.textContent = inputIsi.value || "Isi pengumuman...";
+        previewTitle.textContent = inputJudul.value || "Judul Pengumuman...";
+        previewBody.textContent = inputIsi.value || "Isi pengumuman akan muncul di sini...";
+        
+        inputIsi.style.height = 'auto';
+        inputIsi.style.height = inputIsi.scrollHeight + 'px';
     }
 
-    btnOpen.addEventListener("click", openModal);
-    btnClose.addEventListener("click", closeModal);
-    btnCancel.addEventListener("click", closeModal);
+    // --- EVENT LISTENERS ---
+    if (btnOpen) btnOpen.addEventListener("click", openModal);
+    if (btnClose) btnClose.addEventListener("click", closeModal);
+    if (btnCancel) btnCancel.addEventListener("click", closeModal);
 
-    // [FIX CRITICAL] Ganti addEventListener dengan onclick untuk mencegah multiple binding
-    // Tambahkan Guard Clause: Jika sedang processing, tolak klik berikutnya.
-    btnSubmit.onclick = (e) => {
-        e.preventDefault();
-        e.stopImmediatePropagation(); // Hentikan event bubbling liar
+    if (btnSubmit) {
+        btnSubmit.onclick = (e) => {
+            e.preventDefault();
+            if (btnSubmit.disabled || btnSubmit.dataset.processing === "true") return;
+            storePengumuman();
+        };
+    }
 
-        // Cek apakah tombol sedang dikunci?
-        if (btnSubmit.disabled || btnSubmit.dataset.processing === "true") {
-            return; // Abaikan klik
-        }
+    if (inputJudul) inputJudul.addEventListener("input", updatePreview);
+    if (inputIsi) inputIsi.addEventListener("input", updatePreview);
 
-        storePengumuman();
-    };
-
-    inputJudul.addEventListener("input", updatePreview);
-    inputIsi.addEventListener("input", updatePreview);
-
+    // Close on backdrop
     modal.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
     });
 
-    fetchPengumuman();
+    // --- EXECUTE ---
+    initUser(); // Load ID User
+    fetchPengumuman(); // Load Data
     updatePreview();
 });

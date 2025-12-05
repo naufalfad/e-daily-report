@@ -25,15 +25,15 @@ $menusByRole = [
 ['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'penilai.pengumuman.index'],
 ],
 
-    // ==================== ROLE KEPALA DINAS ====================
-    'kadis' => [
-        ['key' => 'dashboard', 'label' => 'Dashboard',        'icon' => 'home',       'route' => route('kadis.dashboard')],
-        ['key' => 'validasi',  'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => route('kadis.validasi-laporan')],
-        ['key' => 'log',       'label' => 'Log Aktivitas',    'icon' => 'clock',      'route' => route('kadis.log-aktivitas')],
-        ['key' => 'pengumuman','label' => 'Pengumuman',       'icon' => 'announcement', 'route' => route('kadis.pengumuman.index')],
-        ['key' => 'skoring-bidang', 'label' => 'Skoring Kinerja Per Bidang', 'icon' => 'skoring', 'route' => route('kadis.skoring-bidang')],
-        ['key' => 'map',           'label' => 'Peta Aktivitas',   'icon' => 'map-pin',        'route' => route('kadis.peta-aktivitas')],
-    ],
+// ==================== ROLE KEPALA DINAS ====================
+'kadis' => [
+['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'kadis.dashboard'],
+['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => 'kadis.validasi-laporan'],
+['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'kadis.log-aktivitas'],
+['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'kadis.pengumuman.index'],
+['key' => 'skoring-bidang','label' => 'Skoring Kinerja Per Bidang','icon'=>'skoring','route'=>'kadis.skoring-bidang'],
+],
+['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'kadis.peta-aktivitas'],
 
 // ==================== ROLE ADMIN ====================
 'admin' => [

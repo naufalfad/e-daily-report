@@ -1,4 +1,4 @@
-@extends('layouts.app', ['title' => 'Pengumuman', 'role' => 'kadis', 'active' => 'pengumuman'])
+@extends('layouts.app', ['title' => 'Pengumuman', 'role' => 'penilai', 'active' => 'pengumuman'])
 
 @section('content')
 <section id="pengumuman-root" class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 flex flex-col h-full min-h-[500px]">
@@ -131,5 +131,5 @@
 @endsection
 
 @push('scripts')
-    @vite('resources/js/pages/kadis/pengumuman.js')
+    @vite('resources/js/pages/penilai/pengumuman.js')
 @endpush

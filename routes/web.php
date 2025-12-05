@@ -7,6 +7,7 @@ use App\Http\Controllers\Core\ActivityLogController;
 use App\Http\Controllers\Core\PengumumanController;
 use App\Http\Controllers\Core\SkpController;
 use App\Http\Controllers\Core\RiwayatController;
+use App\Http\Controllers\Core\PetaAktivitasController;
 use App\Http\Controllers\Core\SkoringController;
 use App\Http\Controllers\Core\LkhController;
 use App\Http\Controllers\Auth\ProfileController;
@@ -70,6 +71,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/penilai/skoring/export-pdf', [App\Http\Controllers\Core\SkoringController::class, 'exportPdf']);
     Route::get('/skp/export/pdf', [SkpController::class, 'exportPdf'])
         ->name('skp.export.pdf');
+    // GLOBAL EXPORT (bisa untuk staf, kadis, penilai)
+    Route::post('/export-map', [PetaAktivitasController::class, 'exportMap'])
+        ->middleware('auth');
+
+    Route::get('/preview-map-pdf', [PetaAktivitasController::class, 'previewMapPdf'])
+        ->middleware('auth');
 
     /*
     |--------------------------------------------------------------------------
@@ -79,7 +86,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('profil')->name('profil.')->group(function () {
         // Halaman Edit Profil
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
-        
+
         // Proses Update Data
         Route::put('/update-biodata', [ProfileController::class, 'updateBiodata'])->name('update-biodata');
         Route::put('/update-account', [ProfileController::class, 'updateAccount'])->name('update-account');
@@ -96,14 +103,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/input-lkh/{id?}', function ($id = null) {
             return view('staf.input-lkh', ['id' => $id]);
         })->name('input-lkh');
-        
         Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
         Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
         Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
         Route::view('/pengumuman', 'staf.pengumuman')->name('pengumuman');
     });
-    
+
     /*
     |--------------------------------------------------------------------------
     | PENILAI ROUTES
@@ -112,11 +118,11 @@ Route::middleware(['auth'])->group(function () {
     // ... (PENILAI ROUTES tidak berubah)
     Route::prefix('penilai')->name('penilai.')->group(function () {
         Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
-        
+
         Route::get('/input-laporan/{id?}', function ($id = null) {
             return view('penilai.input-lkh', ['id' => $id]);
         })->name('input-laporan');
-        
+
         Route::view('/input-skp', 'penilai.input-skp')->name('input-skp');
         Route::view('/validasi-laporan', 'penilai.validasi-laporan')->name('validasi-laporan');
         Route::view('/skoring-kinerja', 'penilai.skoring-kinerja')->name('skoring-kinerja');
@@ -129,9 +135,9 @@ Route::middleware(['auth'])->group(function () {
         // Route Pengumuman Lengkap untuk Penilai (CRUD)
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
             Route::view('/', 'penilai.pengumuman')->name('index');
-            Route::get('/list', [PengumumanController::class, 'index'])->name('list');   
-            Route::post('/store', [PengumumanController::class, 'store'])->name('store'); 
-            Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy'); 
+            Route::get('/list', [PengumumanController::class, 'index'])->name('list');
+            Route::post('/store', [PengumumanController::class, 'store'])->name('store');
+            Route::delete('/{id}', [PengumumanController::class, 'destroy'])->name('destroy');
         });
     });
 
@@ -141,21 +147,21 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('kadis')->name('kadis.')->group(function () {
-        
+
         // FIX: Mengganti Route::view dengan Closure untuk passing variabel $role
         Route::get('/dashboard', function () {
             $role = 'kadis'; // Asumsi role tetap 'kadis' karena berada di group ini
             return view('kadis.dashboard', compact('role'));
         })->name('dashboard');
-        
+
         Route::view('/validasi-laporan', 'kadis.validasi-laporan')->name('validasi-laporan');
-        
+
         // FIX: Mengganti Route::view dengan Closure untuk passing variabel $role (TAHAP 4.1)
         Route::get('/skoring-bidang', function () {
             $role = 'kadis'; // Asumsi role tetap 'kadis'
             return view('kadis.skoring-bidang', compact('role'));
-        })->name('skoring-bidang'); 
-        
+        })->name('skoring-bidang');
+
         Route::view('/log-aktivitas', 'kadis.log-aktivitas')->name('log-aktivitas');
 
         // [BARU] Integrasi Fitur Pengumuman untuk Kadis
@@ -174,15 +180,15 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
-        
+
         // 1. View HR: Manajemen Pegawai (Profile & Struktur)
         Route::view('/manajemen-pegawai', 'admin.manajemen-pegawai')->name('manajemen-pegawai');
-        
+
         // 2. View IT: Akun Pengguna (Password & Akses)
         Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
-        
+
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
     });
-    
+
 });

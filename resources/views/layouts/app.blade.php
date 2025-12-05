@@ -30,7 +30,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     @stack('styles')
 
@@ -117,7 +119,7 @@
 
                 {{-- TOPBAR: hanya muncul di dashboard --}}
                 @if (($active ?? null) === 'dashboard')
-                <header class="sticky top-0 z-40 bg-[#EFF0F5]/80 backdrop-blur-xl">
+                <header class="sticky top-0 z-40 bg-[#EFF0F5] backdrop-blur-xl">
                     <div class="py-1">
 
                         {{-- Burger (mobile) --}}
@@ -216,7 +218,7 @@
     @vite('resources/js/pages/staf/dashboard.js')
     @vite('resources/js/pages/staf/input-lkh.js')
     @vite('resources/js/pages/staf/input-skp.js')
-    @vite('resources/js/pages/staf/peta-aktivitas.js') 
+    @vite('resources/js/pages/staf/peta-aktivitas.js')
     @vite('resources/js/pages/staf/log-aktivitas.js')
     @vite('resources/js/pages/staf/riwayat.js')
     @break
@@ -228,11 +230,11 @@
     @vite('resources/js/pages/penilai/validasi-laporan.js')
     @vite('resources/js/pages/penilai/input-skp.js')
     @vite('resources/js/pages/penilai/skoring-kinerja.js')
-    @vite('resources/js/pages/penilai/peta-aktivitas.js') 
+    @vite('resources/js/pages/penilai/peta-aktivitas.js')
     @vite('resources/js/pages/penilai/log-aktivitas.js')
     @vite('resources/js/pages/penilai/riwayat.js')
     @break
-    
+
     @case('kadis')
     @vite('resources/js/pages/kadis/dashboard.js')
     @vite('resources/js/pages/kadis/log-aktivitas.js')

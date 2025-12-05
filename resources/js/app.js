@@ -57,6 +57,7 @@ import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
 import './pages/staf/peta-aktivitas.js'; // <-- Biarkan, asumsikan ini untuk staf. Jika ada error, ini perlu diekspor dan didaftarkan global juga.
 import './pages/staf/riwayat.js';
+import './pages/staf/pengumuman.js';
 
 // =========================
 // PENILAI

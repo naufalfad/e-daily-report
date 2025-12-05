@@ -10,6 +10,7 @@ $menusByRole = [
 ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'staf.peta-aktivitas'],
 ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => 'staf.riwayat-lkh'],
 ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'staf.log-aktivitas'],
+['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'staf.pengumuman'],
 ],
 
 // ==================== ROLE PENILAI ====================

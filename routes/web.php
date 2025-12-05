@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
         Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
+        Route::view('/pengumuman', 'staf.pengumuman')->name('pengumuman');
     });
     
     /*

@@ -4,22 +4,35 @@
 
 
 @section('content')
-<section x-data="riwayatData('{{ $role ?? 'pegawai' }}')" x-init="initPage()">
+<section x-data="riwayatData('staf')" x-init="initPage()">
 
     {{-- CARD UTAMA --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
-        <h2 class="text-[20px] font-normal mb-1">Riwayat Laporan</h2>
+    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 flex flex-col min-h-[100vh]">
 
-        {{-- FILTER TANGGAL DAN MODE --}}
-        <form class="mt-4" @submit.prevent="filterData()">
-            <label class="block text-xs font-normal text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
+        {{-- HEADER + BUTTON --}}
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-[20px] font-normal">Riwayat Laporan</h2>
+
+            <button @click="exportPdf()"
+                class="rounded-[10px] bg-[#155FA6] text-white px-4 py-2 text-sm hover:brightness-95 shadow-sm">
+                Export PDF
+            </button>
+        </div>
+
+        {{-- FILTER TANGGAL --}}
+        <form class="mt-1 mb-4" @submit.prevent="filterData()">
+            <label class="block text-xs font-normal text-slate-600 mb-2">
+                Filter Berdasarkan Tanggal
+            </label>
+
             <div class="grid md:grid-cols-[1fr_1fr_auto] gap-3">
-
+                {{-- Dari --}}
                 <div>
                     <label class="sr-only">Dari Tanggal</label>
                     <div class="relative">
                         <input x-model="filter.from" id="tgl_dari" type="date" name="from_date"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+
                         <button type="button" id="tgl_dari_btn"
                             class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
                             <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
@@ -27,11 +40,13 @@
                     </div>
                 </div>
 
+                {{-- Sampai --}}
                 <div>
                     <label class="sr-only">Sampai Tanggal</label>
                     <div class="relative">
                         <input x-model="filter.to" id="tgl_sampai" type="date" name="to_date"
                             class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
+
                         <button type="button" id="tgl_sampai_btn"
                             class="absolute right-3 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center">
                             <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80">
@@ -39,6 +54,7 @@
                     </div>
                 </div>
 
+                {{-- Button Terapkan --}}
                 <div class="flex items-end">
                     <button type="submit"
                         class="rounded-[10px] bg-[#0E7A4A] px-5 py-2.5 text-sm text-white hover:brightness-95 w-full md:w-auto"
@@ -48,64 +64,69 @@
                     </button>
                 </div>
             </div>
-
-            {{-- FILTER KHUSUS PENILAI: MINE vs BAWAHAN --}}
-            <div x-show="role === 'penilai'" class="grid md:grid-cols-2 gap-3 mt-3">
-                <div class="md:col-span-1">
-                    <label class="block text-xs font-normal text-slate-600 mb-2">Tampilkan Data LKH</label>
-                    <select x-model="filter.mode" @change="filterData()"
-                        class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]">
-                        <option value="mine">Hanya Laporan Saya</option>
-                        <option value="subordinates">Semua Laporan Bawahan</option>
-                    </select>
-                </div>
-            </div>
-
         </form>
 
         {{-- TABLE --}}
-        <div class="overflow-x-auto mt-6 min-h-[200px]">
+        <div class="overflow-x-auto mt-2 flex-1">
             <table class="w-full min-w-[900px] text-sm">
                 <thead>
                     <tr class="text-left text-xs text-slate-500 uppercase bg-slate-50">
                         <th class="px-3 py-2 font-medium">Tanggal Laporan</th>
                         <th class="px-3 py-2 font-medium">Nama Kegiatan</th>
+
                         <template x-if="filter.mode === 'subordinates'">
                             <th class="px-3 py-2 font-medium">Pegawai</th>
                         </template>
+
                         <th class="px-3 py-2 font-medium">Tanggal Verifikasi</th>
                         <th class="px-3 py-2 font-medium">Pejabat Penilai</th>
                         <th class="px-3 py-2 font-medium">Status</th>
                         <th class="px-3 py-2 font-medium">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody class="text-slate-700">
+
+                    <!-- KOSONG -->
                     <template x-if="items.length === 0 && !loading">
-                        <tr class="border-t border-slate-100">
+                        <tr>
                             <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
-                                class="px-3 py-4 text-center text-slate-500">Tidak ada data laporan ditemukan.</td>
+                                class="px-3 py-4 text-center text-slate-500">
+                                Tidak ada data laporan ditemukan.
+                            </td>
                         </tr>
                     </template>
+
+                    <!-- LOADING -->
                     <template x-if="loading">
-                        <tr class="border-t border-slate-100">
+                        <tr>
                             <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
-                                class="px-3 py-4 text-center text-slate-500">Memuat data...</td>
+                                class="px-3 py-4 text-center text-slate-500">
+                                Memuat data...
+                            </td>
                         </tr>
                     </template>
+
+                    <!-- DATA -->
                     <template x-for="item in items" :key="item.id">
                         <tr class="border-t border-slate-100 hover:bg-slate-50">
                             <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.tanggal_laporan)"></td>
                             <td class="px-3 py-3" x-text="item.deskripsi_aktivitas"></td>
+
                             <template x-if="filter.mode === 'subordinates'">
                                 <td class="px-3 py-3 whitespace-nowrap" x-text="item.user.name || '-'"></td>
                             </template>
+
                             <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.validated_at)"></td>
+
                             <td class="px-3 py-3"
                                 x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')">
                             </td>
+
                             <td class="px-3 py-3">
                                 <span :class="statusBadgeClass(item.status)" x-text="statusText(item.status)"></span>
                             </td>
+
                             <td class="px-3 py-3">
                                 <button @click="openModal(item)"
                                     class="rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95">
@@ -114,6 +135,7 @@
                             </td>
                         </tr>
                     </template>
+
                 </tbody>
             </table>
         </div>
@@ -223,6 +245,7 @@
 
                     <div x-show="modalData.status === 'rejected' && role === 'pegawai'" class="flex justify-end pt-2">
                         <button
+                            @click="editLaporan(modalData.id)"
                             class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
                             Perbaiki Laporan
                         </button>

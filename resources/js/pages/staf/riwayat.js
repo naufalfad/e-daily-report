@@ -1,5 +1,4 @@
 // resources/js/pages/staf/riwayat.js
-
 function riwayatData(role) {
     const TOKEN = localStorage.getItem("auth_token");
     const BASE_URL = "/api/lkh/riwayat";
@@ -21,6 +20,13 @@ function riwayatData(role) {
             from: "",
             to: "",
             mode: role === "penilai" ? "subordinates" : "mine",
+        },
+
+        //Edit Laporan
+        editLaporan(id) {
+            if (!id) return;
+            // Arahkan ke halaman input/edit dengan ID laporan
+            window.location.href = `/staf/input-lkh/${id}`;
         },
 
         // UTILS
@@ -88,15 +94,9 @@ function riwayatData(role) {
 
             let url = BASE_URL + `?role=${this.role}`;
 
-            if (this.role === "penilai") {
-                url += `&mode=${this.filter.mode}`;
-            }
-            if (this.filter.from) {
-                url += `&from_date=${this.filter.from}`;
-            }
-            if (this.filter.to) {
-                url += `&to_date=${this.filter.to}`;
-            }
+            if (this.role === "penilai") url += `&mode=${this.filter.mode}`;
+            if (this.filter.from) url += `&from_date=${this.filter.from}`;
+            if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
             try {
                 const response = await fetch(url, {
@@ -114,18 +114,18 @@ function riwayatData(role) {
                     );
                 }
 
-                const data = await response.json();
                 this.items = data.data || [];
             } catch (e) {
                 console.error("Gagal memuat data riwayat LKH:", e);
+            } finally {
+                this.loading = false; // <-- DIJAMIN SELALU JALAN
             }
-
-            this.loading = false;
         },
 
         // FILTER
-        filterData() {
-            this.fetchData();
+        // FILTER
+        async filterData() {
+            await this.fetchData();
         },
 
         // MODAL
@@ -143,6 +143,30 @@ function riwayatData(role) {
             } else {
                 alert("Tidak ada bukti yang tersedia.");
             }
+        },
+
+        exportPdf() {
+            Swal.fire({
+                title: "Export PDF?",
+                text: "Apakah Anda yakin ingin mengekspor riwayat laporan ini ke PDF?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#155FA6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Export",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let url = `/riwayat/export-pdf?role=${this.role}&mode=${this.filter.mode}`;
+
+                    if (this.filter.from)
+                        url += `&from_date=${this.filter.from}`;
+                    if (this.filter.to) 
+                        url += `&to_date=${this.filter.to}`;
+
+                    window.open(url, "_blank");
+                }
+            });
         },
 
         // DATEPICKERS

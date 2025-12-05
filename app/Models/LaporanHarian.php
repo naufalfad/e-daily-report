@@ -64,7 +64,12 @@ class LaporanHarian extends Model
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
 
-    // Hubungan ke Atasan
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validator_id');
+    }
+
+    // Hubungan ke Atasan (Relasi yang digunakan sebagai penilai/validator di DB)
     public function atasan(): BelongsTo
     {
         return $this->belongsTo(User::class, 'atasan_id');

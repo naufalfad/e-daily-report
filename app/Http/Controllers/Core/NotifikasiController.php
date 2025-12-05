@@ -79,8 +79,8 @@ class NotifikasiController extends Controller
         return match ($item->related_type) {
             'App\Models\LaporanHarian' =>
                 Auth::user()->hasRole('Atasan')
-                    ? "/penilai/validasi-laporan"
-                    : "/penilai/validasi-laporan",
+                    ? "#"
+                    : "#",
 
             'App\Models\Pengumuman' => "/dashboard/pengumuman/{$item->related_id}",
             'App\Models\Skp' => "/pegawai/skp/{$item->related_id}",

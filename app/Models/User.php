@@ -40,7 +40,7 @@ class User extends Authenticatable
     {
         return $this->foto_profil
             ? Storage::disk('public')->url($this->foto_profil)
-            : asset('images/default-user.png');
+            : asset('assets/icon/avatar.png'); // FIX: Default avatar path disesuaikan
     }
 
     // ---------------------------------------------------------------------
@@ -125,9 +125,15 @@ class User extends Authenticatable
         return $this->roles()->where('nama_role', $roleName)->exists();
     }
 
+    // [FIXED] Relasi SKP diarahkan ke SkpRencana (Model Baru)
     public function skp()
     {
-        return $this->hasMany(Skp::class, 'user_id');
+        return $this->hasMany(SkpRencana::class, 'user_id');
+    }
+
+    public function lkh()
+    {
+        return $this->hasMany(\App\Models\LaporanHarian::class, 'user_id');
     }
 
 }

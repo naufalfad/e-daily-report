@@ -134,6 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Export
     Route::get('export/excel', [ExportController::class, 'exportExcel']);
     Route::get('export/pdf', [ExportController::class, 'exportPdf']);
+    Route::post('/lkh/export-pdf', [LkhController::class, 'exportPdfDirect']);
 
     // Pengumuman
     Route::get('pengumuman', [PengumumanController::class, 'index']);
@@ -147,6 +148,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Activity Log
     Route::get('log-aktivitas', [ActivityLogController::class, 'index'])->name('api.log.aktivitas');
+
+    Route::prefix('kadis')->group(function () {
+        
+        // Fitur Pengumuman Kadis
+        Route::prefix('pengumuman')->group(function () {
+            Route::get('/list', [PengumumanController::class, 'index']);
+            Route::post('/store', [PengumumanController::class, 'store']);
+            Route::delete('/{id}', [PengumumanController::class, 'destroy']);
+        });
+
+    });
 
     // Organisasi
     Route::get('organisasi/tree', [OrganisasiController::class, 'getTree']);

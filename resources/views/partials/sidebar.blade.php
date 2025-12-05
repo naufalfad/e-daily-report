@@ -31,6 +31,7 @@ $menusByRole = [
         ['key' => 'validasi',  'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => route('kadis.validasi-laporan')],
         ['key' => 'log',       'label' => 'Log Aktivitas',    'icon' => 'clock',      'route' => route('kadis.log-aktivitas')],
         ['key' => 'pengumuman','label' => 'Pengumuman',       'icon' => 'announcement', 'route' => route('kadis.pengumuman.index')],
+        ['key' => 'skoring-bidang', 'label' => 'Skoring Kinerja Per Bidang', 'icon' => 'skoring', 'route' => route('kadis.skoring-bidang')],
     ],
 
     // ==================== ROLE ADMIN ====================

@@ -22,6 +22,7 @@ export default defineConfig({
                 'resources/js/pages/kadis/dashboard.js',
                 'resources/js/pages/kadis/log-aktivitas.js',
                 'resources/js/pages/kadis/validasi-laporan.js',
+                'resources/js/pages/kadis/skoring-bidang.js',
 
                 // Penilai
                 'resources/js/pages/penilai/dashboard.js',

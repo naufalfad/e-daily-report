@@ -20,7 +20,6 @@ import { akunPenggunaData } from './pages/admin/akun-pengguna.js';
 // [PERBAIKAN UTAMA] Import fungsi logika halaman pengaturan sistem
 import { systemSettingsData } from './pages/admin/setting-sistem.js';
 
-
 // =========================
 // 3. REGISTRASI GLOBAL (Agar Blade Bisa Panggil)
 // =========================
@@ -69,6 +68,7 @@ import './pages/penilai/riwayat.js';
 import './pages/kadis/dashboard.js'
 import './pages/kadis/log-aktivitas.js'
 import './pages/kadis/validasi-laporan.js'
+import './pages/kadis/skoring-bidang.js'
 
 // =========================
 // ADMIN (Logic lain jika ada)
@@ -85,7 +85,7 @@ window.Chart = Chart;
 // =========================
 // NOTIFIKASI GLOBAL FIX (LOGIC BAWAAN)
 // =========================
-
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
 document.addEventListener('DOMContentLoaded', function () {

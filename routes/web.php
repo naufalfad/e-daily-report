@@ -17,6 +17,8 @@ use App\Http\Controllers\Auth\ProfileController;
 |--------------------------------------------------------------------------
 */
 
+// ... (Bagian AUTH ROUTE tidak berubah)
+
 Route::view('/login', 'auth.login')->name('login');
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -36,6 +38,8 @@ Route::post('/logout', function () {
 | GENERAL STATIC TEST / DEMO & ERROR PAGES (Guest Access)
 |--------------------------------------------------------------------------
 */
+
+// ... (Bagian GENERAL STATIC TEST / DEMO & ERROR PAGES tidak berubah)
 
 Route::view('/tes-pohon-organisasi', 'organisasi');
 
@@ -84,8 +88,8 @@ Route::middleware(['auth'])->group(function () {
     | STAF ROUTES
     |--------------------------------------------------------------------------
     */
+    // ... (STAF ROUTES tidak berubah)
     Route::prefix('staf')->name('staf.')->group(function () {
-
         Route::view('/dashboard', 'staf.dashboard')->name('dashboard');
         Route::get('/input-lkh/{id?}', function ($id = null) {
             return view('staf.input-lkh', ['id' => $id]);
@@ -96,15 +100,14 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
         Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
     });
-
+    
     /*
     |--------------------------------------------------------------------------
     | PENILAI ROUTES
     |--------------------------------------------------------------------------
     */
-
+    // ... (PENILAI ROUTES tidak berubah)
     Route::prefix('penilai')->name('penilai.')->group(function () {
-
         Route::view('/dashboard', 'penilai.dashboard')->name('dashboard');
         
         Route::get('/input-laporan/{id?}', function ($id = null) {
@@ -135,8 +138,21 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('kadis')->name('kadis.')->group(function () {
-        Route::view('/dashboard', 'kadis.dashboard')->name('dashboard');
+        
+        // FIX: Mengganti Route::view dengan Closure untuk passing variabel $role
+        Route::get('/dashboard', function () {
+            $role = 'kadis'; // Asumsi role tetap 'kadis' karena berada di group ini
+            return view('kadis.dashboard', compact('role'));
+        })->name('dashboard');
+        
         Route::view('/validasi-laporan', 'kadis.validasi-laporan')->name('validasi-laporan');
+        
+        // FIX: Mengganti Route::view dengan Closure untuk passing variabel $role (TAHAP 4.1)
+        Route::get('/skoring-bidang', function () {
+            $role = 'kadis'; // Asumsi role tetap 'kadis'
+            return view('kadis.skoring-bidang', compact('role'));
+        })->name('skoring-bidang'); 
+        
         Route::view('/log-aktivitas', 'kadis.log-aktivitas')->name('log-aktivitas');
 
         // [BARU] Integrasi Fitur Pengumuman untuk Kadis
@@ -151,6 +167,7 @@ Route::middleware(['auth'])->group(function () {
     | ADMIN ROUTES (MODUL ROLE ADMIN - CLEAN VERSION)
     |--------------------------------------------------------------------------
     */
+    // ... (ADMIN ROUTES tidak berubah)
     Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::view('/dashboard', 'admin.dashboard')->name('dashboard');

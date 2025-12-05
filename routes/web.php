@@ -160,6 +160,8 @@ Route::middleware(['auth'])->group(function () {
             // Halaman Utama
             Route::view('/', 'kadis.pengumuman')->name('index');
         });
+
+        Route::view('/peta-aktivitas', 'kadis.peta-aktivitas')->name('peta-aktivitas');
     });
 
     /*

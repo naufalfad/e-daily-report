@@ -176,4 +176,5 @@ Route::middleware('auth:sanctum')->group(function () {
     //API mengambil lokasi peta aktivitas
     Route::get('peta-aktivitas', [PetaAktivitasController::class, 'getPetaAktivitas']);
     Route::get('staf-aktivitas', [PetaAktivitasController::class, 'getStafAktivitas']);
+    Route::get('all-aktivitas', [PetaAktivitasController::class, 'getAllAktivitas']);
 });

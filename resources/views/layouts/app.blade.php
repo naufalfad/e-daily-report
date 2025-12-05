@@ -215,8 +215,7 @@
     @case('staf')
     @vite('resources/js/pages/staf/dashboard.js')
     @vite('resources/js/pages/staf/input-lkh.js')
-    @vite('resources/js/pages/staf/input-skp.js')
-    @vite('resources/js/pages/staf/peta-aktivitas.js') 
+    @vite('resources/js/pages/staf/input-skp.js') 
     @vite('resources/js/pages/staf/log-aktivitas.js')
     @vite('resources/js/pages/staf/riwayat.js')
     @break
@@ -228,7 +227,6 @@
     @vite('resources/js/pages/penilai/validasi-laporan.js')
     @vite('resources/js/pages/penilai/input-skp.js')
     @vite('resources/js/pages/penilai/skoring-kinerja.js')
-    @vite('resources/js/pages/penilai/peta-aktivitas.js') 
     @vite('resources/js/pages/penilai/log-aktivitas.js')
     @vite('resources/js/pages/penilai/riwayat.js')
     @break

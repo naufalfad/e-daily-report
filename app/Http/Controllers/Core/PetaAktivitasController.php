@@ -9,6 +9,9 @@ use App\Models\LaporanHarian;
 
 class PetaAktivitasController extends Controller
 {
+    /**
+     * Mengambil Peta Aktivitas User yang Sedang Login
+     */
     public function getPetaAktivitas(Request $request)
     {
         try {
@@ -16,6 +19,7 @@ class PetaAktivitasController extends Controller
 
             $lkh = LaporanHarian::with(['tupoksi', 'user'])
                 ->where('user_id', $userId)
+                ->whereNot('status', 'draft')
                 ->orderBy('tanggal_laporan', 'desc')
                 ->get();
 
@@ -36,6 +40,9 @@ class PetaAktivitasController extends Controller
                     // langsung dari accessor Model
                     "lat"       => $item->lat,
                     "lng"       => $item->lng,
+
+                    // [BARU] Tambahkan lokasi teks
+                    "lokasi_teks" => $item->lokasi_teks,
 
                     "is_luar_lokasi" => $item->is_luar_lokasi,
                 ];
@@ -58,6 +65,9 @@ class PetaAktivitasController extends Controller
         }
     }
 
+    /**
+     * Mengambil Peta Aktivitas Bawahan (Untuk Atasan)
+     */
     public function getStafAktivitas(Request $request)
     {
         try {
@@ -65,6 +75,7 @@ class PetaAktivitasController extends Controller
 
             $lkh = LaporanHarian::with(['tupoksi', 'user'])
                 ->where('atasan_id', $userId)
+                ->whereNot('status', 'draft')
                 ->orderBy('tanggal_laporan', 'desc')
                 ->get();
 
@@ -85,6 +96,9 @@ class PetaAktivitasController extends Controller
                     // langsung dari accessor Model
                     "lat"       => $item->lat,
                     "lng"       => $item->lng,
+
+                    // [BARU] Tambahkan lokasi teks
+                    "lokasi_teks" => $item->lokasi_teks,
 
                     "is_luar_lokasi" => $item->is_luar_lokasi,
                 ];
@@ -107,10 +121,14 @@ class PetaAktivitasController extends Controller
         }
     }
     
+    /**
+     * Mengambil Semua Aktivitas (Mungkin untuk Admin/Dashboard Global)
+     */
     public function getAllAktivitas(Request $request)
     {
         try {
             $lkh = LaporanHarian::with(['tupoksi', 'user'])
+                ->whereNot('status', 'draft')
                 ->orderBy('tanggal_laporan', 'desc')
                 ->get();
 
@@ -131,6 +149,9 @@ class PetaAktivitasController extends Controller
                     // langsung dari accessor Model
                     "lat"       => $item->lat,
                     "lng"       => $item->lng,
+
+                    // [BARU] Tambahkan lokasi teks juga disini agar konsisten
+                    "lokasi_teks" => $item->lokasi_teks,
 
                     "is_luar_lokasi" => $item->is_luar_lokasi,
                 ];

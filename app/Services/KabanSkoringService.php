@@ -75,8 +75,9 @@ class KabanSkoringService
 
             $results->push([
                 'id' => $bidang->id,
-                'nama_bidang' => $bidang->nama,
-                // FIX: Mengakses kolom 'name' dari model User
+                // FIX LOGIKA: Mengganti $bidang->nama menjadi $bidang->nama_bidang
+                'nama_bidang' => $bidang->nama_bidang, 
+                // Mengakses kolom 'name' dari model User untuk Kepala Bidang
                 'nama_kabid' => $bidang->kepalaBidang->name ?? 'N/A', 
                 'total_submitted' => $stats['total_submitted'],
                 'total_approved' => $stats['total_approved'],

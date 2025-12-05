@@ -63,6 +63,8 @@ Route::get('/503', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('riwayat/export-pdf', [RiwayatController::class, 'exportPdf'])->name('riwayat.export.pdf');
     Route::get('/penilai/skoring/export-pdf', [App\Http\Controllers\Core\SkoringController::class, 'exportPdf']);
+    Route::get('/skp/export/pdf', [SkpController::class, 'exportPdf'])
+        ->name('skp.export.pdf');
 
     /*
     |--------------------------------------------------------------------------

@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Core;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SkpRencana; // Model Parent Baru
-use App\Models\SkpTarget;  // Model Child Baru
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\User;
 
 class SkpController extends Controller
 {
@@ -267,4 +268,29 @@ class SkpController extends Controller
 
         return response()->json(['data' => $data]);
     }
+
+    public function exportPdf()
+    {
+        $user = auth()->user();
+
+        $skp = SkpRencana::where('user_id', $user->id)
+            ->with('targets')
+            ->get();
+
+        $penilai = User::find($user->atasan_id);
+
+        $periode_awal = $skp->first()?->periode_awal ?? null;
+        $periode_akhir = $skp->first()?->periode_akhir ?? null;
+
+        $pdf = Pdf::loadView('pdf.skp-export', [
+            'user' => $user,
+            'penilai' => $penilai,
+            'skp' => $skp,
+            'periode_awal' => $periode_awal,
+            'periode_akhir' => $periode_akhir,
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('SKP_' . $user->name . '.pdf');
+    }
+
 }

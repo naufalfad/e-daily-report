@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     async function fetchPengumuman() {
         try {
             const response = await authFetch("/api/pengumuman", {
-                method: "GET"
+                method: "GET",
             });
 
             if (!response.ok) throw new Error("Gagal memuat data");
@@ -34,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = result.data ?? result; // paginate vs non paginate
 
             renderList(data);
-
         } catch (err) {
             console.error(err);
             alert("Terjadi kesalahan saat memuat pengumuman.");
@@ -56,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         listEl.classList.remove("hidden");
         emptyEl.classList.add("hidden");
 
-        data.forEach(item => {
+        data.forEach((item) => {
             listEl.appendChild(createCard(item));
         });
     }
@@ -71,11 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
         article.innerHTML = `
             <div class="flex justify-between items-start gap-4">
                 <div>
-                    <h3 class="text-[14px] font-semibold text-slate-800 mb-1">${item.judul}</h3>
-                    <p class="text-[12px] text-slate-700 leading-snug mb-4 whitespace-pre-line">${item.isi_pengumuman}</p>
+                    <h3 class="text-[14px] font-semibold text-slate-800 mb-1">${
+                        item.judul
+                    }</h3>
+                    <p class="text-[12px] text-slate-700 leading-snug mb-4 whitespace-pre-line">${
+                        item.isi_pengumuman
+                    }</p>
                     <p class="text-[11px] text-slate-400">
                         Diumumkan ${dateStr}
-                        <span class="ml-1 text-slate-300">• Oleh ${item.creator?.name || "Admin"}</span>
+                        <span class="ml-1 text-slate-300">• Oleh ${
+                            item.creator?.name || "Admin"
+                        }</span>
                     </p>
                 </div>
 

@@ -300,34 +300,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ==== ACTION BUTTONS ====
+    // ==== ACTION BUTTONS & MODAL UI FIX ====
     const btnOpenApprove = document.querySelector('.js-open-approve');
     const btnOpenReject = document.querySelector('.js-open-reject');
 
+    // Helper untuk buka modal dengan Display Flex (Agar Posisi Tengah)
+    function openModalFlex(modalEl) {
+        modalEl.classList.remove('hidden');
+        modalEl.classList.add('flex'); // PENTING: Tambah flex agar items-center bekerja
+    }
+
+    // Helper untuk tutup modal
+    function closeModalFlex(modalEl) {
+        modalEl.classList.add('hidden');
+        modalEl.classList.remove('flex');
+    }
+
     if (btnOpenApprove) {
         btnOpenApprove.onclick = () => {
-            detailModal.classList.add('hidden');
-            approveModal.classList.remove('hidden');
+            detailModal.classList.add('hidden'); // Tutup detail
+            openModalFlex(approveModal); // Buka approve
         };
     }
 
     if (btnOpenReject) {
         btnOpenReject.onclick = () => {
-            detailModal.classList.add('hidden');
+            detailModal.classList.add('hidden'); // Tutup detail
             document.getElementById('reject-note').value = '';
             rejectError.classList.add('hidden');
-            rejectModal.classList.remove('hidden');
+            openModalFlex(rejectModal); // Buka reject
         };
     }
 
-    // ==== SUBMIT VALIDATION ====
-    async function submitValidation(status, note) {
+    // Update event listener untuk tombol close bawaan
+    document.querySelectorAll('.js-close-approve').forEach(btn => {
+        btn.addEventListener('click', () => closeModalFlex(approveModal));
+    });
+
+    document.querySelectorAll('.js-close-reject').forEach(btn => {
+        btn.addEventListener('click', () => closeModalFlex(rejectModal));
+    });
+
+    // Update window click listener agar handle flex modal juga
+    window.addEventListener('click', (e) => {
+        if (e.target === detailModal) detailModal.classList.add('hidden');
+        if (e.target === approveModal) closeModalFlex(approveModal);
+        if (e.target === rejectModal) closeModalFlex(rejectModal);
+    });
+
+
+    // ==== SUBMIT VALIDATION (REVISI ERROR BTN) ====
+    // Kita tambah parameter 'buttonElement' agar fungsi tahu tombol mana yang dipencet
+    async function submitValidation(status, note, buttonElement) {
         const lkhId = detailModal.dataset.lkhId;
         const token = getToken();
-        const originalText = btn.innerHTML;
+        
+        // Simpan teks asli tombol
+        const originalText = buttonElement.innerHTML;
 
-        btn.disabled = true;
-        btn.innerHTML = `
+        // Set Loading State
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = `
             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor"
@@ -348,8 +381,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await res.json();
 
             if (res.ok) {
-                modal.classList.add('hidden');
+                // Tutup modal yang aktif berdasarkan status
+                if (status === 'approved') closeModalFlex(approveModal);
+                else closeModalFlex(rejectModal);
+
+                // Refresh data tabel
                 fetchLkhList();
+                
+                // Opsional: Tampilkan notifikasi sukses sederhana
+                alert("Berhasil memvalidasi laporan."); 
             } else {
                 alert(result.message || "Gagal memproses validasi.");
             }
@@ -357,13 +397,18 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
             alert("Terjadi kesalahan jaringan.");
         } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            // Restore Button State
+            if (buttonElement) {
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalText;
+            }
         }
     }
 
+    // Panggil submitValidation dengan mengirimkan 'this' (tombol itu sendiri) atau referensi variabel
     btnSubmitApprove?.addEventListener('click', () => {
-        submitValidation('approved', document.getElementById('approve-note').value);
+        const note = document.getElementById('approve-note').value;
+        submitValidation('approved', note, btnSubmitApprove); // <-- FIX: Kirim elemen tombol
     });
 
     btnSubmitReject?.addEventListener('click', () => {
@@ -372,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             rejectError.classList.remove('hidden');
             return;
         }
-        submitValidation('rejected', note);
+        submitValidation('rejected', note, btnSubmitReject); // <-- FIX: Kirim elemen tombol
     });
 
     // ==== INIT ====

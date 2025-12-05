@@ -20,6 +20,7 @@ use App\Http\Controllers\Core\NotifikasiController;
 use App\Http\Controllers\Core\ActivityLogController; 
 use App\Http\Controllers\Core\OrganisasiController; 
 use App\Http\Controllers\Core\KadisValidatorController;
+use App\Http\Controllers\Core\PetaAktivitasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -154,4 +155,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // API untuk mengambil data skoring bawahan
     Route::get('/skoring-kinerja', [\App\Http\Controllers\Core\SkpController::class, 'getSkoringData']);
+
+    //API mengambil lokasi peta aktivitas
+    Route::get('peta-aktivitas', [PetaAktivitasController::class, 'getPetaAktivitas']);
+    Route::get('staf-aktivitas', [PetaAktivitasController::class, 'getStafAktivitas']);
 });

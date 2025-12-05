@@ -90,4 +90,19 @@ class LaporanHarian extends Model
     {
         $query->where('status', 'waiting_review');
     }
+
+    protected $appends = ['lat', 'lng'];
+
+    public function getLatAttribute()
+    {
+        if (!$this->lokasi) return null;
+        return (float) \DB::selectOne("SELECT ST_Y(lokasi) AS lat FROM laporan_harian WHERE id = ?", [$this->id])->lat;
+    }
+
+    public function getLngAttribute()
+    {
+        if (!$this->lokasi) return null;
+        return (float) \DB::selectOne("SELECT ST_X(lokasi) AS lng FROM laporan_harian WHERE id = ?", [$this->id])->lng;
+    }
+
 }

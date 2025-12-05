@@ -481,13 +481,13 @@ document.addEventListener("alpine:init", () => {
             targets: [{
                     jenis_aspek: 'Kuantitas',
                     indikator: '',
-                    target: '',
+                    target: 0,
                     satuan: ''
                 },
                 {
                     jenis_aspek: 'Waktu',
                     indikator: '',
-                    target: '',
+                    target: 0,
                     satuan: ''
                 }
             ]
@@ -522,7 +522,7 @@ document.addEventListener("alpine:init", () => {
             this.formData.targets.push({
                 jenis_aspek: 'Kualitas',
                 indikator: '',
-                target: '',
+                target: 0,
                 satuan: ''
             });
         },
@@ -540,13 +540,13 @@ document.addEventListener("alpine:init", () => {
                 targets: [{
                         jenis_aspek: 'Kuantitas',
                         indikator: '',
-                        target: '',
+                        target: 0,
                         satuan: ''
                     },
                     {
                         jenis_aspek: 'Waktu',
                         indikator: '',
-                        target: '',
+                        target: 0,
                         satuan: ''
                     }
                 ]
@@ -567,8 +567,25 @@ document.addEventListener("alpine:init", () => {
         },
 
         async submitCreate() {
-            this.isLoading = true;
+            this.isLoading = true; // Mulai Loading
             const token = localStorage.getItem('auth_token');
+
+            // NORMALISASI PAYLOAD
+            // Pastikan target dikonversi ke integer yang aman
+            const payload = {
+                periode_awal: this.formData.periode_awal,
+                periode_akhir: this.formData.periode_akhir,
+                rhk_intervensi: this.formData.rhk_intervensi,
+                rencana_hasil_kerja: this.formData.rencana_hasil_kerja,
+                targets: this.formData.targets.map(t => ({
+                    jenis_aspek: t.jenis_aspek,
+                    indikator: t.indikator || '-',
+                    // Fix: Pastikan jadi angka, jika kosong/NaN jadi 0
+                    target: parseInt(t.target) || 0,
+                    satuan: t.satuan || '-'
+                }))
+            };
+
             try {
                 const res = await fetch('/api/skp', {
                     method: 'POST',
@@ -577,20 +594,30 @@ document.addEventListener("alpine:init", () => {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify(this.formData)
+                    body: JSON.stringify(payload)
                 });
+
                 const json = await res.json();
-                if (res.ok) {
-                    Swal.fire('Sukses', 'Rencana SKP berhasil dibuat!', 'success');
-                    this.resetForm();
-                    this.fetchSkpList();
-                } else {
-                    Swal.fire('Gagal', json.message || 'Validasi Gagal', 'error');
+
+                if (!res.ok) {
+                    // Jika validasi Laravel gagal (422) atau Server Error (500)
+                    throw new Error(json.message || JSON.stringify(json.errors) ||
+                        'Gagal menyimpan');
                 }
+
+                // Jika Sukses
+                Swal.fire('Sukses', 'Rencana SKP berhasil dibuat!', 'success');
+                this.resetForm();
+                this.fetchSkpList();
+
             } catch (e) {
-                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
+                console.error("Error submit:", e);
+                // Tampilkan pesan error yang lebih jelas
+                Swal.fire('Gagal', e.message, 'error');
+            } finally {
+                // PENTING: Matikan loading di sini agar tombol kembali normal dalam kondisi apapun
+                this.isLoading = false;
             }
-            this.isLoading = false;
         },
 
         openDetailModal(data) {
@@ -604,6 +631,21 @@ document.addEventListener("alpine:init", () => {
         async submitEdit() {
             this.isLoading = true;
             const token = localStorage.getItem('auth_token');
+
+            // NORMALISASI PAYLOAD EDIT
+            const payload = {
+                periode_awal: this.editData.periode_awal,
+                periode_akhir: this.editData.periode_akhir,
+                rhk_intervensi: this.editData.rhk_intervensi,
+                rencana_hasil_kerja: this.editData.rencana_hasil_kerja,
+                targets: this.editData.targets.map(t => ({
+                    jenis_aspek: t.jenis_aspek,
+                    indikator: t.indikator || '-',
+                    target: parseInt(t.target || 0),
+                    satuan: t.satuan || '-'
+                }))
+            };
+
             try {
                 const res = await fetch(`/api/skp/${this.editData.id}`, {
                     method: 'PUT',
@@ -612,21 +654,27 @@ document.addEventListener("alpine:init", () => {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify(this.editData)
+                    body: JSON.stringify(payload)
                 });
+
+                const json = await res.json();
+
                 if (res.ok) {
                     Swal.fire('Sukses', 'SKP diperbarui!', 'success');
                     this.openEdit = false;
                     this.fetchSkpList();
                 } else {
-                    const json = await res.json();
-                    Swal.fire('Gagal', json.message, 'error');
+                    Swal.fire('Gagal', json?.errors ? JSON.stringify(json.errors) : json
+                        .message, 'error');
                 }
+
             } catch (e) {
-                Swal.fire('Error', 'Koneksi error', 'error');
+                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
             }
+
             this.isLoading = false;
         },
+
         async deleteSkp(id) {
             const c = await Swal.fire({
                 title: 'Hapus?',

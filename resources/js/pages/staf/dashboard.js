@@ -71,10 +71,9 @@ document.addEventListener("DOMContentLoaded", async function () {
      * =======================================================*/
     if (data.statistik_skp) {
         const s = data.statistik_skp;
-        const n = data.statistik_non_skp
 
         setText("stat-val-1", s.total_skp);
-        setText("stat-val-2", n.total_non_skp);
+        setText("stat-val-2", s.total_non_skp);
         setText("stat-val-3", s.total_diterima);
         setText("stat-desc-3", s.persen_diterima + "% Dari total diterima");
 

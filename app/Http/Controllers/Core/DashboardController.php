@@ -63,8 +63,8 @@ class DashboardController extends Controller
         $lkhSkpApproved = (clone $queryLkhSkp)->where('status', 'approved')->count();
         $lkhSkpRejected = (clone $queryLkhSkp)->where('status', 'rejected')->count();
 
-        $persenSkpDiterima = $totalLkhSkp > 0 ? round(($lkhSkpApproved / $totalLkhSkp) * 100, 1) : 0;
-        $persenSkpDitolak = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
+        // $persenSkpDiterima = $totalLkhSkp > 0 ? round(($lkhSkpApproved / $totalLkhSkp) * 100, 1) : 0;
+        // $persenSkpDitolak = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
 
         // ==========================================
         // 3. STATISTIK LKH NON-SKP
@@ -82,7 +82,13 @@ class DashboardController extends Controller
         $nonSkpApproved = (clone $queryNonSkp)->where('status', 'approved')->count();
         $nonSkpRejected = (clone $queryNonSkp)->where('status', 'rejected')->count();
 
-        $persenNonSkpDiterima = $totalNonSkp > 0 ? round(($nonSkpApproved / $totalNonSkp) * 100, 1) : 0;
+        // $persenNonSkpDiterima = $totalNonSkp > 0 ? round(($nonSkpApproved / $totalNonSkp) * 100, 1) : 0;
+
+        $totalLaporan = $totalLkhSkp + $totalNonSkp;
+        $totalDiterima = $lkhSkpApproved + $nonSkpApproved;
+        $totalDitolak = $lkhSkpRejected + $nonSkpRejected;
+        $persenDiterima = $totalLaporan > 0 ? round(($totalDiterima / $totalLaporan) * 100, 1) : 0;
+        $persenDitolak = $totalLaporan > 0 ? round(($totalDitolak / $totalLaporan) * 100, 1) : 0;
 
         // ==========================================
         // 4. GRAFIK AKTIVITAS & DRAFT
@@ -130,14 +136,11 @@ class DashboardController extends Controller
             ],
             'statistik_skp' => [
                 'total_skp' => $totalLkhSkp,
-                'total_diterima' => $lkhSkpApproved,
-                'total_ditolak' => $lkhSkpRejected,
-                'persen_diterima' => $persenSkpDiterima,
-                'persen_ditolak' => $persenSkpDitolak,
-            ],
-            'statistik_non_skp' => [
+                'total_diterima' => $totalDiterima,
+                'total_ditolak' => $totalDitolak,
+                'persen_diterima' => $persenDiterima,
+                'persen_ditolak' => $persenDitolak,
                 'total_non_skp' => $totalNonSkp,
-                'persen_diterima' => $persenNonSkpDiterima,
             ],
             'grafik_aktivitas' => $graphActivities,
             'aktivitas_terbaru' => $recentActivities,

@@ -223,7 +223,6 @@
             @vite('resources/js/pages/staf/input-lkh.js')
             @vite('resources/js/pages/staf/input-skp.js')
             @vite('resources/js/pages/staf/log-aktivitas.js')
-            @vite('resources/js/pages/staf/riwayat.js')
             {{-- Tambahkan ini agar fitur pengumuman di role staf jalan --}}
             @vite('resources/js/pages/staf/pengumuman.js') 
             @break
@@ -236,13 +235,11 @@
             @vite('resources/js/pages/penilai/input-skp.js')
             @vite('resources/js/pages/penilai/skoring-kinerja.js')
             @vite('resources/js/pages/penilai/peta-aktivitas.js')
-            @vite('resources/js/pages/penilai/log-aktivitas.js') 
-            @vite('resources/js/pages/penilai/riwayat.js') 
+            @vite('resources/js/pages/penilai/log-aktivitas.js') s
             @break
 
         @case('kadis') 
             @vite('resources/js/pages/kadis/dashboard.js') 
-            @vite('resources/js/pages/kadis/log-aktivitas.js')
             @vite('resources/js/pages/kadis/validasi-laporan.js') 
             @vite('resources/js/pages/kadis/skoring-bidang.js') 
             {{-- Tambahkan ini agar fitur pengumuman di role kadis jalan --}}

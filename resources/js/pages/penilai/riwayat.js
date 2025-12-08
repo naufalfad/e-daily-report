@@ -2,7 +2,7 @@
 //   RIWAYAT LKH — PENILAI (SCRIPT TERPISAH)
 // =====================================================
 
-export function riwayatData(role) {
+export function riwayatDataPenilai(role) {
     const TOKEN = localStorage.getItem('auth_token');
     const BASE_URL = '/api/lkh/riwayat';
 
@@ -56,6 +56,8 @@ export function riwayatData(role) {
                     return "Diterima";
                 case "rejected":
                     return "Ditolak";
+                case "draft":
+                    return "Draft";
                 default:
                     return "Menunggu";
             }
@@ -67,6 +69,9 @@ export function riwayatData(role) {
                     return "rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5";
                 case "rejected":
                     return "rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5";
+                case "draft":
+                // Abu-abu untuk draft agar terlihat beda dengan pending
+                return "rounded-full bg-slate-200 text-slate-600 text-[11px] font-medium px-2.5 py-0.5";
                 default:
                     return "rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5";
             }
@@ -197,4 +202,4 @@ export function riwayatData(role) {
 }
 
 // Daftarkan fungsi ke Global Window agar dikenali oleh Alpine.js di HTML
-window.riwayatData = riwayatData;
+window.riwayatDataPenilai = riwayatDataPenilai;

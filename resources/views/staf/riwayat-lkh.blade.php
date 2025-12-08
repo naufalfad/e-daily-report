@@ -4,7 +4,7 @@
 
 
 @section('content')
-<section x-data="riwayatData('staf')" x-init="initPage()">
+<section x-data="riwayatDataStaf('staf')" x-init="initPage()">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 flex flex-col min-h-[100vh]">
@@ -81,13 +81,12 @@
                         <th class="px-3 py-2 font-medium">Tanggal Verifikasi</th>
                         <th class="px-3 py-2 font-medium">Pejabat Penilai</th>
                         <th class="px-3 py-2 font-medium">Status</th>
-                        <th class="px-3 py-2 font-medium">Aksi</th>
+                        <th class="px-3 py-2 font-medium text-center">Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody class="text-slate-700">
 
-                    <!-- KOSONG -->
                     <template x-if="items.length === 0 && !loading">
                         <tr>
                             <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
@@ -97,7 +96,6 @@
                         </tr>
                     </template>
 
-                    <!-- LOADING -->
                     <template x-if="loading">
                         <tr>
                             <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
@@ -107,7 +105,6 @@
                         </tr>
                     </template>
 
-                    <!-- DATA -->
                     <template x-for="item in items" :key="item.id">
                         <tr class="border-t border-slate-100 hover:bg-slate-50">
                             <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.tanggal_laporan)"></td>
@@ -127,15 +124,15 @@
                                 <span :class="statusBadgeClass(item.status)" x-text="statusText(item.status)"></span>
                             </td>
 
-                            <td class="px-3 py-3">
+                            {{-- [FIXED] Kolom Aksi yang lebih Cerdas --}}
+                            <td class="px-3 py-3 flex justify-center gap-2">
                                 <button @click="openModal(item)"
                                     class="rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px] leading-none shadow-sm hover:brightness-95">
-                                    Lihat Detail
+                                    Detail
                                 </button>
                             </td>
                         </tr>
                     </template>
-
                 </tbody>
             </table>
         </div>
@@ -216,7 +213,7 @@
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Kategori:</label>
-                            <p class="text-slate-800" x-text="modalData.skp_id ? 'SKP' : 'Non-SKP'"></p>
+                            <p class="text-slate-800" x-text="modalData.skp_rencana_id ? 'SKP' : 'Non-SKP'"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Lokasi:</label>
@@ -243,11 +240,15 @@
                         </div>
                     </div>
 
-                    <div x-show="modalData.status === 'rejected' && role === 'pegawai'" class="flex justify-end pt-2">
+                    {{-- [FIXED] Tombol di Modal --}}
+                    {{-- Kondisi: Role harus 'staf' (sesuai JS), dan Status Draft OR Rejected --}}
+                    <div x-show="role === 'staf' && (modalData.status === 'draft' || modalData.status === 'rejected')" 
+                         class="flex justify-end pt-2">
                         <button
                             @click="editLaporan(modalData.id)"
-                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
-                            Perbaiki Laporan
+                            :class="modalData.status === 'draft' ? 'bg-slate-500' : 'bg-[#0E7A4A]'"
+                            class="rounded-[10px] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
+                            <span x-text="modalData.status === 'draft' ? 'Lanjutkan Laporan' : 'Perbaiki Laporan'"></span>
                         </button>
                     </div>
                 </div>

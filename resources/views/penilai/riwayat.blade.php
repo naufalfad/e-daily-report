@@ -3,7 +3,7 @@
 @extends('layouts.app', ['title' => $title, 'role' => 'penilai', 'active' => 'riwayat'])
 
 @section('content')
-<section x-data="riwayatData('penilai')" x-init="initPage()">
+<section x-data="riwayatDataPenilai('penilai')" x-init="initPage()">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 flex flex-col min-h-[100vh]">
@@ -215,7 +215,7 @@
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Kategori:</label>
-                            <p class="text-slate-800" x-text="modalData.skp_id ? 'SKP' : 'Non-SKP'"></p>
+                            <p class="text-slate-800" x-text="modalData.skp_rencana_id ? 'SKP' : 'Non-SKP'"></p>
                         </div>
                         <div>
                             <label class="text-xs text-slate-500">Lokasi:</label>

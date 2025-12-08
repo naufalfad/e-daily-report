@@ -18,28 +18,26 @@ class KadisValidatorController extends Controller
      * 1. LIST LKH dari KABID yang harus divalidasi Kadis
      */
     public function index(Request $request)
-    {
-        $kadisId = Auth::id(); // ID Kadis
+{
+    $kadisId = Auth::id(); 
+    $query = LaporanHarian::query()
+        ->with(['user.jabatan', 'user.unitKerja', 'skp', 'bukti']) // Load relasi yang dibutuhkan frontend
+        ->where('atasan_id', $kadisId) // Filter KUNCI: Hanya direct report
+        ->where('user_id', '!=', $kadisId)
+        ->where('status', '!=', 'draft');
 
-        // Laporan MILIK KABID dan atasan_id = kadis
-        $query = LaporanHarian::with(['user', 'skp', 'bukti'])
-            ->whereHas('user', function ($q) {
-                $q->whereHas('jabatan', function ($j) {
-                    $j->where('nama_jabatan', 'like', '%kabid%');
-                });
-            })
-            ->where('atasan_id', $kadisId)
-            ->where('status', '!=', 'draft');
-
-        // Filter status
-        if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        }
-
-        $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END");
-
-        return response()->json($query->latest('tanggal_laporan')->paginate(10));
+    // Filter Status Dinamis
+    if ($request->filled('status') && $request->status !== 'all') {
+        $query->where('status', $request->status);
     }
+
+    // Sorting Logic: Prioritaskan yang butuh validasi (pending/waiting_review)
+    // Pastikan value status sesuai database ('pending' atau 'waiting_review')
+    $query->orderByRaw("CASE WHEN status = 'pending' THEN 1 ELSE 2 END")
+          ->latest('tanggal'); // Pastikan nama kolom tanggal di DB (biasanya 'tanggal' atau 'created_at')
+
+    return response()->json($query->paginate(10));
+}
 
     /**
      * 2. SHOW LKH KABID

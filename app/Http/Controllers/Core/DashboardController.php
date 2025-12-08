@@ -97,7 +97,6 @@ class DashboardController extends Controller
 
         $graphActivities = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
-            ->whereNotNull('skp_rencana_id')
             ->latest('created_at')
             ->get();
 
@@ -130,14 +129,14 @@ class DashboardController extends Controller
                 'persen_capaian' => $persenCapaian,
             ],
             'statistik_skp' => [
-                'total_diajukan' => $totalLkhSkp,
+                'total_skp' => $totalLkhSkp,
                 'total_diterima' => $lkhSkpApproved,
                 'total_ditolak' => $lkhSkpRejected,
                 'persen_diterima' => $persenSkpDiterima,
                 'persen_ditolak' => $persenSkpDitolak,
             ],
             'statistik_non_skp' => [
-                'total_diajukan' => $totalNonSkp,
+                'total_non_skp' => $totalNonSkp,
                 'persen_diterima' => $persenNonSkpDiterima,
             ],
             'grafik_aktivitas' => $graphActivities,

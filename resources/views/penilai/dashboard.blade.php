@@ -124,17 +124,17 @@
         <div class="text-xs text-slate-400 font-medium">Total diajukan</div>
     </div>
 
-    {{-- Card 2: Menunggu Verifikasi (Mapping ke Realisasi Tahunan / Waiting) --}}
+    {{-- Card 2: Total Laporan Non SKP (Mapping ke Realisasi Tahunan / Waiting) --}}
     {{-- Karena JSON tidak punya count 'Waiting', kita pakai Realisasi Tahunan sebagai pengganti --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col gap-2">
         <div class="flex items-start justify-between">
             <div class="text-4xl font-semibold tracking-tight" id="stat-val-2">0</div>
-            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#D8A106]/50">
-                <img src="{{ asset('assets/icon/pending.svg') }}" class="h-5 w-5 object-contain">
+            <div class="flex items-center justify-center h-10 w-10 rounded-[10px] bg-[#155FA6]/50">
+                <img src="{{ asset('assets/icon/send.svg') }}" class="h-5 w-5 object-contain">
             </div>
         </div>
-        <div class="text-xs text-slate-500">Realisasi Tahunan</div>
-        <div class="text-xs text-emerald-600 font-medium" id="stat-desc-2">0% Capaian</div>
+        <div class="text-xs text-slate-500">Total Laporan Non-SKP</div>
+        <div class="text-xs text-slate-400 font-medium">Total diajukan</div>
     </div>
 
     {{-- Card 3: Disetujui (Mapping ke Persen Diterima) --}}

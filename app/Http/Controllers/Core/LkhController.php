@@ -96,7 +96,12 @@ class LkhController extends Controller
     {
         $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
         $user = Auth::user();
-        $status = 'waiting_review';
+        $status = $request->input('status', 'waiting_review');
+
+        // Validasi keamanan agar user tidak bisa kirim status 'approved' secara manual
+        if (!in_array($status, ['draft', 'waiting_review'])) {
+            $status = 'draft';
+        }
 
         if (!$user) {
             return response()->json(['message' => 'User belum login / token invalid'], 401);

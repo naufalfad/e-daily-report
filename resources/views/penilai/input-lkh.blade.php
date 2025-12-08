@@ -27,7 +27,9 @@
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
         <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
 
-        <form id="form-lkh">
+        <form id="form-lkh" 
+     	    method="POST"
+	        enctype="multipart/form-data">>
             <input type="hidden" name="status" id="status_input" value="draft">
             
             {{-- Mode Lokasi Hidden Input (Default: geofence) --}}

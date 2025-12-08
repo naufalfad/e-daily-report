@@ -25,6 +25,7 @@ class ValidatorController extends Controller
         // Karena di Model LaporanHarian, relasinya bernama: public function rencana()
         $query = LaporanHarian::with(['user', 'rencana', 'bukti']) 
             ->where('atasan_id', $atasanId) 
+            ->where('user_id', '!=', $atasanId)
             ->where('status', '!=', 'draft'); 
 
         // Filter status

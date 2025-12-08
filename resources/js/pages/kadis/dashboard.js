@@ -1,221 +1,178 @@
 import Chart from "chart.js/auto";
 
 document.addEventListener("DOMContentLoaded", async function () {
+    // Helper untuk set text aman
     const setText = (id, value = "-") => {
         const el = document.getElementById(id);
         if (el) el.innerText = value;
     };
 
+    // Helper untuk format angka
+    const formatNumber = (num) => {
+        return new Intl.NumberFormat('id-ID').format(num);
+    };
+
+    // 1. Fetch Data dari API Baru (getStatsKadis)
     const token = localStorage.getItem("auth_token");
     const headers = { Accept: "application/json" };
     if (token) headers["Authorization"] = "Bearer " + token;
 
     let data;
     try {
+        // Endpoint ini sekarang mengembalikan JSON struktur baru (User Info + Grafik Data per Bidang)
         const res = await fetch(`/api/dashboard/kadis`, {
             method: "GET",
             headers,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         data = await res.json();
-        console.log("DATA KADIS:", data);
+        console.log("DATA DASHBOARD KADIS (NEW):", data);
     } catch (err) {
-        console.error("Gagal mengambil data dashboard Kadis:", err);
+        console.error("Gagal mengambil data dashboard:", err);
         return;
     }
 
-    /* =======================
- * 0. BANNER & PROFIL
- * =======================*/
+    /* =========================================================================
+     * 1. PROFIL & BANNER
+     * Mapping data user_info ke elemen HTML
+     * =========================================================================*/
+    const u = data.user_info || {};
 
-const u = data.user_info || {};
+    // Header Welcome
+    setText("banner-nama", u.name ?? "Kepala Dinas");
+    
+    // Card Profil Samping
+    setText("profile-nama", u.name ?? "-");
+    setText("profile-nip", u.nip ?? "-");
+    setText("profile-jabatan", u.jabatan ?? "-");
+    setText("profile-unit", u.unit_kerja ?? "-"); // Perhatikan key JSON 'unit_kerja'
+    setText("profile-alamat", u.alamat ?? "-");
+    
+    // Set Foto Profil jika ada
+    const imgEl = document.getElementById("profile-foto");
+    if (imgEl && u.foto) {
+        imgEl.src = u.foto;
+    }
 
-setText("banner-nama", u.name ?? "-");
-setText("profile-nama", u.name ?? "-");
-setText("profile-nip", u.nip ?? "-");
-setText("profile-daerah", u.daerah ?? "-");
+    /* =========================================================================
+     * 2. GENERATE GRAFIK PER BIDANG (DYNAMIC LOOP)
+     * =========================================================================*/
+    const container = document.getElementById("grafik-bidang-container");
+    const listBidang = data.grafik_data || [];
+    const tahunPeriode = data.periode_tahun || new Date().getFullYear();
 
-setText("profile-jabatan", u.jabatan ?? "-");
-setText("profile-dinas", u.unit ?? "-");
-setText("profile-alamat", u.alamat ?? "-");
+    if (container) {
+        // Bersihkan container (loading state remove)
+        container.innerHTML = "";
 
-    /* =======================
-     * 1. Statistik Angka
-     * =======================*/
-    const s = data.statistik || {};
+        if (listBidang.length === 0) {
+            container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-10">Data bidang tidak ditemukan.</div>`;
+        }
 
-    setText("stat-total-hari-ini", s.total_hari_ini ?? 0);
-    setText("stat-menunggu", s.total_menunggu ?? 0);
-    setText("stat-disetujui", s.total_disetujui ?? 0);
-    setText("stat-ditolak", s.total_ditolak ?? 0);
+        // Palette Warna untuk membedakan tiap bidang (Aesthetic Touch)
+        const colors = [
+            { border: "#3B82F6", bg: "rgba(59, 130, 246, 0.1)" }, // Blue
+            { border: "#10B981", bg: "rgba(16, 185, 129, 0.1)" }, // Emerald
+            { border: "#F59E0B", bg: "rgba(245, 158, 11, 0.1)" }, // Amber
+            { border: "#8B5CF6", bg: "rgba(139, 92, 246, 0.1)" }, // Violet
+            { border: "#EC4899", bg: "rgba(236, 72, 153, 0.1)" }, // Pink
+            { border: "#6366F1", bg: "rgba(99, 102, 241, 0.1)" }, // Indigo
+        ];
 
-    /* =======================
-     * 2. Persentase
-     * =======================*/
-    setText("rate-total-hari-ini", `↑ ${s.rate_total ?? 0}% dari kemarin`);
-    setText("rate-menunggu", "⚠ Perlu perhatian"); // FIXED
-    setText("rate-disetujui", `↑ ${s.rate_disetujui ?? 0}% Approval Rate`);
-    setText("rate-ditolak", `↓ ${s.rate_ditolak ?? 0}% Rejection Rate`);
+        // Looping untuk membuat Card Grafik
+        listBidang.forEach((bidang, index) => {
+            // Ambil warna berdasarkan index (looping jika bidang > 6)
+            const theme = colors[index % colors.length];
+            const canvasId = `chart-bidang-${bidang.id_bidang}`;
+            const totalKinerja = bidang.data_bulanan.reduce((a, b) => a + b, 0);
 
-    /* =======================
-     * 3. Aktivitas Terkini
-     * =======================*/
-    const list = document.getElementById("aktivitas-list");
-    list.innerHTML = "";
-
-    if (!data.aktivitas_terbaru?.length) {
-        list.innerHTML = `<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>`;
-    } else {
-        data.aktivitas_terbaru.forEach((item) => {
-            const dateObj = new Date(item.tanggal_laporan);
-            const tanggal = dateObj.toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-            });
-
-            let tone, icon, label;
-            if (item.status === "approved") {
-                tone = "bg-[#128C60]/50";
-                icon = "approve.svg";
-                label = "Disetujui";
-            } else if (item.status === "rejected") {
-                tone = "bg-[#B6241C]/50";
-                icon = "reject.svg";
-                label = "Ditolak";
-            } else {
-                tone = "bg-[#D8A106]/50";
-                icon = "pending.svg";
-                label = "Menunggu Review";
-            }
-
-            list.insertAdjacentHTML(
-                "beforeend",
-                `
-                <li class="flex items-start gap-3">
-                    <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
-                        <img src="/assets/icon/${icon}" class="h-5 w-5">
-                    </div>
-
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-medium truncate">${item.deskripsi_aktivitas}</div>
-
-                        <div class="flex justify-between mt-[2px]">
-                            <span class="text-xs text-slate-500">${label}</span>
-                            <span class="text-xs text-slate-500 whitespace-nowrap">${tanggal}</span>
+            // 1. Inject HTML Struktur Card ke Container
+            const cardHtml = `
+                <div class="bg-white p-5 rounded-[20px] border border-slate-200 shadow-sm flex flex-col h-[320px]">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm leading-tight mb-1">${bidang.nama_bidang}</h3>
+                            <p class="text-xs text-slate-500">Kinerja Tahun ${tahunPeriode}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-xs text-slate-400">Total Approved</span>
+                            <span class="block text-lg font-bold text-slate-800">${formatNumber(totalKinerja)}</span>
                         </div>
                     </div>
-                </li>
-            `
-            );
-        });
-    }
+                    
+                    <div class="flex-1 w-full relative min-h-0">
+                        <canvas id="${canvasId}"></canvas>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHtml);
 
-    /* =======================
-     * 4. GRAFIK Kadis (FULL STYLE)
-     * =======================*/
+            // 2. Render Chart.js
+            const ctx = document.getElementById(canvasId).getContext("2d");
+            
+            // Buat Gradient effect
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, theme.bg.replace('0.1', '0.4')); // Lebih tebal di atas
+            gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
 
-    if (window.kadisChart) {
-        try {
-            window.kadisChart.destroy();
-        } catch (e) {}
-    }
-
-    const grafikAll = data.grafik || [];
-
-    const monthlyTotal = Array(12).fill(0);
-    const monthlyApproved = Array(12).fill(0);
-    const monthlyRejected = Array(12).fill(0);
-
-    grafikAll.forEach((item) => {
-        const m = new Date(item.tanggal_laporan).getMonth();
-        monthlyTotal[m]++;
-
-        if (item.status === "approved") monthlyApproved[m]++;
-        else if (item.status.includes("reject")) monthlyRejected[m]++;
-    });
-
-    const canvas = document.getElementById("kinerjaBulananChart");
-
-    if (canvas) {
-        const ctx = canvas.getContext("2d");
-
-        // ===== MULTI GRADIENT EXACT LIKE OLD STYLE =====
-        const gradTotal = ctx.createLinearGradient(0, 0, 0, 300);
-        gradTotal.addColorStop(0, "rgba(30, 64, 175, 0.35)");
-        gradTotal.addColorStop(1, "rgba(30, 64, 175, 0)");
-
-        const gradApproved = ctx.createLinearGradient(0, 0, 0, 300);
-        gradApproved.addColorStop(0, "rgba(18, 140, 96, 0.25)");
-        gradApproved.addColorStop(1, "rgba(18, 140, 96, 0)");
-
-        const gradRejected = ctx.createLinearGradient(0, 0, 0, 300);
-        gradRejected.addColorStop(0, "rgba(182, 36, 28, 0.25)");
-        gradRejected.addColorStop(1, "rgba(182, 36, 28, 0)");
-
-        window.kadisChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: [
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "Mei",
-                    "Jun",
-                    "Jul",
-                    "Agu",
-                    "Sep",
-                    "Okt",
-                    "Nov",
-                    "Des",
-                ],
-                datasets: [
-                    {
-                        label: "Total Laporan",
-                        data: monthlyTotal,
-                        borderColor: "#1E40AF",
-                        backgroundColor: gradTotal,
-                        pointBackgroundColor: "#1E40AF",
-                        borderWidth: 2.5,
-                        fill: true,
-                        tension: 0.35,
-                    },
-                    {
-                        label: "Laporan Diterima",
-                        data: monthlyApproved,
-                        borderColor: "#128C60",
-                        backgroundColor: gradApproved,
-                        pointBackgroundColor: "#128C60",
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
+                    datasets: [{
+                        label: 'LKH Disetujui',
+                        data: bidang.data_bulanan, // Array [10, 20, 0, ...]
+                        borderColor: theme.border,
+                        backgroundColor: gradient,
                         borderWidth: 2,
+                        pointBackgroundColor: "#fff",
+                        pointBorderColor: theme.border,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
                         fill: true,
-                        tension: 0.35,
-                    },
-                    {
-                        label: "Laporan Ditolak",
-                        data: monthlyRejected,
-                        borderColor: "#B6241C",
-                        backgroundColor: gradRejected,
-                        pointBackgroundColor: "#B6241C",
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.35,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "bottom",
-                        labels: { usePointStyle: true },
-                    },
+                        tension: 0.4 // Garis melengkung halus (Smooth Curve)
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true },
-                },
-            },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }, // Hide legend agar bersih
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1e293b',
+                            bodyColor: '#1e293b',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `Total: ${context.parsed.y} Laporan`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [2, 4], color: '#f1f5f9' },
+                            ticks: { font: { size: 10 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10 } }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
         });
     }
 });

@@ -6,7 +6,7 @@
 export function showToast(message, type = 'info') {
     // Cek apakah container toast sudah ada
     let toastContainer = document.getElementById('toast-container');
-    
+
     if (!toastContainer) {
         toastContainer = document.createElement('div');
         toastContainer.id = 'toast-container';
@@ -16,7 +16,7 @@ export function showToast(message, type = 'info') {
 
     // Buat elemen toast
     const toast = document.createElement('div');
-    
+
     // Warna background berdasarkan tipe
     const bgColors = {
         success: 'bg-green-500',
@@ -24,11 +24,11 @@ export function showToast(message, type = 'info') {
         warning: 'bg-yellow-500',
         info: 'bg-blue-500'
     };
-    
+
     const colorClass = bgColors[type] || bgColors.info;
 
     toast.className = `${colorClass} text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 min-w-[300px] transform transition-all duration-300 translate-x-full opacity-0`;
-    
+
     toast.innerHTML = `
         <span class="flex-1 text-sm font-medium">${message}</span>
         <button onclick="this.parentElement.remove()" class="text-white/80 hover:text-white">
@@ -59,7 +59,7 @@ export function showToast(message, type = 'info') {
 // --- LOGIKA NOTIFIKASI DROPDOWN (TETAP JALAN) ---
 document.addEventListener("DOMContentLoaded", async () => {
     const notifBadge = document.getElementById("notif-badge");
-    const notifList  = document.getElementById("notif-list");
+    const notifList = document.getElementById("notif-list");
 
     if (!notifBadge || !notifList) return;
 
@@ -67,20 +67,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Jika Paduka pakai Sanctum cookie-based auth, token mungkin tidak perlu di header Authorization manual.
     // Tapi mari kita asumsikan logic auth Paduka sudah benar.
     const token = localStorage.getItem("auth_token");
-    
+
     // Jika tidak ada token, mungkin pakai cookie session, jadi fetch tetap jalan.
     // Hapus 'if (!token) return;' jika pakai session based.
-    
+
     try {
         const headers = {
             "Accept": "application/json"
         };
-        
+
         if (token) {
             headers["Authorization"] = `Bearer ${token}`;
         }
 
-        const res = await fetch('/e-daily-report/api/notifikasi', { headers });
+        const res = await fetch('/api/notifikasi', { headers });
 
         if (!res.ok) return; // Silent fail kalau unauthorized
 
@@ -108,10 +108,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Format tanggal agar aman
             let dateStr = '-';
             try {
-                dateStr = new Date(n.created_at).toLocaleString('id-ID', { 
+                dateStr = new Date(n.created_at).toLocaleString('id-ID', {
                     day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                 });
-            } catch(e) {}
+            } catch (e) { }
 
             const html = `
                 <a href="${n.redirect_url ?? '#'}"

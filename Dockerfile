@@ -1,6 +1,7 @@
 FROM php:8.2-fpm
 
 # 1. Install dependencies sistem
+# [FIX] Tambahkan 'libmagic-dev' (library wajib untuk deteksi Mime Type PDF akurat)
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -13,14 +14,16 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
+    libwebp-dev \
+    libmagic-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 2. Konfigurasi & Install Ekstensi PHP
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath zip
+    && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath zip fileinfo
 
-# 3. Atur batasan upload PHP (FIX MASALAH UPLOAD FOTO)
+# 3. Atur batasan upload PHP
 RUN echo "upload_max_filesize=100M" > /usr/local/etc/php/conf.d/uploads.ini \
     && echo "post_max_size=100M" >> /usr/local/etc/php/conf.d/uploads.ini \
     && echo "memory_limit=512M" >> /usr/local/etc/php/conf.d/uploads.ini \

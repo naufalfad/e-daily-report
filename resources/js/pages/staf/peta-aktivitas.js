@@ -1,7 +1,8 @@
-// resources/js/pages/staf/peta-aktivitas.js
+// resources/js/pages/penilai/peta-aktivitas.js
 
-document.addEventListener('alpine:init', () => {
-    Alpine.data('mapPageData', () => ({
+// FIX: Menggunakan export function untuk pendaftaran global Alpine
+export function stafMapData() {
+    return {
 
         map: null,
         markersLayer: null,
@@ -60,11 +61,21 @@ document.addEventListener('alpine:init', () => {
 
         // ---------------- LOGIC DATA ----------------
         loadData() {
-            fetch('/e-daily-report/data/peta-aktivitas.json')
+            // ENDPOINT BENAR untuk Penilai: Mengambil aktivitas bawahan (atasan_id = Auth::id())
+            fetch('/api/peta-aktivitas', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
+                    'Accept': 'application/json'
+                }
+            })
                 .then(res => res.json())
                 .then(data => {
-                    this.allActivities = data;
-                    this.loadMarkers(data);
+                    if (!data.success) {
+                        console.error("API error:", data);
+                        return;
+                    }
+                    this.allActivities = data.data;
+                    this.loadMarkers(data.data);
                 })
                 .catch(err => console.error("Gagal memuat data:", err));
         },
@@ -109,7 +120,7 @@ document.addEventListener('alpine:init', () => {
                                 <span style="display:flex; align-items:center; gap:3px;">⏰ ${act.waktu}</span>
                             </div>
                             <p style="font-size:12px; line-height:1.5; color:#334155; margin:0; font-style:italic; background:#f8fafc; padding:6px; border-radius:4px; border-left: 3px solid ${color};">
-                                "${act.deskripsi.length > 50 ? act.deskripsi.substring(0,50)+'...' : act.deskripsi}"
+                                "${act.deskripsi.length > 50 ? act.deskripsi.substring(0, 50) + '...' : act.deskripsi}"
                             </p>
                         </div>
 
@@ -136,8 +147,8 @@ document.addEventListener('alpine:init', () => {
                     weight: 2,
                     fillOpacity: 0.9
                 })
-                .bindPopup(popupContent)
-                .addTo(this.markersLayer);
+                    .bindPopup(popupContent)
+                    .addTo(this.markersLayer);
             });
         },
 
@@ -190,5 +201,5 @@ document.addEventListener('alpine:init', () => {
                 });
             });
         }
-    }));
-});
+    }
+}

@@ -1,244 +1,159 @@
 @php($title = 'Akun Pengguna')
 
 @extends('layouts.app', [
-'title' => $title,
-'role' => 'admin',
-'active'=> 'akun-pengguna',
+    'title' => $title,
+    'role' => 'admin',
+    'active' => 'akun-pengguna',
 ])
 
 @section('content')
+    <style>
+        .form-input-tegas { @apply w-full rounded-lg border-2 border-slate-400 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition-all; }
+        .form-label-tegas { @apply block text-sm font-bold text-slate-700 mb-1.5; }
+    </style>
 
-{{-- Wrapper utama biar konten bisa stretch vertikal --}}
-<div class="flex-1 flex flex-col min-h-0">
-    <section class="flex-1 flex flex-col rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 mb-0">
-
-        {{-- Header: Judul + tombol kanan --}}
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-            <div>
-                <h1 class="text-[20px] font-normal text-slate-800">Akun Pengguna</h1>
+    {{-- Script JS diganti ke file akun-pengguna.js --}}
+    <div x-data="akunPenggunaData()" x-init="initPage()" class="flex-1 flex flex-col min-h-0 relative">
+        
+        <section class="flex-1 flex flex-col rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 mb-0">
+            
+            {{-- Header --}}
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                <h1 class="text-[20px] font-bold text-slate-800">Manajemen Akses & Kredensial</h1>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3 justify-end">
-                <button type="button" id="btn-open-add-akun"
-                    class="inline-flex items-center gap-2 rounded-[10px] bg-[#128C60] text-white text-[14px] px-5 py-2.5 hover:brightness-95 transition">
-
-                    <img src="{{ asset('assets/icon/akun-pengguna.svg') }}" alt="Tambah Akun" class="h-4 w-4">
-
-                    <span>Tambah Akun</span>
-                </button>
-
-
-            </div>
-        </div>
-
-        {{-- Tabel data akun (stretch sampai bawah) --}}
-        <div class="flex-1 min-h-0 overflow-x-auto">
-            <table class="min-w-full border-collapse text-[13px]">
-                <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50">
-                        <th class="text-left font-medium text-slate-600 py-3 px-4">Nama</th>
-                        <th class="text-left font-medium text-slate-600 py-3 px-4">NIP</th>
-                        <th class="text-left font-medium text-slate-600 py-3 px-4">Email</th>
-                        <th class="text-left font-medium text-slate-600 py-3 px-4">Username</th>
-                        <th class="text-left font-medium text-slate-600 py-3 px-4">Atasan Langsung</th>
-                        <th class="text-left font-medium text-slate-600 py-3 px-4 text-center">Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody class="divide-y divide-slate-100">
-                    {{-- Row 1 --}}
-                    <tr class="hover:bg-slate-50/60">
-                        <td class="py-3 px-4 text-slate-800 align-top">
-                            Fahrizal Mudzaqi Maulana
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top whitespace-nowrap">
-                            196703101988030109
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Staf BAPENDA
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            FahrizalMudzaqi07
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Joko Anwar
-                        </td>
-                        <td class="py-3 px-4 text-center align-top">
-                            <button type="button" class="hover:opacity-80 transition">
-                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
-                            </button>
-                        </td>
-
-                    </tr>
-
-                    {{-- Row 2 --}}
-                    <tr class="hover:bg-slate-50/60">
-                        <td class="py-3 px-4 text-slate-800 align-top">
-                            Muhammad Naufal
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top whitespace-nowrap">
-                            196703101988030109
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Kepala Bidang I
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            MNaufal20
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Darius Sabon Rain
-                        </td>
-                        <td class="py-3 px-4 text-center align-top">
-                            <button type="button" class="hover:opacity-80 transition">
-                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
-                            </button>
-                        </td>
-                    </tr>
-
-                    {{-- Row 3 --}}
-                    <tr class="hover:bg-slate-50/60">
-                        <td class="py-3 px-4 text-slate-800 align-top">
-                            Darius Sabon Rain
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top whitespace-nowrap">
-                            196703101988030109
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Kepala Dinas Badan Pendapatan Daerah
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            DariusSabon9
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            -
-                        </td>
-                        <td class="py-3 px-4 text-center align-top">
-                            <button type="button" class="hover:opacity-80 transition">
-                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
-                            </button>
-                        </td>
-                    </tr>
-
-                    {{-- Row 4 --}}
-                    <tr class="hover:bg-slate-50/60">
-                        <td class="py-3 px-4 text-slate-800 align-top">
-                            Reno Sebastian Nugraha
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top whitespace-nowrap">
-                            196703101988030109
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Staf IT
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Reno12
-                        </td>
-                        <td class="py-3 px-4 text-slate-700 align-top">
-                            Matthew Siregar
-                        </td>
-                        <td class="py-3 px-4 text-center align-top">
-                            <button type="button" class="hover:opacity-80 transition">
-                                <img src="{{ asset('assets/icon/delete.svg') }}" class="h-5 w-5" alt="Hapus">
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </section>
-</div>
-
-{{-- MODAL TAMBAH AKUN PENGGUNA --}}
-<div id="modal-add-akun" class="fixed inset-0 z-[65] hidden items-center justify-center bg-black/60 px-4">
-    <div class="relative w-full max-w-[520px] bg-white rounded-[24px] shadow-xl px-6 md:px-8 py-6 md:py-7">
-
-        {{-- Tombol close (X) --}}
-        <button type="button" id="btn-close-add-akun"
-            class="absolute right-6 top-5 text-slate-400 hover:text-slate-600 text-xl leading-none">
-            &times;
-        </button>
-
-        {{-- Judul modal --}}
-        <h2 class="text-[18px] md:text-[20px] font-semibold text-slate-800 mb-4">
-            Tambah Akun
-        </h2>
-
-        {{-- FORM TAMBAH AKUN (FE only, dummy) --}}
-        <form action="#" method="POST" class="space-y-4">
-            @csrf
-
-            {{-- Pilih Pegawai --}}
-            <div>
-                <label class="block text-[13px] text-slate-600 mb-1">Pilih Pegawai</label>
-                <div class="relative">
-                    <select class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
-                               px-3.5 pr-10 text-sm appearance-none
-                               focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
-                               text-slate-700 placeholder:text-[#9CA3AF]">
-                        <option value="" disabled selected hidden>Pilih Pegawai</option>
-                        <option>Fahrizal Mudzaqi Maulana</option>
-                        <option>Muhammad Naufal</option>
-                        <option>Darius Sabon Rain</option>
-                        <option>Reno Sebastian Nugraha</option>
-                    </select>
-
-                    <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" alt="">
+            {{-- Filter Search --}}
+            <div class="flex gap-3 mb-4">
+                <div class="w-full md:w-1/3">
+                    <input type="text" x-model="search" @input.debounce.500ms="fetchData()" placeholder="Cari Nama / Username..." class="w-full rounded-[10px] border-2 border-slate-300 bg-slate-50 px-4 py-2.5 text-sm focus:border-[#1C7C54] font-bold">
                 </div>
             </div>
 
-            {{-- Pilih Role --}}
-            <div>
-                <label class="block text-[13px] text-slate-600 mb-1">Pilih Role</label>
-                <div class="relative">
-                    <select class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
-                               px-3.5 pr-10 text-sm appearance-none
-                               focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
-                               text-slate-700 placeholder:text-[#9CA3AF]">
-                        <option value="" disabled selected hidden>Pilih Role</option>
-                        <option>Admin</option>
-                        <option>Kepala Dinas</option>
-                        <option>Kepala Bidang</option>
-                        <option>Staf</option>
-                    </select>
+            {{-- Table --}}
+            <div class="flex-1 overflow-x-auto border border-slate-200 rounded-xl relative">
+                <div x-show="isLoading" class="absolute inset-0 z-10 bg-white/80 flex items-center justify-center"><span class="font-bold text-slate-600 animate-pulse">Memuat data...</span></div>
+                <table class="min-w-full text-[13px]">
+                    <thead class="bg-slate-100 border-b-2 border-slate-200">
+                        <tr>
+                            <th class="text-left font-bold text-slate-700 py-3 px-4">Nama Pegawai & Unit</th>
+                            <th class="text-left font-bold text-slate-700 py-3 px-4">Username</th>
+                            <th class="text-left font-bold text-slate-700 py-3 px-4">Role Saat Ini</th>
+                            <th class="text-center font-bold text-slate-700 py-3 px-4">Status</th>
+                            <th class="text-center font-bold text-slate-700 py-3 px-4">Aksi Keamanan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 bg-white">
+                        <template x-for="item in items" :key="item.id">
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-800" x-text="item.name"></div>
+                                    <div class="text-xs font-bold text-slate-500 mt-1" x-text="item.unit_kerja?.nama_unit || '-'"></div>
+                                </td>
+                                <td class="py-3 px-4 font-mono font-bold text-blue-600" x-text="item.username"></td>
+                                <td class="py-3 px-4">
+                                    <span :class="{'bg-red-100 text-red-700': item.roles[0]?.nama_role === 'Super Admin', 'bg-emerald-100 text-emerald-700': item.roles[0]?.nama_role === 'Kadis', 'bg-yellow-100 text-yellow-700': item.roles[0]?.nama_role === 'Penilai', 'bg-slate-100 text-slate-700': item.roles[0]?.nama_role === 'Staf'}"
+                                        class="px-2 py-0.5 rounded-full text-xs font-bold"
+                                        x-text="item.roles[0]?.nama_role || 'No Role'">
+                                    </span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <span :class="item.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                        class="px-2 py-0.5 rounded text-xs font-bold"
+                                        x-text="item.is_active ? 'Aktif' : 'Suspend'">
+                                    </span>
+                                </td>
+                                <td class="text-center py-3 px-4">
+                                    <div class="flex flex-col gap-2 items-center">
+                                        {{-- 1. TOMBOL CREDENTIALS --}}
+                                        <button @click="openModalCred(item)" class="text-xs px-3 py-1.5 w-40 rounded-lg bg-blue-500 text-white font-bold hover:bg-blue-600 transition flex items-center justify-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                                            Reset Kredensial
+                                        </button>
+                                        
+                                        {{-- 2. TOMBOL ROLE --}}
+                                        <button @click="openModalRole(item)" class="text-xs px-3 py-1.5 w-40 rounded-lg bg-amber-500 text-white font-bold hover:bg-amber-600 transition flex items-center justify-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                            Ganti Role
+                                        </button>
 
-                    <img src="{{ asset('assets/icon/chevron-down.svg') }}"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-70 pointer-events-none" alt="">
+                                        {{-- 3. TOMBOL SUSPEND/ACTIVATE --}}
+                                        <button @click="toggleStatus(item)" :class="item.is_active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'" 
+                                            class="text-xs px-3 py-1.5 w-40 rounded-lg text-white font-bold transition flex items-center justify-center gap-1">
+                                            <svg x-show="item.is_active" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                            <svg x-show="!item.is_active" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M12 2v2"></path><path d="M12 17v-6"></path><path d="M12 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                            <span x-text="item.is_active ? 'Suspend Akun' : 'Aktifkan Akun'"></span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        {{-- MODAL 1: EDIT CREDENTIALS (Username & Password) --}}
+        <div x-show="openCred" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4" x-transition.opacity>
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto border border-slate-200" @click.away="toggleCred(false)">
+                <div class="px-8 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-20">
+                    <h3 class="text-xl font-bold text-slate-800">Edit Kredensial Akun (<span x-text="targetName"></span>)</h3>
+                    <button @click="toggleCred(false)" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+                </div>
+                <div class="px-8 py-8">
+                    <form @submit.prevent="submitCredentialUpdate()" class="space-y-6">
+                        <p class="text-sm text-slate-500">Gunakan form ini hanya untuk **Reset Password** atau **Mengganti Username**.</p>
+
+                        <div><label class="form-label-tegas text-blue-700">Username Baru</label><input type="text" x-model="formData.username" class="form-input-tegas bg-blue-50 border-blue-400" placeholder="Username Login"></div>
+                        
+                        <div class="border-t pt-4">
+                            <label class="form-label-tegas text-red-700">Password Baru</label>
+                            <input type="password" x-model="formData.password" class="form-input-tegas border-red-400" placeholder="Kosongkan jika tidak diubah">
+                            <p class="text-xs text-red-500 mt-1">Isi field ini dan konfirmasi di bawah untuk reset password.</p>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label-tegas text-red-700">Konfirmasi Password</label>
+                            <input type="password" x-model="formData.password_confirmation" class="form-input-tegas border-red-400" placeholder="Ulangi Password Baru">
+                        </div>
+
+                        <div class="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-4">
+                            <button type="button" @click="toggleCred(false)" class="px-6 py-2.5 rounded-lg border-2 border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition">Batal</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition">Update Kredensial</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            {{-- Username --}}
-            <div>
-                <label class="block text-[13px] text-slate-600 mb-1">Username</label>
-                <input type="text" placeholder="Buat Username" class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
-                              px-3.5 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
-                              text-slate-700 placeholder:text-[#9CA3AF]" />
+        </div>
+        
+        {{-- MODAL 2: EDIT ROLE (Hak Akses) --}}
+        <div x-show="openRole" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4" x-transition.opacity>
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto border border-slate-200" @click.away="toggleRole(false)">
+                <div class="px-8 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-20">
+                    <h3 class="text-xl font-bold text-slate-800">Ganti Role (<span x-text="targetName"></span>)</h3>
+                    <button @click="toggleRole(false)" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+                </div>
+                <div class="px-8 py-8">
+                    <form @submit.prevent="submitRoleUpdate()" class="space-y-6">
+                        <p class="text-sm text-slate-500">Memindahkan role akan mengubah hak akses pengguna di seluruh aplikasi.</p>
+                        
+                        <div>
+                            <label class="form-label-tegas text-amber-700">Role Baru</label>
+                            <select x-model="formData.role_id" class="form-input-tegas bg-amber-50 border-amber-400 cursor-pointer">
+                                <option value="">-- Pilih Role --</option>
+                                <template x-for="r in roleList" :key="r.id">
+                                    <option :value="r.id" x-text="r.nama_role"></option>
+                                </template>
+                            </select>
+                        </div>
+                        
+                        <div class="mt-8 pt-4 border-t border-slate-100 flex justify-end gap-4">
+                            <button type="button" @click="toggleRole(false)" class="px-6 py-2.5 rounded-lg border-2 border-slate-300 text-slate-700 font-bold hover:bg-slate-100 transition">Batal</button>
+                            <button type="submit" class="px-6 py-2.5 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700 transition">Simpan Role Baru</button>
+                        </div>
+                    </form>
+                </div>
             </div>
+        </div>
 
-            {{-- Password --}}
-            <div>
-                <label class="block text-[13px] text-slate-600 mb-1">Password</label>
-                <input type="password" placeholder="Buat Password" class="w-full h-[46px] rounded-[10px] border border-slate-200 bg-slate-50/60
-                              px-3.5 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]
-                              text-slate-700 placeholder:text-[#9CA3AF]" />
-            </div>
-
-            {{-- Tombol aksi --}}
-            <div class="pt-1 flex flex-wrap justify-end gap-3">
-                <button type="submit" class="inline-flex items-center justify-center rounded-[7px] bg-[#128C60]
-                               px-6 py-2 text-[14px] text-white font-normal hover:brightness-95 transition">
-                    Submit
-                </button>
-
-                <button type="button" id="btn-cancel-add-akun" class="inline-flex items-center justify-center rounded-[7px] bg-[#B6241C]
-                               px-6 py-2 text-[14px] text-white font-normal hover:brightness-95 transition">
-                    Batalkan
-                </button>
-            </div>
-        </form>
     </div>
-</div>
-
 @endsection

@@ -16,7 +16,7 @@ class LaporanHarian extends Model
 
     protected $fillable = [
         'user_id',
-        'skp_id',
+        'skp_rencana_id',
         'tupoksi_id',
         'jenis_kegiatan',
         'tanggal_laporan',
@@ -27,30 +27,31 @@ class LaporanHarian extends Model
         'volume',
         'satuan',
         'status',
-        'catatan_penilai',
+        'komentar_validasi',
+        'waktu_validasi',
         'master_kelurahan_id',
         'is_luar_lokasi',
         'lokasi',
-        // 'validator_id' DIHAPUS
-        'validated_at',
-        'atasan_id', // Tetap menggunakan atasan_id sebagai penilai awal
+        'atasan_id',
+        'mode_lokasi',
+        'lokasi_teks',
     ];
 
     protected $casts = [
         'tanggal_laporan' => 'date',
-        'validated_at' => 'datetime',
+        'waktu_validasi' => 'datetime',
     ];
 
-    // Hubungan ke Pengguna (Pembuat Laporan)
+    // Hubungan ke Pengguna
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Hubungan ke SKP (Jika kegiatan terkait SKP)
-    public function skp(): BelongsTo
+    // [BENAR] Relasi ke Rencana (Pengganti SKP)
+    public function rencana()
     {
-        return $this->belongsTo(Skp::class, 'skp_id');
+        return $this->belongsTo(\App\Models\SkpRencana::class, 'skp_rencana_id');
     }
 
     // Hubungan ke Tupoksi
@@ -65,16 +66,17 @@ class LaporanHarian extends Model
         return $this->hasMany(LkhBukti::class, 'laporan_id');
     }
 
+    public function validator()
+    {
+        return $this->belongsTo(User::class, 'validator_id');
+    }
+
     // Hubungan ke Atasan (Relasi yang digunakan sebagai penilai/validator di DB)
     public function atasan(): BelongsTo
     {
         return $this->belongsTo(User::class, 'atasan_id');
     }
     
-    // RELASI VALIDATOR DIHAPUS KARENA KOLOM TIDAK ADA
-    // public function validator(): BelongsTo { ... }
-
-    // Accessor untuk mendapatkan status laporan yang lebih deskriptif
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -86,9 +88,23 @@ class LaporanHarian extends Model
         };
     }
 
-    // Query Scope untuk memfilter yang menunggu review
     public function scopeWaitingReview(Builder $query): void
     {
         $query->where('status', 'waiting_review');
     }
+
+    protected $appends = ['lat', 'lng'];
+
+    public function getLatAttribute()
+    {
+        if (!$this->lokasi) return null;
+        return (float) \DB::selectOne("SELECT ST_Y(lokasi) AS lat FROM laporan_harian WHERE id = ?", [$this->id])->lat;
+    }
+
+    public function getLngAttribute()
+    {
+        if (!$this->lokasi) return null;
+        return (float) \DB::selectOne("SELECT ST_X(lokasi) AS lng FROM laporan_harian WHERE id = ?", [$this->id])->lng;
+    }
+
 }

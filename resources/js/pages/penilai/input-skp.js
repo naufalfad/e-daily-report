@@ -4,7 +4,7 @@
 
 // Ganti 'export function' menjadi penugasan ke 'window'
 // Agar bisa dipanggil oleh x-data di file Blade
-window.skpPageData = function() {
+window.skpPageData = function () {
     return {
         // Data
         skpList: [],
@@ -234,3 +234,4 @@ window.skpPageData = function() {
         }
     };
 };
+

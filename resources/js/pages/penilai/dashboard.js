@@ -151,92 +151,137 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     /* =======================================================
-     * 6. DRAFT TERBARU
-     * =======================================================*/
-    const draftList = document.getElementById("draft-list");
-    draftList && (draftList.innerHTML = "");
+    * LOGIKA MODAL (BUKA / TUTUP)
+    * =======================================================*/
+    window.openModalDraft = function (e) {
+        if (e) e.preventDefault(); // Mencegah link reload halaman
+        const modal = document.getElementById('modal-all-draft');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Matikan scroll body utama
+        }
+    }
 
-    const draft = data.draft_limit || [];
+    window.closeModalDraft = function () {
+        const modal = document.getElementById('modal-all-draft');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Hidupkan kembali scroll body
+        }
+    }
 
-    if (draftList) {
-        if (!draft.length) {
-            draftList.innerHTML = `
-                <li class="text-sm text-slate-500">Belum ada draft.</li>
-            `;
+    // Tutup modal dengan tombol ESC keyboard
+    document.addEventListener('keydown', function (event) {
+        if (event.key === "Escape") {
+            closeModalDraft();
+        }
+    });
+
+    /* =======================================================
+    * RENDER LIST DRAFT (LOGIKA ANDA)
+    * =======================================================*/
+
+    // Asumsi: variable 'data' sudah didapat dari fetch sebelumnya.
+    const draft = data.draft_limit || [];   // Data sedikit (misal 3)
+    const draftTerbaru = data.draft_terbaru || []; // Data banyak (semua)
+
+    // 1. RENDER LIST LUAR (draft-list)
+    const draftContainer = document.getElementById("draft-list");
+    if (draftContainer) {
+        draftContainer.innerHTML = "";
+        if (draft.length === 0) {
+            draftContainer.innerHTML = '<li class="text-sm text-slate-500">Belum ada draft.</li>';
         } else {
             draft.forEach(item => {
-                const dateObj = new Date(item.updated_at);
-                const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
-                    day: 'numeric', month: 'long', year: 'numeric'
-                });
-
-                const htmlItem = `
-                <li class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-start justify-between gap-4">
-
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium leading-tight text-[15px] truncate"
-                             title="${item.deskripsi_aktivitas}">
-                            ${item.deskripsi_aktivitas}
-                        </div>
-                        <div class="text-xs text-slate-500 mt-[2px]">
-                            Disimpan: ${tanggalFormatted}
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button 
-                            onclick="window.location.href='/penilai/input-laporan/${item.id}'"
-                            class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] hover:brightness-95">
-                            Lanjutkan
-                        </button>
-                        <button 
-                            onclick="deleteDraft('${item.id}')"
-                            class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] hover:bg-rose-600/80">
-                            Hapus
-                        </button>
-                    </div>
-
-                </li>`;
-
-                draftList.insertAdjacentHTML("beforeend", htmlItem);
+                // Gunakan fungsi helper untuk generate HTML agar tidak duplikasi kode
+                draftContainer.insertAdjacentHTML('beforeend', generateDraftItemHtml(item));
             });
         }
     }
 
+    // 2. RENDER LIST DALAM MODAL (draft-terbaru)
+    const draftTerbaruContainer = document.getElementById("draft-terbaru");
+    if (draftTerbaruContainer) {
+        draftTerbaruContainer.innerHTML = "";
+        if (draftTerbaru.length === 0) {
+            draftTerbaruContainer.innerHTML = '<li class="text-sm text-slate-500 text-center py-4">Belum ada draft tersimpan.</li>';
+        } else {
+            draftTerbaru.forEach(item => {
+                draftTerbaruContainer.insertAdjacentHTML('beforeend', generateDraftItemHtml(item));
+            });
+        }
+    }
+
+    // Helper Function: Supaya HTML item konsisten antara list luar dan dalam modal
+    function generateDraftItemHtml(item) {
+        const dateObj = new Date(item.updated_at);
+        const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        return `
+        <li class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-start justify-between gap-4">
+            <div class="flex-1 min-w-0">
+                <div class="font-medium leading-tight text-[15px] truncate" title="${item.deskripsi_aktivitas}">
+                    ${item.deskripsi_aktivitas}
+                </div>
+                <div class="text-xs text-slate-500 mt-[2px] leading-tight">
+                    Disimpan: ${tanggalFormatted}
+                </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button onclick="window.location.href='/penilai/input-laporan/${item.id}'"
+                    class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] shadow-sm hover:brightness-95">
+                    Lanjutkan
+                </button>
+                <button type="button" onclick="deleteDraft('${item.id}')"
+                    class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] shadow-sm hover:bg-rose-600/80">
+                    Hapus
+                </button>
+            </div>
+        </li>
+        `;
+    }
+
     /* =======================================================
-     * 7. GRAFIK (ANTI DOUBLE RENDER)
-     * =======================================================*/
-    let chartKinerja = window.chartKinerja || null;
-
-    const aktivitasAll = data.grafik_aktivitas || [];
-
-    let monthlyTotal = Array(12).fill(0);
-    let monthlyApproved = Array(12).fill(0);
-    let monthlyRejected = Array(12).fill(0);
-
-    aktivitasAll.forEach(item => {
-        const month = new Date(item.tanggal_laporan).getMonth();
-
-        monthlyTotal[month]++;
-
-        if (item.status === "approved") monthlyApproved[month]++;
-        else if (item.status === "rejected" || item.status.includes("reject")) monthlyRejected[month]++;
-        else if (item.status === "draft") monthlyTotal[month]--;
-    });
-
+         * 7. GRAFIK — FIXED VERSION (ANTI ERROR CANVAS)
+         * =======================================================*/
     const canvas = document.getElementById("kinerjaBulananChart");
 
+    // Pastikan data grafik ada
+    const aktivitasAll = data.grafik_aktivitas || [];
+
     if (canvas) {
+        // --- PERBAIKAN UTAMA DI SINI ---
+        // Cek apakah canvas ini sudah punya chart instance dari Chart.js
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) {
+            existingChart.destroy();
+        }
+        // -------------------------------
+
+        // Proses Data Grafik
+        let monthlyTotal = Array(12).fill(0);
+        let monthlyApproved = Array(12).fill(0);
+        let monthlyRejected = Array(12).fill(0);
+
+        aktivitasAll.forEach(item => {
+            const dateObj = new Date(item.tanggal_laporan);
+            const month = dateObj.getMonth();
+
+            monthlyTotal[month]++;
+            if (item.status === "draft") monthlyTotal[month]--;
+            else if (item.status === "rejected") monthlyRejected[month]++;
+            else if (item.status === "approved") monthlyApproved[month]++;
+        });
+
         const ctx = canvas.getContext("2d");
-
-        // FIX ERROR: destroy chart sebelumnya
-        if (chartKinerja) chartKinerja.destroy();
-
         const gradientTotal = ctx.createLinearGradient(0, 0, 0, 260);
         gradientTotal.addColorStop(0, "rgba(30, 64, 175, 0.25)");
         gradientTotal.addColorStop(1, "rgba(30, 64, 175, 0)");
 
-        chartKinerja = new Chart(ctx, {
+        // Buat Chart Baru
+        new Chart(ctx, {
             type: "line",
             data: {
                 labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
@@ -271,43 +316,45 @@ document.addEventListener("DOMContentLoaded", async function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: "bottom" } },
-                scales: { y: { beginAtZero: true } }
+                plugins: {
+                    legend: { position: "bottom" }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
             }
         });
+    }
 
-        // simpan chart global
-        window.chartKinerja = chartKinerja;
+    /* =======================================================
+     * 8. DELETE DRAFT GLOBAL
+     * =======================================================*/
+    window.deleteDraft = async function (id) {
+
+        if (!confirm('Apakah Anda yakin ingin menghapus draft laporan ini?')) return;
+
+        const token = localStorage.getItem("auth_token");
+
+        try {
+            const res = await fetch(`/api/lkh/${id}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!res.ok) {
+                const json = await res.json();
+                alert("Gagal menghapus: " + (json.message || "Error"));
+                return;
+            }
+
+            alert("Draft berhasil dihapus!");
+            window.location.reload();
+
+        } catch (err) {
+            alert("Terjadi kesalahan koneksi.");
+        }
     }
 });
-
-/* =======================================================
- * 8. DELETE DRAFT
- * =======================================================*/
-window.deleteDraft = async function (id) {
-    if (!confirm("Apakah Anda yakin ingin menghapus draft laporan ini?")) return;
-
-    const token = localStorage.getItem("auth_token");
-
-    try {
-        const res = await fetch(`/api/lkh/${id}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json"
-            }
-        });
-
-        if (!res.ok) {
-            const json = await res.json();
-            alert("Gagal menghapus: " + (json.message || "Error"));
-            return;
-        }
-
-        alert("Draft berhasil dihapus!");
-        window.location.reload();
-
-    } catch (err) {
-        alert("Terjadi kesalahan koneksi.");
-    }
-};

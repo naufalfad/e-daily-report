@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     const loadingState = document.getElementById('loading-state');
     const emptyState = document.getElementById('empty-state');
-    
+
     // Statistik Elements
     const statTotal = document.getElementById('stat-total');
     const statAvg = document.getElementById('stat-avg');
@@ -14,70 +14,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let subordinateData = [];
 
-    // --- 1. FETCH DATA DENGAN DEBUGGING ---
+    // --- 1. FETCH DATA ---
     async function fetchData() {
         try {
-            console.log("%c[1] MEMULAI FETCH DATA...", "color: blue; font-weight: bold;");
-            
             loadingState.classList.remove('hidden');
             tableBody.innerHTML = '';
             emptyState.classList.add('hidden');
 
-            // Tambahkan timestamp agar browser TIDAK menggunakan Cache
-            const url = `/penilai/skoring-kinerja?t=${new Date().getTime()}`;
-            console.log("[2] URL Target:", url);
-
+            // [PERBAIKAN UTAMA] Gunakan URL API (/api/...), bukan URL Web (/penilai/...)
+            const url = `/api/skoring-kinerja?t=${new Date().getTime()}`;
+            
             const response = await fetch(url, {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, // Jangan lupa Token!
                     'Accept': 'application/json'
                 }
             });
 
-            console.log("[3] Status Response:", response.status, response.statusText);
-
-            // A. BACA RAW TEXT DULU (Untuk Cek Isi Asli)
-            const rawText = await response.text();
-            console.log("[4] RAW RESPONSE BODY:", rawText);
-
-            // B. COBA PARSE KE JSON
-            let result;
-            try {
-                result = JSON.parse(rawText);
-                console.log("%c[5] JSON SUKSES DIPARSE:", "color: green; font-weight: bold;", result);
-            } catch (e) {
-                console.error("%c[FATAL] Gagal Parse JSON. Server mungkin mengirim HTML/Error!", "color: red; font-weight: bold;", e);
-                showToast('Error: Respons server bukan JSON valid', 'error');
-                return; // Stop jika bukan JSON
+            // Cek jika session habis / unauthenticated
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
             }
 
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
-            // C. CEK STRUKTUR DATA
-            if (result.kinerja_bawahan) {
-                console.log("%c[6] DATA BAWAHAN DITEMUKAN!", "color: green;", result.kinerja_bawahan);
-                subordinateData = result.kinerja_bawahan;
+            const result = await response.json();
+
+            // Mapping data dari response controller
+            // Controller mengembalikan: { data: [...] }
+            if (result.data && Array.isArray(result.data)) {
+                subordinateData = result.data;
             } else {
-                console.warn("%c[WARNING] Key 'kinerja_bawahan' TIDAK ADA. Struktur JSON mungkin salah.", "color: orange;", result);
-                // Fallback: Coba cari array di root atau 'data'
-                subordinateData = Array.isArray(result.data) ? result.data : [];
+                subordinateData = [];
             }
 
             calculateStats(subordinateData);
             renderTable(subordinateData);
 
         } catch (error) {
-            console.error("%c[ERROR UTAMA]:", "color: red;", error);
+            console.error("Gagal memuat data skoring:", error);
+            showToast('Gagal memuat data kinerja.', 'error');
             emptyState.classList.remove('hidden');
         } finally {
             loadingState.classList.add('hidden');
-            console.log("%c[7] SELESAI.", "color: blue;");
         }
     }
 
     // --- 2. RENDER TABEL ---
     function renderTable(data) {
-        console.log("[8] Merender Tabel dengan jumlah data:", data.length);
         tableBody.innerHTML = '';
 
         if (!data || data.length === 0) {
@@ -87,40 +72,53 @@ document.addEventListener('DOMContentLoaded', () => {
         emptyState.classList.add('hidden');
 
         data.forEach(pegawai => {
-            const badgeColor = getBadgeColor(pegawai.predikat);
-            const avatar = pegawai.avatar_url || '/assets/icon/avatar.png';
+            // Tentukan Predikat & Warna Badge
+            // Logika Sederhana: >90 Sangat Baik, >75 Baik, >60 Cukup, Sisanya Kurang
+            let predikat = 'Kurang';
+            if (pegawai.capaian >= 90) predikat = 'Sangat Baik';
+            else if (pegawai.capaian >= 75) predikat = 'Baik';
+            else if (pegawai.capaian >= 60) predikat = 'Cukup';
             
+            const badgeColor = getBadgeColor(predikat);
+            const avatar = pegawai.foto || '/assets/icon/avatar.png';
+
             const row = `
-                <tr class="border-b border-gray-200 hover:bg-gray-50 transition duration-150">
-                    <td class="py-3 px-6 text-left whitespace-nowrap">
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition duration-150">
+                    <td class="py-4 px-6 text-left whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="mr-3">
-                                <img class="w-8 h-8 rounded-full border border-gray-200 object-cover bg-gray-100" 
+                                <img class="w-10 h-10 rounded-full border border-slate-200 object-cover bg-slate-100" 
                                      src="${avatar}" 
                                      onerror="this.src='/assets/icon/avatar.png'"/>
                             </div>
                             <div>
-                                <div class="font-medium text-gray-800">${pegawai.name || 'Tanpa Nama'}</div>
-                                <div class="text-xs text-gray-500 mt-0.5">${pegawai.jabatan || '-'}</div>
+                                <div class="font-bold text-slate-800 text-sm">${pegawai.nama || 'Tanpa Nama'}</div>
+                                <div class="text-xs text-slate-500 mt-0.5">${pegawai.nip || '-'}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="py-3 px-6 text-left">
-                        <span class="bg-gray-100 text-gray-600 py-1 px-3 rounded-full text-xs font-medium">
-                            ${pegawai.unit_kerja || '-'}
-                        </span>
+                    <td class="py-4 px-6 text-left">
+                        <div class="max-w-xs">
+                            <p class="text-sm font-medium text-slate-700 truncate" title="${pegawai.rhk}">${pegawai.rhk || '-'}</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Total LKH yang dikirim: ${pegawai.target} ${pegawai.satuan}</p>
+                        </div>
                     </td>
-                    <td class="py-3 px-6 text-center text-gray-600">
-                        <span class="font-bold text-green-600">${pegawai.approved_lkh ?? 0}</span> 
-                        <span class="text-gray-400 mx-1">/</span> 
-                        ${pegawai.total_lkh ?? 0}
+                    <td class="py-4 px-6 text-center">
+                         <span class="font-bold text-[#155FA6] text-base">${pegawai.realisasi}</span>
+                         <span class="text-xs text-slate-400 block">${pegawai.satuan}</span>
                     </td>
-                    <td class="py-3 px-6 text-center font-bold text-blue-600 text-lg">
-                        ${pegawai.total_nilai ?? 0}%
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            <div class="w-full bg-slate-100 rounded-full h-2 w-24 overflow-hidden">
+                                <div class="bg-[#1C7C54] h-2 rounded-full transition-all duration-500" 
+                                     style="width: ${Math.min(pegawai.capaian, 100)}%"></div>
+                            </div>
+                            <span class="text-xs font-bold text-[#1C7C54]">${pegawai.capaian}%</span>
+                        </div>
                     </td>
-                    <td class="py-3 px-6 text-center">
-                        <span class="${badgeColor} py-1 px-3 rounded-full text-xs font-bold shadow-sm inline-block min-w-[80px]">
-                            ${pegawai.predikat || '-'}
+                    <td class="py-4 px-6 text-center">
+                        <span class="${badgeColor} py-1 px-3 rounded-full text-[11px] font-bold tracking-wide border inline-block">
+                            ${predikat}
                         </span>
                     </td>
                 </tr>
@@ -132,37 +130,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 3. SEARCH ---
     searchInput.addEventListener('input', (e) => {
         const keyword = e.target.value.toLowerCase();
-        console.log("Mencari:", keyword);
         const filtered = subordinateData.filter(p => {
-            return (p.name && p.name.toLowerCase().includes(keyword)) || 
-                   (p.unit_kerja && p.unit_kerja.toLowerCase().includes(keyword));
+            return (p.nama && p.nama.toLowerCase().includes(keyword)) ||
+                   (p.nip && p.nip.toLowerCase().includes(keyword));
         });
         renderTable(filtered);
     });
 
     // --- 4. STATS ---
     function calculateStats(data) {
-        if(statTotal) statTotal.innerText = data.length;
-        
-        if(statAvg) {
+        if (statTotal) statTotal.innerText = data.length;
+
+        if (statAvg) {
             if (data.length > 0) {
-                const sum = data.reduce((acc, curr) => acc + parseFloat(curr.total_nilai || 0), 0);
+                const sum = data.reduce((acc, curr) => acc + parseFloat(curr.capaian || 0), 0);
                 statAvg.innerText = (sum / data.length).toFixed(1) + '%';
             } else {
                 statAvg.innerText = "0%";
             }
         }
 
-        if(statSangatBaik) statSangatBaik.innerText = data.filter(p => p.predikat === 'Sangat Baik').length;
-        if(statPembinaan) statPembinaan.innerText = data.filter(p => ['Kurang', 'Sangat Kurang'].includes(p.predikat)).length;
+        // Hitung manual berdasarkan logika predikat di renderTable
+        let sb = 0;
+        let pembinaan = 0;
+
+        data.forEach(p => {
+            const score = parseFloat(p.capaian || 0);
+            if (score >= 90) sb++;
+            if (score < 60) pembinaan++;
+        });
+
+        if (statSangatBaik) statSangatBaik.innerText = sb;
+        if (statPembinaan) statPembinaan.innerText = pembinaan;
     }
 
     function getBadgeColor(predikat) {
-        switch(predikat) {
-            case 'Sangat Baik': return 'bg-green-100 text-green-800 border border-green-200';
-            case 'Baik': return 'bg-blue-100 text-blue-800 border border-blue-200';
-            case 'Cukup': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
-            default: return 'bg-red-100 text-red-800 border border-red-200';
+        switch (predikat) {
+            case 'Sangat Baik': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+            case 'Baik': return 'bg-blue-50 text-blue-700 border-blue-200';
+            case 'Cukup': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+            default: return 'bg-red-50 text-red-700 border-red-200';
         }
     }
 

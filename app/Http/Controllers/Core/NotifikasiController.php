@@ -46,7 +46,7 @@ class NotifikasiController extends Controller
                     'title'         => "Ada $total Laporan Menunggu Validasi",
                     'pesan'         => "Terdapat $total laporan yang baru diajukan bawahan Anda dan menunggu untuk divalidasi.",
                     'created_at'    => $latest->created_at,
-                    'redirect_url'  => "/penilai/validasi-lkh",
+                    'redirect_url'  => "/penilai/validasi-laporan",
                 ]);
 
                 continue;
@@ -79,8 +79,8 @@ class NotifikasiController extends Controller
         return match ($item->related_type) {
             'App\Models\LaporanHarian' =>
                 Auth::user()->hasRole('Atasan')
-                    ? "/penilai/validasi-lkh/{$item->related_id}"
-                    : "/pegawai/riwayat-lkh/{$item->related_id}",
+                    ? "#"
+                    : "#",
 
             'App\Models\Pengumuman' => "/dashboard/pengumuman/{$item->related_id}",
             'App\Models\Skp' => "/pegawai/skp/{$item->related_id}",

@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btnLoader.classList.remove("hidden");
 
             try {
-                const response = await fetch("/e-daily-report/login", {
+                const response = await fetch("/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -44,12 +44,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const result = await response.json();
 
+                // ==========================================================
+                // [PERBAIKAN UTAMA] Cek Status 403 & Redirect URL
+                // ==========================================================
                 if (!response.ok) {
+
+                    // 1. Cek apakah ada redirect_url (Maintenance Mode atau Security Gate)
+                    if (response.status === 403 && result.redirect_url) {
+
+                        // Hapus semua data token lokal jika ada (Clean up)
+                        localStorage.removeItem("auth_token");
+
+                        Swal.fire({
+                            icon: "warning",
+                            title: "Akses Dibatasi",
+                            text: result.message,
+                            showConfirmButton: false,
+                            timer: 1500,
+                        });
+
+                        // Lakukan pengalihan ke halaman Maintenance
+                        setTimeout(() => {
+                            window.location.href = result.redirect_url;
+                        }, 500);
+
+                        return; // Hentikan alur kode di sini
+                    }
+
+                    // 2. Tangani Error Non-Redirect (Gagal login, Suspend, dll.)
                     throw new Error(
                         result.message || "Username atau password salah."
                     );
                 }
 
+                // Jika sukses (response.ok)
                 Swal.fire({
                     icon: "success",
                     title: "Login Berhasil",
@@ -68,17 +96,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     : [];
 
                 setTimeout(() => {
-                    if (roles.includes("admin")) {
-                        window.location.href = "/e-daily-report/admin/dashboard";
+                    if (roles.some(role => role.includes("admin"))) {
+                        window.location.href = "/admin/manajemen-pegawai";
+
                     } else if (
                         roles.includes("kepala dinas") ||
                         roles.includes("kadis")
                     ) {
-                        window.location.href = "/e-daily-report/kadis/dashboard";
+                        window.location.href = "/kadis/dashboard";
                     } else if (roles.includes("penilai")) {
-                        window.location.href = "/e-daily-report/penilai/dashboard";
+                        window.location.href = "/penilai/dashboard";
                     } else {
-                        window.location.href = "/e-daily-report/staf/dashboard";
+                        window.location.href = "/staf/dashboard";
                     }
                 }, 1200);
             } catch (error) {
@@ -87,7 +116,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 Swal.fire({
                     icon: "error",
                     title: "Login Gagal",
-                    text: "Maaf, akun tidak ditemukan. Silakan periksa kembali username atau password Anda.",
+                    // Tampilkan pesan error dari throw Error di atas
+                    text: error.message || "Maaf, akun tidak ditemukan. Silakan periksa kembali username atau password Anda.",
                     confirmButtonColor: "#1C7C54",
                 });
 

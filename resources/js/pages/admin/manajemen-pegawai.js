@@ -1,7 +1,6 @@
 import Swal from "sweetalert2";
 
 export function manajemenPegawaiData() {
-
     // Helper ambil token
     const BASE_URL = "/api/admin/pegawai";
     const MASTER_URL = "/api/admin/master-dropdown";

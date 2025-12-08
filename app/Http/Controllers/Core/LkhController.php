@@ -94,7 +94,30 @@ class LkhController extends Controller
      */
     public function store(Request $request)
     {
-        $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
+       \Log::info('DEBUG UPLOAD LKH:', [
+        'php_limit_upload' => ini_get('upload_max_filesize'),
+        'php_limit_post'   => ini_get('post_max_size'),
+        'file_data'        => $_FILES['bukti'] ?? 'KOSONG',
+        'laravel_valid'    => $request->file('bukti.0') ? $request->file('bukti.0')->isValid() : 'FILE NOT FOUND',
+        'laravel_error'    => $request->file('bukti.0') ? $request->file('bukti.0')->getErrorMessage() : '-',
+    ]);
+
+// --- DEBUGGER V2 (CEK MIME TYPE) ---
+    if ($request->hasFile('bukti')) {
+        foreach ($request->file('bukti') as $file) {
+            \Log::info('DEBUG FILE IDENTITY:', [
+                'filename'      => $file->getClientOriginalName(),
+                'server_mime'   => $file->getMimeType(),       // <--- INI KUNCINYA (Apa kata server?)
+                'client_mime'   => $file->getClientMimeType(), // (Apa kata browser?)
+                'extension'     => $file->extension(),         // (Apa kata Laravel?)
+                'real_path'     => $file->getRealPath(),
+                'size'          => $file->getSize(),
+            ]);
+        }
+    }
+    // --- END DEBUGGER ---
+
+	$validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
         $user = Auth::user();
         $status = $request->input('status', 'waiting_review');
 
@@ -124,14 +147,27 @@ class LkhController extends Controller
             'volume'            => 'required|integer|min:1',
             'satuan'            => 'required|string|max:50',
             'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id',
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
-
-            // [BARU] Validasi Mode & Lokasi
-            'mode_lokasi'       => 'required|in:geofence,geocoding',
+	    'mode_lokasi'       => 'required|in:geofence,geocoding',
             'latitude'          => 'nullable|numeric',
             'longitude'         => 'nullable|numeric',
             'lokasi_teks'       => 'required_if:mode_lokasi,geocoding|nullable|string|max:255',
-        ]);
+            'bukti.*' => [
+  	    'file',
+    	    'max:102400', // Limit 100MB
+    	    function ($attribute, $value, $fail) {
+                // [LOGIKA ANALIS] 
+            	// Karena server mendeteksi PDF sebagai 'application/octet-stream' (binary),
+        	// validator 'mimes' bawaan akan gagal. Kita bypass dengan mengecek
+        	// ekstensi asli dari nama file yang dikirim user.
+       		$allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'mp4'];
+        	$extension = strtolower($value->getClientOriginalExtension());
+        
+        	if (!in_array($extension, $allowedExtensions)) {
+        	    $fail("File harus bertipe: " . implode(', ', $allowedExtensions));
+       				}
+    			},
+		],
+	]);
 
         if ($validator->fails())
             return response()->json(['errors' => $validator->errors()], 422);

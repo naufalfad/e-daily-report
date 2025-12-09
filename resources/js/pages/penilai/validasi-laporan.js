@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'detail-output': lkhData.output_hasil_kerja,
             'detail-volume': lkhData.volume,
             'detail-satuan': lkhData.satuan,
-            'detail-kategori': lkhData.skp_id ? 'SKP' : 'Non-SKP',
+            'detail-kategori': lkhData.skp_rencana_id ? 'SKP' : 'Non-SKP',
             'detail-jam': `${lkhData.waktu_mulai?.substring(0, 5)} - ${lkhData.waktu_selesai?.substring(0, 5)}`,
             'detail-lokasi': lkhData.lokasi_manual_text || (lkhData.is_luar_lokasi ? 'Luar Kantor' : 'Dalam Kantor')
         };

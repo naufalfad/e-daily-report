@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\KabanSkoringService; // Import Service Layer
 use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf; // Jangan lupa import PDF
+use App\Models\User;
 
 /**
  * TAHAP 3.1: Controller untuk menangani permintaan API Skoring Kinerja Per Bidang.
@@ -69,5 +71,37 @@ class BidangSkoringController extends Controller
                 'message' => 'Gagal mengambil data skoring. Periksa log sistem.',
             ], 500);
         }
+    }
+    public function exportPdf(Request $request)
+    {
+        // 1. Ambil Filter dari URL (agar PDF sesuai pilihan bulan/tahun user)
+        $month = $request->input('month');
+        $year = $request->input('year');
+
+        // 2. Gunakan Service yang sama dengan API agar datanya KONSISTEN
+        $dataBidang = $this->kabanSkoringService->getSkoringPerBidang($month, $year);
+
+        // 3. Ambil Data User (Kadis yang sedang login)
+        $kadis = User::with(['jabatan', 'unitKerja'])->find(auth()->id());
+
+        // 4. Hitung Statistik untuk Header PDF
+        $totalBidang = $dataBidang->count();
+        $avgSkor = $dataBidang->avg('persentase') ?? 0;
+        $perluPembinaan = $dataBidang->where('persentase', '<', 60)->count(); // Asumsi < 60 kurang
+
+        // 5. Render PDF (Kita buat view baru khusus Bidang)
+        $pdf = PDF::loadView('pdf.skoring-bidang', [
+            'kadis' => $kadis,
+            'data' => $dataBidang,
+            'month' => $month,
+            'year' => $year,
+            'stats' => [
+                'total' => $totalBidang,
+                'avg' => $avgSkor,
+                'alert' => $perluPembinaan
+            ]
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('Laporan_Kinerja_Bidang.pdf');
     }
 }

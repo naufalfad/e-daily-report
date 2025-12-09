@@ -12,7 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const statSangatBaik = document.getElementById('stat-sb');
     const statPembinaan = document.getElementById('stat-pembinaan');
 
+    const exportBtn = document.getElementById('export-pdf');
+
     let subordinateData = [];
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            // Kita gunakan window.location karena ini request file (download)
+            // Route ini sudah didefinisikan di web.php dan menggunakan Session Auth
+            window.location.href = '/penilai/skoring/export-pdf';
+        });
+    }
 
     // --- 1. FETCH DATA ---
     async function fetchData() {

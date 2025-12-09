@@ -25,6 +25,7 @@ import { kadisMapData } from './pages/kadis/peta-aktivitas.js';
 import { riwayatDataPenilai } from './pages/penilai/riwayat.js';
 import { riwayatDataStaf} from './pages/staf/riwayat.js';
 import { logActivityKadis } from './pages/kadis/log-aktivitas.js';
+import { logActivityDataAdmin } from './pages/admin/log-aktivitas.js';
 
 
 // =========================
@@ -44,6 +45,7 @@ window.kadisMapData = kadisMapData;
 window.riwayatDataPenilai = riwayatDataPenilai;
 window.riwayatDataStaf = riwayatDataStaf;
 window.logActivityKadis = logActivityKadis;
+window.logActivityDataAdmin = logActivityDataAdmin;
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -73,6 +75,7 @@ import './pages/staf/pengumuman.js';
 import './pages/penilai/input-skp.js';
 import './pages/penilai/log-aktivitas.js';
 import './pages/penilai/pengumuman.js';
+import './pages/admin/log-aktivitas.js';
 
 // Chart global (boleh)
 import Chart from 'chart.js/auto';

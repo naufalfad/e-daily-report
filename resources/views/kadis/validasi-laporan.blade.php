@@ -54,6 +54,7 @@
 
                 {{-- STATUS (DEFAULT: ALL) --}}
                 <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase">Status</label>
                 </div>
 
                 {{-- TOMBOL FILTER --}}

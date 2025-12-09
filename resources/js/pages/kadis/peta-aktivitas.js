@@ -1,6 +1,5 @@
 // resources/js/pages/kadis/peta-aktivitas.js
 
-// FIX: Menggunakan export function untuk pendaftaran global Alpine
 export function kadisMapData() {
     return {
 
@@ -14,12 +13,13 @@ export function kadisMapData() {
 
         showModal: false,
         selectedActivity: null,
+        loading: false, // State loading
 
         initMap() {
             this.$nextTick(() => {
-                // 1. Init Map
+                // 1. Init Map (Default View: Timika, Papua Tengah)
                 this.map = L.map('map', { zoomControl: true })
-                    .setView([-4.557, 136.885], 13);
+                    .setView([-4.5467, 136.8833], 13);
 
                 // 2. Tile Layers
                 const googleRoadmap = L.tileLayer(
@@ -43,7 +43,7 @@ export function kadisMapData() {
                 // 3. Layer Markers
                 this.markersLayer = L.layerGroup().addTo(this.map);
 
-                // 4. Load Data
+                // 4. Load Data Awal
                 this.loadData();
                 this.initDatePickers();
 
@@ -52,17 +52,29 @@ export function kadisMapData() {
                     this.map.invalidateSize()
                 ).observe(document.getElementById('map'));
 
-                // 6. BRIDGING FUNCTION
+                // 6. Bridging Function
                 window.openActivityDetail = (id) => {
                     this.openModal(id);
                 };
             });
         },
 
-        // ---------------- LOGIC DATA ----------------
+        // ---------------- LOGIC DATA (SERVER SIDE) ----------------
         loadData() {
-            // ENDPOINT BENAR untuk Penilai: Mengambil aktivitas bawahan (atasan_id = Auth::id())
-            fetch('/api/all-aktivitas', {
+            this.loading = true;
+
+            // Build URL dengan Filter
+            let url = '/api/all-aktivitas'; // Endpoint Kadis (Semua Aktivitas)
+            const params = [];
+
+            if (this.filter.from) params.push(`from_date=${this.filter.from}`);
+            if (this.filter.to) params.push(`to_date=${this.filter.to}`);
+
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+
+            fetch(url, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
                     'Accept': 'application/json'
@@ -77,13 +89,23 @@ export function kadisMapData() {
                     this.allActivities = data.data;
                     this.loadMarkers(data.data);
                 })
-                .catch(err => console.error("Gagal memuat data:", err));
+                .catch(err => console.error("Gagal memuat data:", err))
+                .finally(() => {
+                    this.loading = false;
+                });
         },
 
         loadMarkers(data) {
             this.markersLayer.clearLayers();
 
+            if (data.length === 0) return;
+
+            const latlngs = [];
+
             data.forEach(act => {
+                // Validasi koordinat
+                if (!act.lat || !act.lng) return;
+
                 // Penentuan warna status
                 let color = '#f59e0b';
                 let bgColorStatus = '#fffbeb';
@@ -120,7 +142,7 @@ export function kadisMapData() {
                                 <span style="display:flex; align-items:center; gap:3px;">⏰ ${act.waktu}</span>
                             </div>
                             <p style="font-size:12px; line-height:1.5; color:#334155; margin:0; font-style:italic; background:#f8fafc; padding:6px; border-radius:4px; border-left: 3px solid ${color};">
-                                "${act.deskripsi.length > 50 ? act.deskripsi.substring(0, 50) + '...' : act.deskripsi}"
+                                "${act.deskripsi && act.deskripsi.length > 50 ? act.deskripsi.substring(0, 50) + '...' : (act.deskripsi || '-')}"
                             </p>
                         </div>
 
@@ -141,7 +163,7 @@ export function kadisMapData() {
                 `;
 
                 L.circleMarker([act.lat, act.lng], {
-                    radius: 7,
+                    radius: 8,
                     fillColor: color,
                     color: '#FFF',
                     weight: 2,
@@ -149,7 +171,14 @@ export function kadisMapData() {
                 })
                     .bindPopup(popupContent)
                     .addTo(this.markersLayer);
+                
+                latlngs.push([act.lat, act.lng]);
             });
+
+            // Auto Zoom jika ada data
+            if (latlngs.length > 0) {
+                this.map.fitBounds(latlngs, { padding: [50, 50] });
+            }
         },
 
         // ---------------- MODAL ----------------
@@ -168,22 +197,10 @@ export function kadisMapData() {
             }, 300);
         },
 
-        // ---------------- FILTER ----------------
+        // ---------------- FILTER ACTION ----------------
         applyFilter() {
-            const from = this.filter.from ? new Date(this.filter.from) : null;
-            const to = this.filter.to ? new Date(this.filter.to) : null;
-
-            if (from) from.setHours(0, 0, 0, 0);
-            if (to) to.setHours(23, 59, 59, 999);
-
-            const filtered = this.allActivities.filter(act => {
-                const actDate = new Date(act.tanggal);
-                if (from && actDate < from) return false;
-                if (to && actDate > to) return false;
-                return true;
-            });
-
-            this.loadMarkers(filtered);
+            // Panggil API ulang dengan parameter tanggal
+            this.loadData();
         },
 
         // ---------------- DATEPICKER ----------------
@@ -203,3 +220,6 @@ export function kadisMapData() {
         }
     }
 }
+
+// Global Registration
+window.kadisMapData = kadisMapData;

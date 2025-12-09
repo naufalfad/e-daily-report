@@ -16,32 +16,53 @@ class ValidatorController extends Controller
 {
     /**
      * 1. LIST LKH BAWAHAN (Inbox Validasi)
+     * [REFACTORED] Filter lengkap server-side
      */
     public function index(Request $request)
     {
         $atasanId = Auth::id();
 
-        // [PERBAIKAN UTAMA] Ganti 'skp' menjadi 'rencana'
-        // Karena di Model LaporanHarian, relasinya bernama: public function rencana()
+        // Base Query: LKH milik bawahan (bukan diri sendiri) & bukan draft
         $query = LaporanHarian::with(['user', 'rencana', 'bukti']) 
             ->where('atasan_id', $atasanId) 
             ->where('user_id', '!=', $atasanId)
             ->where('status', '!=', 'draft'); 
 
-        // Filter status
-        if ($request->has('status') && $request->status != 'all') {
-            $query->where('status', $request->status);
-        } else {
-            // Prioritaskan yang 'waiting_review' agar muncul paling atas
-            $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END");
-        }
+        // 1. Filter Status
+        $query->when($request->status && $request->status !== 'all', function ($q, $status) {
+            $q->where('status', $status);
+        });
 
-        // Filter tanggal
-        if ($request->has('tanggal')) {
-            $query->whereDate('tanggal_laporan', $request->tanggal);
-        }
+        // 2. Filter Bulan & Tahun
+        $query->when($request->month, function ($q, $month) {
+            $q->whereMonth('tanggal_laporan', $month);
+        });
 
-        $data = $query->latest('tanggal_laporan')->paginate(10);
+        $query->when($request->year, function ($q, $year) {
+            $q->whereYear('tanggal_laporan', $year);
+        });
+
+        // 3. Search (Nama Bawahan / Deskripsi Aktivitas)
+        $query->when($request->search, function($q, $search) {
+             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+             $q->where(function($sub) use ($search, $like) {
+                // Cari di Nama User
+                $sub->whereHas('user', function($u) use ($search, $like) {
+                    $u->where('name', $like, "%{$search}%");
+                })
+                // Atau Cari di Deskripsi LKH
+                ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+             });
+        });
+
+        // 4. Legacy Filter Tanggal Spesifik
+        $query->when($request->tanggal, fn($q, $d) => $q->whereDate('tanggal_laporan', $d));
+
+        // Sorting: Prioritaskan 'waiting_review' di atas, sisanya urut tanggal terbaru
+        $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
+              ->latest('tanggal_laporan');
+
+        $data = $query->paginate(10);
 
         return response()->json($data);
     }
@@ -53,7 +74,6 @@ class ValidatorController extends Controller
     {
         $atasanId = Auth::id();
 
-        // [PERBAIKAN UTAMA] Ganti 'skp' menjadi 'rencana'
         $lkh = LaporanHarian::with(['user', 'rencana', 'bukti'])
             ->where('atasan_id', $atasanId) // Pastikan hanya akses milik bawahannya
             ->find($id);
@@ -106,7 +126,7 @@ class ValidatorController extends Controller
             $tglIndo = Carbon::parse($lkh->tanggal_laporan)->translatedFormat('d F Y');
             
             if ($request->status == 'approved') {
-                $type = NotificationType::LKH_APPROVED->value; // Pastikan ambil value dari Enum
+                $type = NotificationType::LKH_APPROVED->value; 
                 $msg  = "Selamat! Laporan Harian tanggal {$tglIndo} telah DISETUJUI.";
             } else {
                 $type = NotificationType::LKH_REJECTED->value;

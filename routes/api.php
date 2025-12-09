@@ -118,13 +118,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // LKH
     Route::prefix('lkh')->group(function () {
+        Route::get('/detail/{id}', [LkhController::class, 'show'])->where('id', '[0-9]+');
         Route::get('riwayat', [LkhController::class, 'getRiwayat']);
         Route::get('referensi', [LkhController::class, 'getReferensi']);
         Route::get('/', [LkhController::class, 'index']); 
         Route::post('/', [LkhController::class, 'store']); 
-        
-        Route::post('/update/{id}', [LkhController::class, 'update'])->where('id', '[0-9]+'); 
-        Route::get('/{id}', [LkhController::class, 'show'])->where('id', '[0-9]+'); 
+        Route::get('/{id}', [LkhController::class, 'show'])->where('id', '[0-9]+');
+        Route::post('/update/{id}', [LkhController::class, 'update'])->where('id', '[0-9]+');  
         Route::delete('/{id}', [LkhController::class, 'destroy'])->where('id', '[0-9]+'); 
     });
 

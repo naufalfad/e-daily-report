@@ -108,7 +108,6 @@
                         <th class="py-3 px-6 w-1/4">Bidang</th>
                         <th class="py-3 px-6 w-1/4">Kepala Bidang (Kabid)</th>
                         <th class="py-3 px-6 text-center">LKH Submitted</th>
-                        <th class="py-3 px-6 text-center">LKH Approved</th>
                         <th class="py-3 px-6 text-center">Persentase</th>
                         <th class="py-3 px-6 text-center">Predikat</th>
                     </tr>

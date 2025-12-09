@@ -225,7 +225,7 @@ class SkpController extends Controller
             // [PERBAIKAN DI SINI] Definisi variabel $totalSubmitted
             // Menghitung total laporan yang sudah diajukan (bukan draft)
             $totalSubmitted = \App\Models\LaporanHarian::where('user_id', $staff->id)
-                ->where('status', '!=', 'draft') 
+                ->whereNotIn('status', ['draft', 'waiting_review']) 
                 ->count();
 
             // Hitung Pembilang: Total LKH yang DISETUJUI (Approved)

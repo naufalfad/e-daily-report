@@ -19,8 +19,13 @@ class SkoringController extends Controller
             ->with('unitKerja') // Ini untuk tabel bawahan
             ->get()
             ->map(function ($item) {
-                $item->total_lkh = $item->lkh()->count();
-                $item->acc_lkh = $item->lkh()->where('status', 'approved')->count();
+                $validStatuses = ['approved', 'rejected']; 
+                $item->total_lkh = $item->lkh()
+                ->whereIn('status', $validStatuses)
+                ->count();
+                $item->acc_lkh = $item->lkh()
+                ->where('status', 'approved')
+                ->count();
                 $item->skor = $item->total_lkh > 0
                     ? round(($item->acc_lkh / $item->total_lkh) * 100)
                     : 0;

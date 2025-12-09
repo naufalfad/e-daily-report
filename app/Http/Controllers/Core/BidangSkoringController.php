@@ -87,7 +87,7 @@ class BidangSkoringController extends Controller
         // 4. Hitung Statistik untuk Header PDF
         $totalBidang = $dataBidang->count();
         $avgSkor = $dataBidang->avg('persentase') ?? 0;
-        $perluPembinaan = $dataBidang->where('persentase', '<', 60)->count(); // Asumsi < 60 kurang
+        $perluPembinaan = $dataBidang->where('persentase', '<=', 75)->count(); // Asumsi < 60 kurang
 
         // 5. Render PDF (Kita buat view baru khusus Bidang)
         $pdf = PDF::loadView('pdf.skoring-bidang', [

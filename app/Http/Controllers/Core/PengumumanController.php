@@ -103,14 +103,25 @@ class PengumumanController extends Controller
      */
     public function destroy($id)
     {
-        $pengumuman = Pengumuman::where('user_id_creator', Auth::id())->find($id);
+        // 1. Cari dulu datanya secara global (tanpa filter where user)
+        $pengumuman = Pengumuman::find($id);
         
+        // Jika data benar-benar tidak ada di DB
         if (!$pengumuman) {
             return response()->json(['message' => 'Pengumuman tidak ditemukan'], 404);
         }
+
+        // 2. Validasi Kepemilikan (STRICT MODE)
+        // Cek apakah ID yang login SAMA DENGAN ID pembuat pengumuman?
+        if ($pengumuman->user_id_creator != Auth::id()) {
+            return response()->json([
+                'message' => 'Anda tidak dapat menghapus pengumuman ini karena bukan milik Anda.'
+            ], 403); // 403 = Forbidden (Dilarang)
+        }
         
+        // 3. Jika lolos validasi (Milik Pribadi), baru hapus
         $pengumuman->delete();
-        return response()->json(['message' => 'Pengumuman dihapus']);
+        return response()->json(['message' => 'Pengumuman berhasil dihapus']);
     }
 
     /**

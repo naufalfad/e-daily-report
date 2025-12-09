@@ -27,7 +27,9 @@
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
         <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
 
-        <form id="form-lkh">
+        <form id="form-lkh" 
+     	    method="POST"
+	        enctype="multipart/form-data">>
             <input type="hidden" name="status" id="status_input" value="draft">
             
             {{-- Mode Lokasi Hidden Input (Default: geofence) --}}
@@ -538,8 +540,14 @@
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
-                    <a :href="'/penilai/input-lkh/' + item.id"
-                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px] hover:bg-[#0b633b]">Lanjut</a>
+                    <a :href="'/penilai/input-laporan/' + item.id" 
+                        class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
+                        Lanjutkan
+                    </a>
+                    <button @click="deleteDraft(item.id)"
+                        class="bg-[#B6241C] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
+                        Hapus
+                    </button>
                 </div>
             </template>
         </div>
@@ -560,8 +568,15 @@
                                 <h4 class="text-[12px] font-medium" x-text="item.deskripsi"></h4>
                                 <p class="text-[10px] text-slate-500" x-text="item.waktu_simpan"></p>
                             </div>
-                            <div class="flex gap-2">
-                                <a :href="'/penilai/input-lkh/' + item.id" class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">Lanjut</a>
+                            <div class="flex items-center gap-2">
+                                <a :href="'/penilai/input-laporan/' + item.id"
+                                    class="bg-[#0E7A4A] text-white text-[12px] px-2 py-1 rounded-[8px]">
+                                    Lanjutkan
+                                </a>
+                                <button @click="deleteDraft(item.id)"
+                                    class="bg-[#B6241C] text-white text-[12px] px-2 py-1 rounded-[8px]">
+                                    Hapus
+                                </button>
                             </div>
                         </div>
                     </template>
@@ -581,6 +596,22 @@
 
 @push('scripts')
 <script>
+function updateAlpineDropdown(inputName, value, label = null) {
+    const el = document.querySelector(`input[name="${inputName}"]`);
+    if (el) {
+        const scope = Alpine.$data(el.closest('[x-data]'));
+        scope.value = value;
+        scope.label = label || value;
+    }
+}
+
+function setAlpineValue(selector, key, value) {
+    const el = document.querySelector(selector);
+    if (el && el.closest("[x-data]")) {
+        Alpine.$data(el.closest("[x-data]"))[key] = value;
+    }
+}
+
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
@@ -666,22 +697,41 @@ async function loadEditLKH(id, headers) {
         const json = await res.json();
         const data = json.data;
 
-        // Populate Standard Inputs
-        document.getElementById("tanggal_lkh").value = data.tanggal_laporan;
+        // 1. Populate Standard Inputs
+        // Fix: Format tanggal dari ISO (YYYY-MM-DDTHH:mm:ss...) ke YYYY-MM-DD
+        if (data.tanggal_laporan) {
+            document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
+        }
+        
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
-        document.querySelector('textarea[name="deskripsi_aktivitas"]').value = data.deskripsi_aktivitas ?? "";
-        document.querySelector('input[name="output_hasil_kerja"]').value = data.output_hasil_kerja ?? "";
-        document.querySelector('input[name="volume"]').value = data.volume ?? "";
+        
+        // Deskripsi & Output
+        const deskripsiEl = document.querySelector('textarea[name="deskripsi_aktivitas"]');
+        if(deskripsiEl) deskripsiEl.value = data.deskripsi_aktivitas ?? "";
 
-        // Populate Mode Lokasi & Koordinat
+        const outputEl = document.querySelector('input[name="output_hasil_kerja"]');
+        if(outputEl) outputEl.value = data.output_hasil_kerja ?? "";
+        
+        // Volume
+        const volumeEl = document.querySelector('input[name="volume"]');
+        if(volumeEl) volumeEl.value = data.volume ?? "";
+
+        // Satuan (Input hidden atau text biasa jika tidak pakai Alpine)
+        const satuanEl = document.querySelector('input[name="satuan"]');
+        if(satuanEl) satuanEl.value = data.satuan ?? "";
+
+        updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
+
+        // 2. Populate Mode Lokasi & Koordinat
         const modeLokasi = data.mode_lokasi || 'geofence';
-        // Trigger Alpine Logic untuk set mode & values
         const lokasiContainer = document.querySelector('[x-data*="mode:"]');
+        
         if(lokasiContainer && lokasiContainer.__x) {
             const alpine = lokasiContainer.__x.$data;
             alpine.mode = modeLokasi;
-            alpine.lat = data.lat; // dari backend Accessor
+            alpine.lat = data.lat; 
             alpine.lng = data.lng;
             alpine.lokasiTeksFinal = data.lokasi_teks || '';
             
@@ -689,31 +739,46 @@ async function loadEditLKH(id, headers) {
                 alpine.searchText = data.lokasi_teks || '';
                 alpine.status = `Tersimpan: ${data.lokasi_teks}`;
             } else {
+                // Tampilkan koordinat jika geofence/manual map
                 alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
             }
         }
 
-        // Logic Kategori & SKP (Sama seperti sebelumnya)
+        // 3. Logic Kategori & SKP
+        const isSkp = !!data.skp_rencana_id; // Cek apakah ada ID SKP
         const kategoriInput = document.querySelector('input[name="kategori"]');
-        kategoriInput.value = data.skp_rencana_id ? "skp" : "non-skp";
+        if(kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";
         
         // Trigger Alpine update untuk Kategori
         const mainLogicDiv = document.querySelector('[x-data*="kategori:"]');
         if(mainLogicDiv && mainLogicDiv.__x) {
-            mainLogicDiv.__x.$data.setKategori(data.skp_rencana_id ? "skp" : "non-skp");
-            if(data.skp_rencana_id && data.rencana) {
-                setTimeout(() => {
-                    mainLogicDiv.__x.$data.skpId = data.skp_rencana_id;
-                    mainLogicDiv.__x.$data.skpLabel = data.rencana.rencana_hasil_kerja;
-                    if (data.rencana.targets?.length) {
-                        mainLogicDiv.__x.$data.satuanValue = data.rencana.targets[0].satuan;
-                        mainLogicDiv.__x.$data.isSatuanLocked = true;
-                    }
-                }, 500); // Delay for fetch
-            }
+            const alpineData = mainLogicDiv.__x.$data;
+            
+            // Set state kategori di Alpine
+            alpineData.setKategori(isSkp ? "skp" : "non-skp");
+
+            setTimeout(() => {
+                // Populate data SKP jika kategori adalah SKP
+                if (isSkp && data.rencana) {
+                    alpineData.skpId = data.skp_rencana_id;
+                    alpineData.skpLabel = data.rencana.rencana_hasil_kerja;
+                    
+                    // PERBAIKAN: Ambil satuan langsung dari root data.satuan
+                    // karena di JSON tidak ada data.rencana.targets
+                    alpineData.satuanValue = data.satuan; 
+                    alpineData.isSatuanLocked = true; // Biasanya SKP satuannya dikunci
+                } else {
+                    // Jika Non-SKP
+                    alpineData.satuanValue = data.satuan;
+                    alpineData.isSatuanLocked = false;
+                }
+            }, 300); // Sedikit delay agar transisi Alpine selesai
         }
 
-    } catch (e) { console.error("Edit Load Error", e); }
+    } catch (e) { 
+        console.error("Edit Load Error", e);
+        alert("Gagal memuat data LKH.");
+    }
 }
 
 async function submitForm(type) {

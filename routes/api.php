@@ -130,6 +130,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Validator
     Route::prefix('validator')->group(function () {
+        Route::get('kadis/lkh', [ValidatorController::class, 'index']);
+         Route::post('kadis/lkh/{id}/validate', [ValidatorController::class, 'validateLkh']);
         Route::get('lkh', [ValidatorController::class, 'index']);
         Route::get('lkh/{id}', [ValidatorController::class, 'show']);
         Route::post('lkh/{id}/validate', [ValidatorController::class, 'validateLkh']);

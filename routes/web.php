@@ -171,6 +171,9 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::view('/peta-aktivitas', 'kadis.peta-aktivitas')->name('peta-aktivitas');
+
+        Route::get('/skoring-bidang/export-pdf', [App\Http\Controllers\Core\BidangSkoringController::class, 'exportPdf'])
+        ->name('skoring-bidang.export.pdf');
     });
 
     /*

@@ -1,8 +1,6 @@
-// =====================================================
-//   RIWAYAT LKH — PENILAI (SCRIPT TERPISAH)
-// =====================================================
+// resources/js/pages/penilai/riwayat.js
 
-export function riwayatData(role) {
+export function riwayatDataPenilai(role) {
     const TOKEN = localStorage.getItem('auth_token');
     const BASE_URL = '/api/lkh/riwayat';
 
@@ -15,26 +13,58 @@ export function riwayatData(role) {
         open: false,
         modalData: null,
 
-        // [BARU] State Modal Bukti
+        // State Modal Bukti
         openBukti: false,
         daftarBukti: [],
 
+        // Filter Data
         filter: {
             from: "",
             to: "",
-            mode: role === "penilai" ? "mine" : "mine",
+            // Default "mine". Dropdown di UI akan mengubah ini jadi "subordinates"
+            mode: "mine", 
         },
 
-        // ---------------------------
-        // FORMAT UTILITIES
-        // ---------------------------
+        // ===============================
+        // ACTIONS
+        // ===============================
 
-        //Edit Laporan
+        // Edit Laporan (Jika status Draft/Rejected)
         editLaporan(id) {
             if (!id) return;
-            // Arahkan ke halaman input/edit dengan ID laporan
-            window.location.href = `/penilai/input-laporan/${id}`;
+            // Arahkan ke halaman input dengan ID laporan (disesuaikan dengan nama file/route)
+            window.location.href = `/penilai/input-lkh/${id}`;
         },
+
+        // Export PDF sesuai Filter & Mode saat ini
+        exportPdf() {
+            Swal.fire({
+                title: "Export PDF?",
+                text: "Apakah Anda yakin ingin mengekspor riwayat laporan ini ke PDF?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#155FA6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Export",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Gunakan mode dinamis dari filter (mine/subordinates)
+                    let url = `/riwayat/export-pdf?role=${this.role}&mode=${this.filter.mode}`;
+
+                    if (this.filter.from)
+                        url += `&from_date=${this.filter.from}`;
+                    if (this.filter.to)
+                        url += `&to_date=${this.filter.to}`;
+
+                    window.open(url, "_blank");
+                }
+            });
+        },
+
+        // ===============================
+        // HELPERS & FORMATTING
+        // ===============================
 
         formatDate(isoString) {
             if (!isoString) return "-";
@@ -51,31 +81,28 @@ export function riwayatData(role) {
         },
 
         statusText(status) {
-            switch (status) {
-                case "approved":
-                    return "Diterima";
-                case "rejected":
-                    return "Ditolak";
-                default:
-                    return "Menunggu";
-            }
+            const texts = {
+                'approved': 'Diterima',
+                'rejected': 'Ditolak',
+                'draft': 'Draft',
+                'waiting_review': 'Menunggu'
+            };
+            return texts[status] || 'Menunggu';
         },
 
         statusBadgeClass(status) {
-            switch (status) {
-                case "approved":
-                    return "rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5";
-                case "rejected":
-                    return "rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5";
-                default:
-                    return "rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5";
-            }
+            const classes = {
+                'approved': 'rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5',
+                'rejected': 'rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5',
+                'draft': 'rounded-full bg-slate-200 text-slate-600 text-[11px] font-medium px-2.5 py-0.5',
+                'waiting_review': 'rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5'
+            };
+            // Default ke waiting_review (kuning) jika status tidak dikenali
+            return classes[status] || classes['waiting_review'];
         },
 
         statusBadgeHtml(status) {
-            return `<span class="${this.statusBadgeClass(
-                status
-            )}">${this.statusText(status)}</span>`;
+            return `<span class="${this.statusBadgeClass(status)}">${this.statusText(status)}</span>`;
         },
 
         getLokasi(item) {
@@ -87,20 +114,26 @@ export function riwayatData(role) {
             );
         },
 
-        // INIT
+        // ===============================
+        // DATA FETCHING
+        // ===============================
+
         async initPage() {
             await this.fetchData();
             this.initDatePickers();
         },
 
-        // FETCH
         async fetchData() {
             this.loading = true;
             this.items = [];
 
+            // Build URL dengan parameter role & mode dinamis
             let url = BASE_URL + `?role=${this.role}`;
 
-            if (this.role === "penilai") url += `&mode=${this.filter.mode}`;
+            if (this.role === "penilai") {
+                url += `&mode=${this.filter.mode}`;
+            }
+            
             if (this.filter.from) url += `&from_date=${this.filter.from}`;
             if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
@@ -115,8 +148,7 @@ export function riwayatData(role) {
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(
-                        `Gagal memuat data. Status: ${response.status
-                        }. Pesan: ${errorData.message || "Unknown Error"}`
+                        `Gagal memuat data. Status: ${response.status}. Pesan: ${errorData.message || "Unknown Error"}`
                     );
                 }
 
@@ -124,59 +156,44 @@ export function riwayatData(role) {
                 this.items = data.data || [];
             } catch (e) {
                 console.error("Gagal memuat data riwayat LKH:", e);
+                // Opsional: Tampilkan notifikasi error kecil
             } finally {
-                this.loading = false; // <-- DIJAMIN SELALU JALAN
+                this.loading = false;
             }
         },
 
-        // FILTER
-        // FILTER
+        // Trigger ulang fetch saat filter berubah
         async filterData() {
             await this.fetchData();
         },
 
-        // MODAL
+        // ===============================
+        // MODALS
+        // ===============================
+
         openModal(item) {
             this.modalData = item;
             this.open = true;
         },
 
-        // VIEW FILE
         viewBukti(buktiArray) {
-            // Cek validitas data
             if (buktiArray && buktiArray.length > 0) {
-                this.daftarBukti = buktiArray; // Simpan array bukti ke state
-                this.openBukti = true; // Trigger modal untuk muncul
+                this.daftarBukti = buktiArray;
+                this.openBukti = true;
             } else {
-                alert("Tidak ada bukti yang tersedia.");
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Tidak Ada Bukti',
+                    text: 'Laporan ini tidak memiliki dokumen lampiran.',
+                    confirmButtonColor: '#155FA6'
+                });
             }
         },
 
-        exportPdf() {
-            Swal.fire({
-                title: "Export PDF?",
-                text: "Apakah Anda yakin ingin mengekspor riwayat laporan ini ke PDF?",
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonColor: "#155FA6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, Export",
-                cancelButtonText: "Batal",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    let url = `/riwayat/export-pdf?role=${this.role}&mode=${this.filter.mode}`;
+        // ===============================
+        // UI COMPONENTS
+        // ===============================
 
-                    if (this.filter.from)
-                        url += `&from_date=${this.filter.from}`;
-                    if (this.filter.to)
-                        url += `&to_date=${this.filter.to}`;
-
-                    window.open(url, "_blank");
-                }
-            });
-        },
-
-        // DATEPICKERS
         initDatePickers() {
             ["tgl_dari", "tgl_sampai"].forEach((id) => {
                 const input = document.getElementById(id);
@@ -196,5 +213,5 @@ export function riwayatData(role) {
     };
 }
 
-// Daftarkan fungsi ke Global Window agar dikenali oleh Alpine.js di HTML
-window.riwayatData = riwayatData;
+// Global Registration agar bisa dipanggil via x-data di Blade
+window.riwayatDataPenilai = riwayatDataPenilai;

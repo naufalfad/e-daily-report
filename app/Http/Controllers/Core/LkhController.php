@@ -67,7 +67,8 @@ class LkhController extends Controller
     }
 
     /**
-     * 1. LIST LKH
+     * 1. LIST LKH (Utama / Tabel Dashboard Staf)
+     * [REFACTORED] Support Filter Bulan, Tahun, Status, Search
      */
     public function index(Request $request)
     {
@@ -76,13 +77,32 @@ class LkhController extends Controller
         $query = LaporanHarian::with(['tupoksi', 'rencana', 'bukti'])
             ->where('user_id', $userId);
 
-        if ($request->has('tanggal')) {
-            $query->whereDate('tanggal_laporan', $request->tanggal);
-        }
+        // 1. Filter Bulan
+        $query->when($request->month, function ($q, $month) {
+            $q->whereMonth('tanggal_laporan', $month);
+        });
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
+        // 2. Filter Tahun
+        $query->when($request->year, function ($q, $year) {
+            $q->whereYear('tanggal_laporan', $year);
+        });
+
+        // 3. Filter Status
+        $query->when($request->status && $request->status !== 'all', function ($q, $status) {
+            $q->where('status', $status);
+        });
+
+        // 4. Search (Deskripsi / Output)
+        $query->when($request->search, function ($q, $search) {
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $q->where(function ($sub) use ($search, $like) {
+                $sub->where('deskripsi_aktivitas', $like, "%{$search}%")
+                    ->orWhere('output_hasil_kerja', $like, "%{$search}%");
+            });
+        });
+
+        // Legacy Filter Tanggal Spesifik
+        $query->when($request->tanggal, fn($q, $d) => $q->whereDate('tanggal_laporan', $d));
 
         $data = $query->latest('tanggal_laporan')->paginate(10);
 
@@ -94,9 +114,37 @@ class LkhController extends Controller
      */
     public function store(Request $request)
     {
-        $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
+       \Log::info('DEBUG UPLOAD LKH:', [
+        'php_limit_upload' => ini_get('upload_max_filesize'),
+        'php_limit_post'   => ini_get('post_max_size'),
+        'file_data'        => $_FILES['bukti'] ?? 'KOSONG',
+        'laravel_valid'    => $request->file('bukti.0') ? $request->file('bukti.0')->isValid() : 'FILE NOT FOUND',
+        'laravel_error'    => $request->file('bukti.0') ? $request->file('bukti.0')->getErrorMessage() : '-',
+    ]);
+
+    // --- DEBUGGER V2 (CEK MIME TYPE) ---
+    if ($request->hasFile('bukti')) {
+        foreach ($request->file('bukti') as $file) {
+            \Log::info('DEBUG FILE IDENTITY:', [
+                'filename'      => $file->getClientOriginalName(),
+                'server_mime'   => $file->getMimeType(),       // <--- INI KUNCINYA (Apa kata server?)
+                'client_mime'   => $file->getClientMimeType(), // (Apa kata browser?)
+                'extension'     => $file->extension(),         // (Apa kata Laravel?)
+                'real_path'     => $file->getRealPath(),
+                'size'          => $file->getSize(),
+            ]);
+        }
+    }
+    // --- END DEBUGGER ---
+
+    $validAktivitas = 'Rapat,Pelayanan Publik,Penyusunan Dokumen,Kunjungan Lapangan,Lainnya';
         $user = Auth::user();
-        $status = 'waiting_review';
+        $status = $request->input('status', 'waiting_review');
+
+        // Validasi keamanan agar user tidak bisa kirim status 'approved' secara manual
+        if (!in_array($status, ['draft', 'waiting_review'])) {
+            $status = 'draft';
+        }
 
         if (!$user) {
             return response()->json(['message' => 'User belum login / token invalid'], 401);
@@ -119,13 +167,26 @@ class LkhController extends Controller
             'volume'            => 'required|integer|min:1',
             'satuan'            => 'required|string|max:50',
             'master_kelurahan_id'=> 'nullable|exists:master_kelurahan,id',
-            'bukti.*'           => 'file|mimes:jpg,jpeg,png,pdf,doc,docx,mp4|max:10240',
-
-            // [BARU] Validasi Mode & Lokasi
             'mode_lokasi'       => 'required|in:geofence,geocoding',
             'latitude'          => 'nullable|numeric',
             'longitude'         => 'nullable|numeric',
             'lokasi_teks'       => 'required_if:mode_lokasi,geocoding|nullable|string|max:255',
+            'bukti.*' => [
+                'file',
+                'max:102400', // Limit 100MB
+                function ($attribute, $value, $fail) {
+                    // [LOGIKA ANALIS] 
+                    // Karena server mendeteksi PDF sebagai 'application/octet-stream' (binary),
+                    // validator 'mimes' bawaan akan gagal. Kita bypass dengan mengecek
+                    // ekstensi asli dari nama file yang dikirim user.
+                    $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'mp4'];
+                    $extension = strtolower($value->getClientOriginalExtension());
+                    
+                    if (!in_array($extension, $allowedExtensions)) {
+                        $fail("File harus bertipe: " . implode(', ', $allowedExtensions));
+                    }
+                },
+            ],
         ]);
 
         if ($validator->fails())
@@ -283,7 +344,8 @@ class LkhController extends Controller
     }
 
     /**
-     * Mengambil Riwayat LKH
+     * Mengambil Riwayat LKH (Khusus Halaman Riwayat)
+     * [REFACTORED] Filter Standarisasi: month, year, search
      */
     public function getRiwayat(Request $request)
     {
@@ -306,6 +368,32 @@ class LkhController extends Controller
             $query->where('user_id', $user->id);
         }
         
+        // 1. Standardized Filter (Month & Year)
+        $query->when($request->month, function ($q, $month) {
+            $q->whereMonth('tanggal_laporan', $month);
+        });
+
+        $query->when($request->year, function ($q, $year) {
+            $q->whereYear('tanggal_laporan', $year);
+        });
+
+        // 2. Filter Status
+        $query->when($request->status && $request->status !== 'all', function ($q, $status) {
+            $q->where('status', $status);
+        });
+
+        // 3. Search (Deskripsi / Nama jika lihat bawahan)
+        $query->when($request->search, function ($q, $search) {
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $q->where(function ($sub) use ($search, $like) {
+                $sub->where('deskripsi_aktivitas', $like, "%{$search}%")
+                    ->orWhereHas('user', function ($u) use ($search, $like) {
+                        $u->where('name', $like, "%{$search}%");
+                    });
+            });
+        });
+
+        // 4. Legacy Filter (Range Date) - Opsional jika masih dibutuhkan
         if ($request->filled('from_date')) {
             $query->whereDate('tanggal_laporan', '>=', $request->from_date);
         }

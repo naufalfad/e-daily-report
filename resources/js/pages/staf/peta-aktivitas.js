@@ -1,6 +1,5 @@
-// resources/js/pages/penilai/peta-aktivitas.js
+// resources/js/pages/staf/peta-aktivitas.js
 
-// FIX: Menggunakan export function untuk pendaftaran global Alpine
 export function stafMapData() {
     return {
         map: null,
@@ -13,14 +12,14 @@ export function stafMapData() {
 
         showModal: false,
         selectedActivity: null,
+        loading: false,
 
         initMap() {
             this.$nextTick(() => {
                 // 1. Init Map
-                this.map = L.map("map", { zoomControl: true }).setView(
-                    [-4.557, 136.885],
-                    13
-                );
+                // SETTING LOKASI DEFAULT: Timika, Papua Tengah
+                this.map = L.map('map', { zoomControl: true })
+                    .setView([-4.5467, 136.8833], 13); 
 
                 // 2. Tile Layers
                 const googleRoadmap = L.tileLayer(
@@ -44,26 +43,38 @@ export function stafMapData() {
                 // 3. Layer Markers
                 this.markersLayer = L.layerGroup().addTo(this.map);
 
-                // 4. Load Data
+                // 4. Load Data Awal
                 this.loadData();
                 this.initDatePickers();
 
-                // 5. Resize Observer
-                new ResizeObserver(() => this.map.invalidateSize()).observe(
-                    document.getElementById("map")
-                );
+                // 5. Resize Observer (Agar peta tidak grey area saat resize)
+                new ResizeObserver(() =>
+                    this.map.invalidateSize()
+                ).observe(document.getElementById('map'));
 
-                // 6. BRIDGING FUNCTION
+                // 6. Bridging Function untuk Popup
                 window.openActivityDetail = (id) => {
                     this.openModal(id);
                 };
             });
         },
 
-        // ---------------- LOGIC DATA ----------------
+        // ---------------- LOGIC DATA (SERVER SIDE) ----------------
         loadData() {
-            // ENDPOINT BENAR untuk Penilai: Mengambil aktivitas bawahan (atasan_id = Auth::id())
-            fetch("/api/peta-aktivitas", {
+            this.loading = true;
+
+            // Build URL Query String
+            let url = '/api/peta-aktivitas'; // Endpoint Staf
+            const params = [];
+
+            if (this.filter.from) params.push(`from_date=${this.filter.from}`);
+            if (this.filter.to) params.push(`to_date=${this.filter.to}`);
+
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+
+            fetch(url, {
                 headers: {
                     Authorization:
                         "Bearer " + localStorage.getItem("auth_token"),
@@ -76,29 +87,40 @@ export function stafMapData() {
                         console.error("API error:", data);
                         return;
                     }
+                    // Simpan data & Render Marker
                     this.allActivities = data.data;
                     this.loadMarkers(data.data);
                 })
-                .catch((err) => console.error("Gagal memuat data:", err));
+                .catch(err => console.error("Gagal memuat data:", err))
+                .finally(() => {
+                    this.loading = false;
+                });
         },
 
         loadMarkers(data) {
             this.markersLayer.clearLayers();
 
-            data.forEach((act) => {
-                // Penentuan warna status
-                let color = "#f59e0b";
-                let bgColorStatus = "#fffbeb";
-                let statusLabel = "Menunggu";
+            if (data.length === 0) return;
 
-                if (act.status === "approved") {
-                    color = "#22c55e";
-                    bgColorStatus = "#dcfce7";
-                    statusLabel = "Disetujui";
-                } else if (act.status === "rejected") {
-                    color = "#ef4444";
-                    bgColorStatus = "#fee2e2";
-                    statusLabel = "Ditolak";
+            const latlngs = [];
+
+            data.forEach(act => {
+                // Validasi koordinat
+                if (!act.lat || !act.lng) return;
+
+                // Penentuan warna status
+                let color = '#f59e0b'; // Kuning (Waiting)
+                let bgColorStatus = '#fffbeb';
+                let statusLabel = 'Menunggu';
+
+                if (act.status === 'approved') {
+                    color = '#22c55e'; // Hijau
+                    bgColorStatus = '#dcfce7';
+                    statusLabel = 'Disetujui';
+                } else if (act.status === 'rejected') {
+                    color = '#ef4444'; // Merah
+                    bgColorStatus = '#fee2e2';
+                    statusLabel = 'Ditolak';
                 }
 
                 // Popup content HTML
@@ -154,8 +176,9 @@ export function stafMapData() {
                     </div>
                 `;
 
+                // Add Marker
                 L.circleMarker([act.lat, act.lng], {
-                    radius: 7,
+                    radius: 8,
                     fillColor: color,
                     color: "#FFF",
                     weight: 2,
@@ -163,7 +186,15 @@ export function stafMapData() {
                 })
                     .bindPopup(popupContent)
                     .addTo(this.markersLayer);
+
+                latlngs.push([act.lat, act.lng]);
             });
+
+            // Auto Zoom ke area marker (jika ada data)
+            // Jika tidak ada data, peta tetap di view default Timika
+            if (latlngs.length > 0) {
+                this.map.fitBounds(latlngs, { padding: [50, 50] });
+            }
         },
 
         // ---------------- MODAL ----------------
@@ -182,22 +213,10 @@ export function stafMapData() {
             }, 300);
         },
 
-        // ---------------- FILTER ----------------
+        // ---------------- FILTER ACTION ----------------
         applyFilter() {
-            const from = this.filter.from ? new Date(this.filter.from) : null;
-            const to = this.filter.to ? new Date(this.filter.to) : null;
-
-            if (from) from.setHours(0, 0, 0, 0);
-            if (to) to.setHours(23, 59, 59, 999);
-
-            const filtered = this.allActivities.filter((act) => {
-                const actDate = new Date(act.tanggal);
-                if (from && actDate < from) return false;
-                if (to && actDate > to) return false;
-                return true;
-            });
-
-            this.loadMarkers(filtered);
+            // Panggil API ulang dengan parameter tanggal
+            this.loadData();
         },
 
         // ---------------- DATEPICKER ----------------

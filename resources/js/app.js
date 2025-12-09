@@ -22,6 +22,10 @@ import { systemSettingsData } from './pages/admin/setting-sistem.js';
 import { penilaiMapData } from './pages/penilai/peta-aktivitas.js';
 import { stafMapData } from './pages/staf/peta-aktivitas.js';
 import { kadisMapData } from './pages/kadis/peta-aktivitas.js';
+import { riwayatDataPenilai } from './pages/penilai/riwayat.js';
+import { riwayatDataStaf} from './pages/staf/riwayat.js';
+import { logActivityKadis } from './pages/kadis/log-aktivitas.js';
+import { logActivityDataAdmin } from './pages/admin/log-aktivitas.js';
 
 
 // =========================
@@ -38,6 +42,10 @@ window.systemSettingsData = systemSettingsData;
 window.penilaiMapData = penilaiMapData;
 window.stafMapData = stafMapData;
 window.kadisMapData = kadisMapData;
+window.riwayatDataPenilai = riwayatDataPenilai;
+window.riwayatDataStaf = riwayatDataStaf;
+window.logActivityKadis = logActivityKadis;
+window.logActivityDataAdmin = logActivityDataAdmin;
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -58,7 +66,7 @@ import './utils/auth-fetch';
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
 import './pages/staf/peta-aktivitas.js'; // <-- Biarkan, asumsikan ini untuk staf. Jika ada error, ini perlu diekspor dan didaftarkan global juga.
-import './pages/staf/riwayat.js';
+// import './pages/staf/riwayat.js';
 import './pages/staf/pengumuman.js';
 
 // =========================
@@ -67,23 +75,7 @@ import './pages/staf/pengumuman.js';
 import './pages/penilai/input-skp.js';
 import './pages/penilai/log-aktivitas.js';
 import './pages/penilai/pengumuman.js';
-// import './pages/penilai/peta-aktivitas.js'; // <-- HAPUS/KOMENTARI: Sudah di-import di Section 2
-import './pages/penilai/riwayat.js';
-// =========================
-// KADIS - BARIS INI DIHAPUS UNTUK FIX KONFLIK
-// =========================
-// import './pages/kadis/dashboard.js'
-// import './pages/kadis/log-aktivitas.js'
-// import './pages/kadis/validasi-laporan.js'
-// import './pages/kadis/skoring-bidang.js'
-
-// =========================
-// ADMIN (Logic lain jika ada) - BARIS INI DIHAPUS UNTUK FIX KONFLIK
-// =========================
-// import './pages/admin/log-aktivitas.js'
-// [CATATAN]: File ini sudah tidak perlu di-import di sini karena sudah di-import di Section 2
-// import './pages/admin/setting-sistem.js' 
-
+import './pages/admin/log-aktivitas.js';
 
 // Chart global (boleh)
 import Chart from 'chart.js/auto';

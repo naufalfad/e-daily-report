@@ -215,68 +215,45 @@ class SkpController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Cari Bawahan (User yang atasan_id-nya adalah user login)
-        $bawahan = \App\Models\User::where('atasan_id', $user->id)->get();
+        // 1. Cari Bawahan
+        $bawahan = \App\Models\User::with('unitKerja')
+            ->where('atasan_id', $user->id)
+            ->get();
 
         $data = $bawahan->map(function ($staff) {
-            // 2. Ambil Rencana SKP Terbaru milik staf ini
-            $rencana = SkpRencana::with([
-                'targets' => function ($q) {
-                    $q->where('jenis_aspek', 'Kuantitas');
-                }
-            ])
-                ->where('user_id', $staff->id)
-                ->latest()
-                ->first();
+            
+            // [PERBAIKAN DI SINI] Definisi variabel $totalSubmitted
+            // Menghitung total laporan yang sudah diajukan (bukan draft)
+            $totalSubmitted = \App\Models\LaporanHarian::where('user_id', $staff->id)
+                ->whereNotIn('status', ['draft', 'waiting_review']) 
+                ->count();
 
-            if (!$rencana) {
-                return [
-                    'id' => $staff->id,
-                    'nama' => $staff->name,
-                    'nip' => $staff->nip,
-                    'status' => 'Belum buat SKP',
-                    'capaian' => 0
-                ];
-            }
-
-            // 3. Ambil Target Kuantitas
-            $targetObj = $rencana->targets->first();
-            $targetAngka = $targetObj ? $targetObj->target : 0;
-            $satuan = $targetObj ? $targetObj->satuan : '-';
-
-            // 3. Hitung Pembilang: Total LKH yang DISETUJUI (Approved)
+            // Hitung Pembilang: Total LKH yang DISETUJUI (Approved)
             $totalApproved = \App\Models\LaporanHarian::where('user_id', $staff->id)
                 ->where('status', 'approved')
                 ->count();
 
-            // 4. Kalkulasi Persentase
+            // Kalkulasi Persentase
+            // Sekarang $totalSubmitted sudah ada nilainya, jadi aman digunakan
             $skor = $totalSubmitted > 0 
                 ? round(($totalApproved / $totalSubmitted) * 100) 
                 : 0;
 
-            // 5. Tentukan Predikat
+            // Tentukan Predikat
             $predikat = 'Kurang';
             if ($skor >= 90) $predikat = 'Sangat Baik';
             else if ($skor >= 75) $predikat = 'Baik';
             else if ($skor >= 60) $predikat = 'Cukup';
 
-            // 6. Return Data Structure
             return [
                 'id' => $staff->id,
                 'nama' => $staff->name,
                 'nip'  => $staff->nip,
                 'foto' => $staff->foto_profil_url ?? asset('assets/icon/avatar.png'),
-                
-                // [FIX] Masukkan UNIT KERJA ke key 'rhk' 
-                // Karena JS di frontend (skoring-kinerja.js) merender kolom ke-2 menggunakan key 'rhk'
                 'rhk' => $staff->unitKerja->nama_unit ?? 'Non-Unit', 
-                
-                // Statistik LKH
-                'target' => $totalSubmitted,   // Total yang diajukan
-                'realisasi' => $totalApproved, // Total yang di-approve
+                'target' => $totalSubmitted,   
+                'realisasi' => $totalApproved, 
                 'satuan' => 'LKH',
-                
-                // Hasil Akhir
                 'capaian' => $skor,
                 'predikat' => $predikat
             ];

@@ -70,19 +70,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (data.statistik_skp) {
         const s = data.statistik_skp;
 
-        setText("stat-val-1", s.total_diajukan);
+        setText("stat-val-1", s.total_skp);
+        setText("stat-val-2", s.total_non_skp);
         setText("stat-val-3", s.total_diterima);
-        setText("stat-desc-3", `${s.persen_diterima}% Dari total diterima`);
+        setText("stat-desc-3", s.persen_diterima + "% Dari total diterima");
 
         setText("stat-val-4", s.total_ditolak);
-        setText("stat-desc-4", `${s.persen_ditolak}% Dari total ditolak`);
-    }
-
-    if (data.skoring_utama) {
-        const sk = data.skoring_utama;
-
-        setText("stat-val-2", sk.realisasi_tahunan);
-        setText("stat-desc-2", `${sk.persen_capaian}% Capaian`);
+        setText("stat-desc-4", s.persen_ditolak + "% Dari total ditolak");
     }
 
     /* =======================================================
@@ -261,7 +255,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         // -------------------------------
 
         // Proses Data Grafik
-        let monthlyTotal = Array(12).fill(0);
+        let monthlySkp = Array(12).fill(0);
+        let monthlyNonSkp = Array(12).fill(0);
         let monthlyApproved = Array(12).fill(0);
         let monthlyRejected = Array(12).fill(0);
 
@@ -269,10 +264,22 @@ document.addEventListener("DOMContentLoaded", async function () {
             const dateObj = new Date(item.tanggal_laporan);
             const month = dateObj.getMonth();
 
-            monthlyTotal[month]++;
-            if (item.status === "draft") monthlyTotal[month]--;
-            else if (item.status === "rejected") monthlyRejected[month]++;
-            else if (item.status === "approved") monthlyApproved[month]++;
+            // Hitung SKP dan Non SKP
+            if (item.skp_rencana_id !== null && item.skp_rencana_id !== "null" && item.status !== "draft") {
+                // SKP yang valid
+                monthlySkp[month]++;
+            }
+            else if ((item.skp_rencana_id === null || item.skp_rencana_id === "null") && item.status !== "draft") {
+                // Bukan SKP
+                monthlyNonSkp[month]++;
+            }
+
+            // Hitungan status
+            if (item.status === "rejected") {
+                monthlyRejected[month]++;
+            } else if (item.status === "approved") {
+                monthlyApproved[month]++;
+            }
         });
 
         const ctx = canvas.getContext("2d");
@@ -287,11 +294,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                 labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
                 datasets: [
                     {
-                        label: "Total Laporan",
-                        data: monthlyTotal,
+                        label: "Laporan SKP",
+                        data: monthlySkp,
                         borderColor: "#1E40AF",
                         backgroundColor: gradientTotal,
                         pointBackgroundColor: "#1E40AF",
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: "Laporan Non SKP",
+                        data: monthlyNonSkp,
+                        borderColor: "#f8be00ff",
+                        backgroundColor: gradientTotal,
+                        pointBackgroundColor: "#f8be00ff",
                         fill: true,
                         tension: 0.3
                     },

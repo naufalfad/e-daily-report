@@ -17,20 +17,25 @@
         z-index: 1;
         }
 
-        #map,
+        #map ,
         .leaflet-container {
         width: 100%;
         height: 100%;
         z-index: 1 !important;
         }
 
-        <<<<<<< HEAD .leaflet-popup-content-wrapper { border-radius: 10px; padding: 0; }=======/* C ustom Popup Styles
-            */ .leaflet-popup-content-wrapper { border-radius: 10px; padding: 0; box-shadow: 0 4px 6px -1px rgb(0 0 0 /
-            0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }>>>>>>>57369d470d6c32c53f7aaf9865200b7b0466f2ef
-            .leaflet-popup-content {
-            margin: 0 !important;
-            font-family: 'Poppins', sans-serif;
-            }
+
+        /* Custom Popup Styles */
+        .leaflet-popup-content-wrapper {
+        border-radius: 10px;
+        padding: 0;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        margin: 0 !important;
+        font-family: 'Poppins',
+        sans-serif;
+        }
     </sty>
     @endpush
 
@@ -41,16 +46,20 @@
 
     @section('content')
 
-    <section x-data="penilaiMapData" x-init="initMap()" class="relative">
+    <section x-data="stafMapData" x-init="initMap()" class="relative">
 
         {{-- CARD UTAMA --}}
         <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">
-            <h2 class="text-[20px] font-normal mb-1">Peta Aktivitas Pegawai</h2>
+            <h2 class="text-[20px] font-normal mb-1">Peta Aktivitas Anda</h2>
+            <div class="flex justify-end mt-4">
+                <button @click="exportMap()"
+                    class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
+                    Export Peta ke PDF
+                </button>
+            </div>
 
-            <button @click="exportMap()"
-                class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
-                Export Peta ke PDF
-            </button>
+
+            {{-- FILTER FORM --}}
             <form class="mt-4" @submit.prevent="applyFilter()">
                 <label class="block text-xs font-semibold text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
 
@@ -60,12 +69,12 @@
                     <div>
                         <div class="relative">
                             <input x-model="filter.from" id="tgl_dari" type="date" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30
-                focus:border-[#1C7C54] transition-all">
+                    px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30
+                    focus:border-[#1C7C54] transition-all">
 
                             {{-- Tombol Kalender --}}
                             <button type="button" id="tgl_dari_btn" class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center
-                cursor-pointer hover:bg-slate-200 rounded-full transition-colors" title="Pilih Tanggal">
+                    cursor-pointer hover:bg-slate-200 rounded-full transition-colors" title="Pilih Tanggal">
                                 <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-70">
                             </button>
                         </div>
@@ -75,12 +84,12 @@
                     <div>
                         <div class="relative">
                             <input x-model="filter.to" id="tgl_sampai" type="date" class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60
-                px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30
-                focus:border-[#1C7C54] transition-all">
+                    px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30
+                    focus:border-[#1C7C54] transition-all">
 
                             {{-- Tombol Kalender --}}
                             <button type="button" id="tgl_sampai_btn" class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center
-                cursor-pointer hover:bg-slate-200 rounded-full transition-colors" title="Pilih Tanggal">
+                    cursor-pointer hover:bg-slate-200 rounded-full transition-colors" title="Pilih Tanggal">
                                 <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-70">
                             </button>
                         </div>
@@ -89,7 +98,7 @@
                     {{-- Tombol Terapkan --}}
                     <div class="flex items-end">
                         <button type="submit" class="h-[42px] rounded-[10px] bg-[#0E7A4A] px-6 text-sm font-medium text-white hover:brightness-95
-            transition-all shadow-sm flex items-center justify-center gap-2 min-w-[100px]" :disabled="loading">
+                transition-all shadow-sm flex items-center justify-center gap-2 min-w-[100px]" :disabled="loading">
 
                             <span x-show="!loading">Terapkan</span>
 
@@ -99,7 +108,7 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                         stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135
-                        5.824 3 7.938l3-2.647z"></path>
+                            5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 <span>Memuat...</span>
                             </span>
@@ -151,7 +160,7 @@
                     <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                         <div>
                             <h3 class="font-bold text-slate-800 text-lg tracking-tight">Detail Aktivitas</h3>
-                            <p class="text-xs text-slate-500">Informasi lengkap lokasi aktivitas pegawai.</p>
+                            <p class="text-xs text-slate-500">Informasi lengkap lokasi aktivitas.</p>
                         </div>
                         <button @click="closeModal()"
                             class="text-slate-400 hover:text-rose-500 p-2 rounded-full hover:bg-rose-50 transition-colors">
@@ -181,7 +190,6 @@
                                         'bg-rose-50 text-rose-600 border-rose-200': selectedActivity.status === 'rejected',
                                         'bg-amber-50 text-amber-600 border-amber-200': selectedActivity.status === 'waiting_review'
                                     }" x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
-
                             {{-- Kategori Badge --}}
                             <span class=" inline-block px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px]
                                         font-bold uppercase tracking-wide border border-blue-100 mb-2"

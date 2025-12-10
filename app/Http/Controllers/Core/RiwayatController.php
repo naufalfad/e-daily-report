@@ -14,7 +14,7 @@ class RiwayatController extends Controller
         $user = auth()->user();
         $role = $request->role ?? 'staf';
 
-        $query = LaporanHarian::with(['user.unitKerja', 'validator', 'atasan'])
+        $query = LaporanHarian::with(['user.unitKerja', 'validator', 'atasan', 'bukti'])
             ->orderBy('tanggal_laporan', 'desc')
             ->whereIn('status', ['approved', 'rejected']); // ⬅ FILTER HANYA YANG SUDAH DIVERIFIKASI
 

@@ -1,8 +1,8 @@
 // resources/js/pages/penilai/riwayat.js
 
 export function riwayatDataPenilai(role) {
-    const TOKEN = localStorage.getItem('auth_token');
-    const BASE_URL = '/api/lkh/riwayat';
+    const TOKEN = localStorage.getItem("auth_token");
+    const BASE_URL = "/api/lkh/riwayat";
 
     return {
         role: role,
@@ -22,7 +22,7 @@ export function riwayatDataPenilai(role) {
             from: "",
             to: "",
             // Default "mine". Dropdown di UI akan mengubah ini jadi "subordinates"
-            mode: "mine", 
+            mode: "mine",
         },
 
         // ===============================
@@ -54,8 +54,7 @@ export function riwayatDataPenilai(role) {
 
                     if (this.filter.from)
                         url += `&from_date=${this.filter.from}`;
-                    if (this.filter.to)
-                        url += `&to_date=${this.filter.to}`;
+                    if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
                     window.open(url, "_blank");
                 }
@@ -82,27 +81,32 @@ export function riwayatDataPenilai(role) {
 
         statusText(status) {
             const texts = {
-                'approved': 'Diterima',
-                'rejected': 'Ditolak',
-                'draft': 'Draft',
-                'waiting_review': 'Menunggu'
+                approved: "Diterima",
+                rejected: "Ditolak",
+                draft: "Draft",
+                waiting_review: "Menunggu",
             };
-            return texts[status] || 'Menunggu';
+            return texts[status] || "Menunggu";
         },
 
         statusBadgeClass(status) {
             const classes = {
-                'approved': 'rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5',
-                'rejected': 'rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5',
-                'draft': 'rounded-full bg-slate-200 text-slate-600 text-[11px] font-medium px-2.5 py-0.5',
-                'waiting_review': 'rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5'
+                approved:
+                    "rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5",
+                rejected:
+                    "rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5",
+                draft: "rounded-full bg-slate-200 text-slate-600 text-[11px] font-medium px-2.5 py-0.5",
+                waiting_review:
+                    "rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5",
             };
             // Default ke waiting_review (kuning) jika status tidak dikenali
-            return classes[status] || classes['waiting_review'];
+            return classes[status] || classes["waiting_review"];
         },
 
         statusBadgeHtml(status) {
-            return `<span class="${this.statusBadgeClass(status)}">${this.statusText(status)}</span>`;
+            return `<span class="${this.statusBadgeClass(
+                status
+            )}">${this.statusText(status)}</span>`;
         },
 
         getLokasi(item) {
@@ -133,7 +137,7 @@ export function riwayatDataPenilai(role) {
             if (this.role === "penilai") {
                 url += `&mode=${this.filter.mode}`;
             }
-            
+
             if (this.filter.from) url += `&from_date=${this.filter.from}`;
             if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
@@ -141,14 +145,16 @@ export function riwayatDataPenilai(role) {
                 const response = await fetch(url, {
                     headers: {
                         Authorization: `Bearer ${TOKEN}`,
-                        Accept: 'application/json'
+                        Accept: "application/json",
                     },
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(
-                        `Gagal memuat data. Status: ${response.status}. Pesan: ${errorData.message || "Unknown Error"}`
+                        `Gagal memuat data. Status: ${
+                            response.status
+                        }. Pesan: ${errorData.message || "Unknown Error"}`
                     );
                 }
 
@@ -171,21 +177,39 @@ export function riwayatDataPenilai(role) {
         // MODALS
         // ===============================
 
-        openModal(item) {
-            this.modalData = item;
+        async openModal(item) {
+            this.modalData = null;
             this.open = true;
+
+            try {
+                const res = await fetch(`/api/lkh/${item.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`,
+                        Accept: "application/json",
+                    },
+                });
+
+                const data = await res.json();
+                this.modalData = data.data;
+
+                console.log("MODAL DATA FULL =", this.modalData);
+            } catch (e) {
+                console.error("Gagal load detail LKH:", e);
+            }
         },
 
         viewBukti(buktiArray) {
-            if (buktiArray && buktiArray.length > 0) {
-                this.daftarBukti = buktiArray;
+            const bukti = this.normalizeBukti(buktiArray);
+
+            if (bukti.length > 0) {
+                this.daftarBukti = bukti;
                 this.openBukti = true;
             } else {
                 Swal.fire({
-                    icon: 'info',
-                    title: 'Tidak Ada Bukti',
-                    text: 'Laporan ini tidak memiliki dokumen lampiran.',
-                    confirmButtonColor: '#155FA6'
+                    icon: "info",
+                    title: "Tidak Ada Bukti",
+                    text: "Laporan ini tidak memiliki dokumen lampiran.",
+                    confirmButtonColor: "#155FA6",
                 });
             }
         },
@@ -209,6 +233,51 @@ export function riwayatDataPenilai(role) {
                     }
                 });
             });
+        },
+
+        normalizeBukti(buktiArray) {
+            if (!buktiArray) return [];
+
+            // Jika bukti berupa STRING JSON -> parse dulu
+            if (typeof buktiArray === "string") {
+                try {
+                    buktiArray = JSON.parse(buktiArray);
+                } catch (e) {
+                    console.error("Gagal parse bukti:", buktiArray);
+                    return [];
+                }
+            }
+
+            // Jika hasil parse bukan array -> jadikan array
+            if (!Array.isArray(buktiArray)) {
+                return [];
+            }
+
+            // Normalisasi setiap item
+            return buktiArray
+                .map((bukti) => {
+                    // Jika string (nama file)
+                    if (typeof bukti === "string") {
+                        return {
+                            file_url: `/storage/uploads/bukti/${bukti}`,
+                        };
+                    }
+
+                    // Jika object { path: ... }
+                    if (bukti.path) {
+                        return {
+                            file_url: `/storage/${bukti.path}`,
+                        };
+                    }
+
+                    // Jika sudah ada file_url
+                    if (bukti.file_url) {
+                        return bukti;
+                    }
+
+                    return null;
+                })
+                .filter(Boolean);
         },
     };
 }

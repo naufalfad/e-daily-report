@@ -143,9 +143,12 @@
 
                             {{-- SEARCH --}}
                             <div class="relative flex-1 max-w-[500px]">
-                                <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
+                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm shadow-sm placeholder:text-slate-400
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
+                                    <div id="search-dropdown"
+                                        class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
+                                    </div>
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                     <img src="{{ asset('assets/icon/search.svg') }}"
                                         class="h-[18px] w-[18px] opacity-70" />
@@ -251,6 +254,77 @@
     @endswitch 
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const input = document.querySelector('input[placeholder="Cari Pengumuman"]');
+        const dropdown = document.getElementById("search-dropdown");
+
+        if (!input || !dropdown) return;
+
+        let typingTimer;
+
+        input.addEventListener("keyup", function () {
+            clearTimeout(typingTimer);
+
+            const query = this.value.trim();
+            if (query.length < 2) {
+                dropdown.classList.add("hidden");
+                return;
+            }
+
+            typingTimer = setTimeout(() => {
+
+                const token = localStorage.getItem("auth_token");
+
+                fetch(`/api/search/pengumuman?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Accept": "application/json"
+                    }
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        console.error("UNAUTHORIZED – token tidak dikirim / salah");
+                    }
+                    return res.json();
+                })
+                .then(data => {
+
+                    if (!Array.isArray(data) || !data.length) {
+                        dropdown.innerHTML = `
+                            <div class="p-3 text-sm text-slate-500">Tidak ada hasil.</div>
+                        `;
+                        dropdown.classList.remove("hidden");
+                        return;
+                    }
+
+                    dropdown.innerHTML = data.map(item => `
+                        <div class="px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-sm">
+                            <div class="font-semibold text-slate-700">${item.judul}</div>
+                            <div class="text-xs text-slate-500 line-clamp-1">${item.isi_pengumuman}</div>
+                            <div class="text-[10px] text-slate-400 mt-1">
+                                Pembuat: ${item.creator ? item.creator.name : 'Tidak diketahui'}
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                ${new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `).join('');
+
+                    dropdown.classList.remove("hidden");
+                });
+
+            }, 300);
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target) && !input.contains(e.target)) {
+                dropdown.classList.add("hidden");
+            }
+        });
+    });
+    </script>
 </body>
 
 </html>

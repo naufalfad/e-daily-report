@@ -87,22 +87,14 @@ class LkhController extends Controller
             $q->whereYear('tanggal_laporan', $year);
         });
 
-        // 3. Filter Status
-        $query->when($request->status && $request->status !== 'all', function ($q, $status) {
-            $q->where('status', $status);
-        });
+        $query->when(
+            $request->filled('status') && $request->status !== 'all',
+            fn($q) => $q->where('status', $request->status)
+        );
 
-        // 4. Search (Deskripsi / Output)
-        $query->when($request->search, function ($q, $search) {
-            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-            $q->where(function ($sub) use ($search, $like) {
-                $sub->where('deskripsi_aktivitas', $like, "%{$search}%")
-                    ->orWhere('output_hasil_kerja', $like, "%{$search}%");
-            });
-        });
-
-        // Legacy Filter Tanggal Spesifik
-        $query->when($request->tanggal, fn($q, $d) => $q->whereDate('tanggal_laporan', $d));
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
 
         $data = $query->latest('tanggal_laporan')->paginate(10);
 

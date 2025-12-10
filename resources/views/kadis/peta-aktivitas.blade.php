@@ -8,6 +8,8 @@
 {{-- STYLES --}}
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{{-- Tambahkan CSS SweetAlert agar tampilannya cantik --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <style>
 .map-container {
@@ -25,37 +27,51 @@
 }
 
 
-/* Custom Popup Styles */
-.leaflet-popup-content-wrapper {
-    border-radius: 10px;
-    padding: 0;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
+    /* Custom Popup Styles - Lebih minimalis karena tombol pindah ke modal */
+    .leaflet-popup-content-wrapper {
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    .leaflet-popup-content {
+        margin: 0 !important;
+        font-family: 'Poppins', sans-serif;
+    }
 </style>
 @endpush
 
 {{-- SCRIPTS --}}
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{{-- Tambahkan JS SweetAlert --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endpush
 
 @section('content')
 
-<section x-data="stafMapData" x-init="initMap()" class="relative">
+<section x-data="kadisMapData" x-init="initMap()" class="relative">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">
-        <h2 class="text-[20px] font-normal mb-1">Peta Aktivitas Anda</h2>
-        <div class="flex justify-end mt-4">
-            <button @click="exportMap()"
-                class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
-                Export Peta ke PDF
-            </button>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-[20px] font-normal">Peta Aktivitas Pegawai</h2>
+            
+            {{-- Indikator Loading --}}
+            <div x-show="loading" class="text-xs font-medium text-emerald-600 flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full animate-pulse" style="display: none;">
+                <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Memuat Data...
+            </div>
+            <div class="flex justify-end mt-4">
+                <button @click="exportMap()"
+                    class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
+                    Export Peta ke PDF
+                </button>
+            </div>
         </div>
 
-
         {{-- FILTER FORM --}}
-        <form class="mt-4" @submit.prevent="applyFilter()">
+        <form class="mb-4" @submit.prevent="applyFilter()">
             <label class="block text-xs font-semibold text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
 
             <div class="grid md:grid-cols-[1fr_1fr_auto] gap-3">
@@ -91,10 +107,11 @@
                 </div>
 
                 {{-- Tombol Terapkan --}}
+                {{-- Tombol Terapkan --}}
                 <div class="flex items-end">
-                    <button type="submit" class="h-[42px] rounded-[10px] bg-[#0E7A4A] px-6 text-sm font-medium text-white hover:brightness-95
-                transition-all shadow-sm flex items-center justify-center gap-2 min-w-[100px]" :disabled="loading">
-
+                    <button type="submit"
+                        class="h-[42px] rounded-[10px] bg-[#0E7A4A] px-6 text-sm font-medium text-white hover:brightness-95 transition-all shadow-sm flex items-center justify-center gap-2 min-w-[100px]"
+                        :disabled="loading">
                         <span x-show="!loading">Terapkan</span>
 
                         <span x-show="loading" class="flex items-center gap-2">
@@ -132,7 +149,7 @@
         </div>
 
         {{-- MAP CONTAINER --}}
-        <div class="map-container mt-4 rounded-xl ring-1 ring-slate-200 overflow-hidden shadow-sm">
+        <div class="map-container mt-4 rounded-xl ring-1 ring-slate-200 overflow-hidden shadow-sm relative">
             <div id="map"></div>
         </div>
     </div>
@@ -206,6 +223,12 @@
 
                                     <div class="h-4 w-px bg-slate-200"></div>
 
+                            <div class="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                                <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-700">
+                                    👤 <span x-text="selectedActivity.user"></span>
+                                </span>
+                            </div>
+                        </div>
                                     {{-- Detail --}}
                                     <div class="grid grid-cols-2 gap-4 mt-4 text-sm">
                                         <div>
@@ -282,20 +305,45 @@
                                         </div>
                                     </div>
 
-                                    {{-- Footer Actions --}}
-                                    <div class="mt-6 flex justify-end">
-                                        <button @click="closeModal()"
-                                            class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                                            Tutup
-                                        </button>
-                                    </div>
-                                </div>
-                    </template>
+                        {{-- [UPDATE UTAMA] TOMBOL AKSI HANYA MUNCUL DI SINI --}}
+                        {{-- Logika: Jika status 'waiting_review', tampilkan tombol Setujui/Tolak --}}
+                        <template x-if="selectedActivity.status === 'waiting_review'">
+                            <div class="mt-4 pt-4 border-t border-slate-100 bg-white sticky bottom-0">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-3 tracking-wider">Tindakan Validasi</p>
+                                
+                                <div class="grid grid-cols-2 gap-3">
+                                    {{-- Tombol Setujui --}}
+                                    <button @click="confirmApprove(selectedActivity.id)" 
+                                        class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-emerald-200 hover:shadow-lg transform active:scale-[0.98]">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                        Setujui
+                                    </button>
 
-                </div>
+                                    {{-- Tombol Tolak --}}
+                                    <button @click="handleReject(selectedActivity.id)" 
+                                        class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm transition-all shadow-sm flex items-center justify-center gap-2 hover:shadow-rose-200 hover:shadow-lg transform active:scale-[0.98]">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        Tolak
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Jika Bukan Waiting Review, Tampilkan Tombol Tutup Saja --}}
+                        <template x-if="selectedActivity.status !== 'waiting_review'">
+                            <div class="mt-6 flex justify-end">
+                                <button @click="closeModal()"
+                                    class="px-6 py-2.5 bg-slate-100 text-slate-600 font-medium text-sm rounded-xl hover:bg-slate-200 transition-all">
+                                    Tutup
+                                </button>
+                            </div>
+                        </template>
+
+                    </div>
+                </template>
             </div>
         </div>
-
+    </div>
 </section>
 
 @endsection

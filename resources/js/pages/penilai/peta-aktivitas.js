@@ -321,7 +321,72 @@ export function penilaiMapData() {
                     if (el && btn) btn.addEventListener('click', () => el.showPicker ? el.showPicker() : el.focus());
                 });
             });
-        }
+        },
+        exportMap() {
+
+            const osmTemp = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                { maxZoom: 20 }
+            );
+
+            let activeGoogleLayer = null;
+
+            this.map.eachLayer(layer => {
+                if (layer._url?.includes("google")) {
+                    activeGoogleLayer = layer;
+                    this.map.removeLayer(layer);
+                }
+            });
+
+            osmTemp.addTo(this.map);
+
+            Swal.fire({
+                title: "Export Peta?",
+                text: "Peta aktivitas akan diproses menjadi PDF.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#1C7C54",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Export",
+            }).then((result) => {
+
+                if (!result.isConfirmed) {
+                    if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
+                    this.map.removeLayer(osmTemp);
+                    return;
+                }
+
+                const mapEl = document.getElementById("map");
+
+                html2canvas(mapEl, {
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: "#ffffff",
+                }).then((canvas) => {
+
+                    const imgData = canvas.toDataURL("image/png");
+
+                    fetch("/export-map", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                            "Authorization": "Bearer " + localStorage.getItem("auth_token")
+                        },
+                        body: JSON.stringify({ image: imgData }),
+                    })
+                    .then(res => res.blob())
+                    .then(blob => {
+
+                        // === BUKA TAB BARU DENGAN PDF ===
+                        const pdfUrl = URL.createObjectURL(blob);
+                        window.open(pdfUrl, "_blank");
+
+                    });
+
+                });
+            });
+        },
     }
 }
 

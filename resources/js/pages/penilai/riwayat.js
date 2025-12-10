@@ -33,7 +33,7 @@ export function riwayatDataPenilai(role) {
         editLaporan(id) {
             if (!id) return;
             // Arahkan ke halaman input dengan ID laporan (disesuaikan dengan nama file/route)
-            window.location.href = `/penilai/input-lkh/${id}`;
+            window.location.href = `/penilai/input-laporan/${id}`;
         },
 
         // Export PDF sesuai Filter & Mode saat ini
@@ -152,8 +152,7 @@ export function riwayatDataPenilai(role) {
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(
-                        `Gagal memuat data. Status: ${
-                            response.status
+                        `Gagal memuat data. Status: ${response.status
                         }. Pesan: ${errorData.message || "Unknown Error"}`
                     );
                 }

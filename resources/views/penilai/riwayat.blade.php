@@ -187,7 +187,7 @@
     </div>
     {{-- END CARD --}}
 
-    {{-- MODAL DETAIL (Tetap Sama) --}}
+    {{-- MODAL DETAIL --}}
     <div x-show="open" x-transition.opacity
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
         style="display: none;">
@@ -215,9 +215,9 @@
                             <label class="text-[10px] uppercase font-bold text-slate-400">Tanggal Laporan</label>
                             <p class="text-slate-800 font-medium mt-0.5" x-text="formatDate(modalData.tanggal_laporan)"></p>
                         </div>
-                        <div x-show="role === 'penilai' && filter.mode === 'subordinates'">
-                            <label class="text-[10px] uppercase font-bold text-slate-400">Pegawai</label>
-                            <p class="text-slate-800 font-medium mt-0.5" x-text="modalData.user ? modalData.user.name : '-'"></p>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-slate-400">Status</label>
+                            <div class="mt-0.5" x-html="statusBadgeHtml(modalData.status)"></div>
                         </div>
                         <div class="col-span-2">
                             <label class="text-[10px] uppercase font-bold text-slate-400">Nama Kegiatan</label>
@@ -270,15 +270,9 @@
                     </div>
 
                     <div class="border-t border-slate-200 pt-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Status Laporan</label>
-                                <div x-html="statusBadgeHtml(modalData.status)"></div>
-                            </div>
-                            <div class="text-right">
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Validator</label>
-                                <p class="text-slate-800 font-medium" x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')"></p>
-                            </div>
+                        <div class="mb-4">
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pejabat Penilai</label>
+                            <p class="text-slate-800 font-medium" x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')"></p>
                         </div>
 
                         <div x-show="modalData.komentar_validasi" class="bg-amber-50 border border-amber-100 rounded-lg p-3">
@@ -287,11 +281,14 @@
                         </div>
                     </div>
 
-                    <div x-show="modalData.status === 'rejected' && role === 'pegawai'" class="flex justify-end pt-2">
+                    {{-- TOMBOL AKSI: Hanya jika Draft/Rejected DAN Mode adalah 'Riwayat Saya' --}}
+                    <div x-show="(modalData.status === 'rejected' || modalData.status === 'draft') && filter.mode === 'mine'" class="flex justify-end pt-2">
                         <button
                             @click="editLaporan(modalData.id)"
-                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95 shadow-sm">
-                            Perbaiki Laporan
+                            :class="modalData.status === 'draft' ? 'bg-slate-500' : 'bg-[#0E7A4A]'"
+                            class="rounded-[10px] px-4 py-2 text-sm font-normal text-white hover:brightness-95 shadow-sm transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <span x-text="modalData.status === 'draft' ? 'Lanjutkan Laporan' : 'Perbaiki Laporan'"></span>
                         </button>
                     </div>
                 </div>

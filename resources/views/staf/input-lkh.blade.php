@@ -318,15 +318,26 @@
                 </div>
                 {{-- Row 8: Bukti & Lokasi Modern --}}
                 <div class="grid md:grid-cols-2 gap-4">
-                    {{-- Upload Bukti --}}
+                    {{-- Unggah Bukti --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+                        
+                        {{-- Input File Utama --}}
                         <label
-                            class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            <span id="bukti_filename" class="truncate">Pilih File</span>
+                            class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <span id="bukti_label_text" class="truncate">Pilih File Baru</span>
                             <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70">
-                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
+                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden" onchange="handleNewFiles(this)">
                         </label>
+
+                        <div id="preview_file_baru" class="mt-2 space-y-2"></div>
+
+                        {{-- Container untuk Menampung Input Hidden ID File yang akan Dihapus --}}
+                        <div id="container_hapus_bukti"></div>
+
+                        {{-- Container Preview File Lama (Akan diisi via JS saat Edit) --}}
+                        <div id="preview_file_lama" class="mt-3 space-y-2">
+                        </div>
                     </div>
 
                     {{-- Modul Input Lokasi Dual Mode --}}
@@ -483,14 +494,20 @@
 
                 {{-- Action Buttons --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="exportPDF()"
-                        class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555]">Export
-                        PDF</button>
-                    <button type="button" onclick="submitForm('draft')"
-                        class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87]">Simpan Draft</button>
-                    <button type="button" onclick="submitForm('waiting_review')"
-                        class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b]">Kirim
-                        LKH</button>
+                    <button type="button" onclick="exportPDF(this)"
+                        class="btn-action rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Export PDF
+                    </button>
+
+                    <button type="button" onclick="submitForm('draft', this)"
+                        class="btn-action rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Simpan Draft
+                    </button>
+
+                    <button type="button" onclick="submitForm('waiting_review', this)"
+                        class="btn-action rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Kirim LKH
+                    </button>
                 </div>
             </div>
         </form>
@@ -507,7 +524,7 @@
                 ['title' => 'Lokasi (Baru)', 'desc' => 'Gunakan "Cari Peta" jika lokasi Anda berbeda dengan posisi GPS saat ini.'],
                 ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
                 ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP jika kegiatan terkait target kinerja.'],
-                ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan foto kegiatan.'],
+                ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan dokumen kegiatan. Dapat berupa PDF atau Gambar.'],
             ] as $guide)
             <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
                 <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
@@ -612,6 +629,180 @@ function setAlpineValue(selector, key, value) {
     }
 }
 
+let newFilesDataTransfer = new DataTransfer();
+
+function handleNewFiles(inputElement) {
+    const files = inputElement.files;
+    
+    // Tambahkan file yang baru dipilih ke penampung (DataTransfer)
+    // Jika Anda ingin setiap kali klik "Browse" me-reset list, hapus baris loop ini dan ganti: newFilesDataTransfer = new DataTransfer();
+    // Tapi biasanya user ingin menambah (append), jadi kita loop:
+    for (let i = 0; i < files.length; i++) {
+        newFilesDataTransfer.items.add(files[i]);
+    }
+
+    // Update input file sesungguhnya dengan data terbaru
+    inputElement.files = newFilesDataTransfer.files;
+
+    // Update Label & Render Preview
+    updateNewFileUI();
+}
+
+function removeNewFile(index) {
+    const dt = new DataTransfer();
+    const currentFiles = newFilesDataTransfer.files;
+
+    // Masukkan kembali semua file KECUALI index yang dihapus
+    for (let i = 0; i < currentFiles.length; i++) {
+        if (i !== index) {
+            dt.items.add(currentFiles[i]);
+        }
+    }
+
+    // Update Global DataTransfer & Input Element
+    newFilesDataTransfer = dt;
+    document.getElementById('bukti_input').files = dt.files;
+
+    // Update UI
+    updateNewFileUI();
+}
+
+function updateNewFileUI() {
+    const inputElement = document.getElementById('bukti_input');
+    const labelText = document.getElementById('bukti_label_text');
+    const container = document.getElementById('preview_file_baru');
+    const files = inputElement.files;
+
+    // 1. Update Label Text
+    labelText.textContent = files.length === 0 
+        ? "Pilih File Baru" 
+        : `${files.length} file baru akan diunggah`;
+
+    // 2. Render Preview List
+    container.innerHTML = '';
+    
+    if (files.length > 0) {
+        // Label kecil pembeda
+        const header = document.createElement('p');
+        header.className = "text-[11px] text-[#155FA6] font-medium mb-1 mt-3";
+        header.innerText = "Akan diunggah (Baru):";
+        container.appendChild(header);
+    }
+
+    Array.from(files).forEach((file, index) => {
+        const isImage = file.type.startsWith('image/');
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between bg-[#F0F7FF] border border-[#155FA6]/30 rounded-[8px] p-2 shadow-sm relative group";
+        
+        // Kita gunakan FileReader untuk preview gambar lokal
+        let thumbnailHtml = `<div class="h-10 w-10 shrink-0 rounded bg-white flex items-center justify-center border border-blue-100 text-[9px] font-bold text-blue-500 uppercase">${file.name.split('.').pop()}</div>`;
+
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden w-full">
+                <!-- Placeholder Thumbnail (akan di-replace jika image) -->
+                <div id="thumb-new-${index}" class="shrink-0">
+                    ${thumbnailHtml}
+                </div>
+                
+                <div class="min-w-0 flex-1">
+                    <p class="text-[12px] font-medium text-slate-700 truncate">${file.name}</p>
+                    <p class="text-[10px] text-slate-400">${fileSizeKB} KB <span class="text-emerald-600 ml-1">• Baru</span></p>
+                </div>
+
+                <!-- Tombol Hapus File Baru -->
+                <button type="button" onclick="removeNewFile(${index})" 
+                    class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(div);
+
+        // Jika Gambar, baca file untuk ditampilkan preview-nya
+        if (isImage) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = document.getElementById(`thumb-new-${index}`);
+                if(imgContainer) {
+                    imgContainer.innerHTML = `
+                        <div class="h-10 w-10 shrink-0 rounded bg-white overflow-hidden border border-blue-100">
+                            <img src="${e.target.result}" class="h-full w-full object-cover">
+                        </div>`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// --- FUNGSI BARU: RENDER FILE LAMA ---
+function renderExistingFiles(files) {
+    const container = document.getElementById('preview_file_lama');
+    container.innerHTML = ''; // Reset container
+
+    if (!files || files.length === 0) return;
+
+    container.innerHTML = '<p class="text-[11px] text-slate-400 mb-1">File tersimpan (Klik silang untuk menghapus):</p>';
+
+    files.forEach(file => {
+        // Cek ekstensi untuk menentukan icon (Gambar vs Dokumen)
+        const ext = file.file_type ? file.file_type.toLowerCase() : 'file';
+        const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+        
+        // URL File (Sesuaikan path storage Anda, misal /storage/)
+        const fileUrl = `/storage/${file.file_path}`;
+
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between bg-white border border-slate-200 rounded-[8px] p-2 shadow-sm";
+        div.id = `file-wrapper-${file.id}`;
+        
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="h-10 w-10 shrink-0 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100">
+                    ${isImage 
+                        ? `<img src="${fileUrl}" class="h-full w-full object-cover">` 
+                        : `<span class="text-[9px] font-bold text-slate-500 uppercase">${ext}</span>`
+                    }
+                </div>
+                <div class="min-w-0">
+                    <a href="${fileUrl}" target="_blank" class="text-[12px] font-medium text-slate-700 hover:text-[#155FA6] hover:underline truncate block">
+                        ${file.file_name_original || 'File Tanpa Nama'}
+                    </a>
+                    <p class="text-[10px] text-slate-400">${(file.file_size / 1024).toFixed(1)} KB</p>
+                </div>
+            </div>
+            <button type="button" onclick="markFileForDeletion(${file.id})" 
+                class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                title="Hapus file ini">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// --- FUNGSI BARU: TANDAI HAPUS ---
+function markFileForDeletion(id) {
+    // 1. Buat Input Hidden name="hapus_bukti[]"
+    const inputContainer = document.getElementById('container_hapus_bukti');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'hapus_bukti[]';
+    input.value = id;
+    inputContainer.appendChild(input);
+
+    // 2. Hapus Element Visual dari UI
+    const wrapper = document.getElementById(`file-wrapper-${id}`);
+    if(wrapper) wrapper.remove();
+}
+
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
@@ -627,9 +818,9 @@ document.addEventListener("DOMContentLoaded", async function() {
         fileInput.addEventListener("change", () => {
             const count = fileInput.files.length;
             document.getElementById("bukti_filename").textContent =
-                count === 0 ? "Pilih File" :
+                count === 0 ? "Pilih File Baru (Jika ada)" :
                 count === 1 ? fileInput.files[0].name :
-                `${count} file dipilih`;
+                `${count} file baru dipilih`;
         });
     }
 

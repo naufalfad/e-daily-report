@@ -888,37 +888,35 @@ async function loadEditLKH(id, headers) {
         const json = await res.json();
         const data = json.data;
 
-        // 1. Populate Standard Inputs
-        // Fix: Format tanggal dari ISO (YYYY-MM-DDTHH:mm:ss...) ke YYYY-MM-DD
-        if (data.tanggal_laporan) {
-            document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
-        }
-        
+        // Populate Standard Inputs
+        if (data.tanggal_laporan) document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
         
-        // Deskripsi & Output
         const deskripsiEl = document.querySelector('textarea[name="deskripsi_aktivitas"]');
         if(deskripsiEl) deskripsiEl.value = data.deskripsi_aktivitas ?? "";
 
         const outputEl = document.querySelector('input[name="output_hasil_kerja"]');
         if(outputEl) outputEl.value = data.output_hasil_kerja ?? "";
         
-        // Volume
         const volumeEl = document.querySelector('input[name="volume"]');
         if(volumeEl) volumeEl.value = data.volume ?? "";
 
-        // Satuan (Input hidden atau text biasa jika tidak pakai Alpine)
         const satuanEl = document.querySelector('input[name="satuan"]');
         if(satuanEl) satuanEl.value = data.satuan ?? "";
 
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi ? data.tupoksi.uraian_tugas : 'Tupoksi Terpilih');
 
-        // 2. Populate Mode Lokasi & Koordinat
+        // [BARU] Populate File Lama (Bukti)
+        // Pastikan API mengembalikan relasi 'bukti' (array)
+        if (data.bukti) {
+            renderExistingFiles(data.bukti);
+        }
+
+        // Populate Mode Lokasi
         const modeLokasi = data.mode_lokasi || 'geofence';
         const lokasiContainer = document.querySelector('[x-data*="mode:"]');
-        
         if(lokasiContainer && lokasiContainer.__x) {
             const alpine = lokasiContainer.__x.$data;
             alpine.mode = modeLokasi;
@@ -930,45 +928,64 @@ async function loadEditLKH(id, headers) {
                 alpine.searchText = data.lokasi_teks || '';
                 alpine.status = `Tersimpan: ${data.lokasi_teks}`;
             } else {
-                // Tampilkan koordinat jika geofence/manual map
                 alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
             }
         }
 
-        // 3. Logic Kategori & SKP
-        const isSkp = !!data.skp_rencana_id; // Cek apakah ada ID SKP
+        // Logic Kategori & SKP
+        const isSkp = !!data.skp_rencana_id;
         const kategoriInput = document.querySelector('input[name="kategori"]');
         if(kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";
         
-        // Trigger Alpine update untuk Kategori
         const mainLogicDiv = document.querySelector('[x-data*="kategori:"]');
         if(mainLogicDiv && mainLogicDiv.__x) {
             const alpineData = mainLogicDiv.__x.$data;
-            
-            // Set state kategori di Alpine
             alpineData.setKategori(isSkp ? "skp" : "non-skp");
-
             setTimeout(() => {
-                // Populate data SKP jika kategori adalah SKP
                 if (isSkp && data.rencana) {
                     alpineData.skpId = data.skp_rencana_id;
                     alpineData.skpLabel = data.rencana.rencana_hasil_kerja;
-                    
-                    // PERBAIKAN: Ambil satuan langsung dari root data.satuan
-                    // karena di JSON tidak ada data.rencana.targets
                     alpineData.satuanValue = data.satuan; 
-                    alpineData.isSatuanLocked = true; // Biasanya SKP satuannya dikunci
+                    alpineData.isSatuanLocked = true;
                 } else {
-                    // Jika Non-SKP
                     alpineData.satuanValue = data.satuan;
                     alpineData.isSatuanLocked = false;
                 }
-            }, 300); // Sedikit delay agar transisi Alpine selesai
+            }, 300);
         }
-
     } catch (e) { 
         console.error("Edit Load Error", e);
-        alert("Gagal memuat data LKH.");
+        // alert("Gagal memuat data LKH."); // Optional alert
+    }
+}
+
+// --- HELPER FUNCTION UNTUK DISABLE TOMBOL ---
+function toggleLoading(isLoading, activeBtn = null) {
+    const allButtons = document.querySelectorAll('.btn-action');
+    
+    allButtons.forEach(btn => {
+        if (isLoading) {
+            // Simpan teks asli jika belum disimpan
+            if (!btn.dataset.originalText) {
+                btn.dataset.originalText = btn.innerHTML;
+            }
+            btn.disabled = true; // Matikan tombol
+        } else {
+            btn.disabled = false; // Hidupkan tombol
+            // Kembalikan teks asli
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
+            }
+        }
+    });
+
+    // Ubah teks tombol yang diklik menjadi loading spinner/text
+    if (isLoading && activeBtn) {
+        activeBtn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> Memproses...`;
     }
 }
 

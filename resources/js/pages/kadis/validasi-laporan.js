@@ -99,10 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await authFetch(`/api/validator/kadis/lkh?${params.toString()}`);
             const json = await res.json();
 
+            const dataToRender = json.data?.data || json.data || [];
+
             if (!res.ok) throw new Error(json.message || "Gagal memuat data");
 
             // Simpan data ke variabel global agar bisa diakses Modal
-            currentLkhData = json.data.data ? json.data.data : json.data;
+            currentLkhData = dataToRender;
 
             renderTable(currentLkhData);
 
@@ -221,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (buktiBtn) {
             if (lkhData.bukti && lkhData.bukti.length > 0) {
                 buktiBtn.disabled = false;
+                // Perhatian: Ini hanya mengambil bukti pertama. Jika ada banyak, perlu modal/viewer lain.
                 const fileUrl = `/storage/${lkhData.bukti[0].file_path}`; 
                 buktiBtn.onclick = () => window.open(fileUrl, '_blank');
                 buktiBtn.innerHTML = `<i class="fas fa-file-alt"></i> Lihat Bukti (${lkhData.bukti.length})`;
@@ -274,14 +277,28 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await authFetch(`/api/validator/kadis/lkh/${lkhId}/validate`, {
                 method: 'POST',
+                // [PERBAIKAN UTAMA]: Menambahkan Content-Type Header
+                headers: {
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify({
-                    status: status,
+                    status: status, 
                     komentar_validasi: note || null
                 })
             });
 
             const json = await res.json();
-            if (!res.ok) throw new Error(json.message);
+            
+            // Penanganan Error 422 dari Backend
+            if (res.status === 422) {
+                let errorMessage = "Data validasi tidak lengkap.";
+                if (json.errors) {
+                    errorMessage = Object.values(json.errors).flat().join('; ');
+                }
+                throw new Error(errorMessage);
+            }
+
+            if (!res.ok) throw new Error(json.message || `Error ${res.status}: Terjadi kesalahan server.`);
 
             Swal.fire({
                 icon: "success",
@@ -329,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnSubmitApprove?.addEventListener('click', () => {
+        // Pada kasus Approve, komentar tidak required, jadi langsung submit
         const note = document.getElementById('approve-note').value;
         submitValidation('approved', note);
     });
@@ -342,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnSubmitReject?.addEventListener('click', () => {
+        // Komentar required untuk Rejected
         const note = document.getElementById('reject-note').value;
         if (!note.trim()) {
             if(rejectError) rejectError.classList.remove('hidden');

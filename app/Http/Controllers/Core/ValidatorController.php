@@ -111,6 +111,13 @@ class ValidatorController extends Controller
         if (!$lkh) {
             return response()->json(['message' => 'Laporan tidak ditemukan atau akses ditolak'], 403);
         }
+        
+        // [PERBAIKAN KRITIS]: Mencegah validasi ulang LKH yang sudah selesai (approved/rejected)
+        if ($lkh->status !== 'waiting_review') {
+            return response()->json([
+                'message' => 'Laporan ini sudah divalidasi sebelumnya dan tidak dapat diubah.'
+            ], 422);
+        }
 
         try {
             // 3. Mulai Transaksi Database

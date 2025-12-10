@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- [PERBAIKAN 1] Meta Tag Identitas User & CSRF --}}
     {{-- Ini PENTING agar JavaScript (pengumuman.js) bisa membaca ID user yang sedang login --}}
@@ -95,6 +96,8 @@
             document.documentElement.classList.remove("loading");
         });
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
 

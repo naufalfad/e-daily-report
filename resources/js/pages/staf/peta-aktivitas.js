@@ -2,13 +2,12 @@
 
 export function stafMapData() {
     return {
-
         map: null,
         markersLayer: null,
         allActivities: [],
         filter: {
-            from: '',
-            to: ''
+            from: "",
+            to: "",
         },
 
         showModal: false,
@@ -35,7 +34,7 @@ export function stafMapData() {
 
                 const baseLayers = {
                     "Google Maps": googleRoadmap,
-                    "Google Satelit": googleSatelit
+                    "Google Satelit": googleSatelit,
                 };
 
                 L.control.layers(baseLayers).addTo(this.map);
@@ -77,12 +76,13 @@ export function stafMapData() {
 
             fetch(url, {
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
-                    'Accept': 'application/json'
-                }
+                    Authorization:
+                        "Bearer " + localStorage.getItem("auth_token"),
+                    Accept: "application/json",
+                },
             })
-                .then(res => res.json())
-                .then(data => {
+                .then((res) => res.json())
+                .then((data) => {
                     if (!data.success) {
                         console.error("API error:", data);
                         return;
@@ -134,17 +134,27 @@ export function stafMapData() {
                             <div style="display:flex; align-items:center; gap:4px; font-size:11px; color:#64748b;">
                                 <span>👤 ${act.user}</span>
                                 <span>•</span>
-                                <span style="color:#0E7A4A; font-weight:500;">${act.kategori_aktivitas}</span>
+                                <span style="color:#0E7A4A; font-weight:500;">${
+                                    act.kategori_aktivitas
+                                }</span>
                             </div>
                         </div>
 
                         <div style="margin-bottom: 12px;">
                             <div style="display:flex; gap:10px; font-size:11px; color:#475569; margin-bottom:6px;">
-                                <span style="display:flex; align-items:center; gap:3px;">📅 ${act.tanggal}</span>
-                                <span style="display:flex; align-items:center; gap:3px;">⏰ ${act.waktu}</span>
+                                <span style="display:flex; align-items:center; gap:3px;">📅 ${
+                                    act.tanggal
+                                }</span>
+                                <span style="display:flex; align-items:center; gap:3px;">⏰ ${
+                                    act.waktu
+                                }</span>
                             </div>
                             <p style="font-size:12px; line-height:1.5; color:#334155; margin:0; font-style:italic; background:#f8fafc; padding:6px; border-radius:4px; border-left: 3px solid ${color};">
-                                "${act.deskripsi && act.deskripsi.length > 50 ? act.deskripsi.substring(0, 50) + '...' : (act.deskripsi || '-')}"
+                                "${
+                                    act.deskripsi.length > 50
+                                        ? act.deskripsi.substring(0, 50) + "..."
+                                        : act.deskripsi
+                                }"
                             </p>
                         </div>
 
@@ -153,7 +163,9 @@ export function stafMapData() {
                                 ${statusLabel}
                             </span>
 
-                            <button onclick="window.openActivityDetail(${act.id})"
+                            <button onclick="window.openActivityDetail(${
+                                act.id
+                            })"
                                style="cursor: pointer; border: none; display: inline-block; background-color: #0E7A4A; color: #ffffff; padding: 5px 12px; font-size: 11px; font-weight: 500; border-radius: 6px; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"
                                onmouseover="this.style.backgroundColor='#0a5c38'"
                                onmouseout="this.style.backgroundColor='#0E7A4A'"
@@ -168,9 +180,9 @@ export function stafMapData() {
                 L.circleMarker([act.lat, act.lng], {
                     radius: 8,
                     fillColor: color,
-                    color: '#FFF',
+                    color: "#FFF",
                     weight: 2,
-                    fillOpacity: 0.9
+                    fillOpacity: 0.9,
                 })
                     .bindPopup(popupContent)
                     .addTo(this.markersLayer);
@@ -187,7 +199,7 @@ export function stafMapData() {
 
         // ---------------- MODAL ----------------
         openModal(id) {
-            const found = this.allActivities.find(item => item.id == id);
+            const found = this.allActivities.find((item) => item.id == id);
             if (found) {
                 this.selectedActivity = found;
                 this.showModal = true;
@@ -210,20 +222,87 @@ export function stafMapData() {
         // ---------------- DATEPICKER ----------------
         initDatePickers() {
             this.$nextTick(() => {
-                ['tgl_dari', 'tgl_sampai'].forEach(id => {
+                ["tgl_dari", "tgl_sampai"].forEach((id) => {
                     const input = document.getElementById(id);
-                    const btn = document.getElementById(id + '_btn');
+                    const btn = document.getElementById(id + "_btn");
                     if (input && btn) {
-                        btn.addEventListener('click', () => {
-                            try { input.showPicker(); }
-                            catch (e) { input.focus(); }
+                        btn.addEventListener("click", () => {
+                            try {
+                                input.showPicker();
+                            } catch (e) {
+                                input.focus();
+                            }
                         });
                     }
                 });
             });
-        }
-    }
-}
+        },
 
-// Global Registration
-window.stafMapData = stafMapData;
+        exportMap() {
+
+            const osmTemp = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                { maxZoom: 20 }
+            );
+
+            let activeGoogleLayer = null;
+
+            this.map.eachLayer(layer => {
+                if (layer._url?.includes("google")) {
+                    activeGoogleLayer = layer;
+                    this.map.removeLayer(layer);
+                }
+            });
+
+            osmTemp.addTo(this.map);
+
+            Swal.fire({
+                title: "Export Peta?",
+                text: "Peta aktivitas akan diproses menjadi PDF.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#1C7C54",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Export",
+            }).then((result) => {
+
+                if (!result.isConfirmed) {
+                    if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
+                    this.map.removeLayer(osmTemp);
+                    return;
+                }
+
+                const mapEl = document.getElementById("map");
+
+                html2canvas(mapEl, {
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: "#ffffff",
+                }).then((canvas) => {
+
+                    const imgData = canvas.toDataURL("image/png");
+
+                    fetch("/export-map", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                            "Authorization": "Bearer " + localStorage.getItem("auth_token")
+                        },
+                        body: JSON.stringify({ image: imgData }),
+                    })
+                    .then(res => res.blob())
+                    .then(blob => {
+
+                        // === BUKA TAB BARU DENGAN PDF ===
+                        const pdfUrl = URL.createObjectURL(blob);
+                        window.open(pdfUrl, "_blank");
+
+                    });
+
+                });
+            });
+        },
+
+    };
+}

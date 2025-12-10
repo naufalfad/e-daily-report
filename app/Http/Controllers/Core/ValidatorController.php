@@ -29,9 +29,10 @@ class ValidatorController extends Controller
             ->where('status', '!=', 'draft'); 
 
         // 1. Filter Status
-        $query->when($request->status && $request->status !== 'all', function ($q, $status) {
-            $q->where('status', $status);
-        });
+        $query->when(
+            $request->filled('status') && $request->status !== 'all',
+            fn($q) => $q->where('status', $request->status)
+        );
 
         // 2. Filter Bulan & Tahun
         $query->when($request->month, function ($q, $month) {

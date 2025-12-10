@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\LaporanHarian;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Aktivitas;
 
 class PetaAktivitasController extends Controller
 {
@@ -101,7 +103,7 @@ class PetaAktivitasController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Mengambil Semua Aktivitas (Admin/Global)
      * [UPDATED] Dengan Server-Side Filtering
@@ -145,10 +147,54 @@ class PetaAktivitasController extends Controller
         }
     }
 
-    /**
-     * Helper Function untuk Format Data Peta
-     * Agar kode lebih rapi (DRY Principle)
-     */
+    public function previewMapPdf(Request $request)
+    {
+        $file = $request->query('file');
+
+        $path = storage_path('app/public/' . $file);
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $file . '"'
+        ]);
+    }
+
+    public function exportMap(Request $request)
+    {
+        $request->validate([
+            'image' => 'required'
+        ]);
+
+        $user = Auth::user();
+
+        // Ambil semua aktivitas user
+        $activities = \App\Models\Aktivitas::where('user_id', $user->id)
+            ->orderBy('tanggal_laporan', 'desc')
+            ->get();
+
+        $meta = [
+            'nama'   => $user->name,
+            'role'   => $user->role,
+            'tanggal_laporan'=> now()->format('d M Y, H:i'),
+        ];
+
+        $image = $request->image;
+
+        $pdf = Pdf::loadView('pdf.peta-aktivitas', [
+            'image'      => $image,
+            'meta'       => $meta,
+            'activities' => $activities,
+        ])->setPaper('a4', 'portrait');
+
+        return response($pdf->output(), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename=peta-aktivitas.pdf');
+    }
+
     private function formatMapData($item)
     {
         return [

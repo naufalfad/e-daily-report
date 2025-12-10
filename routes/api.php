@@ -146,6 +146,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('pengumuman', [PengumumanController::class, 'index']);
     Route::post('pengumuman', [PengumumanController::class, 'store']);
     Route::delete('pengumuman/{id}', [PengumumanController::class, 'destroy']);
+    Route::get('search/pengumuman', [PengumumanController::class, 'search']);
 
     // Notifikasi
     Route::get('notifikasi', [NotifikasiController::class, 'index']);

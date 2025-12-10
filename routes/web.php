@@ -13,6 +13,8 @@ use App\Http\Controllers\Core\RiwayatController;
 use App\Http\Controllers\Core\PetaAktivitasController;
 use App\Http\Controllers\Core\SkoringController;
 use App\Http\Controllers\Core\LkhController;
+// Import Controller Kadis Validator
+use App\Http\Controllers\Core\KadisValidatorController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -163,7 +165,19 @@ Route::middleware(['auth'])->group(function () {
             return view('kadis.dashboard', compact('role'));
         })->name('dashboard');
 
+        // Rute untuk menampilkan daftar validasi laporan
         Route::view('/validasi-laporan', 'kadis.validasi-laporan')->name('validasi-laporan');
+
+        // Rute untuk menampilkan detail LKH (GET)
+        Route::get('/validasi-laporan/{id}', function ($id) {
+            return view('kadis.validasi-laporan', ['id' => $id]);
+        })->where('id', '[0-9]+')->name('validasi-laporan.detail');
+
+        // [PERBAIKAN KRITIS]: Tambahkan rute POST untuk menangani submit validasi dari form web
+        Route::post('/validasi-laporan/{id}', 
+            [KadisValidatorController::class, 'validateLkh']
+        )->name('validasi-laporan.store');
+
 
         // FIX: Mengganti Route::view dengan Closure untuk passing variabel $role (TAHAP 4.1)
         Route::get('/skoring-bidang', function () {

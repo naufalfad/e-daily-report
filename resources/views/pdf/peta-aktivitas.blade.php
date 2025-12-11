@@ -74,15 +74,17 @@
 
     <div class="title">Laporan Peta Aktivitas</div>
 
-    <p>
-        Nama Pegawai: <strong>{{ $meta['nama'] }}</strong><br>
-        Tanggal Export: <strong>{{ $meta['tanggal_laporan'] }}</strong>
-    </p>
+    {{-- BLOK META DIHAPUS SEPENUHNYA UNTUK MENGHINDARI ERROR --}}
 
-    <!-- MAP -->
+    @isset($image)
     <img src="{{ $image }}" class="map-img">
+    @else
+    {{-- Placeholder yang lebih profesional --}}
+    <div style="width: 100%; height: 350px; border: 1px dashed #cccccc; background: #f9f9f9; text-align: center; line-height: 350px; font-size: 12px; color: #666; border-radius: 12px;">
+        Gagal memuat visual peta dari service renderer (Pastikan service Node.js berjalan di port 3000).
+    </div>
+    @endisset
 
-    <!-- LEGENDA STATUS -->
     <div class="legend">
         <div class="legend-item">
             <div class="dot dot-green"></div> Disetujui
@@ -95,26 +97,34 @@
         </div>
     </div>
 
-    <!-- TABEL TITIK KOORDINAT -->
     <table>
+        <thead>
+            <tr>
+                <th>Kegiatan</th>
+                <th>Tanggal & Waktu</th>
+                <th>Status</th>
+                <th>Lokasi Teks</th>
+            </tr>
+        </thead>
         <tbody>
             @foreach($activities as $a)
             <tr>
-                <td>{{ $a->kegiatan }}</td>
-                <td>{{ $a->tanggal }} {{ $a->waktu }}</td>
+                {{-- Menggunakan array syntax $a['key'] --}}
+                <td>{{ $a['kegiatan'] }}</td> 
+                <td>{{ $a['tanggal'] }} {{ $a['waktu'] }}</td>
                 <td>
-                    @if($a->status == 'approved')
+                    {{-- Menggunakan array syntax $a['status'] --}}
+                    @if($a['status'] == 'approved')
                     Disetujui
-                    @elseif($a->status == 'rejected')
+                    @elseif($a['status'] == 'rejected')
                     Ditolak
                     @else
                     Menunggu Validasi
                     @endif
                 </td>
-                <td>{{ $a->lat }}</td>
-                <td>{{ $a->lng }}</td>
                 <td>
-                    {{ $a->lokasi ?? '—' }}
+                    {{-- Menggunakan array syntax $a['lokasi_teks'] --}}
+                    {{ $a['lokasi_teks'] ?? '—' }} 
                 </td>
             </tr>
             @endforeach

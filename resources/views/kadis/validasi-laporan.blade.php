@@ -50,17 +50,20 @@
                 </select>
             </div>
 
-            {{-- Status --}}
-            <div class="md:col-span-2">
-                <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase">Status</label>
-                <select id="filter-status"
-                    class="w-full rounded-lg border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] cursor-pointer">
-                    <option value="all" selected>Semua Status</option>
-                    <option value="waiting_review">Menunggu Review</option>
+                {{-- STATUS (DEFAULT: ALL) --}}
+                <div class="md:col-span-2">
+                    <select id="filter-status" class="appearance-none pl-3 pr-8 py-2 text-sm font-medium border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all bg-white text-slate-600 shadow-sm cursor-pointer">
+                    <option value="waiting_review" selected>Menunggu Review</option>
                     <option value="approved">Disetujui</option>
                     <option value="rejected">Ditolak</option>
+                    <option value="all">Semua Status</option>
                 </select>
-            </div>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
 
             {{-- Button Apply --}}
             <div class="md:col-span-2">

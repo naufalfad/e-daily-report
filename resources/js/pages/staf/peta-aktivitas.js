@@ -240,67 +240,35 @@ export function stafMapData() {
 
         exportMap() {
 
-            const osmTemp = L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                { maxZoom: 20 }
-            );
-
-            let activeGoogleLayer = null;
-
-            this.map.eachLayer(layer => {
-                if (layer._url?.includes("google")) {
-                    activeGoogleLayer = layer;
-                    this.map.removeLayer(layer);
-                }
-            });
-
-            osmTemp.addTo(this.map);
+            // Menghapus semua logika manipulasi layer (googleMaps.addTo/removeLayer),
+            // html2canvas, dan fetch POST Base64 image.
+            // Logic ini tidak diperlukan lagi karena peta tidak di-screenshot dari browser.
 
             Swal.fire({
-                title: "Export Peta?",
-                text: "Peta aktivitas akan diproses menjadi PDF.",
+                title: "Export Peta Aktivitas?",
+                text: "Laporan akan dibuat di server berdasarkan filter tanggal yang dipilih.",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonColor: "#1C7C54",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, Export",
-            }).then((result) => {
+                confirmButtonText: "Ya, Proses Export",
+                showLoaderOnConfirm: true, // Tambahkan loader untuk indikasi proses di server
+                preConfirm: () => {
+                    // 1. Ambil Filter Tanggal dari properti this.filter
+                    const fromDate = this.filter.from || '';
+                    const toDate = this.filter.to || '';
 
-                if (!result.isConfirmed) {
-                    if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
-                    this.map.removeLayer(osmTemp);
-                    return;
+                    // 2. Bangun URL ke endpoint PDF di server (Menggunakan GET Request)
+                    // Endpoint: /preview-map-pdf (telah terdaftar di routes/web.php)
+                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
+
+                    // 3. Buka URL ini di tab baru
+                    // Server akan memproses data (termasuk semua marker) dan mengembalikan PDF.
+                    window.open(url, "_blank");
+
+                    // Langsung resolusi SweetAlert karena proses telah dipindahkan ke tab baru
+                    return true; 
                 }
-
-                const mapEl = document.getElementById("map");
-
-                html2canvas(mapEl, {
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: "#ffffff",
-                }).then((canvas) => {
-
-                    const imgData = canvas.toDataURL("image/png");
-
-                    fetch("/export-map", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                            "Authorization": "Bearer " + localStorage.getItem("auth_token")
-                        },
-                        body: JSON.stringify({ image: imgData }),
-                    })
-                    .then(res => res.blob())
-                    .then(blob => {
-
-                        // === BUKA TAB BARU DENGAN PDF ===
-                        const pdfUrl = URL.createObjectURL(blob);
-                        window.open(pdfUrl, "_blank");
-
-                    });
-
-                });
             });
         },
 

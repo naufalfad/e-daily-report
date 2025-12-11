@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\LaporanHarian;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Aktivitas;
 
@@ -149,50 +150,86 @@ class PetaAktivitasController extends Controller
 
     public function previewMapPdf(Request $request)
     {
-        $file = $request->query('file');
-
-        $path = storage_path('app/public/' . $file);
-
-        if (!file_exists($path)) {
-            abort(404);
-        }
-
-        return response()->file($path, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $file . '"'
-        ]);
-    }
-
-    public function exportMap(Request $request)
-    {
-        $request->validate([
-            'image' => 'required'
-        ]);
-
         $user = Auth::user();
 
-        // Ambil semua aktivitas user
-        $activities = \App\Models\Aktivitas::where('user_id', $user->id)
-            ->orderBy('tanggal_laporan', 'desc')
-            ->get();
+        // 1. Logika Pengambilan Data dan Filtering (Sama seperti sebelumnya)
+        $query = LaporanHarian::with(['user', 'tupoksi'])
+            ->where('user_id', $user->id)
+            ->whereNot('status', 'draft');
 
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+        
+        if (!empty($fromDate)) {
+            $query->whereDate('tanggal_laporan', '>=', $fromDate);
+        }
+        if (!empty($toDate)) {
+            $query->whereDate('tanggal_laporan', '<=', $toDate);
+        }
+
+        $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
+        
+        $activities = $laporanHarian->map(function ($item) {
+            return $this->formatMapData($item);
+        })->filter(function($item) {
+            return !empty($item['lat']) && !empty($item['lng']);
+        });
+        
         $meta = [
-            'nama'   => $user->name,
-            'role'   => $user->role,
-            'tanggal_laporan'=> now()->format('d M Y, H:i'),
+            'nama'          => $user->name,
+            'role'          => $user->role,
+            'tanggal_cetak' => now()->format('d M Y, H:i'),
+            'periode'       => ($fromDate && $toDate) ? 
+                               Carbon::parse($fromDate)->format('d M Y') . ' s/d ' . Carbon::parse($toDate)->format('d M Y') : 
+                               'Semua Data',
         ];
 
-        $image = $request->image;
+        $mapImageBase64 = null;
+        
+        // 2. Panggil Headless Renderer Service (LOKAL)
+        if ($activities->isNotEmpty()) {
+            try {
+                $client = new Client();
+                $firstActivity = $activities->first(); // Digunakan sebagai center default
+                
+                $response = $client->post('http://127.0.0.1:3000/render-map', [
+                    // Timeout diset lebih lama karena rendering Puppeteer butuh waktu
+                    'timeout' => 15.0, 
+                    'json' => [
+                        'activities' => $activities->values()->all(), // Data ke Node.js
+                        'center' => [
+                            'lat' => $firstActivity['lat'],
+                            'lng' => $firstActivity['lng']
+                        ],
+                        'zoom' => 13
+                    ]
+                ]);
 
+                $result = json_decode($response->getBody(), true);
+                
+                if (isset($result['success']) && $result['success']) {
+                    $mapImageBase64 = $result['image'];
+                }
+            } catch (\Exception $e) {
+                // Log kegagalan Node.js/Guzzle, tetapi biarkan PDF tetap dibuat
+                \Log::error('Local Map Renderer Failed: ' . $e->getMessage());
+                // Pada mode lokal, Anda mungkin ingin melakukan dd($e->getMessage()) untuk debug.
+            }
+        }
+
+        // 3. Generate PDF
         $pdf = Pdf::loadView('pdf.peta-aktivitas', [
-            'image'      => $image,
-            'meta'       => $meta,
             'activities' => $activities,
+            'meta'       => $meta,
+            'image'      => $mapImageBase64, // Kirim Base64 ke Blade
         ])->setPaper('a4', 'portrait');
+
+        // 4. Return PDF
+        $filename = 'Peta_Aktivitas_' . $user->username . '_' . time() . '.pdf';
 
         return response($pdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename=peta-aktivitas.pdf');
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 
     private function formatMapData($item)

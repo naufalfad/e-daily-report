@@ -40,17 +40,32 @@ export function penilaiMapData() {
                 sessionStorage.removeItem('map_lng');
                 sessionStorage.removeItem('map_zoom');
 
-                // Init Map
                 this.map = L.map('map', { zoomControl: true }).setView([initialLat, initialLng], initialZoom);
 
-                // Tile Layers
-                L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { 
-                    attribution: "Google Maps", 
-                    maxZoom: 20 
-                }).addTo(this.map);
+                const googleRoadmap = L.tileLayer(
+                    "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+                    { attribution: "Google Maps", maxZoom: 20 }
+                );
 
+                const googleSatelite = L.tileLayer(
+                    "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+                    { 
+                        attribution: "Google Satelite", 
+                        maxZoom: 20 // Max zoom bisa disesuaikan, Esri mendukung hingga 20
+                    }
+                );
+               const baseLayers = {
+                    "Google Maps": googleRoadmap,
+                    "Google Satelite": googleSatelite, // MENGGANTI LABEL DAN VARIABEL
+                };
+
+                L.control.layers(baseLayers).addTo(this.map);
+                googleRoadmap.addTo(this.map);
+
+                // 3. Layer Markers
                 this.markersLayer = L.layerGroup().addTo(this.map);
 
+                // 4. Load Data Awal
                 this.loadData();
                 this.initDatePickers();
 
@@ -324,8 +339,8 @@ export function penilaiMapData() {
         },
         exportMap() {
 
-            const osmTemp = L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            const googleMaps = L.tileLayer(
+                "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
                 { maxZoom: 20 }
             );
 
@@ -338,7 +353,7 @@ export function penilaiMapData() {
                 }
             });
 
-            osmTemp.addTo(this.map);
+            googleMaps.addTo(this.map);
 
             Swal.fire({
                 title: "Export Peta?",
@@ -352,7 +367,7 @@ export function penilaiMapData() {
 
                 if (!result.isConfirmed) {
                     if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
-                    this.map.removeLayer(osmTemp);
+                    this.map.removeLayer(googleMaps);
                     return;
                 }
 

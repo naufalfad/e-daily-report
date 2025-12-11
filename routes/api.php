@@ -28,7 +28,8 @@ use App\Http\Controllers\Core\ActivityLogController;
 use App\Http\Controllers\Core\OrganisasiController;
 use App\Http\Controllers\Core\KadisValidatorController;
 use App\Http\Controllers\Core\PetaAktivitasController;
-use App\Http\Controllers\Core\BidangSkoringController;
+use App\Http\Controllers\Core\BidangSkoringController; 
+
 
 /*
 |--------------------------------------------------------------------------
@@ -50,15 +51,12 @@ Route::post('/login', [AuthController::class, 'login']);
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:sanctum')->group(function () {
-
-    /*
-    |--------------------------------------------------------------------------
-    | A. KADIS VALIDASI LKH
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/lkh', [KadisValidatorController::class, 'index']);
-    Route::get('/lkh/{id}', [KadisValidatorController::class, 'show']);
-    Route::post('/lkh/{id}/validate', [KadisValidatorController::class, 'validateLkh']);
+    
+    // [PERBAIKAN]: Menghapus rute duplikasi Kadis lama. Hanya monitoring yang dijaga.
+    // Laporan yang harus divalidasi oleh KADIS (Sekarang hanya di bawah prefix 'validator')
+    // Route::get('/lkh', [KadisValidatorController::class, 'index']); // Dihapus
+    // Route::get('/lkh/{id}', [KadisValidatorController::class, 'show']); // Dihapus
+    // Route::post('/lkh/{id}/validate', [KadisValidatorController::class, 'validateLkh']); // Dihapus
 
     // Monitoring staf
     Route::get('/monitoring/staf', [KadisValidatorController::class, 'monitoringStaf']);
@@ -91,37 +89,19 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::prefix('admin')->group(function () {
 
-        /*
-        |----------------------------------------------------------------------
-        | 1. HR DOMAIN — MANAJEMEN PEGAWAI
-        |----------------------------------------------------------------------
-        */
+        // 1. DOMAIN HR: MANAJEMEN PEGAWAI
         Route::apiResource('pegawai', UserManagementController::class);
 
-
-        /*
-        |----------------------------------------------------------------------
-        | 2. IT DOMAIN — AKUN PENGGUNA (Keamanan)
-        |----------------------------------------------------------------------
-        */
-        Route::prefix('akun')->group(function () {
-
-            Route::get('/', [UserAccountController::class, 'index']);
-            Route::patch('/{id}/credentials', [UserAccountController::class, 'updateCredentials']);
-            Route::patch('/{id}/role', [UserAccountController::class, 'updateRole']);
-            Route::patch('/{id}/status', [UserAccountController::class, 'updateStatus']);
-
+        // 2. DOMAIN IT: AKUN PENGGUNA (BARU)
+        Route::prefix('akun')->group(function() {
+            Route::get('/', [UserAccountController::class, 'index']); 
+            Route::patch('/{id}/credentials', [UserAccountController::class, 'updateCredentials']); 
+            Route::patch('/{id}/role', [UserAccountController::class, 'updateRole']); 
+            Route::patch('/{id}/status', [UserAccountController::class, 'updateStatus']); 
         });
 
-
-        /*
-        |----------------------------------------------------------------------
-        | 3. MASTER DATA & SYSTEM SETTINGS
-        |----------------------------------------------------------------------
-        */
-        Route::prefix('master')->group(function () {
-
-            // Unit Kerja
+        // 3. MASTER DATA & SETTINGS
+        Route::prefix('master')->group(function() {
             Route::get('unit-kerja', [MasterDataController::class, 'indexUnitKerja']);
             Route::post('unit-kerja', [MasterDataController::class, 'storeUnitKerja']);
 
@@ -203,12 +183,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-    // Validator
+    // Validator (Penilai dan Kadis/Kaban)
     Route::prefix('validator')->group(function () {
-
-        Route::get('kadis/lkh', [ValidatorController::class, 'index']);
-        Route::post('kadis/lkh/{id}/validate', [ValidatorController::class, 'validateLkh']);
-
+        
+        // [PERBAIKAN KRITIS]: Rute Khusus KADIS/KABAN (Menggunakan KadisValidatorController)
+        Route::get('kadis/lkh', [KadisValidatorController::class, 'index']);
+        Route::post('kadis/lkh/{id}/validate', [KadisValidatorController::class, 'validateLkh']);
+        
+        // Rute Umum Penilai/Atasan (Menggunakan ValidatorController)
         Route::get('lkh', [ValidatorController::class, 'index']);
         Route::get('lkh/{id}', [ValidatorController::class, 'show']);
         Route::post('lkh/{id}/validate', [ValidatorController::class, 'validateLkh']);
@@ -242,8 +224,8 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('kadis')->group(function () {
-
-        // Skoring Per Bidang
+        
+        // API Skoring Kinerja Per Bidang
         Route::get('/skoring-bidang', [BidangSkoringController::class, 'index']);
 
         // Pengumuman Kadis

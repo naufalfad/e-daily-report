@@ -46,12 +46,12 @@ export function kadisMapData() {
                     "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
                     { 
                         attribution: "Google Satelite", 
-                        maxZoom: 20 // Max zoom bisa disesuaikan, Esri mendukung hingga 20
+                        maxZoom: 22 
                     }
                 );
                const baseLayers = {
                     "Google Maps": googleRoadmap,
-                    "Google Satelite": googleSatelite, // MENGGANTI LABEL DAN VARIABEL
+                    "Google Satelite": googleSatelite,
                 };
 
                 L.control.layers(baseLayers).addTo(this.map);
@@ -127,8 +127,8 @@ export function kadisMapData() {
                 const actionButton = `
                     <div style="margin-top:12px; padding-top:8px; border-top:1px dashed #e2e8f0; text-align:right;">
                         <button onclick="window.openActivityDetail(${act.id})"
-                           style="background:#0E7A4A; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                           Lihat Detail
+                            style="background:#0E7A4A; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            Lihat Detail
                         </button>
                     </div>
                 `;
@@ -219,10 +219,7 @@ export function kadisMapData() {
                 }
             });
 
-            // Auto Zoom jika ada data
-            if (latlngs.length > 0) {
-                this.map.fitBounds(latlngs, { padding: [50, 50] });
-            }
+            // Logika auto zoom di sini tidak diperlukan
         },
 
         // 3. CORE VALIDATION (Strict Async Logic)
@@ -319,69 +316,36 @@ export function kadisMapData() {
                 });
             });
         },
+        
+        // ---------- FUNGSI EXPORT BARU (OPTIMAL & AKURAT) ----------
         exportMap() {
 
-            const googleTemp = L.tileLayer(
-                "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
-                { maxZoom: 20 }
-            );
-
-            let activeGoogleLayer = null;
-
-            this.map.eachLayer(layer => {
-                if (layer._url?.includes("google")) {
-                    activeGoogleLayer = layer;
-                    this.map.removeLayer(layer);
-                }
-            });
-
-            googleTemp.addTo(this.map);
+            // Logika export diganti dengan panggilan GET request ke Headless Renderer.
 
             Swal.fire({
-                title: "Export Peta?",
-                text: "Peta aktivitas akan diproses menjadi PDF.",
+                title: "Export Peta Aktivitas?",
+                text: "Laporan akan dibuat di server berdasarkan filter tanggal yang dipilih.",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonColor: "#1C7C54",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, Export",
-            }).then((result) => {
+                confirmButtonText: "Ya, Proses Export",
+                showLoaderOnConfirm: true, 
+                preConfirm: () => {
+                    // 1. Ambil Filter Tanggal
+                    const fromDate = this.filter.from || '';
+                    const toDate = this.filter.to || '';
 
-                if (!result.isConfirmed) {
-                    if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
-                    this.map.removeLayer(googleTemp);
-                    return;
+                    // 2. Bangun URL ke endpoint PDF di server (Menggunakan GET Request)
+                    // Endpoint: /preview-map-pdf (Global)
+                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
+
+                    // 3. Buka URL ini di tab baru
+                    window.open(url, "_blank");
+
+                    // Langsung resolusi SweetAlert karena proses telah dipindahkan ke tab baru
+                    return true; 
                 }
-
-                const mapEl = document.getElementById("map");
-
-                html2canvas(mapEl, {
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: "#ffffff",
-                }).then((canvas) => {
-
-                    const imgData = canvas.toDataURL("image/png");
-
-                    fetch("/export-map", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                            "Authorization": "Bearer " + localStorage.getItem("auth_token")
-                        },
-                        body: JSON.stringify({ image: imgData }),
-                    })
-                    .then(res => res.blob())
-                    .then(blob => {
-
-                        // === BUKA TAB BARU DENGAN PDF ===
-                        const pdfUrl = URL.createObjectURL(blob);
-                        window.open(pdfUrl, "_blank");
-
-                    });
-
-                });
             });
         },
     }

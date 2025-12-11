@@ -151,12 +151,23 @@ class PetaAktivitasController extends Controller
     public function previewMapPdf(Request $request)
     {
         $user = Auth::user();
+        $mapImageBase64 = null;
 
-        // 1. Logika Pengambilan Data dan Filtering (Sama seperti sebelumnya)
-        $query = LaporanHarian::with(['user', 'tupoksi'])
-            ->where('user_id', $user->id)
-            ->whereNot('status', 'draft');
+        // 1. Logika Pengambilan Data dan Filtering (Menggunakan logika getAllAktivitas/Kaban)
+        $query = LaporanHarian::with(['user', 'tupoksi']);
+            
+        // **FIX KRITIS UNTUK KABAN/HEAD UNIT:** Filter berdasarkan unit kerja
+        if ($user->unit_kerja_id) {
+            $unitKerjaId = $user->unit_kerja_id;
 
+            $query->whereHas('user', function ($q) use ($unitKerjaId) {
+                $q->where('unit_kerja_id', $unitKerjaId);
+            });
+        }
+        
+        $query->whereNot('status', 'draft');
+        
+        // 2. Terapkan Filter Tanggal dari Request Query
         $fromDate = $request->query('from_date');
         $toDate = $request->query('to_date');
         
@@ -169,34 +180,24 @@ class PetaAktivitasController extends Controller
 
         $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
         
+        // 3. Mapping Data untuk Renderer
         $activities = $laporanHarian->map(function ($item) {
             return $this->formatMapData($item);
         })->filter(function($item) {
             return !empty($item['lat']) && !empty($item['lng']);
         });
         
-        $meta = [
-            'nama'          => $user->name,
-            'role'          => $user->role,
-            'tanggal_cetak' => now()->format('d M Y, H:i'),
-            'periode'       => ($fromDate && $toDate) ? 
-                               Carbon::parse($fromDate)->format('d M Y') . ' s/d ' . Carbon::parse($toDate)->format('d M Y') : 
-                               'Semua Data',
-        ];
-
-        $mapImageBase64 = null;
-        
-        // 2. Panggil Headless Renderer Service (LOKAL)
+        // 4. Panggil Headless Renderer Service
         if ($activities->isNotEmpty()) {
             try {
                 $client = new Client();
-                $firstActivity = $activities->first(); // Digunakan sebagai center default
-                
-                $response = $client->post('http://127.0.0.1:3000/render-map', [
-                    // Timeout diset lebih lama karena rendering Puppeteer butuh waktu
+                $firstActivity = $activities->first();
+                $rendererUrl = env('MAP_RENDER_URL', 'http://127.0.0.1:3000') . '/render-map'; 
+
+                $response = $client->post($rendererUrl, [
                     'timeout' => 15.0, 
                     'json' => [
-                        'activities' => $activities->values()->all(), // Data ke Node.js
+                        'activities' => $activities->values()->all(),
                         'center' => [
                             'lat' => $firstActivity['lat'],
                             'lng' => $firstActivity['lng']
@@ -211,20 +212,29 @@ class PetaAktivitasController extends Controller
                     $mapImageBase64 = $result['image'];
                 }
             } catch (\Exception $e) {
-                // Log kegagalan Node.js/Guzzle, tetapi biarkan PDF tetap dibuat
-                \Log::error('Local Map Renderer Failed: ' . $e->getMessage());
-                // Pada mode lokal, Anda mungkin ingin melakukan dd($e->getMessage()) untuk debug.
+                \Log::error('Map Renderer Failed: ' . $e->getMessage());
             }
         }
+        
+        // 5. Siapkan Metadata
+        $meta = [
+            'nama'          => $user->name,
+            'role'          => $user->role,
+            'tanggal_cetak' => now()->format('d M Y, H:i'),
+            'periode'       => ($fromDate && $toDate) ? 
+                               Carbon::parse($fromDate)->format('d M M') . ' s/d ' . Carbon::parse($toDate)->format('d M Y') : 
+                               'Semua Data',
+            'unit_kerja'    => $user->unitKerja->nama_unit_kerja ?? 'Tidak Terdefinisi'
+        ];
 
-        // 3. Generate PDF
+        // 6. Generate PDF
         $pdf = Pdf::loadView('pdf.peta-aktivitas', [
             'activities' => $activities,
             'meta'       => $meta,
-            'image'      => $mapImageBase64, // Kirim Base64 ke Blade
+            'image'      => $mapImageBase64, // Base64 dari Headless Renderer
         ])->setPaper('a4', 'portrait');
 
-        // 4. Return PDF
+        // 7. Return PDF
         $filename = 'Peta_Aktivitas_' . $user->username . '_' . time() . '.pdf';
 
         return response($pdf->output(), 200)

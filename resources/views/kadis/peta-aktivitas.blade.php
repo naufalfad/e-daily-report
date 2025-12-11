@@ -45,13 +45,12 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {{-- Tambahkan JS SweetAlert --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-{{-- Memastikan html2canvas dimuat untuk keperluan export --}}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJMnNulluNV6CMrUWoO7pI6DB5T05oU8BfP6Hv/h/WlkqO/bRzdtj/ZQmB9Q7FhFhS7K72+i7+xLp2T" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{{-- DEPENDENCY HTML2CANVAS DIHAPUS KARENA SUDAH MENGGUNAKAN SERVER-SIDE RENDERING (SSR) --}}
 @endpush
 
 @section('content')
 
-<section x-data="kadisMapData" x-init="initMap()" class="relative">
+<section x-data="kadisMapData()" x-init="initMap()" class="relative">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">

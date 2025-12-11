@@ -45,7 +45,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {{-- Tambahkan JS SweetAlert --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-{{-- DEPENDENCY HTML2CANVAS DIHAPUS KARENA SUDAH MENGGUNAKAN SERVER-SIDE RENDERING (SSR) --}}
 @endpush
 
 @section('content')
@@ -64,11 +63,21 @@
                     Memuat Data...
                 </div>
 
-                {{-- Tombol Export --}}
-                <button @click="exportMap()"
-                    class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
-                    Export Peta ke PDF
-                </button>
+                <div class="flex gap-2">
+                    {{-- [BARU] Tombol Geolocation/Lokasi Saat Ini --}}
+                    <button @click="zoomToCurrentLocation()"
+                        class="px-3 py-2 bg-slate-500 text-white rounded-lg text-sm hover:bg-slate-600 shadow transition flex items-center gap-1"
+                        title="Zoom ke Lokasi Saya">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        GPS Saya
+                    </button>
+
+                    {{-- Tombol Export --}}
+                    <button @click="exportMap()"
+                        class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
+                        Export Peta ke PDF
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -155,7 +164,7 @@
         </div>
     </div>
 
-    {{-- MODAL DETAIL AKTIVITAS (Struktur tunggal yang benar) --}}
+    {{-- MODAL DETAIL AKTIVITAS --}}
     <div x-show="showModal" x-transition.opacity
         class="fixed inset-0 z-[9999] flex items-center justify-center px-4" style="display: none;">
         {{-- Backdrop --}}

@@ -10,6 +10,9 @@ export function stafMapData() {
             to: "",
         },
 
+        // [BARU] State untuk marker lokasi pengguna saat ini (sementara)
+        currentLocationMarker: null, 
+
         showModal: false,
         selectedActivity: null,
         loading: false,
@@ -59,6 +62,89 @@ export function stafMapData() {
             });
         },
 
+        // ---------------- FITUR BARU: ZOOM TO CURRENT GPS LOCATION ----------------
+        zoomToCurrentLocation() {
+            if (!navigator.geolocation) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Browser Tidak Mendukung',
+                    text: 'Fitur Geolocation tidak didukung oleh browser Anda.'
+                });
+                return;
+            }
+
+            this.loading = true; 
+
+            // [ANTI-STACKING] Hapus marker lama sebelum membuat yang baru
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
+
+            // Gunakan metode locate Leaflet
+            this.map.locate({
+                setView: true, // Auto zoom ke lokasi yang ditemukan
+                maxZoom: 16,  // Zoom maksimal
+                timeout: 10000, // Timeout 10 detik
+                enableHighAccuracy: true // Minta akurasi tinggi
+            })
+            .on('locationfound', (e) => {
+                this.loading = false;
+                const latlng = e.latlng;
+                
+                // 1. Buat Marker Penanda SEMENTARA
+                const locationMarker = L.circleMarker(latlng, {
+                    radius: 10,
+                    color: '#FFF',
+                    weight: 2,
+                    fillColor: '#00BFFF', 
+                    fillOpacity: 1
+                }).addTo(this.map);
+
+                // 2. Tambahkan Circle Akurasi
+                const accuracyCircle = L.circle(latlng, e.accuracy, {
+                    color: '#00BFFF',
+                    fillColor: '#00BFFF',
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    interactive: false // FIX KRITIS: Anti-Blocking
+                }).addTo(this.map);
+
+                // 3. Simpan referensi layer group ke state
+                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]);
+                
+                locationMarker.bindPopup(`Anda di sini (Akurasi: ${Math.round(e.accuracy)} meter)`).openPopup();
+                
+                // 4. Hapus penanda secara otomatis setelah 5 detik
+                setTimeout(() => {
+                    if (this.currentLocationMarker) {
+                        this.map.removeLayer(this.currentLocationMarker);
+                        this.currentLocationMarker = null;
+                    }
+                }, 5000);
+
+            })
+            .on('locationerror', (e) => {
+                this.loading = false;
+                let errorMessage = 'Gagal mendapatkan lokasi GPS.';
+                
+                if (e.code === 1) {
+                    errorMessage = 'Akses lokasi ditolak oleh browser. Mohon izinkan akses GPS.';
+                } else if (e.code === 2) {
+                    errorMessage = 'Lokasi tidak tersedia atau sinyal lemah.';
+                } else if (e.code === 3) {
+                    errorMessage = 'Timeout mencari lokasi. Coba lagi.';
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Akses Lokasi Gagal',
+                    text: errorMessage
+                });
+            });
+        },
+        // ---------------- END FITUR BARU ----------------
+
         // ---------------- LOGIC DATA (SERVER SIDE) ----------------
         loadData() {
             this.loading = true;
@@ -101,6 +187,12 @@ export function stafMapData() {
             this.markersLayer.clearLayers();
 
             if (data.length === 0) return;
+            
+            // Hapus marker lokasi pengguna (jika ada) saat data aktivitas baru dimuat
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
 
             const latlngs = [];
 
@@ -242,7 +334,7 @@ export function stafMapData() {
 
             // Menghapus semua logika manipulasi layer (googleMaps.addTo/removeLayer),
             // html2canvas, dan fetch POST Base64 image.
-            // Logic ini tidak diperlukan lagi karena peta tidak di-screenshot dari browser.
+            // Diganti dengan panggilan GET request yang optimal ke Headless Renderer.
 
             Swal.fire({
                 title: "Export Peta Aktivitas?",
@@ -254,7 +346,7 @@ export function stafMapData() {
                 confirmButtonText: "Ya, Proses Export",
                 showLoaderOnConfirm: true, // Tambahkan loader untuk indikasi proses di server
                 preConfirm: () => {
-                    // 1. Ambil Filter Tanggal dari properti this.filter
+                    // 1. Ambil Filter Tanggal
                     const fromDate = this.filter.from || '';
                     const toDate = this.filter.to || '';
 

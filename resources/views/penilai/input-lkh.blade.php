@@ -1038,39 +1038,83 @@ async function submitForm(type, btnElement) {
 // --- FUNGSI EXPORT PDF ---
 async function exportPDF(btnElement) {
     const res = await Swal.fire({
-        title: "Export PDF?",
+        title: "Preview PDF?",
+        text: "Sistem akan memvalidasi data dan membuka preview di tab baru.",
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Ya",
+        confirmButtonText: "Ya, Buka PDF",
         confirmButtonColor: "#1C7C54"
     });
 
     if (!res.isConfirmed) return;
 
-    // Matikan tombol saat proses download
     toggleLoading(true, btnElement);
 
     try {
         const resp = await fetch("/api/lkh/export-pdf", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`
+                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+                "Accept": "application/json"
             },
             body: new FormData(document.getElementById("form-lkh"))
         });
 
-        if (resp.ok) {
-            const blob = await resp.blob();
-            window.open(URL.createObjectURL(blob), "_blank");
+        // Cek tipe konten
+        const contentType = resp.headers.get("content-type");
+
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            // --- KASUS GAGAL (Validasi Error) ---
+            const json = await resp.json();
             
-            // Khusus PDF, hidupkan kembali tombol setelah file terbuka/terunduh
-            toggleLoading(false); 
+            let errorMsg = json.message;
+            if(json.details && Array.isArray(json.details)) {
+                errorMsg += "<br><br><div style='text-align:left; font-size:12px; max-height:200px; overflow-y:auto;'><ul>";
+                json.details.forEach(err => {
+                    errorMsg += `<li class="text-red-600 mb-1">• ${err}</li>`;
+                });
+                errorMsg += "</ul></div>";
+            }
+
+            Swal.fire({
+                title: "Data Tidak Lengkap",
+                html: errorMsg,
+                icon: "error"
+            });
+
+        } else if (resp.ok) {
+            // --- KASUS SUKSES (Membuka Tab Baru) ---
+            
+            // 1. Ambil Blob data PDF
+            const blob = await resp.blob();
+            
+            // 2. Buat URL sementara dari Blob tersebut
+            const url = window.URL.createObjectURL(blob);
+            
+            // 3. Buka URL tersebut di Tab Baru
+            window.open(url, '_blank');
+
+            // 4. Notifikasi ringan (Opsional)
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'PDF berhasil dibuka'
+            });
+
         } else {
-            throw new Error("Gagal export");
+            throw new Error("Terjadi kesalahan server");
         }
+
     } catch (e) {
-        Swal.fire("Error", "Gagal export PDF", "error");
-        toggleLoading(false); // Hidupkan tombol jika error
+        console.error(e);
+        Swal.fire("Error", "Gagal menghubungi server", "error");
+    } finally {
+        toggleLoading(false, btnElement);
     }
 }
 </script>

@@ -11,6 +11,9 @@ export function kadisMapData() {
             to: ''
         },
 
+        // [KRITIS] State untuk marker lokasi pengguna saat ini (sementara)
+        currentLocationMarker: null, 
+
         // State Modal Detail
         showModal: false,
         selectedActivity: null,
@@ -73,11 +76,94 @@ export function kadisMapData() {
             });
         },
 
+        // ---------------- FITUR: ZOOM TO CURRENT GPS LOCATION ----------------
+        zoomToCurrentLocation() {
+            if (!navigator.geolocation) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Browser Tidak Mendukung',
+                    text: 'Fitur Geolocation tidak didukung oleh browser Anda.'
+                });
+                return;
+            }
+
+            this.loading = true; 
+
+            // [BEST PRACTICE] 1. HAPUS MARKER LAMA SEBELUM MEMBUAT YANG BARU
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
+
+            // Gunakan metode locate Leaflet
+            this.map.locate({
+                setView: true, 
+                maxZoom: 16,  
+                timeout: 10000, 
+                enableHighAccuracy: true 
+            })
+            .on('locationfound', (e) => {
+                this.loading = false;
+                const latlng = e.latlng;
+                
+                // 1. Buat Marker Penanda SEMENTARA
+                const locationMarker = L.circleMarker(latlng, {
+                    radius: 10,
+                    color: '#FFF',
+                    weight: 2,
+                    fillColor: '#00BFFF', 
+                    fillOpacity: 1
+                }).addTo(this.map);
+
+                // 2. Tambahkan Circle Akurasi
+                const accuracyCircle = L.circle(latlng, e.accuracy, {
+                    color: '#00BFFF',
+                    fillColor: '#00BFFF',
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    interactive : false
+                }).addTo(this.map);
+
+                // 3. Simpan referensi layer group ke state
+                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]);
+                
+                locationMarker.bindPopup(`Anda di sini (Akurasi: ${Math.round(e.accuracy)} meter)`).openPopup();
+                
+                // 4. Hapus penanda secara otomatis setelah 5 detik (Memberi efek sementara)
+                setTimeout(() => {
+                    if (this.currentLocationMarker) {
+                        this.map.removeLayer(this.currentLocationMarker);
+                        this.currentLocationMarker = null;
+                    }
+                }, 5000);
+
+            })
+            .on('locationerror', (e) => {
+                this.loading = false;
+                let errorMessage = 'Gagal mendapatkan lokasi GPS.';
+                
+                if (e.code === 1) {
+                    errorMessage = 'Akses lokasi ditolak oleh browser. Mohon izinkan akses GPS.';
+                } else if (e.code === 2) {
+                    errorMessage = 'Lokasi tidak tersedia atau sinyal lemah.';
+                } else if (e.code === 3) {
+                    errorMessage = 'Timeout mencari lokasi. Coba lagi.';
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Akses Lokasi Gagal',
+                    text: errorMessage
+                });
+            });
+        },
+        // ---------------- END FITUR BARU ----------------
+
         // ---------------- LOGIC DATA (SERVER SIDE) ----------------
         loadData() {
             this.loading = true;
             
-            // [ENDPOINT KADIS] Mengambil Semua Aktivitas
+            // [ENDPOINT KADIS] Mengambil Semua Aktivitas (Difilter di Controller berdasarkan unit_kerja_id)
             let url = '/api/all-aktivitas'; 
             
             const params = [];
@@ -105,9 +191,16 @@ export function kadisMapData() {
         loadMarkers(data) {
             this.markersLayer.clearLayers();
             if (data.length === 0) return;
+            
+            // [BARU] 2. Hapus marker lokasi pengguna (jika ada) saat data aktivitas baru dimuat
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
 
             const latlngs = [];
-
+            
+            // ... (Logika loadMarkers lainnya tidak diubah) ...
             data.forEach(act => {
                 if (!act.lat || !act.lng) return;
 
@@ -165,65 +258,10 @@ export function kadisMapData() {
             }
         },
 
-        // ---------------- ACTION HANDLERS (SWEETALERT) ----------------
-        
-        // 1. APPROVE (With Note)
-        confirmApprove(id) {
-            this.closeModal();
-
-            Swal.fire({
-                title: 'Setujui Laporan?',
-                input: 'textarea',
-                inputLabel: 'Catatan Validasi (Opsional)',
-                inputPlaceholder: 'Berikan catatan untuk staf (boleh dikosongkan)...',
-                inputAttributes: { 'aria-label': 'Catatan validasi' },
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#22c55e',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Setujui',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const reason = result.value || ''; 
-                    this.sendValidation(id, 'approved', reason);
-                } else {
-                    this.openModal(id);
-                }
-            });
-        },
-
-        // 2. REJECT (With Note)
-        handleReject(id) {
-            this.closeModal();
-
-            Swal.fire({
-                title: 'Tolak Laporan',
-                input: 'textarea',
-                inputLabel: 'Alasan Penolakan (Wajib)',
-                inputPlaceholder: 'Tuliskan alasan penolakan disini...',
-                inputAttributes: { 'aria-label': 'Alasan penolakan' },
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Kirim Penolakan',
-                cancelButtonText: 'Batal',
-                inputValidator: (value) => {
-                    if (!value) return 'Alasan penolakan wajib diisi!'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.sendValidation(id, 'rejected', result.value);
-                } else {
-                    this.openModal(id);
-                }
-            });
-
-            // Logika auto zoom di sini tidak diperlukan
-        },
-
-        // 3. CORE VALIDATION (Strict Async Logic)
+        // ---------------- ACTION HANDLERS (VALIDASI & EXPORT) ----------------
+        // ... (Fungsi sendValidation, confirmApprove, handleReject, dll. tidak diubah)
         async sendValidation(id, status, reason) {
+            // ... (Logic sendValidation tidak diubah) ...
             // A. Simpan Posisi Peta (Key khusus Kadis)
             const center = this.map.getCenter();
             sessionStorage.setItem('kadis_map_lat', center.lat);
@@ -292,7 +330,59 @@ export function kadisMapData() {
             }
         },
 
-        // ---------------- MODAL DETAIL & UTILS ----------------
+        confirmApprove(id) {
+            // ... (Logic confirmApprove tidak diubah) ...
+            this.closeModal();
+
+            Swal.fire({
+                title: 'Setujui Laporan?',
+                input: 'textarea',
+                inputLabel: 'Catatan Validasi (Opsional)',
+                inputPlaceholder: 'Berikan catatan untuk staf (boleh dikosongkan)...',
+                inputAttributes: { 'aria-label': 'Catatan validasi' },
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#22c55e',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Setujui',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const reason = result.value || ''; 
+                    this.sendValidation(id, 'approved', reason);
+                } else {
+                    this.openModal(id);
+                }
+            });
+        },
+
+        handleReject(id) {
+            // ... (Logic handleReject tidak diubah) ...
+            this.closeModal();
+
+            Swal.fire({
+                title: 'Tolak Laporan',
+                input: 'textarea',
+                inputLabel: 'Alasan Penolakan (Wajib)',
+                inputPlaceholder: 'Tuliskan alasan penolakan disini...',
+                inputAttributes: { 'aria-label': 'Alasan penolakan' },
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Kirim Penolakan',
+                cancelButtonText: 'Batal',
+                inputValidator: (value) => {
+                    if (!value) return 'Alasan penolakan wajib diisi!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.sendValidation(id, 'rejected', result.value);
+                } else {
+                    this.openModal(id);
+                }
+            });
+        },
+
         openModal(id) {
             const found = this.allActivities.find(item => item.id == id);
             if (found) {
@@ -317,7 +407,6 @@ export function kadisMapData() {
             });
         },
         
-        // ---------- FUNGSI EXPORT BARU (OPTIMAL & AKURAT) ----------
         exportMap() {
 
             // Logika export diganti dengan panggilan GET request ke Headless Renderer.
@@ -337,7 +426,6 @@ export function kadisMapData() {
                     const toDate = this.filter.to || '';
 
                     // 2. Bangun URL ke endpoint PDF di server (Menggunakan GET Request)
-                    // Endpoint: /preview-map-pdf (Global)
                     let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
 
                     // 3. Buka URL ini di tab baru

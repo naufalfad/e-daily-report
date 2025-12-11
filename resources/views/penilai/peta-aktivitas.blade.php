@@ -26,17 +26,18 @@
     z-index: 1 !important;
 }
 
-    /* Custom Popup Styles - Lebih minimalis karena tombol pindah ke modal */
-    .leaflet-popup-content-wrapper {
-        border-radius: 12px;
-        padding: 0;
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-    }
 
-    .leaflet-popup-content {
-        margin: 0 !important;
-        font-family: 'Poppins', sans-serif;
-    }
+/* Custom Popup Styles - Lebih minimalis karena tombol pindah ke modal */
+.leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    font-family: 'Poppins', sans-serif;
+}
 </style>
 @endpush
 
@@ -45,13 +46,12 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {{-- Tambahkan JS SweetAlert --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-{{-- Tambahkan html2canvas untuk fitur export peta --}}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJMnNulluNV6CMrUWoO7pI6DB5T05oU8BfP6Hv/h/WlkqO/bRzdtj/ZQmB9Q7FhFhS7K72+i7+xLp2T" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{{-- PUSTAKA HTML2CANVAS DIHAPUS KARENA SUDAH TIDAK DIGUNAKAN (SERVER-SIDE RENDERING) --}}
 @endpush
 
 @section('content')
 
-<section x-data="penilaiMapData" x-init="initMap()" class="relative">
+<section x-data="penilaiMapData()" x-init="initMap()" class="relative">
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">

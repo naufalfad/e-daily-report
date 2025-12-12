@@ -98,7 +98,8 @@ class ValidatorController extends Controller
         // 1. Validasi Input
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected',
-            'komentar_validasi' => 'required_if:status,rejected|string|max:255'
+            // PERBAIKAN: Menambahkan 'nullable' agar Catatan Persetujuan Boleh Kosong
+            'komentar_validasi' => 'nullable|required_if:status,rejected|string|max:255' 
         ]);
 
         if ($validator->fails()) {
@@ -124,6 +125,7 @@ class ValidatorController extends Controller
             DB::beginTransaction();
 
             // Update Data LKH
+            // Catatan: Jika status='approved' dan komentar_validasi kosong, nilai yang disimpan adalah NULL
             $lkh->update([
                 'status' => $request->status,
                 'waktu_validasi' => now(),

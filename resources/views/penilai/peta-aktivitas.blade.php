@@ -171,6 +171,23 @@
 
         {{-- Filter Bar --}}
         <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-2">
+            
+            {{-- [BARU] View Mode Switcher --}}
+            <div class="flex bg-slate-200/50 p-1 rounded-xl mb-5 w-full sm:w-fit">
+                <button type="button"
+                    @click="switchMode('staff')"
+                    :class="viewMode === 'staff' ? 'bg-white text-slate-800 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                    class="px-6 py-2 rounded-lg text-xs sm:text-sm transition-all flex-1 sm:flex-none text-center">
+                    Data Bawahan
+                </button>
+                <button type="button"
+                    @click="switchMode('personal')"
+                    :class="viewMode === 'personal' ? 'bg-white text-slate-800 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                    class="px-6 py-2 rounded-lg text-xs sm:text-sm transition-all flex-1 sm:flex-none text-center">
+                    Peta Saya
+                </button>
+            </div>
+
             <div class="flex flex-col md:flex-row items-end gap-5">
                 <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 flex-1">
                     {{-- Input Tgl Dari --}}
@@ -351,7 +368,8 @@
 
             {{-- FOOTER ACTIONS --}}
             <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 shrink-0">
-                <template x-if="selectedActivity && selectedActivity.status === 'waiting_review'">
+                {{-- [MODIFIKASI] Hanya muncul jika status Waiting Review DAN Mode = Staff --}}
+                <template x-if="selectedActivity && selectedActivity.status === 'waiting_review' && viewMode === 'staff'">
                     <div class="grid grid-cols-2 gap-4">
                         <button @click="confirmApprove(selectedActivity.id)" 
                             class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:shadow-emerald-200 hover:shadow-lg transform active:scale-[0.98] flex items-center justify-center gap-2">
@@ -367,7 +385,8 @@
                     </div>
                 </template>
 
-                <template x-if="selectedActivity && selectedActivity.status !== 'waiting_review'">
+                {{-- [MODIFIKASI] Tombol Tutup muncul jika BUKAN Waiting Review ATAU sedang di Mode Personal --}}
+                <template x-if="selectedActivity && (selectedActivity.status !== 'waiting_review' || viewMode === 'personal')">
                     <div class="flex justify-end">
                         <button @click="closeModal()"
                             class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-xl hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">

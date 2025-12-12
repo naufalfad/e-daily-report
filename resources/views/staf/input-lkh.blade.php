@@ -1025,7 +1025,7 @@ async function submitForm(type, btnElement) {
         if (res.ok) {
             // Jika sukses, biarkan tombol tetap DISABLED agar user tidak klik lagi saat menunggu redirect
             Swal.fire({ icon: "success", title: "Berhasil", showConfirmButton: false, timer: 1500 });
-            setTimeout(() => window.location.href = "/penilai/dashboard", 1000);
+            setTimeout(() => window.location.href = "/staf/dashboard", 1000);
         } else {
             throw new Error(json.message || "Gagal menyimpan data");
         }

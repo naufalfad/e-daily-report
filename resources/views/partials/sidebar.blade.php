@@ -38,7 +38,6 @@ $menusByRole = [
 
 // ==================== ROLE ADMIN ====================
 'admin' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'admin.dashboard'],
 ['key' => 'manajemen-pegawai', 'label' => 'Manajemen Pegawai', 'icon' => 'manajemen-pegawai', 'route' =>
 'admin.manajemen-pegawai'],
 ['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => 'admin.akun-pengguna'],

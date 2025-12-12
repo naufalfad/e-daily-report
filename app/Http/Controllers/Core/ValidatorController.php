@@ -7,10 +7,10 @@ use App\Models\LaporanHarian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\DB;
 use App\Services\NotificationService;
-use App\Enums\NotificationType; 
-use Carbon\Carbon; 
+use App\Enums\NotificationType;
+use Carbon\Carbon;
 
 class ValidatorController extends Controller
 {
@@ -23,10 +23,10 @@ class ValidatorController extends Controller
         $atasanId = Auth::id();
 
         // Base Query: LKH milik bawahan (bukan diri sendiri) & bukan draft
-        $query = LaporanHarian::with(['user', 'rencana', 'bukti']) 
-            ->where('atasan_id', $atasanId) 
+        $query = LaporanHarian::with(['user', 'rencana', 'bukti'])
+            ->where('atasan_id', $atasanId)
             ->where('user_id', '!=', $atasanId)
-            ->where('status', '!=', 'draft'); 
+            ->where('status', '!=', 'draft');
 
         // 1. Filter Status
         $query->when(
@@ -44,16 +44,16 @@ class ValidatorController extends Controller
         });
 
         // 3. Search (Nama Bawahan / Deskripsi Aktivitas)
-        $query->when($request->search, function($q, $search) {
-             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-             $q->where(function($sub) use ($search, $like) {
+        $query->when($request->search, function ($q, $search) {
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $q->where(function ($sub) use ($search, $like) {
                 // Cari di Nama User
-                $sub->whereHas('user', function($u) use ($search, $like) {
+                $sub->whereHas('user', function ($u) use ($search, $like) {
                     $u->where('name', $like, "%{$search}%");
                 })
-                // Atau Cari di Deskripsi LKH
-                ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
-             });
+                    // Atau Cari di Deskripsi LKH
+                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+            });
         });
 
         // 4. Legacy Filter Tanggal Spesifik
@@ -61,7 +61,7 @@ class ValidatorController extends Controller
 
         // Sorting: Prioritaskan 'waiting_review' di atas, sisanya urut tanggal terbaru
         $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
-              ->latest('tanggal_laporan');
+            ->latest('tanggal_laporan');
 
         $data = $query->paginate(10);
 
@@ -94,7 +94,7 @@ class ValidatorController extends Controller
     public function validateLkh(Request $request, $id)
     {
         $atasanId = Auth::id();
-        
+
         // 1. Validasi Input
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected',
@@ -125,21 +125,21 @@ class ValidatorController extends Controller
 
             // Update Data LKH
             $lkh->update([
-                'status'            => $request->status,
-                'waktu_validasi'    => now(),
+                'status' => $request->status,
+                'waktu_validasi' => now(),
                 'komentar_validasi' => $request->komentar_validasi
             ]);
 
             // 4. Logika Notifikasi
             $tglIndo = Carbon::parse($lkh->tanggal_laporan)->translatedFormat('d F Y');
-            
+
             if ($request->status == 'approved') {
-                $type = NotificationType::LKH_APPROVED->value; 
-                $msg  = "Selamat! Laporan Harian tanggal {$tglIndo} telah DISETUJUI.";
+                $type = NotificationType::LKH_APPROVED->value;
+                $msg = "Selamat! Laporan Harian tanggal {$tglIndo} telah DISETUJUI.";
             } else {
                 $type = NotificationType::LKH_REJECTED->value;
                 $previewKomentar = \Illuminate\Support\Str::limit($request->komentar_validasi, 50);
-                $msg  = "Mohon revisi. Laporan tanggal {$tglIndo} DITOLAK. Catatan: {$previewKomentar}";
+                $msg = "Mohon revisi. Laporan tanggal {$tglIndo} DITOLAK. Catatan: {$previewKomentar}";
             }
 
             // Kirim Notifikasi
@@ -148,7 +148,7 @@ class ValidatorController extends Controller
                     $lkh->user_id,
                     $type,
                     $msg,
-                    $lkh 
+                    $lkh
                 );
             } catch (\Exception $e) {
                 // Silent fail notif
@@ -158,13 +158,13 @@ class ValidatorController extends Controller
 
             return response()->json([
                 'message' => $request->status == 'approved' ? 'Laporan berhasil disetujui' : 'Laporan berhasil ditolak',
-                'data'    => $lkh
+                'data' => $lkh
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Terjadi kesalahan saat memproses validasi', 
+                'message' => 'Terjadi kesalahan saat memproses validasi',
                 'error' => $e->getMessage()
             ], 500);
         }

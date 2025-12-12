@@ -2,13 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==== DOM ELEMENTS ====
     const listContainer = document.getElementById('lkh-validation-list');
     
-    // Filters Elements (NEW)
+    // Filters Elements
     const filterStatus = document.getElementById('filter-status');
     const filterMonth = document.getElementById('filter-month');
     const filterYear = document.getElementById('filter-year');
     const filterSearch = document.getElementById('filter-search');
 
-    // Pagination Elements (NEW)
+    // Pagination Elements
     const btnPrev = document.getElementById('prev-page');
     const btnNext = document.getElementById('next-page');
     const paginationInfo = document.getElementById('pagination-info');
@@ -18,14 +18,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const approveModal = document.getElementById('modal-approve');
     const rejectModal = document.getElementById('modal-reject');
     
+    // NEW Modal Elements
+    const buktiListModal = document.getElementById('modal-bukti-list');
+    const buktiListContainer = document.getElementById('bukti-list-container');
+    const previewModal = document.getElementById('modal-preview');
+    const previewContent = document.getElementById('preview-content');
+
     // Action Buttons
     const btnSubmitApprove = document.getElementById('btn-submit-approve');
     const btnSubmitReject = document.getElementById('btn-submit-reject');
     const rejectError = document.getElementById('reject-error');
+    
+    // NEW Bukti Button
+    const btnOpenBukti = document.querySelector('.js-open-bukti');
 
     // State Variables
     let currentPage = 1;
     let searchTimeout = null;
+    // NEW State for Bukti
+    let daftarBukti = [];
+    let selectedBukti = null;
 
     // ==== HELPERS ====
     const getToken = () => localStorage.getItem('auth_token');
@@ -39,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch { return isoString; }
     };
 
+    // ... (formatTime, getInitial, createStatusBadge tetap sama) ...
     const formatTime = (isoString) => {
         if (!isoString) return '';
         try {
@@ -59,8 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const style = config[status] || config['waiting_review'];
         return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${style.css}">${style.label}</span>`;
     };
+    
+    // NEW Helper: Get File Type
+    const getFileType = (url) => {
+        if (!url) return "other";
+        const ext = url.split(".").pop().toLowerCase();
 
-    // ==== MAIN FUNCTION: FETCH DATA ====
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+            return "image";
+        if (ext === "pdf") return "pdf";
+        if (["mp4", "mov", "webm"].includes(ext)) return "video";
+        return "other";
+    };
+
+    // ==== MAIN FUNCTION: FETCH DATA (TETAP SAMA) ====
     async function fetchLkhList(page = 1) {
         if (!listContainer) return;
 
@@ -114,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==== RENDER TABLE ====
+    // ==== RENDER TABLE (TETAP SAMA) ====
     function renderTable(lkhs) {
         listContainer.innerHTML = '';
 
@@ -194,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==== PAGINATION UPDATE ====
+    // ... (updatePagination, filter listeners, pagination listeners tetap sama) ...
     function updatePagination(response) {
         if (!paginationInfo) return;
         
@@ -237,10 +262,139 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==== MODAL LOGIC (Detail, Approve, Reject) ====
+
+    // ==== MODAL LOGIC (Detail, Approve, Reject, Bukti, Preview) ====
+    
+    function openModalFlex(modalEl) {
+        modalEl.classList.remove('hidden');
+        modalEl.classList.add('flex');
+    }
+
+    function closeModals() {
+        detailModal.classList.add('hidden');
+        approveModal.classList.add('hidden');
+        approveModal.classList.remove('flex');
+        rejectModal.classList.add('hidden');
+        rejectModal.classList.remove('flex');
+        buktiListModal.classList.add('hidden'); // NEW
+        buktiListModal.classList.remove('flex'); // NEW
+        previewModal.classList.add('hidden'); // NEW
+        previewModal.classList.remove('flex'); // NEW
+    };
+
+    document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject, .js-close-bukti, .js-close-preview').forEach(btn => {
+        btn.addEventListener('click', closeModals);
+    });
+
+    // NEW Bukti List Modal Logic
+    if(btnOpenBukti) {
+        btnOpenBukti.addEventListener('click', (e) => {
+            // Memastikan tombol tidak disabled dan ada data
+            if (e.currentTarget.disabled) return;
+            
+            if (daftarBukti && daftarBukti.length > 0) {
+                renderBuktiList(daftarBukti);
+                openModalFlex(buktiListModal);
+            } else {
+                alert('Tidak ada lampiran bukti ditemukan.');
+            }
+        });
+    }
+
+    // NEW Render Bukti List
+    function renderBuktiList(buktiArray) {
+        buktiListContainer.innerHTML = '';
+        
+        if (!buktiArray || buktiArray.length === 0) return;
+
+        buktiArray.forEach((bukti, index) => {
+            const type = getFileType(bukti.file_url);
+            let thumbnailHtml = '';
+
+            switch(type) {
+                case 'image':
+                    thumbnailHtml = `<img src="${bukti.file_url}" class="w-full h-32 object-cover rounded-lg shadow-sm" />`;
+                    break;
+                case 'pdf':
+                    thumbnailHtml = `
+                        <div class="w-full h-32 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                            <i class="fas fa-file-pdf text-4xl"></i>
+                        </div>`;
+                    break;
+                case 'video':
+                    thumbnailHtml = `
+                        <div class="w-full h-32 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                            <i class="fas fa-video text-4xl"></i>
+                        </div>`;
+                    break;
+                default:
+                    thumbnailHtml = `
+                        <div class="w-full h-32 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600">
+                            <i class="fas fa-file text-4xl"></i>
+                        </div>`;
+                    break;
+            }
+
+            const item = document.createElement('div');
+            item.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer js-bukti-item";
+            item.innerHTML = `
+                ${thumbnailHtml}
+                <p class="mt-2 text-sm font-medium text-slate-700 truncate">Lampiran ${index + 1}</p>
+                <p class="text-xs text-slate-500 truncate" title="${bukti.file_url.split('/').pop()}">${bukti.file_url.split('/').pop()}</p>
+            `;
+            item.addEventListener('click', () => previewBukti(bukti));
+            buktiListContainer.appendChild(item);
+        });
+    }
+
+    // NEW Preview Bukti
+    function previewBukti(bukti) {
+        selectedBukti = bukti;
+        const type = getFileType(bukti.file_url);
+        previewContent.innerHTML = '';
+
+        let content = '';
+
+        switch(type) {
+            case 'image':
+                content = `<img src="${bukti.file_url}" class="w-full rounded-lg shadow" />`;
+                break;
+            case 'pdf':
+                content = `<iframe src="${bukti.file_url}" class="w-full h-[500px] rounded-lg"></iframe>`;
+                break;
+            case 'video':
+                content = `
+                    <video controls class="w-full rounded-lg">
+                        <source src="${bukti.file_url}" type="video/mp4">
+                        Maaf, browser Anda tidak mendukung tag video.
+                    </video>`;
+                break;
+            default:
+                content = `
+                    <p class="text-center text-slate-600">
+                        File tidak dapat dipreview. Silakan download:
+                    </p>
+                    <div class="text-center">
+                        <a href="${bukti.file_url}" target="_blank"
+                            class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg shadow">
+                            Download File
+                        </a>
+                    </div>`;
+                break;
+        }
+        
+        previewContent.innerHTML = content;
+        openModalFlex(previewModal);
+    }
+    
+    // Logic Modal Detail (diperbarui)
     function openDetailModal(e) {
         const lkhData = JSON.parse(e.currentTarget.dataset.lkhData);
         detailModal.dataset.lkhId = lkhData.id;
+        
+        // Reset bukti state dan simpan data baru
+        daftarBukti = lkhData.bukti || [];
+        selectedBukti = null;
 
         const setMap = {
             'detail-tanggal': formatDate(lkhData.tanggal_laporan),
@@ -287,37 +441,18 @@ document.addEventListener('DOMContentLoaded', () => {
             info?.classList.add('flex');
         }
 
-        // Handle Button Bukti
+        // Handle Button Bukti (DIUBAH)
         const buktiBtn = document.getElementById('detail-bukti-btn');
         if (buktiBtn) {
-            if (lkhData.bukti && lkhData.bukti.length > 0) {
+            if (daftarBukti.length > 0) {
                 buktiBtn.disabled = false;
-                buktiBtn.onclick = () => window.open(lkhData.bukti[0].file_url, "_blank");
+                // Listener akan dipicu oleh event delegation (js-open-bukti)
             } else {
                 buktiBtn.disabled = true;
             }
         }
 
         detailModal.classList.remove('hidden');
-    }
-
-    // Modal Close Logic
-    const closeModals = () => {
-        detailModal.classList.add('hidden');
-        approveModal.classList.add('hidden');
-        approveModal.classList.remove('flex');
-        rejectModal.classList.add('hidden');
-        rejectModal.classList.remove('flex');
-    };
-
-    document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject').forEach(btn => {
-        btn.addEventListener('click', closeModals);
-    });
-
-    // Helper untuk buka modal confirm
-    function openModalFlex(modalEl) {
-        modalEl.classList.remove('hidden');
-        modalEl.classList.add('flex');
     }
 
     // Button Open Approve/Reject from Detail
@@ -339,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // SUBMIT ACTIONS
+    // SUBMIT ACTIONS (TETAP SAMA)
     async function submitValidation(status, note, btn) {
         const lkhId = detailModal.dataset.lkhId;
         const originalText = btn.innerHTML;
@@ -360,14 +495,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 closeModals();
                 fetchLkhList(currentPage); // Refresh list maintain current page
-                alert('Berhasil memvalidasi laporan.');
+                // Mengganti alert dengan Swal.fire jika tersedia
+                if(typeof Swal !== 'undefined') {
+                     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Laporan berhasil divalidasi.', confirmButtonColor: '#0E7A4A' });
+                } else {
+                    alert('Berhasil memvalidasi laporan.');
+                }
             } else {
                 const data = await res.json();
-                alert(data.message || 'Gagal memproses validasi');
+                 if(typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message || 'Gagal memproses validasi', confirmButtonColor: '#d33' });
+                } else {
+                    alert(data.message || 'Gagal memproses validasi');
+                }
             }
         } catch (e) {
             console.error(e);
-            alert('Terjadi kesalahan jaringan');
+             if(typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Error Jaringan', text: 'Terjadi kesalahan jaringan atau server.', confirmButtonColor: '#d33' });
+            } else {
+                alert('Terjadi kesalahan jaringan');
+            }
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalText;

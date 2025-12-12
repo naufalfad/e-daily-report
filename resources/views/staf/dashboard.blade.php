@@ -47,8 +47,9 @@
                 <div class="flex-shrink-0">
                     <div
                         class="h-[78px] w-[78px] rounded-full overflow-hidden bg-[#FF8A3D] flex items-center justify-center">
-                        <img src="{{ asset('assets/icon/avatar.png') }}" class="h-full w-full object-cover"
-                            alt="Avatar">
+                         <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : asset('assets/icon/avatar.png') }}" 
+                             class="h-full w-full object-cover"
+                             alt="Avatar">
                     </div>
                 </div>
 

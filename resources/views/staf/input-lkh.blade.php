@@ -299,21 +299,25 @@
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
                         <div class="relative">
-                            <input id="jam_mulai" name="waktu_mulai" type="time"
+                            {{-- PERUBAHAN: Tambahkan lang="en-GB" untuk memaksa format 24 jam di browser --}}
+                            <input id="jam_mulai" name="waktu_mulai" type="time" step="60" lang="en-GB"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
                             <button type="button" id="jam_mulai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"><img
-                                    src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70"></button>
+                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70">
+                            </button>
                         </div>
                     </div>
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
                         <div class="relative">
-                            <input id="jam_selesai" name="waktu_selesai" type="time"
+                            {{-- PERUBAHAN: Tambahkan lang="en-GB" dan step="60" (untuk menghilangkan detik) --}}
+                            <input id="jam_selesai" name="waktu_selesai" type="time" step="60" lang="en-GB"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
                             <button type="button" id="jam_selesai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center"><img
-                                    src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70"></button>
+                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                                <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70">
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -536,7 +540,8 @@
                     <li>Tanggal & Waktu: Pastikan Jam Mulai < Jam Selesai. Pengisian harus logis.</li>
                     <li>Jenis Kegiatan: Pilih kategori yang paling sesuai (Rapat, Pelayanan, dll.).</li>
                     <li>Tupoksi: Kaitkan dengan uraian tugas Anda.</li>
-                    <li>Uraian Kegiatan: Tulis deskripsi yang ringkas, padat, dan jelas mengenai apa yang dikerjakan.</li>
+                    <li>Uraian Kegiatan: Tulis deskripsi yang ringkas, padat, dan jelas mengenai apa yang dikerjakan.
+                    </li>
                 </ul>
             </div>
 
@@ -544,18 +549,23 @@
             <div class="rounded-[10px] bg-[#0E7A4A] px-4 py-3 text-white leading-normal">
                 <p class="text-[14px] font-bold">2. Kategori Kinerja & Output</p>
                 <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
-                    <li>Non-SKP: Isi Output (misalnya: *Notulensi*) dan tentukan Satuan secara manual (*Jam*, *Dokumen*).</li>
-                    <li>SKP: Pilih Target SKP dari daftar. Sistem akan mengunci Satuan untuk menjaga konsistensi dengan target kinerja Anda.</li>
+                    <li>Non-SKP: Isi Output (misalnya: *Notulensi*) dan tentukan Satuan secara manual (*Jam*,
+                        *Dokumen*).</li>
+                    <li>SKP: Pilih Target SKP dari daftar. Sistem akan mengunci Satuan untuk menjaga konsistensi dengan
+                        target kinerja Anda.</li>
                     <li>Volume: Jumlah kuantitas Output yang dihasilkan (Wajib diisi saat Kirim LKH).</li>
                 </ul>
             </div>
-            
+
             {{-- Panduan Lokasi (Alur Teknis) --}}
             <div class="rounded-[10px] bg-[#B6241C] px-4 py-3 text-white leading-normal">
                 <p class="text-[14px] font-bold">3. Lokasi (Geospatial) - Wajib Kirim LKH</p>
                 <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
-                    <li>GPS (Otomatis/Geofence): Digunakan untuk kegiatan di tempat dengan GPS. Tekan tombol lokasi untuk mengunci posisi.</li>
-                    <li>Cari Peta (Geocoding): Digunakan untuk kegiatan yang lokasinya tidak dapat dijangkau GPS. Cari nama lokasi (misal: Alamat Kantor atau kota tempat dinas), lalu pilih untuk menyimpan koordinat dan nama lokasi.</li>
+                    <li>GPS (Otomatis/Geofence): Digunakan untuk kegiatan di tempat dengan GPS. Tekan tombol lokasi
+                        untuk mengunci posisi.</li>
+                    <li>Cari Peta (Geocoding): Digunakan untuk kegiatan yang lokasinya tidak dapat dijangkau GPS. Cari
+                        nama lokasi (misal: Alamat Kantor atau kota tempat dinas), lalu pilih untuk menyimpan koordinat
+                        dan nama lokasi.</li>
                     <li>Penting: Koordinat atau lokasi kerja harus terisi sebelum Kirim LKH.</li>
                 </ul>
             </div>
@@ -958,6 +968,7 @@ function renderDrafts(data) {
     }));
 }
 
+// PENTING: Terapkan perubahan ini di file Blade/JS Anda.
 async function loadEditLKH(id, headers) {
     try {
         const res = await fetch(`/api/lkh/${id}`, {
@@ -980,9 +991,6 @@ async function loadEditLKH(id, headers) {
         const volumeEl = document.querySelector('input[name="volume"]');
         if (volumeEl) volumeEl.value = data.volume ?? "";
 
-        const satuanEl = document.querySelector('input[name="satuan"]');
-        if (satuanEl) satuanEl.value = data.satuan ?? "";
-
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
         updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi ? data.tupoksi.uraian_tugas :
             'Tupoksi Terpilih');
@@ -992,27 +1000,7 @@ async function loadEditLKH(id, headers) {
             renderExistingFiles(data.bukti);
         }
 
-        // Populate Mode Lokasi
-        const modeLokasi = data.mode_lokasi || 'geofence';
-        const lokasiContainer = document.querySelector('[x-data*="mode:"]');
-
-        // Cek Alpine scope
-        if (lokasiContainer && Alpine.raw(lokasiContainer.__x.isRoot)) {
-            const alpine = lokasiContainer.__x.$data;
-            alpine.mode = modeLokasi;
-            alpine.lat = data.lat;
-            alpine.lng = data.lng;
-            alpine.lokasiTeksFinal = data.lokasi_teks || '';
-
-            if (modeLokasi === 'geocoding') {
-                alpine.searchText = data.lokasi_teks || '';
-                alpine.status = `Tersimpan: ${data.lokasi_teks}`;
-            } else {
-                alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
-            }
-        }
-
-        // Logic Kategori & SKP
+        // --- 1. POPULATE LOGIC KATEGORI & SATUAN (PERBAIKAN KRUSIAL) ---
         const isSkp = !!data.skp_rencana_id;
         const kategoriInput = document.querySelector('input[name="kategori"]');
         if (kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";
@@ -1022,19 +1010,51 @@ async function loadEditLKH(id, headers) {
             const alpineData = mainLogicDiv.__x.$data;
             alpineData.setKategori(isSkp ? "skp" : "non-skp");
 
-            setTimeout(() => {
-                if (isSkp && data.rencana) {
-                    alpineData.skpId = data.skp_rencana_id;
-                    alpineData.skpLabel = data.rencana.rencana_hasil_kerja;
+            // Perbaikan: SET VALUE SATUAN DI SINI, UNTUK NON-SKP
+            alpineData.satuanValue = data.satuan ?? '';
 
-                    // Ambil satuan dari root data
-                    alpineData.satuanValue = data.satuan;
-                    alpineData.isSatuanLocked = true;
+            setTimeout(() => {
+                if (isSkp) {
+                    alpineData.skpId = data.skp_rencana_id;
+                    alpineData.skpLabel = data.rencana ? data.rencana.rencana_hasil_kerja :
+                        'Target SKP Tersimpan';
+
+                    // Lock satuan jika ada
+                    alpineData.isSatuanLocked = !!data.satuan && data.satuan !== '-';
                 } else {
-                    alpineData.satuanValue = data.satuan;
+                    // Pastikan Non-SKP tidak terkunci
                     alpineData.isSatuanLocked = false;
                 }
             }, 300);
+        }
+
+        // --- 2. POPULATE LOGIC LOKASI (Menggunakan data.latitude & data.longitude yang baru dari Controller) ---
+        const modeLokasi = data.mode_lokasi || 'geofence';
+        const lokasiContainer = document.querySelector('[x-data*="mode:"]');
+
+        if (lokasiContainer && Alpine.raw(lokasiContainer.__x.isRoot)) {
+            const alpine = lokasiContainer.__x.$data;
+            alpine.mode = modeLokasi;
+
+            // Asumsi Controller sudah mengembalikan data.latitude & data.longitude
+            alpine.lat = data.latitude;
+            alpine.lng = data.longitude;
+            alpine.lokasiTeksFinal = data.lokasi_teks || '';
+
+            if (modeLokasi === 'geocoding') {
+                alpine.searchText = data.lokasi_teks || '';
+                // SET STATUS UNTUK MODE GEOCDING
+                alpine.status = data.lokasi_teks ? `Tersimpan: ${data.lokasi_teks.substring(0, 30)}...` :
+                    'Cari lokasi pada kolom input';
+            } else {
+                // SET STATUS UNTUK MODE GEOFENCE
+                if (data.latitude && data.longitude) {
+                    alpine.status =
+                        `Terkunci: ${parseFloat(data.latitude).toFixed(5)}, ${parseFloat(data.longitude).toFixed(5)}`;
+                } else {
+                    alpine.status = 'Klik tombol untuk ambil lokasi';
+                }
+            }
         }
 
     } catch (e) {

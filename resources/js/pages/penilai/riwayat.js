@@ -13,9 +13,11 @@ export function riwayatDataPenilai(role) {
         open: false,
         modalData: null,
 
-        // State Modal Bukti
+        // State Modal Bukti (DITAMBAH)
         openBukti: false,
         daftarBukti: [],
+        showPreview: false, // DITAMBAH
+        selectedBukti: null, // DITAMBAH
 
         // Filter Data
         filter: {
@@ -118,6 +120,18 @@ export function riwayatDataPenilai(role) {
             );
         },
 
+        // DITAMBAH: Helper untuk mendapatkan jenis file
+        getFileType(url) {
+            if (!url) return "other";
+            const ext = url.split(".").pop().toLowerCase();
+
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+                return "image";
+            if (ext === "pdf") return "pdf";
+            if (["mp4", "mov", "webm"].includes(ext)) return "video";
+            return "other";
+        },
+
         // ===============================
         // DATA FETCHING
         // ===============================
@@ -182,6 +196,7 @@ export function riwayatDataPenilai(role) {
             this.open = true;
 
             try {
+                // Fetch full detail (as per original logic)
                 const res = await fetch(`/api/lkh/${item.id}`, {
                     headers: {
                         Authorization: `Bearer ${TOKEN}`,
@@ -198,6 +213,7 @@ export function riwayatDataPenilai(role) {
             }
         },
 
+        // DITAMBAH: Fungsi untuk membuka modal list bukti
         viewBukti(buktiArray) {
             const bukti = this.normalizeBukti(buktiArray);
 
@@ -213,6 +229,13 @@ export function riwayatDataPenilai(role) {
                 });
             }
         },
+
+        // DITAMBAH: Fungsi untuk membuka modal preview
+        preview(b) {
+            this.selectedBukti = b;
+            this.showPreview = true;
+        },
+
 
         // ===============================
         // UI COMPONENTS

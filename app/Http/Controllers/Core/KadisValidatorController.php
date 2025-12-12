@@ -26,12 +26,11 @@ class KadisValidatorController extends Controller
             ->where('user_id', '!=', $kadisId)
             ->where('status', '!=', 'draft');
 
-        // 1. Status Filter
-        $validStatuses = ['waiting_review', 'approved', 'rejected'];
-
-        if (in_array($request->status, $validStatuses)) {
-            $query->where('status', $request->status);
-        }
+        // 1. Filter Status
+        $query->when(
+            $request->filled('status') && $request->status !== 'all',
+            fn($q) => $q->where('status', $request->status)
+        );
 
         // 2. Search Fix (BUG utama)
         if (!empty(trim($request->search))) {
@@ -42,7 +41,7 @@ class KadisValidatorController extends Controller
                 $sub->whereHas('user', function ($u) use ($search, $like) {
                     $u->where('name', $like, "%{$search}%");
                 })
-                ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
             });
         }
         // 2. Filter Bulan
@@ -59,18 +58,18 @@ class KadisValidatorController extends Controller
         $query->when($request->filled('search'), function ($q) use ($request) {
             $search = $request->search;
             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-            
+
             $q->where(function ($sub) use ($search, $like) {
                 $sub->whereHas('user', function ($u) use ($search, $like) {
                     $u->where('name', $like, "%{$search}%");
                 })
-                ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
             });
         });
 
         // Sorting: Waiting Review Paling Atas
         $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
-              ->latest('tanggal_laporan');
+            ->latest('tanggal_laporan');
 
         return response()->json($query->paginate(10));
     }
@@ -128,9 +127,9 @@ class KadisValidatorController extends Controller
 
             // Kirim Notifikasi
             $tglIndo = Carbon::parse($lkh->tanggal_laporan)->translatedFormat('d F Y');
-            
+
             if ($request->status === 'approved') {
-                $type = NotificationType::LKH_APPROVED->value; 
+                $type = NotificationType::LKH_APPROVED->value;
                 $msg = "Laporan Kabid pada tanggal {$tglIndo} telah disetujui Kadis.";
             } else {
                 $type = NotificationType::LKH_REJECTED->value;
@@ -172,7 +171,7 @@ class KadisValidatorController extends Controller
             // Filter hanya user dengan jabatan mengandung kata 'staf' (Opsional, tergantung bussines logic)
             ->whereHas('user.jabatan', function ($j) {
                 $j->where('nama_jabatan', 'ilike', '%staf%')
-                  ->orWhere('nama_jabatan', 'ilike', '%pelaksana%'); // Tambahan coverage
+                    ->orWhere('nama_jabatan', 'ilike', '%pelaksana%'); // Tambahan coverage
             });
 
         // 1. Filter Bulan & Tahun (Wajib ada untuk monitoring)
@@ -180,9 +179,9 @@ class KadisValidatorController extends Controller
         $query->when($request->year, fn($q, $y) => $q->whereYear('tanggal_laporan', $y));
 
         // 2. Search (Cari nama staf tertentu)
-        $query->when($request->search, function($q, $search) {
-             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-             $q->whereHas('user', fn($u) => $u->where('name', $like, "%{$search}%"));
+        $query->when($request->search, function ($q, $search) {
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $q->whereHas('user', fn($u) => $u->where('name', $like, "%{$search}%"));
         });
 
         // [FIX KOLOM]

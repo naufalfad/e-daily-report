@@ -11,6 +11,8 @@ export function riwayatDataStaf(role) {
 
         // State Modal Detail Laporan
         open: false,
+        showPreview: false,
+        selectedBukti: null,
         modalData: null,
 
         // State Modal Bukti
@@ -51,8 +53,7 @@ export function riwayatDataStaf(role) {
 
                     if (this.filter.from)
                         url += `&from_date=${this.filter.from}`;
-                    if (this.filter.to) 
-                        url += `&to_date=${this.filter.to}`;
+                    if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
                     window.open(url, "_blank");
                 }
@@ -88,10 +89,14 @@ export function riwayatDataStaf(role) {
 
         statusText(status) {
             switch (status) {
-                case "approved": return "Diterima";
-                case "rejected": return "Ditolak";
-                case "draft": return "Draft";
-                default: return "Menunggu";
+                case "approved":
+                    return "Diterima";
+                case "rejected":
+                    return "Ditolak";
+                case "draft":
+                    return "Draft";
+                default:
+                    return "Menunggu";
             }
         },
 
@@ -109,7 +114,9 @@ export function riwayatDataStaf(role) {
         },
 
         statusBadgeHtml(status) {
-            return `<span class="${this.statusBadgeClass(status)}">${this.statusText(status)}</span>`;
+            return `<span class="${this.statusBadgeClass(
+                status
+            )}">${this.statusText(status)}</span>`;
         },
 
         // ===============================
@@ -141,13 +148,14 @@ export function riwayatDataStaf(role) {
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(
-                        `Gagal memuat data. Status: ${response.status}. Pesan: ${errorData.message || "Unknown Error"}`
+                        `Gagal memuat data. Status: ${
+                            response.status
+                        }. Pesan: ${errorData.message || "Unknown Error"}`
                     );
                 }
 
                 const data = await response.json();
                 this.items = data.data || []; // Pastikan fallback array kosong
-
             } catch (e) {
                 console.error("Gagal memuat data riwayat LKH:", e);
                 // Opsional: alert("Gagal memuat data");
@@ -175,10 +183,10 @@ export function riwayatDataStaf(role) {
                 this.openBukti = true;
             } else {
                 Swal.fire({
-                    icon: 'info',
-                    title: 'Tidak Ada Bukti',
-                    text: 'Laporan ini tidak memiliki lampiran bukti.',
-                    confirmButtonColor: '#155FA6'
+                    icon: "info",
+                    title: "Tidak Ada Bukti",
+                    text: "Laporan ini tidak memiliki lampiran bukti.",
+                    confirmButtonColor: "#155FA6",
                 });
             }
         },
@@ -202,6 +210,22 @@ export function riwayatDataStaf(role) {
                     }
                 });
             });
+        },
+
+        getFileType(url) {
+            if (!url) return "other";
+            const ext = url.split(".").pop().toLowerCase();
+
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+                return "image";
+            if (ext === "pdf") return "pdf";
+            if (["mp4", "mov", "webm"].includes(ext)) return "video";
+            return "other";
+        },
+
+        preview(b) {
+            this.selectedBukti = b;
+            this.showPreview = true;
         },
     };
 }

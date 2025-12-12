@@ -12,7 +12,7 @@ class UserImportController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'csv_file' => 'required|mimes:csv,txt'
+            'csv_file' => 'required|mimes:csv,txt, xls, xlsx'
         ]);
 
         $import = new UserCsvImport;

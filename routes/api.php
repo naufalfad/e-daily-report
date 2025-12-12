@@ -142,7 +142,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('settings', [SystemSettingController::class, 'update']);
 
         //Import CSV
-        Route::post('/import/users', [UserImportController::class, 'import']);
+        Route::post('pegawai/import', [UserImportController::class, 'import']);
     });
 
 

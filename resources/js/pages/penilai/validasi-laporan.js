@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch { return isoString; }
     };
 
-    // ... (formatTime, getInitial, createStatusBadge tetap sama) ...
     const formatTime = (isoString) => {
         if (!isoString) return '';
         try {
@@ -85,7 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return "other";
     };
 
-    // ==== MAIN FUNCTION: FETCH DATA (TETAP SAMA) ====
+    // Helper: Mengubah string kosong menjadi null
+    const emptyToNull = (str) => {
+        return (typeof str === 'string' && str.trim() === '') ? null : str;
+    };
+
+    // ==== MAIN FUNCTION: FETCH DATA ====
     async function fetchLkhList(page = 1) {
         if (!listContainer) return;
 
@@ -109,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Construct Query Params (LOGIC BARU)
+        // Construct Query Params
         const params = new URLSearchParams({
             page: page,
             status: filterStatus ? filterStatus.value : 'waiting_review',
@@ -127,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const data = await response.json();
             
-            // Render Data & Update Pagination
             renderTable(data.data);
             updatePagination(data);
             currentPage = page;
@@ -139,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==== RENDER TABLE (TETAP SAMA) ====
+    // ==== RENDER TABLE ====
     function renderTable(lkhs) {
         listContainer.innerHTML = '';
 
@@ -219,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ... (updatePagination, filter listeners, pagination listeners tetap sama) ...
+    // ==== PAGINATION UPDATE ====
     function updatePagination(response) {
         if (!paginationInfo) return;
         
@@ -234,12 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnNext) btnNext.disabled = !response.next_page_url;
     }
 
-    // ==== FILTER EVENT LISTENERS (LOGIC BARU) ====
+    // ==== FILTER EVENT LISTENERS ====
     if (filterStatus) filterStatus.addEventListener('change', () => fetchLkhList(1));
     if (filterMonth) filterMonth.addEventListener('change', () => fetchLkhList(1));
     if (filterYear) filterYear.addEventListener('change', () => fetchLkhList(1));
     
-    // Search with Debounce (Agar tidak spam API)
+    // Search with Debounce
     if (filterSearch) {
         filterSearch.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
@@ -276,10 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
         approveModal.classList.remove('flex');
         rejectModal.classList.add('hidden');
         rejectModal.classList.remove('flex');
-        buktiListModal.classList.add('hidden'); // NEW
-        buktiListModal.classList.remove('flex'); // NEW
-        previewModal.classList.add('hidden'); // NEW
-        previewModal.classList.remove('flex'); // NEW
+        buktiListModal.classList.add('hidden');
+        buktiListModal.classList.remove('flex');
+        previewModal.classList.add('hidden');
+        previewModal.classList.remove('flex');
     };
 
     document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject, .js-close-bukti, .js-close-preview').forEach(btn => {
@@ -287,19 +290,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // NEW Bukti List Modal Logic
-    if(btnOpenBukti) {
-        btnOpenBukti.addEventListener('click', (e) => {
-            // Memastikan tombol tidak disabled dan ada data
-            if (e.currentTarget.disabled) return;
+    document.querySelector('#modal-detail')?.addEventListener('click', (e) => {
+        if (e.target.closest('.js-open-bukti')) {
+            const btn = e.target.closest('.js-open-bukti');
+            if (btn.disabled) return;
             
             if (daftarBukti && daftarBukti.length > 0) {
                 renderBuktiList(daftarBukti);
                 openModalFlex(buktiListModal);
             } else {
-                alert('Tidak ada lampiran bukti ditemukan.');
+                Swal.fire({
+                    icon: "info",
+                    title: "Tidak Ada Bukti",
+                    text: "Laporan ini tidak memiliki lampiran bukti.",
+                    confirmButtonColor: "#155FA6",
+                });
             }
-        });
-    }
+        }
+    });
 
     // NEW Render Bukti List
     function renderBuktiList(buktiArray) {
@@ -387,13 +395,37 @@ document.addEventListener('DOMContentLoaded', () => {
         openModalFlex(previewModal);
     }
     
-    // Logic Modal Detail (diperbarui)
+    // Helper untuk mengubah struktur data bukti dari API
+    function normalizeBukti(buktiArray) {
+        if (!buktiArray) return [];
+        // Pastikan array
+        let arr = Array.isArray(buktiArray) ? buktiArray : 
+                    (typeof buktiArray === 'string' ? JSON.parse(buktiArray) : []);
+        
+        if (!Array.isArray(arr)) return [];
+
+        return arr.map((bukti) => {
+            if (typeof bukti === "string") {
+                return { file_url: `/storage/uploads/bukti/${bukti}` };
+            }
+            // Mengasumsikan struktur API yang paling umum
+            if (bukti.file_path) {
+                return { file_url: `/storage/${bukti.file_path}` };
+            }
+            if (bukti.file_url) {
+                return bukti;
+            }
+            return null;
+        }).filter(Boolean);
+    };
+
+    // Logic Modal Detail
     function openDetailModal(e) {
         const lkhData = JSON.parse(e.currentTarget.dataset.lkhData);
         detailModal.dataset.lkhId = lkhData.id;
         
         // Reset bukti state dan simpan data baru
-        daftarBukti = lkhData.bukti || [];
+        daftarBukti = normalizeBukti(lkhData.bukti || []);
         selectedBukti = null;
 
         const setMap = {
@@ -402,8 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'detail-nama': lkhData.jenis_kegiatan || '-',
             'detail-uraian': lkhData.deskripsi_aktivitas,
             'detail-output': lkhData.output_hasil_kerja || '-',
-            'detail-volume': lkhData.volume || '-',
-            'detail-satuan': lkhData.satuan || '',
+            'detail-volume': `${lkhData.volume || '-'} ${lkhData.satuan || ''}`,
             'detail-kategori': lkhData.skp_rencana_id ? 'SKP' : 'Non-SKP',
             'detail-jam': `${lkhData.waktu_mulai?.substring(0, 5)} - ${lkhData.waktu_selesai?.substring(0, 5)}`,
             'detail-lokasi': lkhData.lokasi_manual_text || (lkhData.is_luar_lokasi ? 'Luar Kantor' : 'Dalam Kantor')
@@ -413,6 +444,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById(id);
             if (el) el.textContent = value;
         });
+        
+        // Pisahkan penanganan volume dan satuan untuk elemen terpisah
+        const [volumeValue, ...satuanParts] = setMap['detail-volume'].split(' ');
+        document.getElementById('detail-volume').textContent = volumeValue;
+        document.getElementById('detail-satuan').textContent = satuanParts.join(' ');
+
 
         document.getElementById('detail-status').innerHTML = createStatusBadge(lkhData.status);
 
@@ -421,6 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const catText = document.getElementById('detail-catatan');
         if (lkhData.komentar_validasi) {
             catWrap.classList.remove('hidden');
+            catWrap.classList.remove('bg-rose-50', 'border-rose-100');
+            catWrap.classList.add('bg-amber-50', 'border-amber-100'); // Ganti warna default
             catText.textContent = `"${lkhData.komentar_validasi}"`;
         } else {
             catWrap.classList.add('hidden');
@@ -460,6 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnOpenApprove) {
         btnOpenApprove.addEventListener('click', () => {
             detailModal.classList.add('hidden');
+            document.getElementById('approve-note').value = ''; // Reset Catatan
             openModalFlex(approveModal);
         });
     }
@@ -474,10 +514,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // SUBMIT ACTIONS (TETAP SAMA)
+    // SUBMIT ACTIONS (PERBAIKAN: Menggunakan emptyToNull untuk catatan persetujuan)
     async function submitValidation(status, note, btn) {
         const lkhId = detailModal.dataset.lkhId;
         const originalText = btn.innerHTML;
+        
+        // Khusus Approved, Catatan boleh NULL
+        const finalNote = (status === 'approved') ? emptyToNull(note) : note; 
+
         btn.disabled = true;
         btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Proses...`;
 
@@ -489,21 +533,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ status, komentar_validasi: note })
+                body: JSON.stringify({ status, komentar_validasi: finalNote }) // Menggunakan finalNote
             });
 
             if (res.ok) {
                 closeModals();
-                fetchLkhList(currentPage); // Refresh list maintain current page
-                // Mengganti alert dengan Swal.fire jika tersedia
+                fetchLkhList(currentPage); 
                 if(typeof Swal !== 'undefined') {
-                     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Laporan berhasil divalidasi.', confirmButtonColor: '#0E7A4A' });
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Laporan berhasil divalidasi.', confirmButtonColor: '#0E7A4A' });
                 } else {
                     alert('Berhasil memvalidasi laporan.');
                 }
             } else {
                 const data = await res.json();
-                 if(typeof Swal !== 'undefined') {
+                if(typeof Swal !== 'undefined') {
                     Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message || 'Gagal memproses validasi', confirmButtonColor: '#d33' });
                 } else {
                     alert(data.message || 'Gagal memproses validasi');
@@ -511,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error(e);
-             if(typeof Swal !== 'undefined') {
+            if(typeof Swal !== 'undefined') {
                 Swal.fire({ icon: 'error', title: 'Error Jaringan', text: 'Terjadi kesalahan jaringan atau server.', confirmButtonColor: '#d33' });
             } else {
                 alert('Terjadi kesalahan jaringan');
@@ -524,7 +567,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubmitApprove) {
         btnSubmitApprove.addEventListener('click', () => {
-            submitValidation('approved', document.getElementById('approve-note').value, btnSubmitApprove);
+            const note = document.getElementById('approve-note').value;
+            // Catatan dipastikan boleh kosong (akan diubah jadi null oleh emptyToNull)
+            submitValidation('approved', note, btnSubmitApprove);
         });
     }
 

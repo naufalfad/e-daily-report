@@ -44,8 +44,6 @@ use App\Http\Controllers\Core\UserImportController;
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login']);
-//Import CSV
-Route::post('/import/users', [UserImportController::class, 'import']);
 
 
 /*
@@ -142,6 +140,9 @@ Route::middleware('auth:sanctum')->group(function () {
         */
         Route::get('settings', [SystemSettingController::class, 'index']);
         Route::post('settings', [SystemSettingController::class, 'update']);
+
+        //Import CSV
+        Route::post('/import/users', [UserImportController::class, 'import']);
     });
 
 

@@ -16,99 +16,142 @@ class UserCsvImport implements ToCollection, WithHeadingRow
 {
     public $errors = [];
 
+    /**
+     * Mapping: Header CSV → Internal Key
+     */
+    private $map = [
+        'nip'              => 'nip',
+        'nama'             => 'name',
+        'nama_role'        => 'nama_role',
+        'jabatan_atasan'   => 'jabatan_atasan',
+        'unit'             => 'nama_unit',
+        'jabatan'          => 'nama_jabatan',
+        'bidang'           => 'nama_bidang',
+    ];
+
+    private function col($row, $key)
+    {
+        // Cari header CSV yang sesuai internal key
+        $csvKey = array_search($key, $this->map);
+
+        return $csvKey ? ($row[$csvKey] ?? null) : null;
+    }
+
     public function collection(Collection $rows)
     {
         foreach ($rows as $index => $row) {
 
             // ==========================
-            // 1. VALIDASI DATA MINIMAL
+            // 1. Ambil nilai mapping
             // ==========================
-            if (!isset($row['nip']) || empty($row['nip'])) {
+            $nip         = $this->col($row, 'nip');
+            $name        = $this->col($row, 'name');
+            $roleName    = $this->col($row, 'nama_role');
+            $jabatanAtasan  = $this->col($row, 'jabatan_atasan');
+            $unitNama    = $this->col($row, 'nama_unit');
+            $jabatanNama = $this->col($row, 'nama_jabatan');
+            $bidangNama  = $this->col($row, 'nama_bidang');
+
+            // ==========================
+            // 2. VALIDASI DATA MINIMAL
+            // ==========================
+            if (!$nip) {
                 $this->errors[] = "Baris " . ($index + 2) . ": NIP kosong.";
                 continue;
             }
 
-            if (!isset($row['name']) || empty($row['name'])) {
-                $this->errors[] = "Baris " . ($index + 2) . ": NAME kosong.";
+            if (!$name) {
+                $this->errors[] = "Baris " . ($index + 2) . ": NAMA kosong.";
                 continue;
             }
 
-            if (!isset($row['nama_role']) || empty($row['nama_role'])) {
+            if (!$roleName) {
                 $this->errors[] = "Baris " . ($index + 2) . ": ROLE kosong.";
                 continue;
             }
 
             // ==========================
-            // 2. CEK ATASAN
+            // 3. CEK ATASAN
             // ==========================
             $atasan = null;
-            if (!empty($row['nama_atasan'])) {
-                $atasan = User::where('name', 'ilike', $row['nama_atasan'])->first();
+
+            if (!empty($jabatanAtasan)) {
+
+                // 1. Cari jabatan atasan
+                $jabatanAtasanModel = Jabatan::where('nama_jabatan', 'ilike', $jabatanAtasan)->first();
+
+                if (!$jabatanAtasanModel) {
+                    $this->errors[] = "Baris " . ($index + 2) . ": Jabatan atasan '{$jabatanAtasan}' tidak ditemukan.";
+                    continue;
+                }
+
+                // 2. Cari user yang memiliki jabatan itu
+                $atasan = User::where('jabatan_id', $jabatanAtasanModel->id)->first();
 
                 if (!$atasan) {
-                    $this->errors[] = "Baris " . ($index + 2) . ": Atasan '{$row['nama_atasan']}' tidak ditemukan.";
-                    continue; // aturan Anda: jika atasan tidak ada → FAIL baris tersebut
+                    $this->errors[] = "Baris " . ($index + 2) . ": Tidak ada user dengan jabatan atasan '{$jabatanAtasan}'.";
+                    continue;
                 }
             }
 
             // ==========================
-            // 3. AUTO CREATE ROLE
+            // 4. AUTO CREATE ROLE
             // ==========================
             $role = Role::firstOrCreate(
-                ['nama_role' => $row['nama_role']],
-                ['nama_role' => $row['nama_role']]
+                ['nama_role' => $roleName],
+                ['nama_role' => $roleName]
             );
 
             // ==========================
-            // 4. AUTO CREATE UNIT KERJA
+            // 5. AUTO CREATE UNIT KERJA
             // ==========================
             $unit = null;
-            if (!empty($row['nama_unit'])) {
+            if (!empty($unitNama)) {
                 $unit = UnitKerja::firstOrCreate(
-                    ['nama_unit' => $row['nama_unit']],
-                    ['nama_unit' => $row['nama_unit']]
+                    ['nama_unit' => $unitNama],
+                    ['nama_unit' => $unitNama]
                 );
             }
 
             // ==========================
-            // 5. AUTO CREATE JABATAN
+            // 6. AUTO CREATE JABATAN
             // ==========================
             $jabatan = null;
-            if (!empty($row['nama_jabatan'])) {
+            if (!empty($jabatanNama)) {
                 $jabatan = Jabatan::firstOrCreate(
-                    ['nama_jabatan' => $row['nama_jabatan']],
-                    ['nama_jabatan' => $row['nama_jabatan']]
+                    ['nama_jabatan' => $jabatanNama],
+                    ['nama_jabatan' => $jabatanNama]
                 );
             }
 
             // ==========================
-            // 6. AUTO CREATE BIDANG
+            // 7. AUTO CREATE BIDANG
             // ==========================
             $bidang = null;
-            if (!empty($row['nama_bidang'])) {
+            if (!empty($bidangNama)) {
                 $bidang = Bidang::firstOrCreate(
-                    ['nama_bidang' => $row['nama_bidang']],
-                    ['nama_bidang' => $row['nama_bidang'], 'unit_kerja_id' => $unit?->id]
+                    ['nama_bidang' => $bidangNama],
+                    ['nama_bidang' => $bidangNama, 'unit_kerja_id' => $unit?->id]
                 );
             }
 
             // ==========================
-            // 7. CEK DUPLIKASI USER
+            // 8. CEK DUPLIKASI USER
             // ==========================
-            $existing = User::where('nip', $row['nip'])->first();
+            $existing = User::where('nip', $nip)->first();
             if ($existing) {
-                $this->errors[] = "Baris " . ($index + 2) . ": NIP '{$row['nip']}' sudah terdaftar.";
+                $this->errors[] = "Baris " . ($index + 2) . ": NIP '{$nip}' sudah terdaftar.";
                 continue;
             }
 
             // ==========================
-            // 8. BUAT USER BARU
+            // 9. BUAT USER BARU
             // ==========================
             $user = User::create([
-                'name'          => $row['name'],
-                'nip'           => $row['nip'],
-                'username'      => $row['nip'], // sesuai permintaan
-                'password'      => Hash::make($row['nip']), // hash nip
+                'name'          => $name,
+                'nip'           => $nip,
+                'username'      => $nip,
+                'password'      => Hash::make($nip),
                 'unit_kerja_id' => $unit?->id,
                 'jabatan_id'    => $jabatan?->id,
                 'bidang_id'     => $bidang?->id,
@@ -117,7 +160,7 @@ class UserCsvImport implements ToCollection, WithHeadingRow
             ]);
 
             // ==========================
-            // 9. ASSIGN ROLE
+            // 10. ASSIGN ROLE
             // ==========================
             $user->roles()->sync([$role->id]);
         }

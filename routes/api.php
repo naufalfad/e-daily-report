@@ -29,6 +29,7 @@ use App\Http\Controllers\Core\OrganisasiController;
 use App\Http\Controllers\Core\KadisValidatorController;
 use App\Http\Controllers\Core\PetaAktivitasController;
 use App\Http\Controllers\Core\BidangSkoringController; 
+use App\Http\Controllers\Core\UserImportController;
 
 
 /*
@@ -140,6 +141,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('settings', [SystemSettingController::class, 'index']);
         Route::post('settings', [SystemSettingController::class, 'update']);
 
+        //Import CSV
+        Route::post('pegawai/import', [UserImportController::class, 'import']);
     });
 
 

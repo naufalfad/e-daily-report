@@ -188,6 +188,11 @@ export function penilaiMapData() {
                 window.approveActivity = (id) => this.confirmApprove(id);
                 window.rejectActivity = (id) => this.handleReject(id);
                 
+                // [BARU] Helper Redirect untuk Perbaiki Laporan (Mode Personal Penilai)
+                window.editActivity = (id) => {
+                    window.location.href = `/penilai/input-laporan/${id}`;
+                };
+                
                 // Helper Navigasi Cluster
                 window.zoomToActivity = (id) => this.handleZoomToId(id);
             });

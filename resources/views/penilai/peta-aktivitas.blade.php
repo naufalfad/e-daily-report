@@ -172,7 +172,7 @@
         {{-- Filter Bar --}}
         <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-2">
             
-            {{-- [BARU] View Mode Switcher --}}
+            {{-- [LOGIKA BARU] View Mode Switcher --}}
             <div class="flex bg-slate-200/50 p-1 rounded-xl mb-5 w-full sm:w-fit">
                 <button type="button"
                     @click="switchMode('staff')"
@@ -368,7 +368,8 @@
 
             {{-- FOOTER ACTIONS --}}
             <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 shrink-0">
-                {{-- [MODIFIKASI] Hanya muncul jika status Waiting Review DAN Mode = Staff --}}
+                
+                {{-- [LOGIKA BARU] MODE VALIDASI: Hanya muncul jika status Waiting Review DAN Mode = Staff --}}
                 <template x-if="selectedActivity && selectedActivity.status === 'waiting_review' && viewMode === 'staff'">
                     <div class="grid grid-cols-2 gap-4">
                         <button @click="confirmApprove(selectedActivity.id)" 
@@ -385,8 +386,22 @@
                     </div>
                 </template>
 
-                {{-- [MODIFIKASI] Tombol Tutup muncul jika BUKAN Waiting Review ATAU sedang di Mode Personal --}}
-                <template x-if="selectedActivity && (selectedActivity.status !== 'waiting_review' || viewMode === 'personal')">
+                {{-- [LOGIKA BARU] MODE PERBAIKAN: Hanya jika status rejected DAN mode personal --}}
+                <template x-if="selectedActivity && selectedActivity.status === 'rejected' && viewMode === 'personal'">
+                    <div class="flex justify-end gap-3">
+                        <button @click="window.editActivity(selectedActivity.id)"
+                            class="px-6 py-3 bg-amber-500 text-white font-medium text-sm rounded-xl hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98] flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            Perbaiki Laporan
+                        </button>
+                        <button @click="closeModal()" class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-xl hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
+                            Tutup Detail
+                        </button>
+                    </div>
+                </template>
+
+                {{-- [LOGIKA BARU] DEFAULT: Muncul jika tidak sedang dalam mode aksi di atas --}}
+                <template x-if="selectedActivity && !(selectedActivity.status === 'waiting_review' && viewMode === 'staff') && !(selectedActivity.status === 'rejected' && viewMode === 'personal')">
                     <div class="flex justify-end">
                         <button @click="closeModal()"
                             class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-xl hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">

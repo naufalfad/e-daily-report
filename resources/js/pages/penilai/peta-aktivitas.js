@@ -7,6 +7,9 @@ export function penilaiMapData() {
         markersLayer: null, 
         markerMap: {},      // Dictionary untuk pencarian cepat marker by ID
         
+        // [BARU] State untuk Mode Tampilan ('staff' = Bawahan, 'personal' = Peta Saya)
+        viewMode: 'staff',
+
         allActivities: [],
         filter: {
             from: '',
@@ -190,6 +193,13 @@ export function penilaiMapData() {
             });
         },
 
+        // [BARU] Fungsi Switch Mode (Logic Tahap 2)
+        switchMode(mode) {
+            if (this.viewMode === mode) return; // Mencegah reload jika mode sama
+            this.viewMode = mode;
+            this.loadData();
+        },
+
         // ------------------------------------------------------------------
         // FITUR: ZOOM KE ITEM DARI LIST CLUSTER (SPIDERFY)
         // ------------------------------------------------------------------
@@ -263,8 +273,10 @@ export function penilaiMapData() {
         loadData() {
             this.loading = true;
             
-            // [UPDATE] Endpoint khusus Penilai (Bawahan)
-            let url = '/api/staf-aktivitas'; 
+            // [UPDATE] Endpoint Dinamis Berdasarkan viewMode (Logic Tahap 3)
+            let url = (this.viewMode === 'staff') 
+                ? '/api/staf-aktivitas'      // Endpoint Data Bawahan (Existing)
+                : '/api/peta-aktivitas';     // Endpoint Data Pribadi (New)
             
             const params = [];
             if (this.filter.from) params.push(`from_date=${this.filter.from}`);

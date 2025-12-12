@@ -243,100 +243,119 @@ $role = 'penilai'; // Definisi variabel role eksplisit
                             <label class="text-[10px] uppercase font-bold text-slate-400">Pegawai</label>
                             <p class="text-slate-800 font-medium mt-0.5"
                                 x-text="modalData.user ? modalData.user.name : '-'"></p>
-                        </div>
-                        <div :class="filter.mode === 'mine' ? 'col-span-2' : ''">
-                            <label class="text-[10px] uppercase font-bold text-slate-400">Nama Kegiatan</label>
-                            <p class="text-slate-800 font-bold text-base mt-0.5" x-text="modalData.jenis_kegiatan"></p>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="text-[10px] uppercase font-bold text-slate-400">Uraian</label>
-                            <p class="text-slate-600 mt-0.5 leading-relaxed" x-text="modalData.deskripsi_aktivitas"></p>
-                        </div>
-                    </div>
-
-                    {{-- Detail Grid --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Output</label>
-                            <div class="font-semibold text-slate-700" x-text="modalData.output_hasil_kerja"></div>
-                        </div>
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Waktu</label>
-                            <div class="font-semibold text-slate-700">
-                                <span x-text="modalData.waktu_mulai.substring(0, 5)"></span> -
-                                <span x-text="modalData.waktu_selesai.substring(0, 5)"></span>
-                            </div>
-                        </div>
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Volume</label>
-                            <div class="font-semibold text-slate-700">
-                                <span x-text="modalData.volume"></span> <span x-text="modalData.satuan"
-                                    class="text-xs font-normal text-slate-500"></span>
-                            </div>
-                        </div>
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Kategori</label>
-                            <div class="font-semibold text-slate-700"
-                                x-text="modalData.skp_rencana_id ? 'SKP' : 'Non-SKP'"></div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-2">
-                        <div>
-                            <label class="text-[10px] text-slate-400 block">Lokasi</label>
-                            <p class="text-slate-800 font-medium flex items-center gap-1">
-                                <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span x-text="getLokasi(modalData)"></span>
-                            </p>
-                        </div>
-                        <button @click="viewBukti(modalData.bukti)"
-                            :disabled="!modalData.bukti || modalData.bukti.length === 0"
-                            class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                            Lihat Bukti
-                        </button>
-                    </div>
-
-                    <div class="border-t border-slate-200 pt-4">
-                        <div class="flex items-center justify-between mb-4">
                             <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Status
-                                    Laporan</label>
-                                <div x-html="statusBadgeHtml(modalData.status)"></div>
+                                <label class="text-[10px] uppercase font-bold text-slate-400">Status</label>
+                                <div class="mt-0.5" x-html="statusBadgeHtml(modalData.status)"></div>
                             </div>
-                            <div class="text-right">
-                                <label
-                                    class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Validator</label>
-                                <p class="text-slate-800 font-medium"
-                                    x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')">
+                            <div :class="filter.mode === 'mine' ? 'col-span-2' : ''">
+                                <label class="text-[10px] uppercase font-bold text-slate-400">Nama Kegiatan</label>
+                                <p class="text-slate-800 font-bold text-base mt-0.5" x-text="modalData.jenis_kegiatan">
+                                </p>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] uppercase font-bold text-slate-400">Uraian</label>
+                                <p class="text-slate-600 mt-0.5 leading-relaxed" x-text="modalData.deskripsi_aktivitas">
                                 </p>
                             </div>
                         </div>
 
-                        <div x-show="modalData.komentar_validasi"
-                            class="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                            <label class="text-[10px] font-bold text-amber-700 uppercase mb-1 block">Catatan
-                                Penilai</label>
-                            <p class="text-amber-800 text-sm italic" x-text="modalData.komentar_validasi"></p>
+                        {{-- Detail Grid --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Output</label>
+                                <div class="font-semibold text-slate-700" x-text="modalData.output_hasil_kerja"></div>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Waktu</label>
+                                <div class="font-semibold text-slate-700">
+                                    <span x-text="modalData.waktu_mulai.substring(0, 5)"></span> -
+                                    <span x-text="modalData.waktu_selesai.substring(0, 5)"></span>
+                                </div>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Volume</label>
+                                <div class="font-semibold text-slate-700">
+                                    <span x-text="modalData.volume"></span> <span x-text="modalData.satuan"
+                                        class="text-xs font-normal text-slate-500"></span>
+                                </div>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Kategori</label>
+                                <div class="font-semibold text-slate-700"
+                                    x-text="modalData.skp_rencana_id ? 'SKP' : 'Non-SKP'"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div x-show="modalData.status === 'rejected' && role === 'pegawai'" class="flex justify-end pt-2">
-                        <button @click="editLaporan(modalData.id)"
-                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95 shadow-sm">
-                            Perbaiki Laporan
-                        </button>
-                    </div>
-                </div>
+                        <div class="flex items-center justify-between pt-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block">Lokasi</label>
+                                <p class="text-slate-800 font-medium flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span x-text="getLokasi(modalData)"></span>
+                                </p>
+                            </div>
+                            <button @click="viewBukti(modalData.bukti)"
+                                :disabled="!modalData.bukti || modalData.bukti.length === 0"
+                                class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                                Lihat Bukti
+                            </button>
+                        </div>
+
+                        <div class="border-t border-slate-200 pt-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Status
+                                        Laporan</label>
+                                    <div x-html="statusBadgeHtml(modalData.status)"></div>
+                                </div>
+                                <div class="text-right">
+                                    <label
+                                        class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Validator</label>
+                                    <p class="text-slate-800 font-medium"
+                                        x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')">
+                                    </p>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pejabat
+                                        Penilai</label>
+                                    <p class="text-slate-800 font-medium"
+                                        x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')">
+                                    </p>
+                                </div>
+
+                                <div x-show="modalData.komentar_validasi"
+                                    class="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                                    <label class="text-[10px] font-bold text-amber-700 uppercase mb-1 block">Catatan
+                                        Penilai</label>
+                                    <p class="text-amber-800 text-sm italic" x-text="modalData.komentar_validasi"></p>
+                                </div>
+                            </div>
+
+                            {{-- TOMBOL AKSI: Hanya jika Draft/Rejected DAN Mode adalah 'Riwayat Saya' --}}
+                            <div x-show="(modalData.status === 'rejected' || modalData.status === 'draft') && filter.mode === 'mine'"
+                                class="flex justify-end pt-2">
+                                <button @click="editLaporan(modalData.id)"
+                                    :class="modalData.status === 'draft' ? 'bg-slate-500' : 'bg-[#0E7A4A]'"
+                                    class="rounded-[10px] px-4 py-2 text-sm font-normal text-white hover:brightness-95 shadow-sm transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span
+                                        x-text="modalData.status === 'draft' ? 'Lanjutkan Laporan' : 'Perbaiki Laporan'"></span>
+                                </button>
+                            </div>
+                        </div>
             </template>
         </div>
     </div>

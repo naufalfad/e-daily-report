@@ -87,22 +87,14 @@ class LkhController extends Controller
             $q->whereYear('tanggal_laporan', $year);
         });
 
-        // 3. Filter Status
-        $query->when($request->status && $request->status !== 'all', function ($q, $status) {
-            $q->where('status', $status);
-        });
+        $query->when(
+            $request->filled('status') && $request->status !== 'all',
+            fn($q) => $q->where('status', $request->status)
+        );
 
-        // 4. Search (Deskripsi / Output)
-        $query->when($request->search, function ($q, $search) {
-            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-            $q->where(function ($sub) use ($search, $like) {
-                $sub->where('deskripsi_aktivitas', $like, "%{$search}%")
-                    ->orWhere('output_hasil_kerja', $like, "%{$search}%");
-            });
-        });
-
-        // Legacy Filter Tanggal Spesifik
-        $query->when($request->tanggal, fn($q, $d) => $q->whereDate('tanggal_laporan', $d));
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
 
         $data = $query->latest('tanggal_laporan')->paginate(10);
 
@@ -571,40 +563,65 @@ class LkhController extends Controller
 
     public function exportPdf($id)
     {
+        // 1. Ambil Data
         $lkh = LaporanHarian::with([
             'tupoksi',
             'rencana', 
-            'user' => fn($q) => $q->with('unitKerja')
+            'user.unitKerja'
         ])->findOrFail($id);
 
+        // 2. VALIDASI DATA KOSONG MANUAL
+        // Kita tampung error dalam array
+        $missingFields = [];
+
+        if (empty($lkh->output_hasil_kerja)) $missingFields[] = 'Output Hasil Kerja';
+        if (empty($lkh->volume)) $missingFields[] = 'Volume';
+        if (empty($lkh->satuan)) $missingFields[] = 'Satuan';
+        if (empty($lkh->deskripsi_aktivitas)) $missingFields[] = 'Uraian Kegiatan';
+        
+        // Cek Lokasi (Salah satu harus ada)
+        if (empty($lkh->lokasi_teks) && (empty($lkh->latitude) || empty($lkh->longitude))) {
+            $missingFields[] = 'Lokasi (GPS/Teks)';
+        }
+
+        // Cek SKP (Jika kategori SKP tapi relasi kosong)
+        // Asumsi di DB kolom 'kategori' menyimpan value 'skp' atau 'non-skp'
+        if ($lkh->kategori === 'skp' && empty($lkh->skp_rencana_id)) {
+            $missingFields[] = 'Target SKP';
+        }
+
+        // Jika ada field yang kosong, kirim JSON Error (422)
+        if (count($missingFields) > 0) {
+            return response()->json([
+                'status' => 'validation_error',
+                'message' => 'Tidak dapat export PDF. Data belum lengkap:',
+                'details' => $missingFields
+            ], 422);
+        }
+
+        // 3. GENERATE PDF (Jika Lolos Validasi)
         $pdf = Pdf::loadView('pdf.lkh', [
-            'pegawai_nama' => $lkh->user->name,
-            'pegawai_nip' => $lkh->user->nip,
-            'pegawai_unit' => $lkh->user->unitKerja->nama_unit ?? '-',
-
-            'tanggal' => $lkh->tanggal_laporan,
+            'pegawai_nama'   => $lkh->user->name,
+            'pegawai_nip'    => $lkh->user->nip,
+            'pegawai_unit'   => $lkh->user->unitKerja->nama_unit ?? '-',
+            'tanggal'        => $lkh->tanggal_laporan,
             'jenis_kegiatan' => $lkh->jenis_kegiatan,
-            'tupoksi' => $lkh->tupoksi->uraian_tugas ?? '-',
+            'tupoksi'        => $lkh->tupoksi->uraian_tugas ?? '-',
+            'kategori'       => $lkh->skp_rencana_id ? 'SKP' : 'Non-SKP',
+            'jam_mulai'      => $lkh->waktu_mulai,
+            'jam_selesai'    => $lkh->waktu_selesai,
             
-            // Fix Kategori Logic
-            'kategori' => $lkh->skp_rencana_id ? 'SKP' : 'Non-SKP',
+            // Prioritas: Teks -> GPS
+            'lokasi'         => $lkh->lokasi_teks 
+                                ?? ($lkh->latitude ? "{$lkh->latitude}, {$lkh->longitude}" : '-'),
+            'lokasi_teks'    => $lkh->lokasi_teks,
 
-            'jam_mulai' => $lkh->waktu_mulai,
-            'jam_selesai' => $lkh->waktu_selesai,
-
-            'lokasi' => $lkh->lokasi
-                ?? ($lkh->latitude && $lkh->longitude
-                    ? "{$lkh->latitude}, {$lkh->longitude}"
-                    : '-'),
+            'output'         => $lkh->output_hasil_kerja,
+            'volume'         => $lkh->volume,
+            'satuan'         => $lkh->satuan,
+            'target_skp'     => optional($lkh->rencana)->rencana_hasil_kerja ?? '-',
             
-            // [UPDATE] Tampilkan nama tempat
-            'lokasi_teks' => $lkh->lokasi_teks,
-
-            'output' => $lkh->output_hasil_kerja,
-            'volume' => $lkh->volume,
-            'satuan' => $lkh->satuan,
-
-            'target_skp' => optional($lkh->rencana)->rencana_hasil_kerja ?? '-',
+            'uraian_kegiatan' => $lkh->deskripsi_aktivitas // Tambahkan ini jika di view butuh
         ]);
 
         return $pdf->stream("LKH-{$id}.pdf");
@@ -612,19 +629,68 @@ class LkhController extends Controller
 
     public function exportPdfDirect(Request $request)
     {
+        // --- 1. VALIDASI FIELD WAJIB ---
+        $validator = Validator::make($request->all(), [
+            'tanggal_laporan'     => 'required|date',
+            'waktu_mulai'         => 'required',
+            'waktu_selesai'       => 'required',
+            'jenis_kegiatan'      => 'required',
+            'tupoksi_id'          => 'required',
+            'deskripsi_aktivitas' => 'required|string|min:5',
+            'output_hasil_kerja'  => 'required',
+            'volume'              => 'required|numeric|min:1',
+            'satuan'              => 'required',
+        ], [
+            'required' => ':attribute wajib diisi.',
+            'min'      => ':attribute terlalu pendek.',
+            'numeric'  => ':attribute harus berupa angka.'
+        ]);
+
+        // Jika validasi standar gagal
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'validation_error',
+                'message' => 'Data belum lengkap',
+                'details' => $validator->errors()->all()
+            ], 422);
+        }
+
+        // --- 2. VALIDASI LOGIKA KHUSUS (SKP & LOKASI) ---
+        $customErrors = [];
+
+        // A. Validasi SKP: Jika kategori SKP, maka Target SKP wajib dipilih
+        if ($request->kategori === 'skp' && empty($request->skp_rencana_id)) {
+            $customErrors[] = 'Kategori dipilih "SKP", namun Target SKP belum dipilih.';
+        }
+
+        // B. Validasi Lokasi: Wajib ada salah satu (GPS atau Teks)
+        $hasGPS  = !empty($request->latitude) && !empty($request->longitude);
+        $hasText = !empty($request->lokasi_teks);
+        
+        if (!$hasGPS && !$hasText) {
+            $customErrors[] = 'Lokasi wajib diisi (Pastikan GPS aktif atau cari lokasi di peta).';
+        }
+
+        // Jika ada error logika khusus, return JSON
+        if (count($customErrors) > 0) {
+            return response()->json([
+                'status' => 'validation_error',
+                'message' => 'Validasi Data Gagal',
+                'details' => $customErrors
+            ], 422);
+        }
+
+        // --- 3. PROSES DATA (Jika Lolos Validasi) ---
         $user = auth()->user();
+        $tupoksi = Tupoksi::find($request->tupoksi_id); // Asumsi Tupoksi pasti ada krn required
 
-        // Ambil Tupoksi
-        $tupoksi = Tupoksi::find($request->tupoksi_id);
-
-        // Ambil SKP Rencana jika kategori SKP (Sesuai update Anda)
+        // Ambil Data SKP (jika ada)
         $rencana = null;
         $targetQty = null;
         $targetSatuan = null;
 
         if ($request->kategori === 'skp' && $request->skp_rencana_id) {
             $rencana = SkpRencana::with('targets')->find($request->skp_rencana_id);
-
             if ($rencana && $rencana->targets->count()) {
                 $targetQty = $rencana->targets->first()->target;
                 $targetSatuan = $rencana->targets->first()->satuan;
@@ -632,42 +698,32 @@ class LkhController extends Controller
         }
 
         $data = [
-            'pegawai_nama' => $user->name,
-            'pegawai_nip' => $user->nip,
-            'pegawai_unit' => $user->unitKerja->nama_unit ?? '-',
-
-            'tanggal' => $request->tanggal_laporan,
-            'jenis_kegiatan' => $request->jenis_kegiatan,
-            'tupoksi' => $tupoksi->uraian_tugas ?? '-',
-            'kategori' => $request->kategori === 'skp' ? 'SKP' : 'Non-SKP',
-
-            'jam_mulai' => $request->waktu_mulai,
-            'jam_selesai' => $request->waktu_selesai,
-
-            'lokasi' => $request->lokasi
-                ?: ($request->latitude && $request->longitude
-                    ? "{$request->latitude}, {$request->longitude}"
-                    : '-'),
+            'pegawai_nama'    => $user->name,
+            'pegawai_nip'     => $user->nip,
+            'pegawai_unit'    => $user->unitKerja->nama_unit ?? '-',
+            'tanggal'         => $request->tanggal_laporan,
+            'jenis_kegiatan'  => $request->jenis_kegiatan,
+            'tupoksi'         => $tupoksi->uraian_tugas ?? '-',
+            'kategori'        => $request->kategori === 'skp' ? 'SKP' : 'Non-SKP',
+            'jam_mulai'       => $request->waktu_mulai,
+            'jam_selesai'     => $request->waktu_selesai,
             
-            // [UPDATE] Sertakan teks lokasi di PDF
-            'lokasi_teks' => $request->lokasi_teks,
+            // Logika tampilan lokasi
+            'lokasi'          => $request->lokasi_teks 
+                                ?: ($hasGPS ? "{$request->latitude}, {$request->longitude}" : '-'),
+            'lokasi_teks'     => $request->lokasi_teks,
 
             'uraian_kegiatan' => $request->deskripsi_aktivitas,
-
-            'output' => $request->output_hasil_kerja,
-            'volume' => $request->volume,
-            'satuan' => $request->satuan,
-
-            // Data SKP Lengkap
-            'target_skp' => $rencana ? $rencana->rencana_hasil_kerja : null,
-            'target_qty' => $targetQty,
-            'target_satuan' => $targetSatuan,
-
-            'bukti_status' => "Bukti hanya tersedia setelah disimpan.",
+            'output'          => $request->output_hasil_kerja,
+            'volume'          => $request->volume,
+            'satuan'          => $request->satuan,
+            'target_skp'      => $rencana ? $rencana->rencana_hasil_kerja : null,
+            'target_qty'      => $targetQty,
+            'target_satuan'   => $targetSatuan,
+            'bukti_status'    => "Preview Draft",
         ];
 
-        return Pdf::loadView('pdf.laporan-harian', $data)
-            ->setPaper('a4', 'portrait')
-            ->stream('laporan-harian.pdf');
+        $pdf = Pdf::loadView('pdf.laporan-harian', $data);
+        return $pdf->setPaper('a4', 'portrait')->stream('laporan-harian.pdf');
     }
 }

@@ -10,6 +10,9 @@ export function stafMapData() {
             to: "",
         },
 
+        // [BARU] State untuk marker lokasi pengguna saat ini (sementara)
+        currentLocationMarker: null, 
+
         showModal: false,
         selectedActivity: null,
         loading: false,
@@ -59,6 +62,89 @@ export function stafMapData() {
             });
         },
 
+        // ---------------- FITUR BARU: ZOOM TO CURRENT GPS LOCATION ----------------
+        zoomToCurrentLocation() {
+            if (!navigator.geolocation) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Browser Tidak Mendukung',
+                    text: 'Fitur Geolocation tidak didukung oleh browser Anda.'
+                });
+                return;
+            }
+
+            this.loading = true; 
+
+            // [ANTI-STACKING] Hapus marker lama sebelum membuat yang baru
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
+
+            // Gunakan metode locate Leaflet
+            this.map.locate({
+                setView: true, // Auto zoom ke lokasi yang ditemukan
+                maxZoom: 16,  // Zoom maksimal
+                timeout: 10000, // Timeout 10 detik
+                enableHighAccuracy: true // Minta akurasi tinggi
+            })
+            .on('locationfound', (e) => {
+                this.loading = false;
+                const latlng = e.latlng;
+                
+                // 1. Buat Marker Penanda SEMENTARA
+                const locationMarker = L.circleMarker(latlng, {
+                    radius: 10,
+                    color: '#FFF',
+                    weight: 2,
+                    fillColor: '#00BFFF', 
+                    fillOpacity: 1
+                }).addTo(this.map);
+
+                // 2. Tambahkan Circle Akurasi
+                const accuracyCircle = L.circle(latlng, e.accuracy, {
+                    color: '#00BFFF',
+                    fillColor: '#00BFFF',
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    interactive: false // FIX KRITIS: Anti-Blocking
+                }).addTo(this.map);
+
+                // 3. Simpan referensi layer group ke state
+                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]);
+                
+                locationMarker.bindPopup(`Anda di sini (Akurasi: ${Math.round(e.accuracy)} meter)`).openPopup();
+                
+                // 4. Hapus penanda secara otomatis setelah 5 detik
+                setTimeout(() => {
+                    if (this.currentLocationMarker) {
+                        this.map.removeLayer(this.currentLocationMarker);
+                        this.currentLocationMarker = null;
+                    }
+                }, 5000);
+
+            })
+            .on('locationerror', (e) => {
+                this.loading = false;
+                let errorMessage = 'Gagal mendapatkan lokasi GPS.';
+                
+                if (e.code === 1) {
+                    errorMessage = 'Akses lokasi ditolak oleh browser. Mohon izinkan akses GPS.';
+                } else if (e.code === 2) {
+                    errorMessage = 'Lokasi tidak tersedia atau sinyal lemah.';
+                } else if (e.code === 3) {
+                    errorMessage = 'Timeout mencari lokasi. Coba lagi.';
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Akses Lokasi Gagal',
+                    text: errorMessage
+                });
+            });
+        },
+        // ---------------- END FITUR BARU ----------------
+
         // ---------------- LOGIC DATA (SERVER SIDE) ----------------
         loadData() {
             this.loading = true;
@@ -101,6 +187,12 @@ export function stafMapData() {
             this.markersLayer.clearLayers();
 
             if (data.length === 0) return;
+            
+            // Hapus marker lokasi pengguna (jika ada) saat data aktivitas baru dimuat
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
 
             const latlngs = [];
 
@@ -240,67 +332,35 @@ export function stafMapData() {
 
         exportMap() {
 
-            const osmTemp = L.tileLayer(
-                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                { maxZoom: 20 }
-            );
-
-            let activeGoogleLayer = null;
-
-            this.map.eachLayer(layer => {
-                if (layer._url?.includes("google")) {
-                    activeGoogleLayer = layer;
-                    this.map.removeLayer(layer);
-                }
-            });
-
-            osmTemp.addTo(this.map);
+            // Menghapus semua logika manipulasi layer (googleMaps.addTo/removeLayer),
+            // html2canvas, dan fetch POST Base64 image.
+            // Diganti dengan panggilan GET request yang optimal ke Headless Renderer.
 
             Swal.fire({
-                title: "Export Peta?",
-                text: "Peta aktivitas akan diproses menjadi PDF.",
+                title: "Export Peta Aktivitas?",
+                text: "Laporan akan dibuat di server berdasarkan filter tanggal yang dipilih.",
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonColor: "#1C7C54",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, Export",
-            }).then((result) => {
+                confirmButtonText: "Ya, Proses Export",
+                showLoaderOnConfirm: true, // Tambahkan loader untuk indikasi proses di server
+                preConfirm: () => {
+                    // 1. Ambil Filter Tanggal
+                    const fromDate = this.filter.from || '';
+                    const toDate = this.filter.to || '';
 
-                if (!result.isConfirmed) {
-                    if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
-                    this.map.removeLayer(osmTemp);
-                    return;
+                    // 2. Bangun URL ke endpoint PDF di server (Menggunakan GET Request)
+                    // Endpoint: /preview-map-pdf (telah terdaftar di routes/web.php)
+                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
+
+                    // 3. Buka URL ini di tab baru
+                    // Server akan memproses data (termasuk semua marker) dan mengembalikan PDF.
+                    window.open(url, "_blank");
+
+                    // Langsung resolusi SweetAlert karena proses telah dipindahkan ke tab baru
+                    return true; 
                 }
-
-                const mapEl = document.getElementById("map");
-
-                html2canvas(mapEl, {
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: "#ffffff",
-                }).then((canvas) => {
-
-                    const imgData = canvas.toDataURL("image/png");
-
-                    fetch("/export-map", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                            "Authorization": "Bearer " + localStorage.getItem("auth_token")
-                        },
-                        body: JSON.stringify({ image: imgData }),
-                    })
-                    .then(res => res.blob())
-                    .then(blob => {
-
-                        // === BUKA TAB BARU DENGAN PDF ===
-                        const pdfUrl = URL.createObjectURL(blob);
-                        window.open(pdfUrl, "_blank");
-
-                    });
-
-                });
             });
         },
 

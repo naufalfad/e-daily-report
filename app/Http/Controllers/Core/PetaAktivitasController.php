@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\LaporanHarian;
+use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Aktivitas;
 
@@ -148,50 +150,96 @@ class PetaAktivitasController extends Controller
 
     public function previewMapPdf(Request $request)
     {
-        $file = $request->query('file');
+        $user = Auth::user();
+        $mapImageBase64 = null;
 
-        $path = storage_path('app/public/' . $file);
+        // 1. Logika Pengambilan Data dan Filtering (Menggunakan logika getAllAktivitas/Kaban)
+        $query = LaporanHarian::with(['user', 'tupoksi']);
+            
+        // **FIX KRITIS UNTUK KABAN/HEAD UNIT:** Filter berdasarkan unit kerja
+        if ($user->unit_kerja_id) {
+            $unitKerjaId = $user->unit_kerja_id;
 
-        if (!file_exists($path)) {
-            abort(404);
+            $query->whereHas('user', function ($q) use ($unitKerjaId) {
+                $q->where('unit_kerja_id', $unitKerjaId);
+            });
+        }
+        
+        $query->whereNot('status', 'draft');
+        
+        // 2. Terapkan Filter Tanggal dari Request Query
+        $fromDate = $request->query('from_date');
+        $toDate = $request->query('to_date');
+        
+        if (!empty($fromDate)) {
+            $query->whereDate('tanggal_laporan', '>=', $fromDate);
+        }
+        if (!empty($toDate)) {
+            $query->whereDate('tanggal_laporan', '<=', $toDate);
         }
 
-        return response()->file($path, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $file . '"'
-        ]);
-    }
+        $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
+        
+        // 3. Mapping Data untuk Renderer
+        $activities = $laporanHarian->map(function ($item) {
+            return $this->formatMapData($item);
+        })->filter(function($item) {
+            return !empty($item['lat']) && !empty($item['lng']);
+        });
+        
+        // 4. Panggil Headless Renderer Service
+        if ($activities->isNotEmpty()) {
+            try {
+                $client = new Client();
+                $firstActivity = $activities->first();
+                $rendererUrl = env('MAP_RENDER_URL', 'http://127.0.0.1:3000') . '/render-map'; 
 
-    public function exportMap(Request $request)
-    {
-        $request->validate([
-            'image' => 'required'
-        ]);
+                $response = $client->post($rendererUrl, [
+                    'timeout' => 15.0, 
+                    'json' => [
+                        'activities' => $activities->values()->all(),
+                        'center' => [
+                            'lat' => $firstActivity['lat'],
+                            'lng' => $firstActivity['lng']
+                        ],
+                        'zoom' => 13
+                    ]
+                ]);
 
-        $user = Auth::user();
-
-        // Ambil semua aktivitas user
-        $activities = \App\Models\Aktivitas::where('user_id', $user->id)
-            ->orderBy('tanggal_laporan', 'desc')
-            ->get();
-
+                $result = json_decode($response->getBody(), true);
+                
+                if (isset($result['success']) && $result['success']) {
+                    $mapImageBase64 = $result['image'];
+                }
+            } catch (\Exception $e) {
+                \Log::error('Map Renderer Failed: ' . $e->getMessage());
+            }
+        }
+        
+        // 5. Siapkan Metadata
         $meta = [
-            'nama'   => $user->name,
-            'role'   => $user->role,
-            'tanggal_laporan'=> now()->format('d M Y, H:i'),
+            'nama'          => $user->name,
+            'role'          => $user->role,
+            'tanggal_cetak' => now()->format('d M Y, H:i'),
+            'periode'       => ($fromDate && $toDate) ? 
+                               Carbon::parse($fromDate)->format('d M M') . ' s/d ' . Carbon::parse($toDate)->format('d M Y') : 
+                               'Semua Data',
+            'unit_kerja'    => $user->unitKerja->nama_unit_kerja ?? 'Tidak Terdefinisi'
         ];
 
-        $image = $request->image;
-
+        // 6. Generate PDF
         $pdf = Pdf::loadView('pdf.peta-aktivitas', [
-            'image'      => $image,
-            'meta'       => $meta,
             'activities' => $activities,
+            'meta'       => $meta,
+            'image'      => $mapImageBase64, // Base64 dari Headless Renderer
         ])->setPaper('a4', 'portrait');
+
+        // 7. Return PDF
+        $filename = 'Peta_Aktivitas_' . $user->username . '_' . time() . '.pdf';
 
         return response($pdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename=peta-aktivitas.pdf');
+            ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
     }
 
     private function formatMapData($item)

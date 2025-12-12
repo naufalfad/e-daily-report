@@ -41,21 +41,43 @@
 
 @section('content')
 
-<section x-data="stafMapData" x-init="initMap()" class="relative">
+{{-- FIX: Menggunakan x-data="stafMapData()" untuk inisialisasi yang benar --}}
+<section x-data="stafMapData()" x-init="initMap()" class="relative"> 
 
     {{-- CARD UTAMA --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 relative z-10">
-        <h2 class="text-[20px] font-normal mb-1">Peta Aktivitas Anda</h2>
-        <div class="flex justify-end mt-4">
-            <button @click="exportMap()"
-                class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
-                Export Peta ke PDF
-            </button>
+        <div class="flex justify-between items-start mb-4">
+            <h2 class="text-[20px] font-normal">Peta Aktivitas Anda</h2>
+            
+            {{-- FIX UI: Menggabungkan Loading Indicator dan Tombol dalam Flex Kolom --}}
+            <div class="flex flex-col items-end gap-2"> 
+                {{-- Indikator Loading --}}
+                <div x-show="loading" class="text-xs font-medium text-emerald-600 flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full animate-pulse" style="display: none;">
+                    <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Memuat Data...
+                </div>
+
+                <div class="flex gap-2">
+                    {{-- [BARU] Tombol Geolocation/Lokasi Saat Ini --}}
+                    <button @click="zoomToCurrentLocation()"
+                        class="px-3 py-2 bg-slate-500 text-white rounded-lg text-sm hover:bg-slate-600 shadow transition flex items-center gap-1"
+                        title="Zoom ke Lokasi Saya">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        GPS Saya
+                    </button>
+
+                    {{-- Tombol Export --}}
+                    <button @click="exportMap()"
+                        class="px-4 py-2 bg-[#1C7C54] text-white rounded-lg text-sm hover:brightness-95 shadow">
+                        Export Peta ke PDF
+                    </button>
+                </div>
+            </div>
         </div>
 
 
         {{-- FILTER FORM --}}
-        <form class="mt-4" @submit.prevent="applyFilter()">
+        <form @submit.prevent="applyFilter()">
             <label class="block text-xs font-semibold text-slate-600 mb-2">Filter Berdasarkan Tanggal</label>
 
             <div class="grid md:grid-cols-[1fr_1fr_auto] gap-3">
@@ -137,165 +159,125 @@
         </div>
     </div>
 
-    {{-- MODAL --}} <div x-show="showModal" x-transition.opacity
+    {{-- MODAL DETAIL AKTIVITAS (Struktur modal yang benar, menghilangkan div bertingkat yang redundant) --}}
+    <div x-show="showModal" x-transition.opacity
         class="fixed inset-0 z-[9999] flex items-center justify-center px-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeModal()"></div>
-        {{-- MODAL DETAIL AKTIVITAS --}}
-        <div x-show="showModal" x-transition.opacity
-            class="fixed inset-0 z-[9999] flex items-center justify-center px-4" style="display: none;">
-            {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="closeModal()">
+        
+        {{-- MODAL PANEL --}}
+        <div
+            class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all ring-1 ring-slate-200">
+
+            {{-- HEADER --}}
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-slate-800 text-lg tracking-tight">Detail Aktivitas</h3>
+                    <p class="text-xs text-slate-500">Informasi lengkap lokasi aktivitas.</p>
+                </div>
+                <button @click="closeModal()"
+                    class="text-slate-400 hover:text-rose-500 p-2 rounded-full hover:bg-rose-50 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
 
-            {{-- Modal Panel --}}
-            <div
-                class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all ring-1 ring-slate-200">
+            {{-- CONTENT --}}
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
 
-                {{-- HEADER --}}
-                <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <template x-if="selectedActivity">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-lg tracking-tight">Detail Aktivitas</h3>
-                        <p class="text-xs text-slate-500">Informasi lengkap lokasi aktivitas.</p>
-                    </div>
-                    <button @click="closeModal()"
-                        class="text-slate-400 hover:text-rose-500 p-2 rounded-full hover:bg-rose-50 transition-colors">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+                        {{-- Kategori Badge --}}
+                        <span class=" inline-block px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px]
+                            font-bold uppercase tracking-wide border border-blue-100 mb-2"
+                            x-text="selectedActivity.kategori_aktivitas"></span>
 
-                {{-- CONTENT --}}
-                <div class="p-6 overflow-y-auto max-h-[70vh]">
+                        {{-- Judul Kegiatan --}}
+                        <h2 class="text-lg font-bold text-slate-900 leading-snug mb-4"
+                            x-text="selectedActivity.kegiatan"></h2>
 
-                    <template x-if="selectedActivity">
-                        <div>
-                            {{-- Kategori --}} <span class="text-xs font-bold uppercase text-emerald-600"
-                                x-text="selectedActivity.kategori_aktivitas"></span>
+                        {{-- Status Bar --}}
+                        <div class="flex items-center gap-3 mb-6">
+                            <span class="px-2.5 py-1 text-xs rounded-lg font-semibold border shadow-sm" :class="{
+                                'bg-emerald-50 text-emerald-600 border-emerald-100': selectedActivity.status === 'approved',
+                                'bg-rose-50 text-rose-600 border-rose-100': selectedActivity.status === 'rejected',
+                                'bg-amber-50 text-amber-600 border-amber-100': selectedActivity.status === 'waiting_review'
+                            }"
+                                x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
+                                    (selectedActivity.status === 'rejected' ? 'Ditolak' : 'Menunggu Validasi')">
+                            </span>
+                        </div>
 
-                            {{-- Judul --}}
-                            <h2 class="text-xl font-bold text-slate-800 mt-1 mb-3" x-text="selectedActivity.kegiatan">
-                            </h2>
-
-                            {{-- Status + User --}}
-                            <div class="flex items-center gap-3">
-                                <span class="px-2 py-1 text-xs rounded-md font-semibold border" :class="{
-                                        'bg-emerald-50 text-emerald-600 border-emerald-200': selectedActivity.status === 'approved',
-                                        'bg-rose-50 text-rose-600 border-rose-200': selectedActivity.status === 'rejected',
-                                        'bg-amber-50 text-amber-600 border-amber-200': selectedActivity.status === 'waiting_review'
-                                    }" x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
-                            {{-- Kategori Badge --}}
-                            <span class=" inline-block px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px]
-                                    font-bold uppercase tracking-wide border border-blue-100 mb-2"
-                                    x-text="selectedActivity.kategori_aktivitas"></span>
-
-                                {{-- Judul Kegiatan --}}
-                                <h2 class="text-lg font-bold text-slate-900 leading-snug mb-4"
-                                    x-text="selectedActivity.kegiatan"></h2>
-
-                                {{-- Status Bar --}}
-                                <div class="flex items-center gap-3 mb-6">
-                                    <span class="px-2.5 py-1 text-xs rounded-lg font-semibold border shadow-sm" :class="{
-                                        'bg-emerald-50 text-emerald-600 border-emerald-100': selectedActivity.status === 'approved',
-                                        'bg-rose-50 text-rose-600 border-rose-100': selectedActivity.status === 'rejected',
-                                        'bg-amber-50 text-amber-600 border-amber-100': selectedActivity.status === 'waiting_review'
-                                    }"
-                                        x-text="selectedActivity.status === 'approved' ? 'Disetujui' :
-                                            (selectedActivity.status === 'rejected' ? 'Ditolak' : 'Menunggu Validasi')">
-                                    </span>
-
-                                    <div class="h-4 w-px bg-slate-200"></div>
-
-                                    {{-- Detail --}}
-                                    <div class="grid grid-cols-2 gap-4 mt-4 text-sm">
-                                        <div>
-                                            <label class="text-xs text-slate-400">Tanggal</label>
-                                            <div class="font-medium" x-text="selectedActivity.tanggal"></div>
-                                        </div>
-
-                                        <div>
-                                            <label class="text-xs text-slate-400">Waktu</label>
-                                            <div class="font-medium" x-text="selectedActivity.waktu"></div>
-                                        </div>
-
-                                        <div class="col-span-2">
-                                            <label class="text-xs text-slate-400">Deskripsi</label>
-                                            <div class="bg-slate-50 p-3 border rounded-lg italic text-slate-600"
-                                                x-text="selectedActivity.deskripsi"></div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Grid Detail --}}
-                                    <div
-                                        class="bg-slate-50 rounded-xl p-4 border border-slate-100 grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <label
-                                                class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Tanggal</label>
-                                            <div class="font-semibold text-slate-700 flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <span x-text="selectedActivity.tanggal"></span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label
-                                                class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Waktu</label>
-                                            <div class="font-semibold text-slate-700 flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span x-text="selectedActivity.waktu"></span>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-span-2 pt-2 border-t border-slate-200/60">
-                                            <label
-                                                class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Uraian
-                                                / Deskripsi</label>
-                                            <div class="text-slate-600 leading-relaxed italic"
-                                                x-text="selectedActivity.deskripsi || '-'"></div>
-                                        </div>
-
-                                        <div class="col-span-2 pt-2 border-t border-slate-200/60">
-                                            <label
-                                                class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Lokasi
-                                                Tercatat</label>
-                                            <div class="text-slate-700 font-medium text-xs flex items-start gap-1">
-                                                <svg class="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                                <span x-text="selectedActivity.lokasi_teks || 'Koordinat GPS'"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- Footer Actions --}}
-                                    <div class="mt-6 flex justify-end">
-                                        <button @click="closeModal()"
-                                            class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                                            Tutup
-                                        </button>
-                                    </div>
+                        {{-- Grid Detail --}}
+                        <div
+                            class="bg-slate-50 rounded-xl p-4 border border-slate-100 grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <label
+                                    class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Tanggal</label>
+                                <div class="font-semibold text-slate-700 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span x-text="selectedActivity.tanggal"></span>
                                 </div>
-                    </template>
+                            </div>
 
-                </div>
+                            <div>
+                                <label
+                                    class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Waktu</label>
+                                <div class="font-semibold text-slate-700 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span x-text="selectedActivity.waktu"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-span-2 pt-2 border-t border-slate-200/60">
+                                <label
+                                    class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Uraian
+                                    / Deskripsi</label>
+                                <div class="text-slate-600 leading-relaxed italic"
+                                    x-text="selectedActivity.deskripsi || '-'"></div>
+                            </div>
+
+                            <div class="col-span-2 pt-2 border-t border-slate-200/60">
+                                <label
+                                    class="text-[10px] uppercase font-bold text-slate-400 mb-1 block">Lokasi
+                                    Tercatat</label>
+                                <div class="text-slate-700 font-medium text-xs flex items-start gap-1">
+                                    <svg class="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span x-text="selectedActivity.lokasi_teks || 'Koordinat GPS'"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Footer Actions --}}
+                        <div class="mt-6 flex justify-end">
+                            <button @click="closeModal()"
+                                class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-medium text-sm rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
             </div>
         </div>
-
+    </div>
 </section>
 
 @endsection

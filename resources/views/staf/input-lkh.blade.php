@@ -56,12 +56,12 @@
 
                     {{-- Jenis Kegiatan (Alpine Optimized) --}}
                     <div x-data="{
-                                open: false,
-                                value: '',
-                                label: 'Pilih Jenis Kegiatan',
-                                options: ['Rapat', 'Pelayanan Publik', 'Penyusunan Dokumen', 'Kunjungan Lapangan', 'Lainnya'],
-                                select(opt) { this.value = opt; this.label = opt; this.open = false; }
-                            }">
+                            open: false,
+                            value: '',
+                            label: 'Pilih Jenis Kegiatan',
+                            options: ['Rapat', 'Pelayanan Publik', 'Penyusunan Dokumen', 'Kunjungan Lapangan', 'Lainnya'],
+                            select(opt) { this.value = opt; this.label = opt; this.open = false; }
+                        }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
                         <input type="hidden" name="jenis_kegiatan" x-model="value">
 
@@ -319,16 +319,27 @@
                 </div>
                 {{-- Row 8: Bukti & Lokasi Modern --}}
                 <div class="grid md:grid-cols-2 gap-4">
-                    {{-- Upload Bukti --}}
+                    {{-- Unggah Bukti --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+
+                        {{-- Input File Utama --}}
                         <label
-                            class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            <span id="bukti_filename" class="truncate">Pilih File</span>
+                            class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <span id="bukti_label_text" class="truncate">Pilih File Baru</span>
                             <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70">
-                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
+                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden"
+                                onchange="handleNewFiles(this)">
                         </label>
-                        <p id="bukti_error" class="text-[12px] text-red-600 mt-1 hidden"></p>
+
+                        <div id="preview_file_baru" class="mt-2 space-y-2"></div>
+
+                        {{-- Container untuk Menampung Input Hidden ID File yang akan Dihapus --}}
+                        <div id="container_hapus_bukti"></div>
+
+                        {{-- Container Preview File Lama (Akan diisi via JS saat Edit) --}}
+                        <div id="preview_file_lama" class="mt-3 space-y-2">
+                        </div>
                     </div>
 
                     {{-- Modul Input Lokasi Dual Mode --}}
@@ -494,15 +505,20 @@
 
                 {{-- Action Buttons --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="exportPDF()"
-                        class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555]">Export
-                        PDF</button>
-                    <button type="button" onclick="submitForm('draft')"
-                        class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87]">Simpan
-                        Draft</button>
-                    <button type="button" onclick="submitForm('waiting_review')"
-                        class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b]">Kirim
-                        LKH</button>
+                    <button type="button" onclick="exportPDF(this)"
+                        class="btn-action rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Export PDF
+                    </button>
+
+                    <button type="button" onclick="submitForm('draft', this)"
+                        class="btn-action rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Simpan Draft
+                    </button>
+
+                    <button type="button" onclick="submitForm('waiting_review', this)"
+                        class="btn-action rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Kirim LKH
+                    </button>
                 </div>
             </div>
         </form>
@@ -520,7 +536,7 @@
             ini.'],
             ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
             ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP jika kegiatan terkait target kinerja.'],
-            ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan foto kegiatan.'],
+            ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan dokumen kegiatan. Dapat berupa PDF atau Gambar.'],
             ] as $guide)
             <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
                 <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
@@ -531,8 +547,37 @@
     </div>
 
     {{-- KIRI BAWAH: DRAFT LKH (Tidak berubah banyak) --}}
-    <div x-data="{ openDraftModal: false, draftsLimit: [], draftsAll: [] }"
-        @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" x-cloak
+    <div x-data="{ openDraftModal: false, draftsLimit: [], draftsAll: [], deleteDraft(id) {
+        // Implementasi deleteDraft untuk tombol Hapus
+        Swal.fire({
+            title: 'Hapus Draft?',
+            text: 'Draft ini akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#B6241C',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Ya, Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Panggil API Hapus
+                fetch(`/api/lkh/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Accept': 'application/json'
+                    }
+                }).then(res => {
+                    if (res.ok) {
+                        Swal.fire('Terhapus!', 'Draft berhasil dihapus.', 'success');
+                        // Refresh drafts dan stats
+                        fetchDashboardStats();
+                    } else {
+                        Swal.fire('Gagal!', 'Gagal menghapus draft.', 'error');
+                    }
+                });
+            }
+        });
+    }}" @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" x-cloak
         class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
 
         <div class="flex items-center justify-between mb-3 shrink-0">
@@ -611,6 +656,9 @@
 
 @push('scripts')
 <script>
+// --- Global DataTransfer & Helper ---
+let newFilesDataTransfer = new DataTransfer();
+
 function updateAlpineDropdown(inputName, value, label = null) {
     const el = document.querySelector(`input[name="${inputName}"]`);
     if (el) {
@@ -627,6 +675,174 @@ function setAlpineValue(selector, key, value) {
     }
 }
 
+function handleNewFiles(inputElement) {
+    const files = inputElement.files;
+    // Pengecekan ukuran file terintegrasi dengan fungsi submitForm (atau bisa ditambah di sini)
+
+    // Tambahkan file yang baru dipilih ke penampung (DataTransfer)
+    for (let i = 0; i < files.length; i++) {
+        newFilesDataTransfer.items.add(files[i]);
+    }
+
+    // Update input file sesungguhnya dengan data terbaru
+    inputElement.files = newFilesDataTransfer.files;
+
+    // Update Label & Render Preview
+    updateNewFileUI();
+}
+
+function removeNewFile(index) {
+    const dt = new DataTransfer();
+    const currentFiles = newFilesDataTransfer.files;
+
+    // Masukkan kembali semua file KECUALI index yang dihapus
+    for (let i = 0; i < currentFiles.length; i++) {
+        if (i !== index) {
+            dt.items.add(currentFiles[i]);
+        }
+    }
+
+    newFilesDataTransfer = dt;
+    document.getElementById('bukti_input').files = dt.files;
+    updateNewFileUI();
+}
+
+function updateNewFileUI() {
+    const inputElement = document.getElementById('bukti_input');
+    const labelText = document.getElementById('bukti_label_text');
+    const container = document.getElementById('preview_file_baru');
+    const files = inputElement.files;
+
+    // 1. Update Label Text
+    labelText.textContent = files.length === 0 ?
+        "Pilih File Baru" :
+        `${files.length} file baru akan diunggah`;
+
+    // 2. Render Preview List
+    container.innerHTML = '';
+
+    if (files.length > 0) {
+        // Label kecil pembeda
+        const header = document.createElement('p');
+        header.className = "text-[11px] text-[#155FA6] font-medium mb-1 mt-3";
+        header.innerText = "Akan diunggah (Baru):";
+        container.appendChild(header);
+    }
+
+    Array.from(files).forEach((file, index) => {
+        const isImage = file.type.startsWith('image/');
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+
+        const div = document.createElement('div');
+        div.className =
+            "flex items-center justify-between bg-[#F0F7FF] border border-[#155FA6]/30 rounded-[8px] p-2 shadow-sm relative group";
+
+        // Placeholder Thumbnail
+        let thumbnailHtml =
+            `<div class="h-10 w-10 shrink-0 rounded bg-white flex items-center justify-center border border-blue-100 text-[9px] font-bold text-blue-500 uppercase">${file.name.split('.').pop()}</div>`;
+
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden w-full">
+                <div id="thumb-new-${index}" class="shrink-0">
+                    ${thumbnailHtml}
+                </div>
+                
+                <div class="min-w-0 flex-1">
+                    <p class="text-[12px] font-medium text-slate-700 truncate">${file.name}</p>
+                    <p class="text-[10px] text-slate-400">${fileSizeKB} KB <span class="text-emerald-600 ml-1">• Baru</span></p>
+                </div>
+
+                <button type="button" onclick="removeNewFile(${index})" 
+                    class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(div);
+
+        // Jika Gambar, baca file untuk ditampilkan preview-nya
+        if (isImage) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = document.getElementById(`thumb-new-${index}`);
+                if (imgContainer) {
+                    imgContainer.innerHTML = `
+                        <div class="h-10 w-10 shrink-0 rounded bg-white overflow-hidden border border-blue-100">
+                            <img src="${e.target.result}" class="h-full w-full object-cover">
+                        </div>`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// --- FUNGSI RENDER FILE LAMA ---
+function renderExistingFiles(files) {
+    const container = document.getElementById('preview_file_lama');
+    container.innerHTML = ''; // Reset container
+
+    if (!files || files.length === 0) return;
+
+    container.innerHTML =
+        '<p class="text-[11px] text-slate-400 mb-1">File tersimpan (Klik silang untuk menghapus):</p>';
+
+    files.forEach(file => {
+        // Cek ekstensi untuk menentukan icon (Gambar vs Dokumen)
+        const ext = file.file_type ? file.file_type.toLowerCase() : 'file';
+        const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+
+        // URL File (Sesuaikan path storage Anda)
+        const fileUrl = `/storage/${file.file_path}`;
+
+        const div = document.createElement('div');
+        div.className =
+            "flex items-center justify-between bg-white border border-slate-200 rounded-[8px] p-2 shadow-sm";
+        div.id = `file-wrapper-${file.id}`;
+
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="h-10 w-10 shrink-0 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100">
+                    ${isImage 
+                        ? `<img src="${fileUrl}" class="h-full w-full object-cover">` 
+                        : `<span class="text-[9px] font-bold text-slate-500 uppercase">${ext}</span>`
+                    }
+                </div>
+                <div class="min-w-0">
+                    <a href="${fileUrl}" target="_blank" class="text-[12px] font-medium text-slate-700 hover:text-[#155FA6] hover:underline truncate block">
+                        ${file.file_name_original || 'File Tanpa Nama'}
+                    </a>
+                    <p class="text-[10px] text-slate-400">${(file.file_size / 1024).toFixed(1)} KB</p>
+                </div>
+            </div>
+            <button type="button" onclick="markFileForDeletion(${file.id})" 
+                class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                title="Hapus file ini">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// --- FUNGSI TANDAI HAPUS ---
+function markFileForDeletion(id) {
+    const inputContainer = document.getElementById('container_hapus_bukti');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'hapus_bukti[]';
+    input.value = id;
+    inputContainer.appendChild(input);
+
+    const wrapper = document.getElementById(`file-wrapper-${id}`);
+    if (wrapper) wrapper.remove();
+}
+
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
@@ -636,19 +852,27 @@ document.addEventListener("DOMContentLoaded", async function() {
         "Authorization": "Bearer " + token
     };
 
-    // File preview
-    const fileInput = document.getElementById("bukti_input");
-    if (fileInput) {
-        fileInput.addEventListener("change", () => {
-            const count = fileInput.files.length;
-            document.getElementById("bukti_filename").textContent =
-                count === 0 ? "Pilih File" :
-                count === 1 ? fileInput.files[0].name :
-                `${count} file dipilih`;
-        });
-    }
-
     // Load dashboard stats
+    fetchDashboardStats();
+
+    // Load Data Edit
+    if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
+
+    // Date/Time pickers trigger
+    ["tanggal_lkh", "jam_mulai", "jam_selesai"].forEach(id => {
+        document.getElementById(id + "_btn")?.addEventListener("click", () =>
+            document.getElementById(id).showPicker()
+        );
+    });
+});
+
+// --- FETCH DASHBOARD STATS ---
+async function fetchDashboardStats() {
+    const token = localStorage.getItem("auth_token");
+    const headers = {
+        "Accept": "application/json",
+        "Authorization": "Bearer " + token
+    };
     try {
         const res = await fetch("/api/dashboard/stats", {
             headers
@@ -661,17 +885,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     } catch (e) {
         console.error("Stats Error", e);
     }
-
-    // Edit mode logic
-    if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
-
-    // Date/Time pickers trigger
-    ["tanggal_lkh", "jam_mulai", "jam_selesai"].forEach(id => {
-        document.getElementById(id + "_btn")?.addEventListener("click", () =>
-            document.getElementById(id).showPicker()
-        );
-    });
-});
+}
 
 function renderAktivitas(list) {
     const el = document.getElementById("aktivitas-list");
@@ -726,38 +940,38 @@ async function loadEditLKH(id, headers) {
         const json = await res.json();
         const data = json.data;
 
-        // 1. Populate Standard Inputs
-        // Fix: Format tanggal dari ISO (YYYY-MM-DDTHH:mm:ss...) ke YYYY-MM-DD
-        if (data.tanggal_laporan) {
-            document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
-        }
-
+        // Populate Standard Inputs
+        if (data.tanggal_laporan) document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
 
-        // Deskripsi & Output
         const deskripsiEl = document.querySelector('textarea[name="deskripsi_aktivitas"]');
         if (deskripsiEl) deskripsiEl.value = data.deskripsi_aktivitas ?? "";
 
         const outputEl = document.querySelector('input[name="output_hasil_kerja"]');
         if (outputEl) outputEl.value = data.output_hasil_kerja ?? "";
 
-        // Volume
         const volumeEl = document.querySelector('input[name="volume"]');
         if (volumeEl) volumeEl.value = data.volume ?? "";
 
-        // Satuan (Input hidden atau text biasa jika tidak pakai Alpine)
         const satuanEl = document.querySelector('input[name="satuan"]');
         if (satuanEl) satuanEl.value = data.satuan ?? "";
 
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi ? data.tupoksi.uraian_tugas :
+            'Tupoksi Terpilih');
 
-        // 2. Populate Mode Lokasi & Koordinat
+        // Populate File Lama (Bukti)
+        if (data.bukti) {
+            renderExistingFiles(data.bukti);
+        }
+
+        // Populate Mode Lokasi
         const modeLokasi = data.mode_lokasi || 'geofence';
         const lokasiContainer = document.querySelector('[x-data*="mode:"]');
 
-        if (lokasiContainer && lokasiContainer.__x) {
+        // Cek Alpine scope
+        if (lokasiContainer && Alpine.raw(lokasiContainer.__x.isRoot)) {
             const alpine = lokasiContainer.__x.$data;
             alpine.mode = modeLokasi;
             alpine.lat = data.lat;
@@ -768,105 +982,74 @@ async function loadEditLKH(id, headers) {
                 alpine.searchText = data.lokasi_teks || '';
                 alpine.status = `Tersimpan: ${data.lokasi_teks}`;
             } else {
-                // Tampilkan koordinat jika geofence/manual map
                 alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
             }
         }
 
-        // 3. Logic Kategori & SKP
-        const isSkp = !!data.skp_rencana_id; // Cek apakah ada ID SKP
+        // Logic Kategori & SKP
+        const isSkp = !!data.skp_rencana_id;
         const kategoriInput = document.querySelector('input[name="kategori"]');
         if (kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";
 
-        // Trigger Alpine update untuk Kategori
         const mainLogicDiv = document.querySelector('[x-data*="kategori:"]');
-        if (mainLogicDiv && mainLogicDiv.__x) {
+        if (mainLogicDiv && Alpine.raw(mainLogicDiv.__x.isRoot)) {
             const alpineData = mainLogicDiv.__x.$data;
-
-            // Set state kategori di Alpine
             alpineData.setKategori(isSkp ? "skp" : "non-skp");
 
             setTimeout(() => {
-                // Populate data SKP jika kategori adalah SKP
                 if (isSkp && data.rencana) {
                     alpineData.skpId = data.skp_rencana_id;
                     alpineData.skpLabel = data.rencana.rencana_hasil_kerja;
 
-                    // PERBAIKAN: Ambil satuan langsung dari root data.satuan
-                    // karena di JSON tidak ada data.rencana.targets
+                    // Ambil satuan dari root data
                     alpineData.satuanValue = data.satuan;
-                    alpineData.isSatuanLocked = true; // Biasanya SKP satuannya dikunci
+                    alpineData.isSatuanLocked = true;
                 } else {
-                    // Jika Non-SKP
                     alpineData.satuanValue = data.satuan;
                     alpineData.isSatuanLocked = false;
                 }
-            }, 300); // Sedikit delay agar transisi Alpine selesai
+            }, 300);
         }
 
     } catch (e) {
         console.error("Edit Load Error", e);
-        alert("Gagal memuat data LKH.");
     }
 }
 
-// === VALIDASI FILE BUKTI MAX SIZE ===
-// FOTO max 2MB, dokumen lain max 5MB
-const buktiInput = document.getElementById("bukti_input");
-const buktiError = document.getElementById("bukti_error");
-const buktiLabel = document.querySelector("label[for='bukti_input']");
+// --- HELPER FUNCTION UNTUK DISABLE TOMBOL ---
+function toggleLoading(isLoading, activeBtn = null) {
+    const allButtons = document.querySelectorAll('.btn-action');
 
-if (buktiInput) {
-    buktiInput.addEventListener("change", () => {
-        buktiError.classList.add("hidden");
-        buktiInput.classList.remove("ring-2", "ring-red-500");
-
-        let isError = false;
-        let message = "";
-
-        for (const file of buktiInput.files) {
-            const sizeMB = file.size / (1024 * 1024);
-            const ext = file.name.split(".").pop().toLowerCase();
-
-            const isImage = ["jpg", "jpeg", "png", "webp"].includes(ext);
-            const isDoc = ["pdf", "doc", "docx", "mp4"].includes(ext);
-
-            if (isImage && sizeMB > 2) {
-                isError = true;
-                message = "Ukuran foto melebihi 2MB.";
+    allButtons.forEach(btn => {
+        if (isLoading) {
+            // Simpan teks asli jika belum disimpan
+            if (!btn.dataset.originalText) {
+                btn.dataset.originalText = btn.innerHTML;
             }
-
-            if (isDoc && sizeMB > 5) {
-                isError = true;
-                message = "Ukuran dokumen melebihi 5MB.";
-            }
-        }
-
-        if (isError) {
-            buktiError.textContent =
-                message + " Maksimum: Foto 2MB, Dokumen 5MB.";
-            buktiError.classList.remove("hidden");
-
-            // Form error styling
-            buktiLabel.classList.add("border-red-500", "text-red-600");
-            buktiLabel.classList.remove("border-slate-300");
-
+            btn.disabled = true; // Matikan tombol
         } else {
-            buktiLabel.classList.remove("border-red-500", "text-red-600");
-            buktiLabel.classList.add("border-slate-300");
+            btn.disabled = false; // Hidupkan tombol
+            // Kembalikan teks asli
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
+            }
         }
     });
+
+    // Ubah teks tombol yang diklik menjadi loading spinner/text
+    if (isLoading && activeBtn) {
+        activeBtn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> Memproses...`;
+    }
 }
 
-async function submitForm(type) {
-    // CEK FILE ERROR
-    if (!buktiError.classList.contains("hidden")) {
-        return Swal.fire({
-            icon: "error",
-            title: "Upload Tidak Valid",
-            text: "File bukti melebihi batas maksimal. Foto maks 2MB, dokumen maks 5MB.",
-        });
-    }
+// --- FUNGSI SUBMIT FORM UTAMA ---
+async function submitForm(type, btnElement) {
+    // 1. Matikan semua tombol agar user tidak klik 2x
+    toggleLoading(true, btnElement);
 
     const form = document.getElementById("form-lkh");
     const formData = new FormData(form);
@@ -875,19 +1058,23 @@ async function submitForm(type) {
     // Validasi Sederhana
     if (type === "waiting_review") {
         if (!formData.get("output_hasil_kerja") || !formData.get("satuan")) {
-            return Swal.fire({
+            Swal.fire({
                 icon: "warning",
                 title: "Belum Lengkap",
                 text: "Output dan Satuan wajib diisi"
             });
+            toggleLoading(false); // Hidupkan tombol lagi jika validasi gagal
+            return;
         }
         // Validasi Lokasi
         if (!formData.get("latitude") || !formData.get("longitude")) {
-            return Swal.fire({
+            Swal.fire({
                 icon: "warning",
                 title: "Lokasi Kosong",
                 text: "Mohon ambil lokasi GPS atau cari lokasi di peta."
             });
+            toggleLoading(false); // Hidupkan tombol lagi
+            return;
         }
     }
 
@@ -910,6 +1097,8 @@ async function submitForm(type) {
                 showConfirmButton: false,
                 timer: 1500
             });
+
+            // Arahkan ke dashboard staf
             setTimeout(() => window.location.href = "/staf/dashboard", 1000);
         } else {
             throw new Error(json.message || "Gagal menyimpan data");
@@ -920,37 +1109,83 @@ async function submitForm(type) {
             title: "Gagal",
             text: e.message
         });
+        toggleLoading(false); // Hidupkan tombol lagi jika error API
     }
 }
 
-async function exportPDF() {
+// --- FUNGSI EXPORT PDF ---
+async function exportPDF(btnElement) {
     const res = await Swal.fire({
-        title: "Export PDF?",
+        title: "Preview PDF?",
+        text: "Sistem akan memvalidasi data dan membuka preview di tab baru.",
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Ya",
+        confirmButtonText: "Ya, Buka PDF",
         confirmButtonColor: "#1C7C54"
     });
 
     if (!res.isConfirmed) return;
 
+    toggleLoading(true, btnElement);
+
     try {
         const resp = await fetch("/api/lkh/export-pdf", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`
+                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+                "Accept": "application/json"
             },
             body: new FormData(document.getElementById("form-lkh"))
         });
 
-        if (resp.ok) {
+        const contentType = resp.headers.get("content-type");
+
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            // --- KASUS GAGAL (Validasi Error) ---
+            const json = await resp.json();
+
+            let errorMsg = json.message;
+            if (json.details && Array.isArray(json.details)) {
+                errorMsg +=
+                    "<br><br><div style='text-align:left; font-size:12px; max-height:200px; overflow-y:auto;'><ul>";
+                json.details.forEach(err => {
+                    errorMsg += `<li class="text-red-600 mb-1">• ${err}</li>`;
+                });
+                errorMsg += "</ul></div>";
+            }
+
+            Swal.fire({
+                title: "Data Tidak Lengkap",
+                html: errorMsg,
+                icon: "error"
+            });
+
+        } else if (resp.ok) {
+            // --- KASUS SUKSES (Membuka Tab Baru) ---
             const blob = await resp.blob();
-            window.open(URL.createObjectURL(blob), "_blank");
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'PDF berhasil dibuka'
+            });
+
         } else {
-            throw new Error("Gagal export");
+            throw new Error("Terjadi kesalahan server");
         }
+
     } catch (e) {
-        Swal.fire("Error", "Gagal export PDF", "error");
+        console.error(e);
+        Swal.fire("Error", "Gagal menghubungi server", "error");
+    } finally {
+        toggleLoading(false, btnElement);
     }
 }
 </script>

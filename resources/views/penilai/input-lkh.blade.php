@@ -513,24 +513,51 @@
         </form>
     </div>
 
-    {{-- KANAN ATAS: PANDUAN SINGKAT --}}
+    {{-- KANAN ATAS: PANDUAN SINGKAT (REVISI DETAIL) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col h-full">
-        <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
+        <h3 class="text-lg font-semibold text-slate-800 mb-3">Panduan Pengisian Detil LKH</h3>
 
-        <div class="mt-3 space-y-2 flex-1 overflow-y-auto pr-1">
-            @foreach ([
-                ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan.'],
-                ['title' => 'Jenis Kegiatan', 'desc' => 'Pilih jenis kegiatan yang dilakukan.'],
-                ['title' => 'Lokasi (Baru)', 'desc' => 'Gunakan "Cari Peta" jika lokasi Anda berbeda dengan posisi GPS saat ini.'],
-                ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
-                ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP jika kegiatan terkait target kinerja.'],
-                ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan dokumen kegiatan. Dapat berupa PDF atau Gambar.'],
-            ] as $guide)
-            <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
-                <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
-                <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
+        <div class="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+            {{-- Panduan Umum --}}
+            <div class="rounded-[10px] bg-[#155FA6] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">1. Data Waktu & Tupoksi</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>Tanggal & Waktu: Pastikan Jam Mulai < Jam Selesai. Pengisian harus logis.</li>
+                    <li>Jenis Kegiatan: Pilih kategori yang paling sesuai (Rapat, Pelayanan, dll.).</li>
+                    <li>Tupoksi: Kaitkan dengan uraian tugas Anda.</li>
+                    <li>Uraian Kegiatan: Tulis deskripsi yang ringkas, padat, dan jelas mengenai apa yang dikerjakan.</li>
+                </ul>
             </div>
-            @endforeach
+
+            {{-- Panduan Kategori & SKP (Alur Logis) --}}
+            <div class="rounded-[10px] bg-[#0E7A4A] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">2. Kategori Kinerja & Output</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>Non-SKP: Isi Output (misalnya: *Notulensi*) dan tentukan Satuan secara manual (*Jam*, *Dokumen*).</li>
+                    <li>SKP: Pilih Target SKP dari daftar. Sistem akan mengunci Satuan untuk menjaga konsistensi dengan target kinerja Anda.</li>
+                    <li>Volume: Jumlah kuantitas Output yang dihasilkan (Wajib diisi saat Kirim LKH).</li>
+                </ul>
+            </div>
+            
+            {{-- Panduan Lokasi (Alur Teknis) --}}
+            <div class="rounded-[10px] bg-[#B6241C] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">3. Lokasi (Geospatial) - Wajib Kirim LKH</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>GPS (Otomatis/Geofence): Digunakan untuk kegiatan di tempat dengan GPS. Tekan tombol lokasi untuk mengunci posisi.</li>
+                    <li>Cari Peta (Geocoding): Digunakan untuk kegiatan yang lokasinya tidak dapat dijangkau GPS. Cari nama lokasi (misal: Alamat Kantor atau kota tempat dinas), lalu pilih untuk menyimpan koordinat dan nama lokasi.</li>
+                    <li>Penting: Koordinat atau lokasi kerja harus terisi sebelum Kirim LKH.</li>
+                </ul>
+            </div>
+
+            {{-- Panduan Bukti --}}
+            <div class="rounded-[10px] bg-[#6B7280] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">4. Unggah Bukti Kegiatan</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>Wajib lampirkan dokumen (Gambar/PDF).</li>
+                    <li>Penambahan: File baru ditambahkan ke daftar.</li>
+                    <li>Penghapusan: Klik 'X' pada file yang sudah tersimpan untuk menghapus lampiran tersebut.</li>
+                </ul>
+            </div>
         </div>
     </div>
 

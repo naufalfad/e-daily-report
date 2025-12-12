@@ -1,6 +1,6 @@
 @php
-    $title = 'Riwayat Laporan';
-    $role = 'penilai'; // Definisi variabel role eksplisit
+$title = 'Riwayat Laporan';
+$role = 'penilai'; // Definisi variabel role eksplisit
 @endphp
 
 @extends('layouts.app', ['title' => $title, 'role' => $role, 'active' => 'riwayat'])
@@ -24,7 +24,7 @@
         {{-- FILTER SECTION --}}
         <form class="mt-2 mb-6" @submit.prevent="filterData()">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-                
+
                 {{-- 1. FILTER MODE (KHUSUS PENILAI) --}}
                 @if($role === 'penilai')
                 <div class="w-full lg:w-48">
@@ -39,7 +39,10 @@
                         </select>
                         {{-- Chevron Icon --}}
                         <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </div>
                     </div>
                 </div>
@@ -53,7 +56,7 @@
                         <div class="relative">
                             <input x-model="filter.from" id="tgl_dari" type="date"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                            
+
                             {{-- PERBAIKAN: pointer-events-none DIHAPUS, diganti cursor-pointer --}}
                             <button type="button" id="tgl_dari_btn"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center cursor-pointer hover:bg-slate-200 rounded-full transition-colors"
@@ -69,7 +72,7 @@
                         <div class="relative">
                             <input x-model="filter.to" id="tgl_sampai" type="date"
                                 class="w-full rounded-[10px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none" />
-                            
+
                             {{-- PERBAIKAN: pointer-events-none DIHAPUS, diganti cursor-pointer --}}
                             <button type="button" id="tgl_sampai_btn"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center cursor-pointer hover:bg-slate-200 rounded-full transition-colors"
@@ -87,9 +90,13 @@
                         :disabled="loading">
                         <span x-show="!loading">Terapkan Filter</span>
                         <span x-show="loading" class="flex items-center gap-2">
-                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
                             </svg>
                             Memuat...
                         </span>
@@ -125,8 +132,14 @@
                             <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
                                 class="px-3 py-12 text-center text-slate-500 italic">
                                 <div class="flex flex-col items-center justify-center gap-2">
-                                    <svg class="w-10 h-10 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <span x-text="filter.mode === 'mine' ? 'Anda belum memiliki riwayat laporan.' : 'Belum ada riwayat laporan bawahan.'"></span>
+                                    <svg class="w-10 h-10 text-slate-200" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg>
+                                    <span
+                                        x-text="filter.mode === 'mine' ? 'Anda belum memiliki riwayat laporan.' : 'Belum ada riwayat laporan bawahan.'"></span>
                                 </div>
                             </td>
                         </tr>
@@ -137,7 +150,14 @@
                             <td :colspan="role === 'penilai' && filter.mode === 'subordinates' ? 7 : 6"
                                 class="px-3 py-12 text-center text-slate-500">
                                 <div class="flex items-center justify-center gap-2">
-                                    <svg class="animate-spin h-5 w-5 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <svg class="animate-spin h-5 w-5 text-emerald-600"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
                                     <span>Sedang memuat data...</span>
                                 </div>
                             </td>
@@ -147,22 +167,25 @@
                     <template x-for="item in items" :key="item.id">
                         <tr class="hover:bg-slate-50 transition-colors group">
                             <td class="px-3 py-3 whitespace-nowrap" x-text="formatDate(item.tanggal_laporan)"></td>
-                            
+
                             <td class="px-3 py-3">
                                 <div class="font-medium text-slate-800" x-text="item.jenis_kegiatan || '-'"></div>
-                                <div class="text-xs text-slate-500 truncate max-w-[200px]" x-text="item.deskripsi_aktivitas"></div>
+                                <div class="text-xs text-slate-500 truncate max-w-[200px]"
+                                    x-text="item.deskripsi_aktivitas"></div>
                             </td>
 
                             <template x-if="filter.mode === 'subordinates'">
                                 <td class="px-3 py-3 whitespace-nowrap bg-blue-50/10">
                                     <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold" x-text="(item.user.name || '?').charAt(0)"></div>
+                                        <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold"
+                                            x-text="(item.user.name || '?').charAt(0)"></div>
                                         <span class="font-medium text-slate-700" x-text="item.user.name || '-'"></span>
                                     </div>
                                 </td>
                             </template>
 
-                            <td class="px-3 py-3 whitespace-nowrap text-slate-500" x-text="formatDate(item.validated_at)"></td>
+                            <td class="px-3 py-3 whitespace-nowrap text-slate-500"
+                                x-text="formatDate(item.validated_at)"></td>
 
                             <td class="px-3 py-3 text-slate-600"
                                 x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')">
@@ -208,96 +231,137 @@
 
             <template x-if="modalData">
                 <div class="space-y-6 text-sm">
-                    
+
                     {{-- Header Info --}}
                     <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                         <div>
                             <label class="text-[10px] uppercase font-bold text-slate-400">Tanggal Laporan</label>
-                            <p class="text-slate-800 font-medium mt-0.5" x-text="formatDate(modalData.tanggal_laporan)"></p>
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400">Status</label>
-                            <div class="mt-0.5" x-html="statusBadgeHtml(modalData.status)"></div>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="text-[10px] uppercase font-bold text-slate-400">Nama Kegiatan</label>
-                            <p class="text-slate-800 font-bold text-base mt-0.5" x-text="modalData.jenis_kegiatan"></p>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="text-[10px] uppercase font-bold text-slate-400">Uraian</label>
-                            <p class="text-slate-600 mt-0.5 leading-relaxed" x-text="modalData.deskripsi_aktivitas"></p>
-                        </div>
-                    </div>
-
-                    {{-- Detail Grid --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Output</label>
-                            <div class="font-semibold text-slate-700" x-text="modalData.output_hasil_kerja"></div>
-                        </div>
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Waktu</label>
-                            <div class="font-semibold text-slate-700">
-                                <span x-text="modalData.waktu_mulai.substring(0, 5)"></span> - 
-                                <span x-text="modalData.waktu_selesai.substring(0, 5)"></span>
-                            </div>
-                        </div>
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Volume</label>
-                            <div class="font-semibold text-slate-700">
-                                <span x-text="modalData.volume"></span> <span x-text="modalData.satuan" class="text-xs font-normal text-slate-500"></span>
-                            </div>
-                        </div>
-                        <div class="p-3 border border-slate-100 rounded-lg">
-                            <label class="block text-[10px] text-slate-400 mb-1">Kategori</label>
-                            <div class="font-semibold text-slate-700" x-text="modalData.skp_rencana_id ? 'SKP' : 'Non-SKP'"></div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-2">
-                        <div>
-                            <label class="text-[10px] text-slate-400 block">Lokasi</label>
-                            <p class="text-slate-800 font-medium flex items-center gap-1">
-                                <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                <span x-text="getLokasi(modalData)"></span>
+                            <p class="text-slate-800 font-medium mt-0.5" x-text="formatDate(modalData.tanggal_laporan)">
                             </p>
                         </div>
-                        <button @click="viewBukti(modalData.bukti)" :disabled="!modalData.bukti || modalData.bukti.length === 0"
-                            class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                            Lihat Bukti
-                        </button>
-                    </div>
-
-                    <div class="border-t border-slate-200 pt-4">
-                        <div class="mb-4">
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pejabat Penilai</label>
-                            <p class="text-slate-800 font-medium" x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')"></p>
+                        <div x-show="filter.mode === 'subordinates'">
+                            <label class="text-[10px] uppercase font-bold text-slate-400">Pegawai</label>
+                            <p class="text-slate-800 font-medium mt-0.5"
+                                x-text="modalData.user ? modalData.user.name : '-'"></p>
+                            <div>
+                                <label class="text-[10px] uppercase font-bold text-slate-400">Status</label>
+                                <div class="mt-0.5" x-html="statusBadgeHtml(modalData.status)"></div>
+                            </div>
+                            <div :class="filter.mode === 'mine' ? 'col-span-2' : ''">
+                                <label class="text-[10px] uppercase font-bold text-slate-400">Nama Kegiatan</label>
+                                <p class="text-slate-800 font-bold text-base mt-0.5" x-text="modalData.jenis_kegiatan">
+                                </p>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="text-[10px] uppercase font-bold text-slate-400">Uraian</label>
+                                <p class="text-slate-600 mt-0.5 leading-relaxed" x-text="modalData.deskripsi_aktivitas">
+                                </p>
+                            </div>
                         </div>
 
-                        <div x-show="modalData.komentar_validasi" class="bg-amber-50 border border-amber-100 rounded-lg p-3">
-                            <label class="text-[10px] font-bold text-amber-700 uppercase mb-1 block">Catatan Penilai</label>
-                            <p class="text-amber-800 text-sm italic" x-text="modalData.komentar_validasi"></p>
+                        {{-- Detail Grid --}}
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Output</label>
+                                <div class="font-semibold text-slate-700" x-text="modalData.output_hasil_kerja"></div>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Waktu</label>
+                                <div class="font-semibold text-slate-700">
+                                    <span x-text="modalData.waktu_mulai.substring(0, 5)"></span> -
+                                    <span x-text="modalData.waktu_selesai.substring(0, 5)"></span>
+                                </div>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Volume</label>
+                                <div class="font-semibold text-slate-700">
+                                    <span x-text="modalData.volume"></span> <span x-text="modalData.satuan"
+                                        class="text-xs font-normal text-slate-500"></span>
+                                </div>
+                            </div>
+                            <div class="p-3 border border-slate-100 rounded-lg">
+                                <label class="block text-[10px] text-slate-400 mb-1">Kategori</label>
+                                <div class="font-semibold text-slate-700"
+                                    x-text="modalData.skp_rencana_id ? 'SKP' : 'Non-SKP'"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- TOMBOL AKSI: Hanya jika Draft/Rejected DAN Mode adalah 'Riwayat Saya' --}}
-                    <div x-show="(modalData.status === 'rejected' || modalData.status === 'draft') && filter.mode === 'mine'" class="flex justify-end pt-2">
-                        <button
-                            @click="editLaporan(modalData.id)"
-                            :class="modalData.status === 'draft' ? 'bg-slate-500' : 'bg-[#0E7A4A]'"
-                            class="rounded-[10px] px-4 py-2 text-sm font-normal text-white hover:brightness-95 shadow-sm transition-all flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                            <span x-text="modalData.status === 'draft' ? 'Lanjutkan Laporan' : 'Perbaiki Laporan'"></span>
-                        </button>
-                    </div>
-                </div>
+                        <div class="flex items-center justify-between pt-2">
+                            <div>
+                                <label class="text-[10px] text-slate-400 block">Lokasi</label>
+                                <p class="text-slate-800 font-medium flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span x-text="getLokasi(modalData)"></span>
+                                </p>
+                            </div>
+                            <button @click="viewBukti(modalData.bukti)"
+                                :disabled="!modalData.bukti || modalData.bukti.length === 0"
+                                class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm disabled:opacity-50">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                </svg>
+                                Lihat Bukti
+                            </button>
+                        </div>
+
+                        <div class="border-t border-slate-200 pt-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Status
+                                        Laporan</label>
+                                    <div x-html="statusBadgeHtml(modalData.status)"></div>
+                                </div>
+                                <div class="text-right">
+                                    <label
+                                        class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Validator</label>
+                                    <p class="text-slate-800 font-medium"
+                                        x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')">
+                                    </p>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pejabat
+                                        Penilai</label>
+                                    <p class="text-slate-800 font-medium"
+                                        x-text="modalData.validator ? modalData.validator.name : (modalData.atasan ? modalData.atasan.name : '-')">
+                                    </p>
+                                </div>
+
+                                <div x-show="modalData.komentar_validasi"
+                                    class="bg-amber-50 border border-amber-100 rounded-lg p-3">
+                                    <label class="text-[10px] font-bold text-amber-700 uppercase mb-1 block">Catatan
+                                        Penilai</label>
+                                    <p class="text-amber-800 text-sm italic" x-text="modalData.komentar_validasi"></p>
+                                </div>
+                            </div>
+
+                            {{-- TOMBOL AKSI: Hanya jika Draft/Rejected DAN Mode adalah 'Riwayat Saya' --}}
+                            <div x-show="(modalData.status === 'rejected' || modalData.status === 'draft') && filter.mode === 'mine'"
+                                class="flex justify-end pt-2">
+                                <button @click="editLaporan(modalData.id)"
+                                    :class="modalData.status === 'draft' ? 'bg-slate-500' : 'bg-[#0E7A4A]'"
+                                    class="rounded-[10px] px-4 py-2 text-sm font-normal text-white hover:brightness-95 shadow-sm transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    <span
+                                        x-text="modalData.status === 'draft' ? 'Lanjutkan Laporan' : 'Perbaiki Laporan'"></span>
+                                </button>
+                            </div>
+                        </div>
             </template>
         </div>
     </div>
     {{-- END MODAL --}}
 
-    {{-- MODAL LIST BUKTI DOKUMEN --}}
+    {{-- MODAL LIST BUKTI DOKUMEN (NEW) --}}
     <div x-show="openBukti" style="display: none;"
         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
@@ -326,46 +390,46 @@
             </div>
 
             {{-- List Dokumen --}}
-            <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+
                 <template x-for="(bukti, index) in daftarBukti" :key="index">
-                    <a :href="bukti.file_url" target="_blank"
-                        class="flex items-center p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-all group relative overflow-hidden">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer"
+                        @click="preview(bukti)">
 
-                        {{-- Icon Dokumen --}}
-                        <div
-                            class="h-10 w-10 shrink-0 rounded-lg bg-white flex items-center justify-center text-slate-500 shadow-sm group-hover:text-blue-600 border border-slate-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                        </div>
+                        {{-- THUMBNAIL PREVIEW --}}
+                        <template x-if="getFileType(bukti.file_url) === 'image'">
+                            <img :src="bukti.file_url" class="w-full h-24 object-cover rounded-lg shadow-sm" />
+                        </template>
 
-                        {{-- Info Dokumen --}}
-                        <div class="ml-3.5 flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-slate-700 truncate group-hover:text-blue-700"
-                                x-text="'Dokumen Lampiran ' + (index + 1)"></p>
-                            <div class="flex items-center text-[11px] text-slate-500 mt-0.5 space-x-2">
-                                <span class="truncate max-w-[150px]" x-text="bukti.file_url.split('/').pop()"></span>
-                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span
-                                    class="text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">Buka
-                                    File</span>
+                        <template x-if="getFileType(bukti.file_url) === 'pdf'">
+                            <div
+                                class="w-full h-24 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                                <i class="fas fa-file-pdf text-3xl"></i>
                             </div>
-                        </div>
+                        </template>
 
-                        {{-- Icon External Link --}}
-                        <div class="ml-2 text-slate-300 group-hover:text-blue-500 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                <polyline points="15 3 21 3 21 9" />
-                                <line x1="10" y1="14" x2="21" y2="3" />
-                            </svg>
-                        </div>
-                    </a>
+                        <template x-if="getFileType(bukti.file_url) === 'video'">
+                            <div
+                                class="w-full h-24 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                                <i class="fas fa-video text-3xl"></i>
+                            </div>
+                        </template>
+
+                        <template x-if="getFileType(bukti.file_url) === 'other'">
+                            <div
+                                class="w-full h-24 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600">
+                                <i class="fas fa-file text-3xl"></i>
+                            </div>
+                        </template>
+
+                        {{-- LABEL FILE --}}
+                        <p class="mt-2 text-xs font-medium text-slate-700 truncate" x-text="'Lampiran ' + (index + 1)">
+                        </p>
+
+                        <p class="text-[10px] text-slate-500 truncate" x-text="bukti.file_url.split('/').pop()">
+                        </p>
+                    </div>
                 </template>
             </div>
 
@@ -379,6 +443,51 @@
         </div>
     </div>
 
+    {{-- PREVIEW MODAL (NEW) --}}
+    <div x-show="showPreview"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
+        style="display:none;" @click.self.stop="showPreview = false">
+
+        <div class="bg-white rounded-xl p-4 max-w-3xl w-full">
+
+            <button @click.stop="showPreview = false" class="float-right text-slate-500 hover:text-slate-700">
+                ✕
+            </button>
+
+            <div class="mt-6">
+                <h4 class="text-sm font-bold text-slate-700 mb-2"
+                    x-text="'Preview: ' + (selectedBukti ? selectedBukti.file_url.split('/').pop() : 'Dokumen')"></h4>
+
+                <template x-if="selectedBukti && getFileType(selectedBukti.file_url) === 'image'">
+                    <img :src="selectedBukti.file_url" class="w-full rounded-lg shadow" />
+                </template>
+
+                <template x-if="selectedBukti && getFileType(selectedBukti.file_url) === 'pdf'">
+                    <iframe :src="selectedBukti.file_url" class="w-full h-[500px] rounded-lg"></iframe>
+                </template>
+
+                <template x-if="selectedBukti && getFileType(selectedBukti.file_url) === 'video'">
+                    <video controls class="w-full rounded-lg">
+                        <source :src="selectedBukti.file_url" type="video/mp4">
+                        <p>Browser Anda tidak mendukung video.</p>
+                    </video>
+                </template>
+
+                <template x-if="selectedBukti && getFileType(selectedBukti.file_url) === 'other'">
+                    <div class="text-center py-8">
+                        <p class="text-center text-slate-600 mb-4">
+                            File tidak dapat dipreview. Silakan download:
+                        </p>
+                        <a :href="selectedBukti.file_url" target="_blank"
+                            class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg shadow">
+                            Download File
+                        </a>
+                    </div>
+                </template>
+
+            </div>
+        </div>
+    </div>
 </section>
 
 @endsection

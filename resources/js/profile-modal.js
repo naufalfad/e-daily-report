@@ -42,22 +42,87 @@ document.addEventListener('DOMContentLoaded', function () {
         fileInput.addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 const name = e.target.files[0].name;
-                fileNameDisplay.textContent = "File terpilih: " + name;
+                fileNameDisplay.querySelector('span').textContent = "File terpilih: " + name;
                 fileNameDisplay.classList.remove('hidden');
             }
         });
     }
 
-    // --- 3. LOGIKA MODAL TAILWIND ---
+    // --- 3. VALIDASI & LOGIKA MODAL (AKUN) ---
     const modal = document.getElementById('tailwind-modal');
     const btnTrigger = document.getElementById('btn-trigger-modal');
     const btnCancel = document.getElementById('btn-cancel-modal');
     const btnConfirm = document.getElementById('btn-confirm-final');
     const formAccount = document.getElementById('form-account');
+    const usernameInput = document.querySelector('input[name="username"]');
 
-    // Buka Modal
+    /**
+     * Memastikan Username hanya berisi huruf, angka, titik (.), dan underscore (_).
+     */
+    const isValidUsername = (username) => {
+        // Asumsi: Swal.fire sudah dimuat di layouts.app (karena Anda sudah menggunakannya sebelumnya)
+        if (typeof Swal === 'undefined') return true; 
+
+        if (!username) return false;
+        // Regex: Hanya mengizinkan a-z, A-Z, 0-9, titik, dan underscore. TIDAK ADA SPASI.
+        const regex = /^[a-zA-Z0-9._]+$/;
+        return regex.test(username) && username.length >= 3; 
+    };
+
+    // Fungsi untuk mengurus logout setelah sukses
+    const handleAccountUpdateSuccess = (newUsername) => {
+        Swal.fire({
+            title: 'Berhasil Diperbarui!',
+            html: `
+                <p>Username atau Password Anda telah berhasil diganti.</p>
+                <p class="mt-2 text-red-500 font-bold">Anda harus login ulang!</p>
+                <p class="text-sm mt-1">Gunakan username baru: <code>${newUsername}</code></p>
+            `,
+            icon: 'success',
+            showCancelButton: false,
+            confirmButtonText: 'OK, Logout Sekarang',
+            allowOutsideClick: false,
+            customClass: {
+                confirmButton: 'bg-red-600 hover:bg-red-700'
+            }
+        }).then(() => {
+            // Ini akan memicu logout di backend
+            window.location.href = '{{ route("logout") }}'; // Harap pastikan route ini ada
+        });
+    };
+    
+    // Fungsi untuk SweetAlert sukses update Biodata
+    const handleBiodataUpdateSuccess = (message) => {
+        Swal.fire({
+            icon: 'success',
+            title: 'Sukses!',
+            text: message || 'Biodata berhasil diperbarui.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    };
+
+
+    // Buka Modal (Sekaligus Validasi Frontend)
     if (btnTrigger) {
-        btnTrigger.addEventListener('click', () => {
+        btnTrigger.addEventListener('click', (e) => {
+            e.preventDefault(); 
+
+            // 1. Validasi Username Format
+            if (!isValidUsername(usernameInput.value)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    text: 'Username hanya boleh mengandung huruf (a-z), angka (0-9), titik (.), atau underscore (_). Spasi tidak diizinkan.',
+                    confirmButtonColor: '#B6241C'
+                });
+                usernameInput.focus();
+                usernameInput.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+
+            // 2. Jika valid, buka modal konfirmasi
+            usernameInput.classList.remove('border-red-500', 'ring-red-500');
             modal.classList.remove('hidden');
         });
     }
@@ -69,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Eksekusi Simpan
+    // Eksekusi Simpan Final
     if (btnConfirm) {
         btnConfirm.addEventListener('click', () => {
             // Loading State
@@ -77,14 +142,15 @@ document.addEventListener('DOMContentLoaded', function () {
             btnConfirm.disabled = true;
             btnCancel.disabled = true;
 
-            formAccount.submit();
+            formAccount.submit(); // Submit form
         });
     }
 
     // --- 4. LOGIKA TOGGLE PASSWORD (EYE ICON) ---
     window.togglePassword = function(fieldId) {
         const input = document.getElementById(fieldId);
-        const icon = input.nextElementSibling.querySelector('i');
+        const toggleButton = input.nextElementSibling;
+        const icon = toggleButton.querySelector('i');
         
         if (input.type === "password") {
             input.type = "text";
@@ -96,4 +162,16 @@ document.addEventListener('DOMContentLoaded', function () {
             icon.classList.add('fa-eye');
         }
     };
+
+    // --- 5. DETEKSI SUKSES DARI SESSION (Setelah page reload) ---
+    const successAccountElement = document.getElementById('account-update-success');
+    const successBiodataElement = document.getElementById('biodata-update-success');
+
+    if (successAccountElement) {
+        const newUsername = successAccountElement.dataset.username;
+        handleAccountUpdateSuccess(newUsername);
+    } else if (successBiodataElement) {
+        const message = successBiodataElement.dataset.message;
+        handleBiodataUpdateSuccess(message);
+    }
 });

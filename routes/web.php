@@ -218,6 +218,22 @@ Route::middleware(['auth'])->group(function () {
 
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
+
+        Route::prefix('master')->name('master.')->group(function () {
+        
+        // 1. UNIT KERJA
+        Route::resource('unit-kerja', \App\Http\Controllers\Admin\Master\UnitKerjaController::class)
+            ->except(['show', 'create', 'edit']); // Kita pakai Modal, jadi tidak butuh create/edit page terpisah
+
+        // 2. BIDANG (BARU)
+        Route::resource('bidang', \App\Http\Controllers\Admin\Master\BidangController::class)
+        ->except(['show', 'create', 'edit']);
+
+        // 3. JABATAN (BARU - BUKA INI)
+        Route::resource('jabatan', \App\Http\Controllers\Admin\Master\JabatanController::class)
+        ->except(['show', 'create', 'edit']);
+            
+      });
     });
 
 });

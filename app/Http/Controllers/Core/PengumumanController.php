@@ -164,4 +164,30 @@ class PengumumanController extends Controller
             NotificationService::sendBatch($payload);
         }
     }
+
+    public function search(Request $request)
+    {
+        $q = $request->q;
+
+        if (!$q || strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $pengumuman = \App\Models\Pengumuman::with('creator') // relasi ke users
+            ->where('judul', 'ILIKE', "%$q%")
+            ->orWhere('isi_pengumuman', 'ILIKE', "%$q%")
+            ->orWhereHas('creator', function($user) use ($q) {
+                $user->where('name', 'ILIKE', "%$q%");
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return response()->json($pengumuman);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id_creator');
+    }
 }

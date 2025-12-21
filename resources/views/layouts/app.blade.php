@@ -4,9 +4,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- [PERBAIKAN 1] Meta Tag Identitas User & CSRF --}}
-    {{-- Ini PENTING agar JavaScript (pengumuman.js) bisa membaca ID user yang sedang login --}}
+    {{-- Meta Tag Identitas User & CSRF --}}
     <meta name="user-id" content="{{ auth()->id() }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -26,6 +26,27 @@
     {{-- Favicon --}}
     <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
+
+    {{-- 1. jQuery (Wajib ada paling atas agar $ dikenali) --}}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+    {{-- 2. DataTables JS (Untuk tabel canggih) --}}
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    
+    {{-- 3. DataTables CSS (Agar tabel rapi, walau kita override dengan Tailwind) --}}
+    <style>
+        /* Override DataTables Default Style agar selaras dengan Tailwind */
+        .dataTables_wrapper .dataTables_length select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #e2e8f0 !important; /* slate-200 */
+        }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -61,13 +82,8 @@
         }
 
         @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         /* Hapus icon bawaan input tanggal */
@@ -96,27 +112,48 @@
         });
     </script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 
 <body class="min-h-screen bg-[#EFF0F5] text-slate-800">
 
-    <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
+    {{-- [PERBAIKAN UTAMA: LOGIC ROLE DIPINDAH KE SINI] --}}
+    {{-- Ini wajib ada DI ATAS SEBELUM SIDEBAR DIPANGGIL --}}
+    @php
+        if (!isset($role)) {
+            // Ambil role dari database user yg login
+            $userRole = auth()->check() ? (auth()->user()->roles->first()->nama_role ?? 'staf') : 'staf';
+            
+            // Mapping Nama Role DB -> Key Switch Case
+            $roleMap = [
+                'Super Admin'   => 'admin',
+                'Administrator' => 'admin',
+                'Kadis'         => 'kadis',
+                'Penilai'       => 'penilai',
+                'Staf'          => 'staf'
+            ];
 
+            $role = $roleMap[$userRole] ?? 'staf';
+        }
+    @endphp
+
+    <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
         <div class="flex flex-row gap-2">
             <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce"></div>
             <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce [animation-delay:-.3s]"></div>
             <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce [animation-delay:-.5s]"></div>
         </div>
-
     </div>
 
     <div class="p-5 h-screen">
         <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 overflow-hidden">
 
             {{-- Sidebar --}}
+            {{-- Karena $role sudah di-set di atas, Sidebar sekarang menerima role yang BENAR --}}
             @include('partials.sidebar', [
-            'role' => $role ?? 'staf',
-            'active' => $active ?? null,
+                'role' => $role,
+                'active' => $active ?? null,
             ])
 
             {{-- KONTEN KANAN --}}
@@ -140,9 +177,12 @@
 
                             {{-- SEARCH --}}
                             <div class="relative flex-1 max-w-[500px]">
-                                <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
+                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm shadow-sm placeholder:text-slate-400
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
+                                    <div id="search-dropdown"
+                                        class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
+                                    </div>
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                     <img src="{{ asset('assets/icon/search.svg') }}"
                                         class="h-[18px] w-[18px] opacity-70" />
@@ -207,51 +247,115 @@
     @stack('scripts')
 
     {{-- Load script sesuai role --}}
-    {{-- [PERBAIKAN 2] Pastikan script pengumuman.js dipanggil untuk Staf & Kadis juga --}}
     @switch($role)
 
-        @case('admin')
-            @vite('resources/js/pages/admin/dashboard.js')
-            @vite('resources/js/pages/admin/manajemen-pegawai.js')
-            @vite('resources/js/pages/admin/akun-pengguna.js')
-            @vite('resources/js/pages/admin/setting-sistem.js')
-            @vite('resources/js/pages/admin/log-aktivitas.js')
-            @break
+    @case('admin')
+    @vite('resources/js/pages/admin/dashboard.js')
+    @vite('resources/js/pages/admin/manajemen-pegawai.js')
+    @vite('resources/js/pages/admin/akun-pengguna.js')
+    @vite('resources/js/pages/admin/setting-sistem.js')
+    @break
 
-        @case('staf')
-            @vite('resources/js/pages/staf/dashboard.js')
-            @vite('resources/js/pages/staf/input-lkh.js')
-            @vite('resources/js/pages/staf/input-skp.js')
-            @vite('resources/js/pages/staf/log-aktivitas.js')
-            @vite('resources/js/pages/staf/riwayat.js')
-            {{-- Tambahkan ini agar fitur pengumuman di role staf jalan --}}
-            @vite('resources/js/pages/staf/pengumuman.js') 
-            @break
+    @case('staf')
+    @vite('resources/js/pages/staf/dashboard.js')
+    @vite('resources/js/pages/staf/input-lkh.js')
+    @vite('resources/js/pages/staf/input-skp.js')
+    @vite('resources/js/pages/staf/log-aktivitas.js')
+    @vite('resources/js/pages/staf/pengumuman.js')
+    @break
 
-        @case('penilai')
-            @vite('resources/js/pages/penilai/dashboard.js')
-            @vite('resources/js/pages/penilai/input-lkh.js')
-            @vite('resources/js/pages/penilai/pengumuman.js')
-            @vite('resources/js/pages/penilai/validasi-laporan.js')
-            @vite('resources/js/pages/penilai/input-skp.js')
-            @vite('resources/js/pages/penilai/skoring-kinerja.js')
-            @vite('resources/js/pages/penilai/peta-aktivitas.js')
-            @vite('resources/js/pages/penilai/log-aktivitas.js') 
-            @vite('resources/js/pages/penilai/riwayat.js') 
-            @break
+    @case('penilai')
+    @vite('resources/js/pages/penilai/dashboard.js')
+    @vite('resources/js/pages/penilai/input-lkh.js')
+    @vite('resources/js/pages/penilai/pengumuman.js')
+    @vite('resources/js/pages/penilai/validasi-laporan.js')
+    @vite('resources/js/pages/penilai/input-skp.js')
+    @vite('resources/js/pages/penilai/skoring-kinerja.js')
+    @vite('resources/js/pages/penilai/peta-aktivitas.js')
+    @vite('resources/js/pages/penilai/log-aktivitas.js')
+    @break
 
-        @case('kadis') 
-            @vite('resources/js/pages/kadis/dashboard.js') 
-            @vite('resources/js/pages/kadis/log-aktivitas.js')
-            @vite('resources/js/pages/kadis/validasi-laporan.js') 
-            @vite('resources/js/pages/kadis/skoring-bidang.js') 
-            {{-- Tambahkan ini agar fitur pengumuman di role kadis jalan --}}
-            @vite('resources/js/pages/kadis/pengumuman.js')
-            @break
+    @case('kadis')
+    @vite('resources/js/pages/kadis/dashboard.js')
+    @vite('resources/js/pages/kadis/validasi-laporan.js')
+    @vite('resources/js/pages/kadis/skoring-bidang.js')
+    @vite('resources/js/pages/kadis/pengumuman.js')
+    @break
 
-    @endswitch 
-    
+    @endswitch
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const input = document.querySelector('input[placeholder="Cari Pengumuman"]');
+        const dropdown = document.getElementById("search-dropdown");
+
+        if (!input || !dropdown) return;
+
+        let typingTimer;
+
+        input.addEventListener("keyup", function () {
+            clearTimeout(typingTimer);
+
+            const query = this.value.trim();
+            if (query.length < 2) {
+                dropdown.classList.add("hidden");
+                return;
+            }
+
+            typingTimer = setTimeout(() => {
+
+                const token = localStorage.getItem("auth_token");
+
+                fetch(`/api/search/pengumuman?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Accept": "application/json"
+                    }
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        console.error("UNAUTHORIZED – token tidak dikirim / salah");
+                    }
+                    return res.json();
+                })
+                .then(data => {
+
+                    if (!Array.isArray(data) || !data.length) {
+                        dropdown.innerHTML = `
+                            <div class="p-3 text-sm text-slate-500">Tidak ada hasil.</div>
+                        `;
+                        dropdown.classList.remove("hidden");
+                        return;
+                    }
+
+                    dropdown.innerHTML = data.map(item => `
+                        <div class="px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-sm">
+                            <div class="font-semibold text-slate-700">${item.judul}</div>
+                            <div class="text-xs text-slate-500 line-clamp-1">${item.isi_pengumuman}</div>
+                            <div class="text-[10px] text-slate-400 mt-1">
+                                Pembuat: ${item.creator ? item.creator.name : 'Tidak diketahui'}
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                ${new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `).join('');
+
+                    dropdown.classList.remove("hidden");
+                });
+
+            }, 300);
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target) && !input.contains(e.target)) {
+                dropdown.classList.add("hidden");
+            }
+        });
+    });
+    </script>
 </body>
 
 </html>

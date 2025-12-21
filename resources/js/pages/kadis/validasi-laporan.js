@@ -1,301 +1,552 @@
+import { authFetch } from "../../utils/auth-fetch";
+import { showToast } from "../../global/notification";
+
 document.addEventListener('DOMContentLoaded', () => {
 
+    // === DOM ELEMENTS ===
+    const listContainer = document.getElementById('lkh-validation-list');
+    const filterForm = document.getElementById('filter-form');
+    
+    // Filter Inputs
+    const filterSearch = document.getElementById('filter-search');
+    const filterMonth = document.getElementById('filter-month');
+    const filterYear = document.getElementById('filter-year');
+    const filterStatus = document.getElementById('filter-status');
+
+    // Modals
     const detailModal = document.getElementById('modal-detail');
     const approveModal = document.getElementById('modal-approve');
     const rejectModal = document.getElementById('modal-reject');
-    const listContainer = document.getElementById('lkh-validation-list');
+    
+    // NEW Modal Elements
+    const buktiListModal = document.getElementById('modal-bukti-list');
+    const buktiListContainer = document.getElementById('bukti-list-container');
+    const previewModal = document.getElementById('modal-preview');
+    const previewContent = document.getElementById('preview-content');
+    const btnOpenBukti = document.getElementById('detail-bukti-btn'); // Tombol di Modal Detail
 
-    if (!listContainer) return;
-
+    // Buttons
     const btnSubmitApprove = document.getElementById('btn-submit-approve');
     const btnSubmitReject = document.getElementById('btn-submit-reject');
     const rejectError = document.getElementById('reject-error');
 
-    const show = (el) => {
-        el.classList.remove('hidden');
-        el.classList.add('flex');
-    };
-    const hide = (el) => {
-        el.classList.add('hidden');
-        el.classList.remove('flex');
-    };
+    // STATE MANAGEMENT (Simpan Data Lokal)
+    let currentLkhData = []; 
+    let daftarBukti = []; // NEW State for Bukti
+    let selectedBukti = null; // NEW State for Preview
 
-    const getToken = () => localStorage.getItem('auth_token');
+    if (!listContainer) return;
+
+    // === UTILS ===
+    const show = (el) => {
+        if(el) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        }
+    };
+    
+    const hide = (el) => {
+        if(el) {
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+    };
+    
+    const closeAllModals = () => { // NEW Helper to close all related modals
+        hide(detailModal);
+        hide(approveModal);
+        hide(rejectModal);
+        hide(buktiListModal);
+        hide(previewModal);
+    };
 
     const formatDate = (iso) => {
         try {
             return new Date(iso).toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
+                day: 'numeric', month: 'long', year: 'numeric'
             });
-        } catch (_) {
-            return iso;
-        }
+        } catch (_) { return iso; }
     };
 
     const createStatusBadge = (status) => {
-        if (status === 'waiting_review')
-            return `<span class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700">Menunggu</span>`;
-        if (status === 'approved')
-            return `<span class="px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700">Diterima</span>`;
-        if (status === 'rejected')
-            return `<span class="px-2 py-0.5 text-xs rounded-full bg-rose-100 text-rose-700">Ditolak</span>`;
-        return `<span class="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">Draft</span>`;
+        const styles = {
+            'waiting_review': 'bg-amber-50 text-amber-600 border border-amber-200',
+            'approved': 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+            'rejected': 'bg-rose-50 text-rose-600 border border-rose-200',
+            'draft': 'bg-slate-50 text-slate-500 border border-slate-200'
+        };
+        const labels = {
+            'waiting_review': 'Menunggu',
+            'approved': 'Disetujui',
+            'rejected': 'Ditolak',
+            'draft': 'Draft'
+        };
+        const cls = styles[status] || styles['draft'];
+        const lbl = labels[status] || status;
+        return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded-full ${cls}">${lbl}</span>`;
+    };
+    
+    // NEW Helper: Get File Type
+    const getFileType = (url) => {
+        if (!url) return "other";
+        const ext = url.split(".").pop().toLowerCase();
+
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+            return "image";
+        if (ext === "pdf") return "pdf";
+        if (["mp4", "mov", "webm"].includes(ext)) return "video";
+        return "other";
     };
 
-    async function fetchLkhList() {
-        listContainer.innerHTML =
-            '<tr><td colspan="7" class="p-4 text-center text-slate-500">Memuat data...</td></tr>';
+    // NEW Helper: Normalisasi Bukti (ditempatkan di scope ini)
+    const normalizeBukti = (buktiArray) => {
+        if (!buktiArray) return [];
+        
+        // Pastikan array
+        let arr = Array.isArray(buktiArray) ? buktiArray : 
+                    (typeof buktiArray === 'string' ? JSON.parse(buktiArray) : []);
+        
+        if (!Array.isArray(arr)) return [];
 
-        const token = getToken();
-        if (!token) return;
+        return arr.map((bukti) => {
+            if (typeof bukti === "string") {
+                // Asumsi: Jika string, itu nama file yang ada di folder 'bukti'
+                return { file_url: `/storage/uploads/bukti/${bukti}` };
+            }
+            if (bukti.path) {
+                // Asumsi: path relatif dari storage
+                return { file_url: `/storage/${bukti.path}` };
+            }
+            if (bukti.file_url) {
+                return bukti;
+            }
+            return null;
+        }).filter(Boolean);
+    };
+
+    // === MAIN FUNCTION: FETCH DATA ===
+    async function fetchLkhList() {
+        // 1. Set Loading State
+        listContainer.innerHTML = `
+            <tr>
+                <td colspan="6" class="p-8 text-center">
+                    <div class="flex flex-col items-center justify-center">
+                        <svg class="animate-spin h-8 w-8 text-[#1C7C54] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-slate-500 text-sm">Memuat daftar laporan...</span>
+                    </div>
+                </td>
+            </tr>`;
+
+        // 2. Build Query Params (Default to Current Date if null)
+        const params = new URLSearchParams({
+            month: filterMonth ? filterMonth.value : new Date().getMonth() + 1,
+            year: filterYear ? filterYear.value : new Date().getFullYear(),
+            status: filterStatus ? filterStatus.value : 'all',
+            search: filterSearch ? filterSearch.value : '',
+            page: 1 
+        });
 
         try {
-            const res = await fetch('/api/validator/lkh', {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
+            // 3. Fetch Data
+            const res = await authFetch(`/api/validator/kadis/lkh?${params.toString()}`);
             const json = await res.json();
-            if (!res.ok) throw new Error(json.message);
 
-            renderTable(json.data);
+            const dataToRender = json.data?.data || json.data || [];
+
+            if (!res.ok) throw new Error(json.message || "Gagal memuat data");
+
+            // Simpan data ke variabel global agar bisa diakses Modal
+            currentLkhData = dataToRender;
+
+            renderTable(currentLkhData);
 
         } catch (err) {
-            listContainer.innerHTML =
-                `<tr><td colspan="7" class="p-4 text-center text-rose-600">${err.message}</td></tr>`;
+            console.error(err);
+            listContainer.innerHTML = 
+                `<tr><td colspan="6" class="p-6 text-center text-rose-500 text-sm font-medium">Gagal memuat data: ${err.message}</td></tr>`;
         }
     }
 
+    // === RENDER TABLE ===
     function renderTable(lkhs) {
         listContainer.innerHTML = '';
 
-        if (!lkhs.length) {
-            listContainer.innerHTML =
-                '<tr><td colspan="7" class="p-4 text-center text-slate-500">Tidak ada laporan untuk divalidasi.</td></tr>';
+        if (!lkhs || lkhs.length === 0) {
+            listContainer.innerHTML = `
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-slate-400">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
+                            <span class="text-sm">Tidak ada laporan yang sesuai filter.</span>
+                        </div>
+                    </td>
+                </tr>`;
             return;
         }
 
         lkhs.forEach((lkh) => {
-            let waktu = `${lkh.waktu_mulai.substring(0, 5)} – ${lkh.waktu_selesai.substring(0, 5)}`;
-            let lokasi = lkh.lokasi_manual_text || (lkh.is_luar_lokasi ? 'Luar Kantor' : 'GPS Dalam Kantor');
-
-            listContainer.innerHTML += `
-                <tr class="border-t border-slate-200">
-                    <td class="px-4 py-2 whitespace-nowrap">${formatDate(lkh.created_at)}</td>
-                    <td class="px-4 py-2">${lkh.deskripsi_aktivitas.substring(0, 40)}...</td>
-                    <td class="px-4 py-2 whitespace-nowrap">${waktu}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">${lkh.user?.name ?? '-'}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">${lokasi}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">${createStatusBadge(lkh.status)}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">
+            let waktu = `${lkh.waktu_mulai.substring(0, 5)} - ${lkh.waktu_selesai.substring(0, 5)}`;
+            let pegawai = lkh.user ? lkh.user.name : 'Unknown';
+            
+            // Kita hanya simpan ID di tombol. Data diambil dari currentLkhData
+            const row = `
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">${formatDate(lkh.tanggal_laporan)}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-800 text-sm">${pegawai}</div>
+                        <div class="text-xs text-slate-500">${lkh.user?.nip || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-slate-800 truncate max-w-[200px]" title="${lkh.jenis_kegiatan}">
+                            ${lkh.jenis_kegiatan}
+                        </div>
+                        <div class="text-xs text-slate-500 truncate max-w-[200px]">${lkh.deskripsi_aktivitas}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap font-mono text-xs text-slate-600">
+                        ${waktu}
+                    </td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap">
+                        ${createStatusBadge(lkh.status)}
+                    </td>
+                    <td class="px-6 py-4 text-center whitespace-nowrap">
                         <button type="button"
-                            class="js-open-detail inline-flex items-center justify-center rounded-[6px] bg-[#155FA6] text-white text-[11px] px-3 py-[4px]"
-                            data-lkh-id="${lkh.id}"
-                            data-lkh-data='${JSON.stringify(lkh)}'>
-                            Lihat Detail
+                            class="js-open-detail group inline-flex items-center justify-center gap-1.5 rounded-lg bg-white border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm"
+                            data-id="${lkh.id}">
+                            <i class="fas fa-eye text-slate-400 group-hover:text-blue-500"></i> Detail
                         </button>
                     </td>
                 </tr>
             `;
+            listContainer.insertAdjacentHTML('beforeend', row);
         });
-
-        document.querySelectorAll('.js-open-detail').forEach((btn) =>
-            btn.addEventListener('click', openDetailModal)
-        );
     }
 
+    // === EVENT DELEGATION (KUNCI PERBAIKAN TOMBOL DETAIL) ===
+    listContainer.addEventListener('click', function(e) {
+        // Cek apakah elemen yang diklik adalah (atau ada di dalam) tombol .js-open-detail
+        const btn = e.target.closest('.js-open-detail');
+        if (btn) {
+            const id = btn.dataset.id;
+            // Cari data objek lengkap dari array global
+            const lkhData = currentLkhData.find(item => item.id == id);
+            
+            if (lkhData) {
+                openDetailModal(lkhData);
+            } else {
+                console.error("Data LKH tidak ditemukan untuk ID:", id);
+            }
+        }
+    });
 
-    // ========================
-    // === OPEN DETAIL MODAL ==
-    // ========================
-    function openDetailModal(event) {
-
-        const lkhData = JSON.parse(event.currentTarget.dataset.lkhData);
-
+    // === MODAL LOGIC ===
+    function openDetailModal(lkhData) {
         detailModal.dataset.lkhId = lkhData.id;
+        
+        // Reset bukti state dan simpan data baru
+        // Kita gunakan normalizeBukti di sini
+        daftarBukti = normalizeBukti(lkhData.bukti || []);
+        selectedBukti = null;
 
-        document.getElementById('detail-tanggal').textContent = formatDate(lkhData.tanggal_laporan);
-        document.getElementById('detail-pegawai').textContent = lkhData.user?.name ?? '-';
-        document.getElementById('detail-nama').textContent = lkhData.jenis_kegiatan ?? '-';
-        document.getElementById('detail-uraian').textContent = lkhData.deskripsi_aktivitas ?? '-';
+        // Helper untuk mengisi teks dengan aman
+        const setText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        };
 
-        document.getElementById('detail-output').textContent = lkhData.output_hasil_kerja ?? '-';
-        document.getElementById('detail-volume').textContent = lkhData.volume ?? '-';
-        document.getElementById('detail-satuan').textContent = lkhData.satuan ?? '-';
-        document.getElementById('detail-kategori').textContent = lkhData.skp_id ? 'SKP' : 'Non-SKP';
+        // Isi Data ke Modal
+        setText('detail-tanggal', formatDate(lkhData.tanggal_laporan));
+        setText('detail-pegawai', lkhData.user?.name ?? '-');
+        setText('detail-nama', lkhData.jenis_kegiatan ?? '-');
+        setText('detail-uraian', lkhData.deskripsi_aktivitas ?? '-');
+        setText('detail-output', lkhData.output_hasil_kerja ?? '-');
+        setText('detail-volume', `${lkhData.volume ?? '-'} ${lkhData.satuan ?? ''}`);
+        // setText('detail-satuan', lkhData.satuan ?? '-'); // Digabung dengan volume
+        
+        const kategori = lkhData.skp_rencana_id ? 'SKP' : 'Non-SKP';
+        setText('detail-kategori', kategori);
+        
+        setText('detail-jam-mulai', lkhData.waktu_mulai.substring(0, 5));
+        setText('detail-jam-selesai', lkhData.waktu_selesai.substring(0, 5));
 
-        document.getElementById('detail-jam-mulai').textContent = lkhData.waktu_mulai.substring(0, 5);
-        document.getElementById('detail-jam-selesai').textContent = lkhData.waktu_selesai.substring(0, 5);
+        let lokasi = lkhData.lokasi_manual_text || (lkhData.is_luar_lokasi ? 'Luar Kantor (GPS)' : 'Dalam Kantor (GPS)');
+        setText('detail-lokasi', lokasi);
 
-        let lokasi = lkhData.lokasi_manual_text || (lkhData.is_luar_lokasi ? 'Luar Kantor' : 'Dalam Kantor (GPS)');
-        document.getElementById('detail-lokasi').textContent = lokasi;
+        const statusEl = document.getElementById('detail-status');
+        if(statusEl) statusEl.innerHTML = createStatusBadge(lkhData.status);
 
-        document.getElementById('detail-status').innerHTML = createStatusBadge(lkhData.status);
-
-        const buktiBtn = document.getElementById('detail-bukti-btn');
-        if (lkhData.bukti?.length) {
-            buktiBtn.disabled = false;
-            buktiBtn.textContent = `Lihat Bukti (${lkhData.bukti.length})`;
-            buktiBtn.onclick = () => window.open(lkhData.bukti[0].file_url, '_blank');
-        } else {
-            buktiBtn.disabled = true;
-            buktiBtn.textContent = 'Tidak Ada Bukti';
+        // Tombol Bukti (DIUBAH)
+        if (btnOpenBukti) {
+            if (daftarBukti.length > 0) {
+                btnOpenBukti.disabled = false;
+                btnOpenBukti.innerHTML = `<i class="fas fa-file-alt"></i> Lihat Bukti (${daftarBukti.length})`;
+                btnOpenBukti.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btnOpenBukti.disabled = true;
+                btnOpenBukti.innerHTML = `<i class="fas fa-eye-slash"></i> Tidak Ada Bukti`;
+                btnOpenBukti.classList.add('opacity-50', 'cursor-not-allowed');
+            }
         }
 
+        // Catatan Validasi
         const catWrap = document.getElementById('detail-catatan-wrapper');
-        const catNote = document.getElementById('detail-catatan');
-
-        if (lkhData.komentar_validasi) {
-            catWrap.classList.remove('hidden');
-            catNote.textContent =
-                `${lkhData.validator?.name ?? 'Validator'}: ${lkhData.komentar_validasi}`;
-        } else {
-            catWrap.classList.add('hidden');
+        if (catWrap) {
+            if (lkhData.komentar_validasi) {
+                catWrap.classList.remove('hidden');
+                setText('detail-catatan', lkhData.komentar_validasi);
+            } else {
+                catWrap.classList.add('hidden');
+            }
         }
 
+        // Tombol Aksi (Hanya muncul jika Waiting Review)
         const actions = document.getElementById('validation-actions');
         const info = document.getElementById('validation-info');
 
-        if (lkhData.status === 'waiting_review') {
-            actions.classList.remove('hidden');
-            info.classList.add('hidden');
-        } else {
-            actions.classList.add('hidden');
-            info.classList.remove('hidden');
+        if (actions && info) {
+            if (lkhData.status === 'waiting_review') {
+                actions.classList.remove('hidden');
+                info.classList.add('hidden');
+            } else {
+                actions.classList.add('hidden');
+                info.classList.remove('hidden');
+            }
         }
 
         show(detailModal);
     }
+    
+    // NEW: Fungsi untuk menampilkan modal list bukti
+    function openBuktiListModal() {
+        if (daftarBukti.length > 0) {
+            renderBuktiList(daftarBukti);
+            hide(detailModal); // Sembunyikan modal detail dulu
+            show(buktiListModal);
+        } else {
+            Swal.fire({
+                icon: "info",
+                title: "Tidak Ada Bukti",
+                text: "Laporan ini tidak memiliki dokumen lampiran.",
+                confirmButtonColor: "#1C7C54",
+            });
+        }
+    }
 
+    // NEW: Fungsi untuk me-render daftar bukti di modal
+    function renderBuktiList(buktiArray) {
+        buktiListContainer.innerHTML = '';
+        
+        if (!buktiArray || buktiArray.length === 0) return;
 
-    // ======================================
-    // =========== SUBMIT VALIDASI ==========
-    // ======================================
+        buktiArray.forEach((bukti, index) => {
+            const type = getFileType(bukti.file_url);
+            let thumbnailHtml = '';
+
+            // Render Thumbnail berdasarkan tipe file
+            switch(type) {
+                case 'image':
+                    thumbnailHtml = `<img src="${bukti.file_url}" class="w-full h-24 object-cover rounded-lg shadow-sm" />`;
+                    break;
+                case 'pdf':
+                    thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-red-100 flex items-center justify-center text-red-600"><i class="fas fa-file-pdf text-3xl"></i></div>`;
+                    break;
+                case 'video':
+                    thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600"><i class="fas fa-video text-3xl"></i></div>`;
+                    break;
+                default:
+                    thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600"><i class="fas fa-file text-3xl"></i></div>`;
+                    break;
+            }
+
+            const item = document.createElement('div');
+            item.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer js-preview-bukti";
+            item.innerHTML = `
+                ${thumbnailHtml}
+                <p class="mt-2 text-xs font-medium text-slate-700 truncate">Lampiran ${index + 1}</p>
+                <p class="text-[10px] text-slate-500 truncate" title="${bukti.file_url.split('/').pop()}">${bukti.file_url.split('/').pop()}</p>
+            `;
+            item.dataset.index = index; // Simpan index untuk preview
+            buktiListContainer.appendChild(item);
+        });
+        
+        // Tambahkan listener untuk preview
+        document.querySelectorAll('.js-preview-bukti').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const index = e.currentTarget.dataset.index;
+                previewBukti(daftarBukti[index]);
+            });
+        });
+    }
+
+    // NEW: Fungsi untuk menampilkan modal preview
+    function previewBukti(bukti) {
+        selectedBukti = bukti;
+        const type = getFileType(bukti.file_url);
+        previewContent.innerHTML = '';
+        hide(buktiListModal); // Sembunyikan list bukti
+
+        let content = '';
+        const filename = bukti.file_url.split('/').pop();
+
+        switch(type) {
+            case 'image':
+                content = `<img src="${bukti.file_url}" class="w-full rounded-lg shadow" />`;
+                break;
+            case 'pdf':
+                content = `<iframe src="${bukti.file_url}" class="w-full h-[500px] rounded-lg"></iframe>`;
+                break;
+            case 'video':
+                content = `
+                    <video controls class="w-full rounded-lg">
+                        <source src="${bukti.file_url}" type="video/mp4">
+                        <p>Browser Anda tidak mendukung video.</p>
+                    </video>`;
+                break;
+            default:
+                content = `
+                    <div class="text-center py-8">
+                        <p class="text-center text-slate-600 mb-4">
+                            File **${filename}** tidak dapat dipreview.
+                        </p>
+                        <a href="${bukti.file_url}" target="_blank"
+                            class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg shadow">
+                            <i class="fas fa-download"></i> Download File
+                        </a>
+                    </div>`;
+                break;
+        }
+        
+        previewContent.innerHTML = `<h4 class="text-sm font-bold text-slate-700 mb-2 truncate">Preview: ${filename}</h4>` + content;
+        show(previewModal);
+    }
+    
+
+    // === SUBMIT VALIDATION ===
     async function submitValidation(status, note) {
         const lkhId = detailModal.dataset.lkhId;
-
-        const token = getToken();
+        
+        Swal.fire({
+            title: 'Memproses...',
+            text: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
         try {
-            const res = await fetch(`/api/validator/lkh/${lkhId}/validate`, {
+            const res = await authFetch(`/api/validator/kadis/lkh/${lkhId}/validate`, {
                 method: 'POST',
+                // [PERBAIKAN UTAMA]: Menambahkan Content-Type Header
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json' 
                 },
                 body: JSON.stringify({
-                    status: status,
+                    status: status, 
                     komentar_validasi: note || null
                 })
             });
 
             const json = await res.json();
+            
+            // Penanganan Error 422 dari Backend
+            if (res.status === 422) {
+                let errorMessage = "Data validasi tidak lengkap.";
+                if (json.errors) {
+                    errorMessage = Object.values(json.errors).flat().join('; ');
+                }
+                throw new Error(errorMessage);
+            }
 
-            if (!res.ok) throw new Error(json.message);
+            if (!res.ok) throw new Error(json.message || `Error ${res.status}: Terjadi kesalahan server.`);
 
             Swal.fire({
                 icon: "success",
-                title: status === "approved" ? "Laporan Diterima" : "Laporan Ditolak",
-                text: "Validasi berhasil!",
-                confirmButtonColor: "#1C7C54"
+                title: "Berhasil!",
+                text: json.message || "Status laporan diperbarui.",
+                confirmButtonColor: "#1C7C54",
+                timer: 2000,
+                showConfirmButton: false
             });
 
-            hide(detailModal);
-            hide(approveModal);
-            hide(rejectModal);
-
-            fetchLkhList();
+            closeAllModals(); // Gunakan fungsi baru untuk menutup semua
+            
+            fetchLkhList(); // Refresh data
 
         } catch (err) {
             Swal.fire({
                 icon: "error",
-                title: "Gagal Memproses",
+                title: "Gagal",
                 text: err.message,
                 confirmButtonColor: "#B6241C"
             });
         }
     }
 
+    // === EVENT LISTENERS ===
 
-    // ======================
-    // ==== EVENT HANDLER ===
-    // ======================
+    if(filterForm) {
+        filterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchLkhList();
+        });
+    }
 
-    document.querySelector('.js-close-detail').addEventListener('click', () => hide(detailModal));
+    // Listener Modal Close (Diperbarui)
+    document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject').forEach(btn => {
+        btn.addEventListener('click', closeAllModals);
+    });
+    
+    // NEW Listener untuk menutup modal Bukti dan Preview
+    document.querySelector('.js-close-bukti')?.addEventListener('click', () => {
+        hide(buktiListModal);
+        show(detailModal); // Kembali ke modal detail
+    });
+    
+    document.querySelector('.js-close-preview')?.addEventListener('click', () => {
+        hide(previewModal);
+        show(buktiListModal); // Kembali ke modal list bukti
+    });
 
-    // open approve
-    document.querySelector('.js-open-approve').addEventListener('click', () => {
+    // NEW Listener untuk membuka modal list bukti dari modal detail
+    btnOpenBukti?.addEventListener('click', (e) => {
+        if (!e.currentTarget.disabled) {
+            openBuktiListModal();
+        }
+    });
+
+    // Listener untuk Approve/Reject flow
+    document.querySelector('.js-open-approve')?.addEventListener('click', () => {
         hide(detailModal);
         show(approveModal);
+        const note = document.getElementById('approve-note');
+        if(note) note.value = '';
     });
 
-    // close approve
-    document.querySelector('.js-close-approve').addEventListener('click', () => {
-        hide(approveModal);
-        document.getElementById('approve-note').value = '';
-    });
-
-    btnSubmitApprove.addEventListener('click', () => {
+    btnSubmitApprove?.addEventListener('click', () => {
+        // Pada kasus Approve, komentar tidak required, jadi langsung submit
         const note = document.getElementById('approve-note').value;
-
-        Swal.fire({
-            title: "Terima Laporan?",
-            text: "Apakah laporan ini sudah sesuai?",
-            icon: "question",
-            showCancelButton: true,
-            confirmButtonColor: "#0E7A4A",
-            cancelButtonColor: "#777",
-            confirmButtonText: "Terima"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                submitValidation('approved', note);
-            }
-        });
+        submitValidation('approved', note);
     });
 
-    // open reject
-    document.querySelector('.js-open-reject').addEventListener('click', () => {
+    document.querySelector('.js-open-reject')?.addEventListener('click', () => {
         hide(detailModal);
         show(rejectModal);
-        rejectError.classList.add('hidden');
-        document.getElementById('reject-note').value = '';
+        if(rejectError) rejectError.classList.add('hidden');
+        const note = document.getElementById('reject-note');
+        if(note) note.value = '';
     });
 
-    // close reject
-    document.querySelector('.js-close-reject').addEventListener('click', () => {
-        hide(rejectModal);
-        rejectError.classList.add('hidden');
-        document.getElementById('reject-note').value = '';
-    });
-
-    // submit reject
-    btnSubmitReject.addEventListener('click', () => {
+    btnSubmitReject?.addEventListener('click', () => {
+        // Komentar required untuk Rejected
         const note = document.getElementById('reject-note').value;
-
         if (!note.trim()) {
-            rejectError.classList.remove('hidden');
+            if(rejectError) rejectError.classList.remove('hidden');
             return;
         }
-
-        Swal.fire({
-            title: "Tolak Laporan?",
-            text: "Catatan sudah diisi dan laporan akan dikembalikan.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#B6241C",
-            cancelButtonColor: "#777",
-            confirmButtonText: "Tolak"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                submitValidation('rejected', note);
-            }
-        });
+        submitValidation('rejected', note);
     });
 
+    // Initial Load
     fetchLkhList();
 });

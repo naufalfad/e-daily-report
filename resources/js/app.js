@@ -1,3 +1,5 @@
+// resources/js/app.js
+
 // =========================
 // GLOBAL STYLE & LOGIN
 // =========================
@@ -22,22 +24,29 @@ import { systemSettingsData } from './pages/admin/setting-sistem.js';
 import { penilaiMapData } from './pages/penilai/peta-aktivitas.js';
 import { stafMapData } from './pages/staf/peta-aktivitas.js';
 import { kadisMapData } from './pages/kadis/peta-aktivitas.js';
+import { riwayatDataPenilai } from './pages/penilai/riwayat.js';
+import { riwayatDataStaf} from './pages/staf/riwayat.js';
+import { logActivityKadis } from './pages/kadis/log-aktivitas.js';
+import { logActivityDataAdmin } from './pages/admin/log-aktivitas.js';
 
 
 // =========================
-// 3. REGISTRASI GLOBAL (Agar Blade Bisa Panggil)
+// 3. REGISTRASI GLOBAL (Fix: Menggunakan Alpine.data untuk Robustness)
 // =========================
 window.Alpine = Alpine;
-// Registrasi Manajemen Pegawai (Eksisting)
-window.manajemenPegawaiData = manajemenPegawaiData;
-// Registrasi Akun Pengguna (Eksisting)
-window.akunPenggunaData = akunPenggunaData;
-// [PERBAIKAN UTAMA] Registrasi Pengaturan Sistem
-window.systemSettingsData = systemSettingsData;
-// [PERBAIKAN MAP] Registrasi Peta Aktivitas (Penilai)
-window.penilaiMapData = penilaiMapData;
-window.stafMapData = stafMapData;
-window.kadisMapData = kadisMapData;
+
+// Ganti SEMUA penugasan 'window.xxx = xxx' menjadi Alpine.data()
+Alpine.data('manajemenPegawaiData', manajemenPegawaiData); 
+Alpine.data('akunPenggunaData', akunPenggunaData);
+Alpine.data('systemSettingsData', systemSettingsData);
+Alpine.data('penilaiMapData', penilaiMapData);
+Alpine.data('stafMapData', stafMapData); // FIX UTAMA: Registrasi sebagai komponen Alpine
+Alpine.data('kadisMapData', kadisMapData);
+Alpine.data('riwayatDataPenilai', riwayatDataPenilai);
+Alpine.data('riwayatDataStaf', riwayatDataStaf);
+Alpine.data('logActivityKadis', logActivityKadis);
+Alpine.data('logActivityDataAdmin', logActivityDataAdmin);
+
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -57,8 +66,7 @@ import './utils/auth-fetch';
 // =========================
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
-import './pages/staf/peta-aktivitas.js'; // <-- Biarkan, asumsikan ini untuk staf. Jika ada error, ini perlu diekspor dan didaftarkan global juga.
-import './pages/staf/riwayat.js';
+import './pages/staf/peta-aktivitas.js'; 
 import './pages/staf/pengumuman.js';
 
 // =========================
@@ -67,23 +75,7 @@ import './pages/staf/pengumuman.js';
 import './pages/penilai/input-skp.js';
 import './pages/penilai/log-aktivitas.js';
 import './pages/penilai/pengumuman.js';
-// import './pages/penilai/peta-aktivitas.js'; // <-- HAPUS/KOMENTARI: Sudah di-import di Section 2
-import './pages/penilai/riwayat.js';
-// =========================
-// KADIS - BARIS INI DIHAPUS UNTUK FIX KONFLIK
-// =========================
-// import './pages/kadis/dashboard.js'
-// import './pages/kadis/log-aktivitas.js'
-// import './pages/kadis/validasi-laporan.js'
-// import './pages/kadis/skoring-bidang.js'
-
-// =========================
-// ADMIN (Logic lain jika ada) - BARIS INI DIHAPUS UNTUK FIX KONFLIK
-// =========================
-// import './pages/admin/log-aktivitas.js'
-// [CATATAN]: File ini sudah tidak perlu di-import di sini karena sudah di-import di Section 2
-// import './pages/admin/setting-sistem.js' 
-
+import './pages/admin/log-aktivitas.js';
 
 // Chart global (boleh)
 import Chart from 'chart.js/auto';

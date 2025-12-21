@@ -12,7 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const statSangatBaik = document.getElementById('stat-sb');
     const statPembinaan = document.getElementById('stat-pembinaan');
 
+    const exportBtn = document.getElementById('export-pdf');
+
     let subordinateData = [];
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function () {
+            // Kita gunakan window.location karena ini request file (download)
+            // Route ini sudah didefinisikan di web.php dan menggunakan Session Auth
+            window.location.href = '/penilai/skoring/export-pdf';
+        });
+    }
 
     // --- 1. FETCH DATA ---
     async function fetchData() {
@@ -23,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // [PERBAIKAN UTAMA] Gunakan URL API (/api/...), bukan URL Web (/penilai/...)
             const url = `/api/skoring-kinerja?t=${new Date().getTime()}`;
-            
+
             const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, // Jangan lupa Token!
@@ -78,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pegawai.capaian >= 90) predikat = 'Sangat Baik';
             else if (pegawai.capaian >= 75) predikat = 'Baik';
             else if (pegawai.capaian >= 60) predikat = 'Cukup';
-            
+
             const badgeColor = getBadgeColor(predikat);
             const avatar = pegawai.foto || '/assets/icon/avatar.png';
 
@@ -100,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="py-4 px-6 text-left">
                         <div class="max-w-xs">
                             <p class="text-sm font-medium text-slate-700 truncate" title="${pegawai.rhk}">${pegawai.rhk || '-'}</p>
-                            <p class="text-[11px] text-slate-400 mt-1">Total LKH yang dikirim: ${pegawai.target} ${pegawai.satuan}</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Total LKH yang divalidasi: ${pegawai.target} ${pegawai.satuan}</p>
                         </div>
                     </td>
                     <td class="py-4 px-6 text-center">
@@ -132,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const keyword = e.target.value.toLowerCase();
         const filtered = subordinateData.filter(p => {
             return (p.nama && p.nama.toLowerCase().includes(keyword)) ||
-                   (p.nip && p.nip.toLowerCase().includes(keyword));
+                (p.nip && p.nip.toLowerCase().includes(keyword));
         });
         renderTable(filtered);
     });

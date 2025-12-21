@@ -15,76 +15,124 @@ use Carbon\Carbon;
 class KadisValidatorController extends Controller
 {
     /**
-     * 1. LIST LKH dari KABID yang harus divalidasi Kadis
+     * LIST LKH KABID UNTUK KADIS
      */
     public function index(Request $request)
     {
-        $kadisId = Auth::id(); // ID Kadis
+        $kadisId = Auth::id();
 
-        // Laporan MILIK KABID dan atasan_id = kadis
-        $query = LaporanHarian::with(['user', 'skp', 'bukti'])
-            ->whereHas('user', function ($q) {
-                $q->whereHas('jabatan', function ($j) {
-                    $j->where('nama_jabatan', 'like', '%kabid%');
-                });
-            })
+        $query = LaporanHarian::with(['user.jabatan', 'user.unitKerja', 'rencana', 'bukti'])
             ->where('atasan_id', $kadisId)
             ->where('status', '!=', 'draft');
 
-        // Filter status
-        if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+        // === FILTER STATUS ===
+        $query->when(
+            $request->filled('status') && $request->status !== 'all',
+            fn($q) => $q->where('status', $request->status)
+        );
+
+        // === FILTER BULAN ===
+        $query->when(
+            $request->filled('month'),
+            fn($q) => $q->whereMonth('tanggal_laporan', $request->month)
+        );
+
+        // === FILTER TAHUN ===
+        $query->when(
+            $request->filled('year'),
+            fn($q) => $q->whereYear('tanggal_laporan', $request->year)
+        );
+
+        // === SEARCH (Nama User & Deskripsi Aktivitas) ===
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+
+            $query->where(function ($sub) use ($search, $like) {
+                $sub->whereHas('user', fn($u) => 
+                        $u->where('name', $like, "%{$search}%")
+                    )
+                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+            });
         }
 
-        $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END");
+        // 3. Filter Tahun
+        $query->when($request->filled('year'), function ($q) use ($request) {
+            $q->whereYear('tanggal_laporan', $request->year);
+        });
 
-        return response()->json($query->latest('tanggal_laporan')->paginate(10));
+        // 4. Search (Nama User / Deskripsi)
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+
+            $q->where(function ($sub) use ($search, $like) {
+                $sub->whereHas('user', function ($u) use ($search, $like) {
+                    $u->where('name', $like, "%{$search}%");
+                })
+                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+            });
+        });
+
+        // Sorting: Waiting Review Paling Atas
+        $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
+            ->latest('tanggal_laporan');
+
+        return response()->json($query->paginate(10));
     }
 
     /**
-     * 2. SHOW LKH KABID
+     * SHOW DETAIL LKH KABID
      */
     public function show($id)
     {
         $kadisId = Auth::id();
 
-        $lkh = LaporanHarian::with(['user', 'skp', 'bukti'])
+        $lkh = LaporanHarian::with(['user', 'rencana', 'bukti'])
             ->where('atasan_id', $kadisId)
             ->find($id);
 
         if (!$lkh) {
             return response()->json([
-                'message' => 'Laporan tidak ditemukan atau bukan laporan Kabid.'
+                'message' => 'Laporan tidak ditemukan atau bukan laporan bawahan Anda.'
             ], 404);
         }
 
         return response()->json(['data' => $lkh]);
     }
 
-
     /**
-     * 3. VALIDASI LKH dari Kabid
+     * VALIDASI LKH OLEH KADIS
      */
     public function validateLkh(Request $request, $id)
     {
         $kadisId = Auth::id();
 
+        // === VALIDASI INPUT ===
         $validator = Validator::make($request->all(), [
             'status' => 'required|in:approved,rejected',
-            'komentar_validasi' => 'required_if:status,rejected|string|max:255'
+            'komentar_validasi' => 'required_if:status,rejected|max:255'
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Cari laporan milik KABID dengan atasan Kadis
+        // === CEK DATA LKH ===
         $lkh = LaporanHarian::where('atasan_id', $kadisId)->find($id);
 
         if (!$lkh) {
-            return response()->json(['message' => 'Akses ditolak'], 403);
+            return response()->json(['message' => 'Akses ditolak.'], 403);
         }
 
+        // Hanya status waiting_review yang boleh divalidasi
+        if ($lkh->status !== 'waiting_review') {
+            return response()->json([
+                'message' => 'Laporan ini sudah divalidasi sebelumnya.'
+            ], 422);
+        }
+
+        // === PROSES VALIDASI ===
         try {
             DB::beginTransaction();
 
@@ -94,49 +142,66 @@ class KadisValidatorController extends Controller
                 'komentar_validasi' => $request->komentar_validasi
             ]);
 
-            // Notifikasi ke Kabid
-            $tglIndo = Carbon::parse($lkh->tanggal_laporan)->translatedFormat('d F Y');
+            // === SIAPKAN NOTIFIKASI ===
+            $tglIndo = Carbon::parse($lkh->tanggal_laporan)
+                        ->translatedFormat('d F Y');
 
             if ($request->status === 'approved') {
-                $type = NotificationType::LKH_APPROVED;
-                $msg = "Laporan Kabid pada tanggal {$tglIndo} telah disetujui Kadis.";
+                $notifType = NotificationType::LKH_APPROVED->value;
+                $notifMsg  = "Laporan Kabid tanggal {$tglIndo} telah DISETUJUI oleh Kadis.";
             } else {
-                $type = NotificationType::LKH_REJECTED;
-                $msg = "Laporan Kabid pada tanggal {$tglIndo} ditolak Kadis.";
+                $notifType = NotificationType::LKH_REJECTED->value;
+                $notifMsg  = "Laporan Kabid tanggal {$tglIndo} DITOLAK oleh Kadis. Catatan: {$request->komentar_validasi}";
             }
 
-            NotificationService::send($lkh->user_id, $type, $msg, $lkh);
+            NotificationService::send(
+                $lkh->user_id,
+                $notifType,
+                $notifMsg,
+                $lkh
+            );
 
             DB::commit();
 
             return response()->json([
-                'message' => 'Validasi berhasil',
+                'message' => 'Validasi berhasil dilakukan.',
                 'data' => $lkh
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Terjadi kesalahan',
-                'error' => $e->getMessage()
+                'message' => 'Terjadi kesalahan.',
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * 4. MONITORING LAPORAN STAF (hanya yang sudah di-approve Kabid)
+     * MONITORING LKH STAF (yang sudah disetujui Kabid)
      */
-    public function monitoringStaf()
+    public function monitoringStaf(Request $request)
     {
-        // Ambil laporan staf yang statusnya APPROVED
-        $data = LaporanHarian::with(['user', 'skp'])
+        $query = LaporanHarian::with(['user', 'rencana'])
             ->where('status', 'approved')
+            // Filter hanya user dengan jabatan mengandung kata 'staf' (Opsional, tergantung bussines logic)
             ->whereHas('user.jabatan', function ($j) {
-                $j->where('nama_jabatan', 'like', '%staf%');
-            })
-            ->latest('tanggal_laporan')
-            ->paginate(20);
+                $j->where('nama_jabatan', 'ilike', '%staf%')
+                  ->orWhere('nama_jabatan', 'ilike', '%pelaksana%');
+            });
 
-        return response()->json($data);
+        // === FILTER BULAN & TAHUN ===
+        $query->when($request->month, fn($q, $m) => $q->whereMonth('tanggal_laporan', $m));
+        $query->when($request->year, fn($q, $y) => $q->whereYear('tanggal_laporan', $y));
+
+        // 2. Search (Cari nama staf tertentu)
+        $query->when($request->search, function ($q, $search) {
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $q->whereHas('user', fn($u) => $u->where('name', $like, "%{$search}%"));
+        });
+
+        return response()->json(
+            $query->latest('tanggal_laporan')->paginate(20)
+        );
     }
 }

@@ -1,251 +1,334 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Skoring Kinerja Pegawai</title>
-
-    <!-- TAILWIND COMPATIBLE INLINE CSS -->
+    <title>Laporan Kinerja Pegawai</title>
     <style>
-    body {
-        font-family: DejaVu Sans, sans-serif;
-        padding: 24px;
-        font-size: 14px;
-        color: #111827;
-    }
+        /* =========================================
+           1. RESET & BASIC LAYOUT
+           ========================================= */
+        @page {
+            margin: 0px; 
+            padding: 0px;
+        }
 
-    .flex {
-        display: flex;
-    }
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 12px;
+            color: #1e293b; /* Slate 800 */
+            line-height: 1.4;
+            background-color: #ffffff;
+        }
 
-    .items-center {
-        align-items: center;
-    }
+        .content-wrapper {
+            padding: 40px;
+        }
 
-    .justify-between {
-        justify-content: space-between;
-    }
+        /* =========================================
+           2. HEADER (HERO STYLE)
+           ========================================= */
+        .header-hero {
+            background-color: #1e40af; /* Blue 800 */
+            color: #ffffff;
+            padding: 30px 40px;
+            border-bottom: 8px solid #f59e0b; /* Amber 500 */
+        }
 
-    .justify-center {
-        justify-content: center;
-    }
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
 
-    .text-center {
-        text-align: center;
-    }
+        .header-subtitle {
+            font-size: 12px;
+            font-weight: normal;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
 
-    .font-bold {
-        font-weight: 700;
-    }
+        .header-meta-badge {
+            background-color: rgba(255,255,255, 0.15);
+            color: #ffffff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 15px;
+            border: 1px solid rgba(255,255,255, 0.3);
+        }
 
-    .font-semibold {
-        font-weight: 600;
-    }
+        /* =========================================
+           3. STATS CARDS
+           ========================================= */
+        .stats-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 20px 0;
+            margin-bottom: 30px;
+            margin-left: -20px; 
+            margin-right: -20px;
+            width: calc(100% + 40px);
+        }
 
-    .font-medium {
-        font-weight: 500;
-    }
+        .stat-card {
+            background-color: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 20px;
+            width: 33.33%;
+            vertical-align: top;
+        }
 
-    .text-gray-500 {
-        color: #6B7280;
-    }
+        .card-blue { border-top: 4px solid #3b82f6; }
+        .card-purple { border-top: 4px solid #8b5cf6; }
+        .card-red { border-top: 4px solid #ef4444; }
+        .card-green { border-top: 4px solid #22c55e; }
 
-    .text-gray-700 {
-        color: #374151;
-    }
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
 
-    .text-gray-800 {
-        color: #1F2937;
-    }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+        }
 
-    .text-xl {
-        font-size: 20px;
-    }
+        /* =========================================
+           4. DATA TABLE
+           ========================================= */
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 11px;
+        }
 
-    .text-2xl {
-        font-size: 24px;
-    }
+        .custom-table th {
+            background-color: #eff6ff;
+            color: #1e3a8a;
+            border-bottom: 2px solid #3b82f6;
+            padding: 12px 10px;
+            text-align: left;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
 
-    .text-sm {
-        font-size: 13px;
-    }
+        .custom-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            vertical-align: middle;
+        }
 
-    .text-xs {
-        font-size: 12px;
-    }
+        .custom-table tr:nth-child(even) {
+            background-color: #f8fafc; 
+        }
 
-    .mt-1 {
-        margin-top: 4px;
-    }
+        /* =========================================
+           5. VISUAL ELEMENTS
+           ========================================= */
+        .bar-bg {
+            background-color: #e2e8f0;
+            height: 6px;
+            width: 100%;
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .bar-fill {
+            background-color: #3b82f6;
+            height: 100%;
+            border-radius: 3px;
+        }
 
-    .mt-6 {
-        margin-top: 24px;
-    }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            display: inline-block;
+            min-width: 80px;
+        }
+        .badge-sb { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .badge-b  { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+        .badge-c  { background: #fef9c3; color: #a16207; border: 1px solid #fde047; }
+        .badge-k  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
 
-    .mb-4 {
-        margin-bottom: 16px;
-    }
-
-    .mb-6 {
-        margin-bottom: 24px;
-    }
-
-    .mb-8 {
-        margin-bottom: 32px;
-    }
-
-    .mr-1 {
-        margin-right: 4px;
-    }
-
-    .p-4 {
-        padding: 16px;
-    }
-
-    .p-3 {
-        padding: 12px;
-    }
-
-    .p-2 {
-        padding: 8px;
-    }
-
-    .rounded-lg {
-        border-radius: 12px;
-    }
-
-    .rounded-xl {
-        border-radius: 16px;
-    }
-
-    .border {
-        border: 1px solid #D1D5DB;
-    }
-
-    .border-gray {
-        border-color: #D1D5DB;
-    }
-
-    .bg-gray-50 {
-        background: #F9FAFB;
-    }
-
-    .bg-gray-100 {
-        background: #F3F4F6;
-    }
-
-    .grid-3 {
-        display: flex;
-        gap: 12px;
-    }
-
-    .grid-item {
-        flex: 1;
-    }
-
-    /* BADGE COLORS */
-    .badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        color: white;
-        font-weight: 700;
-        font-size: 12px;
-    }
-
-    .sangatbaik {
-        background: #16A34A;
-    }
-
-    .baik {
-        background: #3B82F6;
-    }
-
-    .cukup {
-        background: #F59E0B;
-    }
-
-    .kurang {
-        background: #EF4444;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
-
-    th {
-        background: #F3F4F6;
-        padding: 8px;
-        border: 1px solid #D1D5DB;
-        text-transform: uppercase;
-        font-size: 11px;
-    }
-
-    td {
-        padding: 8px;
-        border: 1px solid #E5E7EB;
-        font-size: 13px;
-    }
+        .signature-container {
+            margin-top: 50px;
+            page-break-inside: avoid;
+            width: 100%;
+        }
+        .signature-box {
+            float: right;
+            width: 250px;
+            text-align: center;
+        }
+        .signature-line {
+            margin-top: 70px;
+            border-bottom: 1px solid #000;
+            display: inline-block;
+            width: 100%;
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold">Laporan Skoring Kinerja Pegawai</h2>
-        <p class="text-gray-600 mt-1 text-sm">
-            Disusun oleh: <b>{{ $atasan->name }}</b> |
-            Tanggal: {{ now()->format('d M Y') }}
-        </p>
-    </div>
-
-    {{-- CARD STATISTIK (3 KOLOM) --}}
-    <div class="grid-3 mb-6">
-        <div class="grid-item bg-gray-50 border rounded-lg p-4 text-center">
-            <div class="text-gray-700 text-sm font-medium">Total Bawahan</div>
-            <div class="text-2xl font-bold mt-1">{{ $bawahan->count() }}</div>
+    {{-- HERO HEADER --}}
+    <div class="header-hero">
+        <h1 class="header-title">Laporan Kinerja Pegawai</h1>
+        <div class="header-subtitle">
+            Badan Pendapatan Daerah Kabupaten Mimika
         </div>
-
-        <div class="grid-item bg-gray-50 border rounded-lg p-4 text-center">
-            <div class="text-gray-700 text-sm font-medium">Rata-rata Skor</div>
-            <div class="text-2xl font-bold mt-1">{{ round($avgScore) }}%</div>
-        </div>
-
-        <div class="grid-item bg-gray-50 border rounded-lg p-4 text-center">
-            <div class="text-gray-700 text-sm font-medium">Perlu Pembinaan</div>
-            <div class="text-2xl font-bold mt-1">{{ $pembinaan }}</div>
+        <div class="header-meta-badge">
+            PERIODE: {{ strtoupper(now()->translatedFormat('F Y')) }}
         </div>
     </div>
 
-    {{-- TABEL --}}
-    <table>
-        <thead>
+    {{-- CONTENT WRAPPER --}}
+    <div class="content-wrapper">
+
+        {{-- INFO SINGKAT (LOGIC FIXED HERE) --}}
+        <table style="width: 100%; margin-bottom: 25px;">
             <tr>
-                <th>Nama Pegawai</th>
-                <th>Unit Kerja</th>
-                <th>Realisasi</th>
-                <th>Skor</th>
-                <th>Predikat</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($bawahan as $b)
-            <tr>
-                <td>{{ $b->name }}</td>
-                <td>{{ $b->unitKerja->nama ?? '-' }}</td>
-                <td>{{ $b->acc_lkh }} / {{ $b->total_lkh }}</td>
-                <td>{{ $b->skor }}%</td>
-                <td>
-                    <span class="badge {{ strtolower(str_replace(' ', '', $b->predikat)) }}">
-                        {{ $b->predikat }}
+                <td style="width: 50%; vertical-align: top;">
+                    <span style="color:#64748b; font-size:10px; font-weight:bold; letter-spacing:1px;">UNIT KERJA / BIDANG</span><br>
+                    <span style="font-size:14px; font-weight:bold; color:#0f172a;">
+                        {{-- FIX: Cek Unit Kerja dulu, kalau kosong cek Bidang, kalau kosong default --}}
+                        {{ 
+                            $atasan->unitKerja->nama 
+                            ?? ($atasan->bidang->nama_bidang 
+                            ?? 'BAPENDA KAB. MIMIKA') 
+                        }}
                     </span>
                 </td>
+                <td style="width: 50%; text-align: right; vertical-align: top;">
+                    <span style="color:#64748b; font-size:10px; font-weight:bold; letter-spacing:1px;">DICETAK OLEH</span><br>
+                    <span style="font-size:14px; color:#0f172a;">
+                        {{ $atasan->name }}
+                    </span>
+                    <div style="font-size:10px; color:#64748b; margin-top:2px;">
+                        {{ $atasan->jabatan->nama_jabatan ?? 'Pejabat Penilai' }}
+                    </div>
+                </td>
             </tr>
-            @endforeach
-        </tbody>
-    </table>
+        </table>
+
+        {{-- STATS CARDS --}}
+        <table class="stats-table">
+            <tr>
+                <td class="stat-card card-blue">
+                    <div class="stat-label">Total Pegawai</div>
+                    <div class="stat-value">{{ $bawahan->count() }}</div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:5px;">Orang</div>
+                </td>
+                
+                <td class="stat-card card-purple">
+                    <div class="stat-label">Rata-rata Skor</div>
+                    <div class="stat-value">{{ round($avgScore) }}%</div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:5px;">Keseluruhan Tim</div>
+                </td>
+
+                <td class="stat-card {{ $pembinaan > 0 ? 'card-red' : 'card-green' }}">
+                    <div class="stat-label">Perlu Pembinaan</div>
+                    <div class="stat-value" style="color: {{ $pembinaan > 0 ? '#ef4444' : '#22c55e' }}">
+                        {{ $pembinaan }}
+                    </div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:5px;">
+                        {{ $pembinaan > 0 ? 'Perhatian Diperlukan' : 'Semua Aman' }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- DATA TABLE --}}
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th width="5%">No</th>
+                    <th width="35%">Pegawai</th>
+                    <th width="25%">Realisasi LKH</th>
+                    <th width="15%" style="text-align:center;">Skor</th>
+                    <th width="20%" style="text-align:center;">Predikat</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($bawahan as $index => $b)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>
+                        <div style="font-weight:bold; color:#0f172a;">{{ $b->name }}</div>
+                        <div style="font-size:10px; color:#64748b; margin-top:2px;">NIP. {{ $b->nip ?? '-' }}</div>
+                    </td>
+                    <td>
+                        <div style="font-size:12px; font-weight:bold;">
+                            {{ $b->acc_lkh }} <span style="font-weight:normal; color:#94a3b8;">/ {{ $b->total_lkh }}</span>
+                        </div>
+                        {{-- Visual Bar --}}
+                        @php
+                            $persen = $b->total_lkh > 0 ? ($b->acc_lkh / $b->total_lkh) * 100 : 0;
+                        @endphp
+                        <div class="bar-bg">
+                            <div class="bar-fill" style="width: {{ $persen }}%;"></div>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">
+                        <span style="font-size:14px; font-weight:800; color:#1e293b;">
+                            {{ $b->skor }}%
+                        </span>
+                    </td>
+                    <td style="text-align:center;">
+                        @php
+                            $p = strtolower(str_replace(' ', '', $b->predikat));
+                            $cls = 'badge-k';
+                            if($p == 'sangatbaik') $cls = 'badge-sb';
+                            elseif($p == 'baik') $cls = 'badge-b';
+                            elseif($p == 'cukup') $cls = 'badge-c';
+                        @endphp
+                        <span class="badge {{ $cls }}">
+                            {{ $b->predikat }}
+                        </span>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" style="text-align:center; padding:30px; color:#94a3b8; font-style:italic;">
+                        Data pegawai tidak ditemukan untuk periode ini.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        {{-- SIGNATURE --}}
+        <div class="signature-container">
+            <div class="signature-box">
+                <div style="margin-bottom: 5px; color:#334155;">Ditetapkan di Mimika, {{ now()->translatedFormat('d F Y') }}</div>
+                <div style="font-weight:bold; color:#0f172a;">Pejabat Penilai,</div>
+                
+                <div class="signature-line"></div>
+                
+                <div style="margin-top: 5px; font-weight:bold; text-decoration:underline;">{{ $atasan->name }}</div>
+                <div style="font-size:11px; color:#64748b;">NIP. {{ $atasan->nip ?? '-' }}</div>
+            </div>
+            <div style="clear:both;"></div>
+        </div>
+
+    </div>
 
 </body>
-
 </html>

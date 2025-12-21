@@ -1,5 +1,6 @@
 // resources/js/pages/staf/riwayat.js
-function riwayatData(role) {
+
+export function riwayatDataStaf(role) {
     const TOKEN = localStorage.getItem("auth_token");
     const BASE_URL = "/api/lkh/riwayat";
 
@@ -10,26 +11,59 @@ function riwayatData(role) {
 
         // State Modal Detail Laporan
         open: false,
+        showPreview: false,
+        selectedBukti: null,
         modalData: null,
 
-        // [BARU] State Modal Bukti
+        // State Modal Bukti
         openBukti: false,
         daftarBukti: [],
 
+        // Filter (Mode otomatis 'mine' untuk staf)
         filter: {
             from: "",
             to: "",
-            mode: role === "penilai" ? "subordinates" : "mine",
+            mode: "mine",
         },
 
-        //Edit Laporan
+        // ===============================
+        // ACTIONS
+        // ===============================
+
+        // Edit Laporan (Khusus Staf: Draft atau Rejected)
         editLaporan(id) {
             if (!id) return;
-            // Arahkan ke halaman input/edit dengan ID laporan
             window.location.href = `/staf/input-lkh/${id}`;
         },
 
-        // UTILS
+        // Export PDF
+        exportPdf() {
+            Swal.fire({
+                title: "Export PDF?",
+                text: "Apakah Anda yakin ingin mengekspor riwayat laporan ini ke PDF?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#155FA6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Export",
+                cancelButtonText: "Batal",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let url = `/riwayat/export-pdf?role=${this.role}&mode=mine`;
+
+                    if (this.filter.from)
+                        url += `&from_date=${this.filter.from}`;
+                    if (this.filter.to) url += `&to_date=${this.filter.to}`;
+
+                    window.open(url, "_blank");
+                }
+            });
+        },
+
+        // ===============================
+        // HELPERS & FORMATTING
+        // ===============================
+
         formatDate(isoString) {
             if (!isoString) return "-";
             try {
@@ -44,12 +78,23 @@ function riwayatData(role) {
             }
         },
 
+        getLokasi(item) {
+            return (
+                item.lokasi_manual_text ||
+                (item.is_luar_lokasi
+                    ? "Luar Kantor (GPS)"
+                    : "Dalam Kantor (GPS)")
+            );
+        },
+
         statusText(status) {
             switch (status) {
                 case "approved":
                     return "Diterima";
                 case "rejected":
                     return "Ditolak";
+                case "draft":
+                    return "Draft";
                 default:
                     return "Menunggu";
             }
@@ -61,7 +106,9 @@ function riwayatData(role) {
                     return "rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5";
                 case "rejected":
                     return "rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5";
-                default:
+                case "draft":
+                    return "rounded-full bg-slate-200 text-slate-600 text-[11px] font-medium px-2.5 py-0.5";
+                default: // waiting_review
                     return "rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5";
             }
         },
@@ -72,29 +119,21 @@ function riwayatData(role) {
             )}">${this.statusText(status)}</span>`;
         },
 
-        getLokasi(item) {
-            return (
-                item.lokasi_manual_text ||
-                (item.is_luar_lokasi
-                    ? "Luar Kantor (GPS)"
-                    : "Dalam Kantor (GPS)")
-            );
-        },
+        // ===============================
+        // DATA FETCHING
+        // ===============================
 
-        // INIT
         async initPage() {
             await this.fetchData();
             this.initDatePickers();
         },
 
-        // FETCH
         async fetchData() {
             this.loading = true;
             this.items = [];
 
-            let url = BASE_URL + `?role=${this.role}`;
-
-            if (this.role === "penilai") url += `&mode=${this.filter.mode}`;
+            // Build URL
+            let url = BASE_URL + `?role=${this.role}&mode=mine`;
             if (this.filter.from) url += `&from_date=${this.filter.from}`;
             if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
@@ -109,67 +148,53 @@ function riwayatData(role) {
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(
-                        `Gagal memuat data. Status: ${response.status
+                        `Gagal memuat data. Status: ${
+                            response.status
                         }. Pesan: ${errorData.message || "Unknown Error"}`
                     );
                 }
 
-                this.items = data.data || [];
+                const data = await response.json();
+                this.items = data.data || []; // Pastikan fallback array kosong
             } catch (e) {
                 console.error("Gagal memuat data riwayat LKH:", e);
+                // Opsional: alert("Gagal memuat data");
             } finally {
-                this.loading = false; // <-- DIJAMIN SELALU JALAN
+                this.loading = false;
             }
         },
 
-        // FILTER
-        // FILTER
         async filterData() {
             await this.fetchData();
         },
 
-        // MODAL
+        // ===============================
+        // MODALS
+        // ===============================
+
         openModal(item) {
             this.modalData = item;
             this.open = true;
         },
 
-        // VIEW FILE
         viewBukti(buktiArray) {
-            // Cek validitas data
             if (buktiArray && buktiArray.length > 0) {
-                this.daftarBukti = buktiArray; // Simpan array bukti ke state
-                this.openBukti = true; // Trigger modal untuk muncul
+                this.daftarBukti = buktiArray;
+                this.openBukti = true;
             } else {
-                alert("Tidak ada bukti yang tersedia.");
+                Swal.fire({
+                    icon: "info",
+                    title: "Tidak Ada Bukti",
+                    text: "Laporan ini tidak memiliki lampiran bukti.",
+                    confirmButtonColor: "#155FA6",
+                });
             }
         },
 
-        exportPdf() {
-            Swal.fire({
-                title: "Export PDF?",
-                text: "Apakah Anda yakin ingin mengekspor riwayat laporan ini ke PDF?",
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonColor: "#155FA6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, Export",
-                cancelButtonText: "Batal",
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    let url = `/riwayat/export-pdf?role=${this.role}&mode=${this.filter.mode}`;
+        // ===============================
+        // UI COMPONENTS
+        // ===============================
 
-                    if (this.filter.from)
-                        url += `&from_date=${this.filter.from}`;
-                    if (this.filter.to) 
-                        url += `&to_date=${this.filter.to}`;
-
-                    window.open(url, "_blank");
-                }
-            });
-        },
-
-        // DATEPICKERS
         initDatePickers() {
             ["tgl_dari", "tgl_sampai"].forEach((id) => {
                 const input = document.getElementById(id);
@@ -186,9 +211,24 @@ function riwayatData(role) {
                 });
             });
         },
+
+        getFileType(url) {
+            if (!url) return "other";
+            const ext = url.split(".").pop().toLowerCase();
+
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+                return "image";
+            if (ext === "pdf") return "pdf";
+            if (["mp4", "mov", "webm"].includes(ext)) return "video";
+            return "other";
+        },
+
+        preview(b) {
+            this.selectedBukti = b;
+            this.showPreview = true;
+        },
     };
 }
 
-// [CRITICAL FIX]
-// Daftarkan fungsi ke Global Window agar dikenali oleh Alpine.js di HTML
-window.riwayatData = riwayatData;
+// Global Registration
+window.riwayatDataStaf = riwayatDataStaf;

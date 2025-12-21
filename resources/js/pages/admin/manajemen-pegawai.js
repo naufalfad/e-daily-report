@@ -4,6 +4,7 @@ export function manajemenPegawaiData() {
     // Helper ambil token
     const BASE_URL = "/api/admin/pegawai";
     const MASTER_URL = "/api/admin/master-dropdown";
+    const IMPORT_URL = "/api/admin/pegawai/import";
 
     const getToken = () => localStorage.getItem("auth_token");
 
@@ -11,14 +12,16 @@ export function manajemenPegawaiData() {
         // --- STATE ---
         items: [],
         isLoading: false,
-        search: '',
+        search: "",
+        fileUpload: null,
+        isImporting: false,
 
         // Pagination
         pagination: {
             current_page: 1,
             last_page: 1,
             next_page_url: null,
-            prev_page_url: null
+            prev_page_url: null,
         },
 
         // Modal States
@@ -40,15 +43,15 @@ export function manajemenPegawaiData() {
 
         // Form Data
         formData: {
-            name: '',
+            name: "",
             // username: '', // DIHAPUS
-            nip: '',
+            nip: "",
             // password: '', // DIHAPUS
-            unit_kerja_id: '',
-            bidang_id: '',
-            jabatan_id: '',
+            unit_kerja_id: "",
+            bidang_id: "",
+            jabatan_id: "",
             // role_id: '', // DIHAPUS
-            atasan_id: ''
+            atasan_id: "",
         },
 
         // [WATCHER] Flag untuk mencegah looping
@@ -65,15 +68,20 @@ export function manajemenPegawaiData() {
             await this.fetchData();
 
             // Setup Watcher Manual
-            this.$watch('formData.unit_kerja_id', () => this.onUnitKerjaChange());
-            this.$watch('formData.bidang_id', () => this.fetchCalonAtasan());
-            this.$watch('formData.jabatan_id', () => this.fetchCalonAtasan());
+            this.$watch("formData.unit_kerja_id", () =>
+                this.onUnitKerjaChange()
+            );
+            this.$watch("formData.bidang_id", () => this.fetchCalonAtasan());
+            this.$watch("formData.jabatan_id", () => this.fetchCalonAtasan());
         },
 
         // --- MASTER DATA FETCHING ---
         async fetchMasterData() {
             try {
-                const headers = { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" };
+                const headers = {
+                    Authorization: `Bearer ${getToken()}`,
+                    Accept: "application/json",
+                };
 
                 // [PERBAIKAN] Hanya fetch data HR: Unit Kerja dan Jabatan
                 const [resUnit, resJab] = await Promise.all([
@@ -100,9 +108,15 @@ export function manajemenPegawaiData() {
             if (!unitId) return;
 
             try {
-                const res = await fetch(`${MASTER_URL}/bidang-by-unit-kerja/${unitId}`, {
-                    headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
-                });
+                const res = await fetch(
+                    `${MASTER_URL}/bidang-by-unit-kerja/${unitId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${getToken()}`,
+                            Accept: "application/json",
+                        },
+                    }
+                );
                 this.bidangList = await res.json();
             } catch (e) {
                 console.error("Gagal load bidang", e);
@@ -124,13 +138,19 @@ export function manajemenPegawaiData() {
                 // Buat Query String
                 const params = new URLSearchParams({
                     unit_kerja_id,
-                    bidang_id: bidang_id || '',
-                    jabatan_id
+                    bidang_id: bidang_id || "",
+                    jabatan_id,
                 });
 
-                const res = await fetch(`${MASTER_URL}/calon-atasan?${params}`, {
-                    headers: { "Authorization": `Bearer ${getToken()}`, "Accept": "application/json" }
-                });
+                const res = await fetch(
+                    `${MASTER_URL}/calon-atasan?${params}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${getToken()}`,
+                            Accept: "application/json",
+                        },
+                    }
+                );
 
                 const candidates = await res.json();
                 this.atasanList = candidates;
@@ -138,11 +158,9 @@ export function manajemenPegawaiData() {
                 // [AUTO SELECT]
                 if (candidates.length === 1) {
                     this.formData.atasan_id = candidates[0].id;
+                } else if (candidates.length === 0) {
+                    this.formData.atasan_id = "";
                 }
-                else if (candidates.length === 0) {
-                    this.formData.atasan_id = '';
-                }
-
             } catch (e) {
                 console.error("Gagal cari atasan", e);
             } finally {
@@ -157,16 +175,18 @@ export function manajemenPegawaiData() {
             let targetUrl = url;
             // [PERBAIKAN] Hapus pencarian Username di client-side
             if (this.search) {
-                const separator = targetUrl.includes('?') ? '&' : '?';
-                targetUrl += `${separator}search=${encodeURIComponent(this.search)}`;
+                const separator = targetUrl.includes("?") ? "&" : "?";
+                targetUrl += `${separator}search=${encodeURIComponent(
+                    this.search
+                )}`;
             }
 
             try {
                 const response = await fetch(targetUrl, {
                     headers: {
-                        "Authorization": `Bearer ${getToken()}`,
-                        "Accept": "application/json"
-                    }
+                        Authorization: `Bearer ${getToken()}`,
+                        Accept: "application/json",
+                    },
                 });
 
                 if (!response.ok) throw new Error("Gagal mengambil data");
@@ -179,13 +199,16 @@ export function manajemenPegawaiData() {
                     current_page: json.current_page,
                     last_page: json.last_page,
                     next_page_url: json.next_page_url,
-                    prev_page_url: json.prev_page_url
+                    prev_page_url: json.prev_page_url,
                 };
-
             } catch (error) {
                 console.error(error);
                 // Menampilkan error 404 dari console (asumsi BASE_URL sudah benar di server)
-                Swal.fire("Error API", "Gagal memuat data. Cek BASE_URL di JS dan Route API.", "error");
+                Swal.fire(
+                    "Error API",
+                    "Gagal memuat data. Cek BASE_URL di JS dan Route API.",
+                    "error"
+                );
             } finally {
                 this.isLoading = false;
             }
@@ -193,10 +216,10 @@ export function manajemenPegawaiData() {
 
         // --- 2. CREATE & UPDATE (SUBMIT FORM) ---
         async submitForm(type) {
-            const isEdit = type === 'edit';
+            const isEdit = type === "edit";
             const url = isEdit ? `${BASE_URL}/${this.editId}` : BASE_URL;
             // Gunakan method POST untuk Laravel PUT/PATCH jika form-data tidak mendukung PUT
-            const method = isEdit ? 'PUT' : 'POST'; 
+            const method = isEdit ? "PUT" : "POST";
 
             // [PERBAIKAN UTAMA] Payload hanya berisi data HR (tanpa kredensial)
             const payload = {
@@ -213,20 +236,22 @@ export function manajemenPegawaiData() {
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        "Authorization": `Bearer ${getToken()}`,
+                        Authorization: `Bearer ${getToken()}`,
                         "Content-Type": "application/json",
-                        "Accept": "application/json",
+                        Accept: "application/json",
                         // Tambahkan header X-HTTP-METHOD-OVERRIDE jika menggunakan POST untuk PUT/PATCH
-                        ...(isEdit && { 'X-HTTP-Method-Override': 'PUT' })
+                        ...(isEdit && { "X-HTTP-Method-Override": "PUT" }),
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
                 });
 
                 const result = await response.json();
 
                 if (!response.ok) {
                     if (response.status === 422) {
-                        const errors = Object.values(result.errors).flat().join('\n');
+                        const errors = Object.values(result.errors)
+                            .flat()
+                            .join("\n");
                         throw new Error(errors || "Validasi gagal");
                     }
                     throw new Error(result.message || "Terjadi kesalahan");
@@ -238,7 +263,6 @@ export function manajemenPegawaiData() {
                 else this.toggleAdd(false);
 
                 this.fetchData();
-
             } catch (error) {
                 Swal.fire("Gagal", error.message, "error");
             }
@@ -247,12 +271,12 @@ export function manajemenPegawaiData() {
         // --- 3. DELETE ---
         async deleteItem(id) {
             const confirm = await Swal.fire({
-                title: 'Hapus Pegawai?',
+                title: "Hapus Pegawai?",
                 text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: 'warning',
+                icon: "warning",
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Ya, Hapus!'
+                confirmButtonColor: "#d33",
+                confirmButtonText: "Ya, Hapus!",
             });
 
             if (confirm.isConfirmed) {
@@ -260,19 +284,79 @@ export function manajemenPegawaiData() {
                     const response = await fetch(`${BASE_URL}/${id}`, {
                         method: "DELETE",
                         headers: {
-                            "Authorization": `Bearer ${getToken()}`,
-                            "Accept": "application/json"
-                        }
+                            Authorization: `Bearer ${getToken()}`,
+                            Accept: "application/json",
+                        },
                     });
 
                     if (!response.ok) throw new Error("Gagal menghapus data");
 
-                    Swal.fire('Terhapus!', 'Data pegawai berhasil dihapus.', 'success');
+                    Swal.fire(
+                        "Terhapus!",
+                        "Data pegawai berhasil dihapus.",
+                        "success"
+                    );
                     this.fetchData();
-
                 } catch (error) {
                     Swal.fire("Error", error.message, "error");
                 }
+            }
+        },
+
+        // --- 4. IMPORT EXCEL ---
+        async submitImport() {
+            if (!this.fileUpload) {
+                Swal.fire("Peringatan", "Silakan pilih file Excel terlebih dahulu.", "warning");
+                return;
+            }
+
+            this.isImporting = true;
+            
+            // Buat FormData untuk mengirim file
+            const formData = new FormData();
+            formData.append('csv_file', this.fileUpload);
+
+            try {
+                const response = await fetch(IMPORT_URL, {
+                    method: 'POST',
+                    headers: {
+                        "Authorization": `Bearer ${getToken()}`,
+                        // Tidak perlu Content-Type: application/json saat mengirim FormData
+                        "Accept": "application/json"
+                    },
+                    body: formData // Langsung kirim FormData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const errors = Object.values(result.errors).flat().join('\n');
+                        throw new Error(errors || "Validasi file gagal");
+                    }
+                    throw new Error(result.message || "Terjadi kesalahan saat import");
+                }
+
+                // Handle Error dari Import (Maatwebsite/Excel)
+                if (result.errors && result.errors.length > 0) {
+                    const errorList = result.errors.join('<br>');
+                    Swal.fire({
+                        title: "Import Sebagian Berhasil",
+                        html: `Data Pegawai berhasil di-import, **namun** terdapat **${result.errors.length}** baris error:<br><br><div class="text-left">${errorList}</div>`,
+                        icon: "warning",
+                        confirmButtonText: "Mengerti"
+                    });
+                } else {
+                    Swal.fire("Import Berhasil", result.message, "success");
+                }
+
+                this.toggleUpload(false); // Tutup modal
+                this.fetchData(); // Refresh data tabel
+
+            } catch (error) {
+                Swal.fire("Gagal Import", error.message, "error");
+            } finally {
+                this.isImporting = false;
             }
         },
 
@@ -282,9 +366,12 @@ export function manajemenPegawaiData() {
             if (val) {
                 // [PERBAIKAN] Reset hanya field HR
                 this.formData = {
-                    name: '', nip: '',
-                    unit_kerja_id: '', bidang_id: '', jabatan_id: '',
-                    atasan_id: ''
+                    name: "",
+                    nip: "",
+                    unit_kerja_id: "",
+                    bidang_id: "",
+                    jabatan_id: "",
+                    atasan_id: "",
                 };
                 this.bidangList = [];
                 this.atasanList = [];
@@ -326,11 +413,15 @@ export function manajemenPegawaiData() {
 
         toggleUpload(val) {
             this.openUpload = val;
+            if (val) {
+                // Reset file ketika modal dibuka
+                this.fileUpload = null;
+            }
         },
 
         // Pagination Helpers
         changePage(url) {
             if (url) this.fetchData(url);
-        }
+        },
     };
 }

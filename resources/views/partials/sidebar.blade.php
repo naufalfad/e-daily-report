@@ -38,7 +38,6 @@ $menusByRole = [
 
 // ==================== ROLE ADMIN ====================
 'admin' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'admin.dashboard'],
 ['key' => 'manajemen-pegawai', 'label' => 'Manajemen Pegawai', 'icon' => 'manajemen-pegawai', 'route' =>
 'admin.manajemen-pegawai'],
 ['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => 'admin.akun-pengguna'],
@@ -59,12 +58,15 @@ $menus = $menusByRole[$roleKey] ?? $menusByRole['staf'];
 
 // =============== INSERT "PROFIL SAYA" UNIVERSAL MENU ===============
 
+// Logic Update: Mencegah menu profil muncul untuk role 'admin'
+if ($roleKey !== 'admin') {
 $menus[] = [
 'key' => 'profil',
 'label' => 'Profil Saya',
 'icon' => 'profil',
 'route' => 'profil.edit' // *NAMA ROUTE*, bukan URL
 ];
+}
 
 
 // =============== ICON MAP ===============

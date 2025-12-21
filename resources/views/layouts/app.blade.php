@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- [PERBAIKAN 1] Meta Tag Identitas User & CSRF --}}
     {{-- Ini PENTING agar JavaScript (pengumuman.js) bisa membaca ID user yang sedang login --}}
@@ -14,13 +15,13 @@
 
     {{-- Anti-FOUC: sembunyikan body sebelum CSS & asset siap --}}
     <style>
-        html.loading body {
-            visibility: hidden;
-        }
+    html.loading body {
+        visibility: hidden;
+    }
     </style>
 
     <script>
-        document.documentElement.classList.add("loading");
+    document.documentElement.classList.add("loading");
     </script>
 
     {{-- Favicon --}}
@@ -42,59 +43,61 @@
     @stack('styles')
 
     <style>
-        body {
-            font-family: 'Poppins', ui-sans-serif, system-ui;
+    body {
+        font-family: 'Poppins', ui-sans-serif, system-ui;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* Loader Spin */
+    .loader-spin {
+        animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
         }
 
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        to {
+            transform: rotate(360deg);
         }
+    }
 
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+    /* Hapus icon bawaan input tanggal */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        opacity: 0 !important;
+        display: none !important;
+    }
 
-        /* Loader Spin */
-        .loader-spin {
-            animation: spin .8s linear infinite;
-        }
+    /* Hapus icon bawaan input time */
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        opacity: 0 !important;
+        display: none !important;
+    }
 
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Hapus icon bawaan input tanggal */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            opacity: 0 !important;
-            display: none !important;
-        }
-
-        /* Hapus icon bawaan input time */
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            opacity: 0 !important;
-            display: none !important;
-        }
-
-        /* Hilangkan spinners Android/Edge */
-        input[type="time"]::-webkit-inner-spin-button,
-        input[type="date"]::-webkit-inner-spin-button {
-            display: none !important;
-        }
+    /* Hilangkan spinners Android/Edge */
+    input[type="time"]::-webkit-inner-spin-button,
+    input[type="date"]::-webkit-inner-spin-button {
+        display: none !important;
+    }
     </style>
 
     {{-- Setelah semua CSS / asset siap → tampilkan halaman --}}
     <script>
-        window.addEventListener("load", () => {
-            document.documentElement.classList.remove("loading");
-        });
+    window.addEventListener("load", () => {
+        document.documentElement.classList.remove("loading");
+    });
     </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
 
@@ -140,9 +143,12 @@
 
                             {{-- SEARCH --}}
                             <div class="relative flex-1 max-w-[500px]">
-                                <input type="text" placeholder="Cari" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
+                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm shadow-sm placeholder:text-slate-400
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
+                                    <div id="search-dropdown"
+                                        class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
+                                    </div>
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                     <img src="{{ asset('assets/icon/search.svg') }}"
                                         class="h-[18px] w-[18px] opacity-70" />
@@ -210,48 +216,115 @@
     {{-- [PERBAIKAN 2] Pastikan script pengumuman.js dipanggil untuk Staf & Kadis juga --}}
     @switch($role)
 
-        @case('admin')
-            @vite('resources/js/pages/admin/dashboard.js')
-            @vite('resources/js/pages/admin/manajemen-pegawai.js')
-            @vite('resources/js/pages/admin/akun-pengguna.js')
-            @vite('resources/js/pages/admin/setting-sistem.js')
-            @vite('resources/js/pages/admin/log-aktivitas.js')
-            @break
+    @case('admin')
+    @vite('resources/js/pages/admin/dashboard.js')
+    @vite('resources/js/pages/admin/manajemen-pegawai.js')
+    @vite('resources/js/pages/admin/akun-pengguna.js')
+    @vite('resources/js/pages/admin/setting-sistem.js')
+    @break
 
-        @case('staf')
-            @vite('resources/js/pages/staf/dashboard.js')
-            @vite('resources/js/pages/staf/input-lkh.js')
-            @vite('resources/js/pages/staf/input-skp.js')
-            @vite('resources/js/pages/staf/log-aktivitas.js')
-            @vite('resources/js/pages/staf/riwayat.js')
-            {{-- Tambahkan ini agar fitur pengumuman di role staf jalan --}}
-            @vite('resources/js/pages/staf/pengumuman.js') 
-            @break
+    @case('staf')
+    @vite('resources/js/pages/staf/dashboard.js')
+    @vite('resources/js/pages/staf/input-lkh.js')
+    @vite('resources/js/pages/staf/input-skp.js')
+    @vite('resources/js/pages/staf/log-aktivitas.js')
+    {{-- Tambahkan ini agar fitur pengumuman di role staf jalan --}}
+    @vite('resources/js/pages/staf/pengumuman.js')
+    @break
 
-        @case('penilai')
-            @vite('resources/js/pages/penilai/dashboard.js')
-            @vite('resources/js/pages/penilai/input-lkh.js')
-            @vite('resources/js/pages/penilai/pengumuman.js')
-            @vite('resources/js/pages/penilai/validasi-laporan.js')
-            @vite('resources/js/pages/penilai/input-skp.js')
-            @vite('resources/js/pages/penilai/skoring-kinerja.js')
-            @vite('resources/js/pages/penilai/peta-aktivitas.js')
-            @vite('resources/js/pages/penilai/log-aktivitas.js') 
-            @vite('resources/js/pages/penilai/riwayat.js') 
-            @break
+    @case('penilai')
+    @vite('resources/js/pages/penilai/dashboard.js')
+    @vite('resources/js/pages/penilai/input-lkh.js')
+    @vite('resources/js/pages/penilai/pengumuman.js')
+    @vite('resources/js/pages/penilai/validasi-laporan.js')
+    @vite('resources/js/pages/penilai/input-skp.js')
+    @vite('resources/js/pages/penilai/skoring-kinerja.js')
+    @vite('resources/js/pages/penilai/peta-aktivitas.js')
+    @vite('resources/js/pages/penilai/log-aktivitas.js') s
+    @break
 
-        @case('kadis') 
-            @vite('resources/js/pages/kadis/dashboard.js') 
-            @vite('resources/js/pages/kadis/log-aktivitas.js')
-            @vite('resources/js/pages/kadis/validasi-laporan.js') 
-            @vite('resources/js/pages/kadis/skoring-bidang.js') 
-            {{-- Tambahkan ini agar fitur pengumuman di role kadis jalan --}}
-            @vite('resources/js/pages/kadis/pengumuman.js')
-            @break
+    @case('kadis')
+    @vite('resources/js/pages/kadis/dashboard.js')
+    @vite('resources/js/pages/kadis/validasi-laporan.js')
+    @vite('resources/js/pages/kadis/skoring-bidang.js')
+    {{-- Tambahkan ini agar fitur pengumuman di role kadis jalan --}}
+    @vite('resources/js/pages/kadis/pengumuman.js')
+    @break
 
-    @endswitch 
-    
+    @endswitch
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const input = document.querySelector('input[placeholder="Cari Pengumuman"]');
+        const dropdown = document.getElementById("search-dropdown");
+
+        if (!input || !dropdown) return;
+
+        let typingTimer;
+
+        input.addEventListener("keyup", function () {
+            clearTimeout(typingTimer);
+
+            const query = this.value.trim();
+            if (query.length < 2) {
+                dropdown.classList.add("hidden");
+                return;
+            }
+
+            typingTimer = setTimeout(() => {
+
+                const token = localStorage.getItem("auth_token");
+
+                fetch(`/api/search/pengumuman?q=${encodeURIComponent(query)}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Accept": "application/json"
+                    }
+                })
+                .then(res => {
+                    if (res.status === 401) {
+                        console.error("UNAUTHORIZED – token tidak dikirim / salah");
+                    }
+                    return res.json();
+                })
+                .then(data => {
+
+                    if (!Array.isArray(data) || !data.length) {
+                        dropdown.innerHTML = `
+                            <div class="p-3 text-sm text-slate-500">Tidak ada hasil.</div>
+                        `;
+                        dropdown.classList.remove("hidden");
+                        return;
+                    }
+
+                    dropdown.innerHTML = data.map(item => `
+                        <div class="px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-sm">
+                            <div class="font-semibold text-slate-700">${item.judul}</div>
+                            <div class="text-xs text-slate-500 line-clamp-1">${item.isi_pengumuman}</div>
+                            <div class="text-[10px] text-slate-400 mt-1">
+                                Pembuat: ${item.creator ? item.creator.name : 'Tidak diketahui'}
+                            </div>
+                            <div class="text-[10px] text-slate-400">
+                                ${new Date(item.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `).join('');
+
+                    dropdown.classList.remove("hidden");
+                });
+
+            }, 300);
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!dropdown.contains(e.target) && !input.contains(e.target)) {
+                dropdown.classList.add("hidden");
+            }
+        });
+    });
+    </script>
 </body>
 
 </html>

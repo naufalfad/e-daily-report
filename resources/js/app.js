@@ -12,6 +12,8 @@ import '../js/profile-modal.js'
 // =========================
 import Alpine from 'alpinejs';
 
+import MapInput from './components/map-input.js';
+
 // =========================
 // 2. IMPORT LOGIKA HALAMAN ADMIN
 // =========================
@@ -33,6 +35,7 @@ import { logActivityDataAdmin } from './pages/admin/log-aktivitas.js';
 // =========================
 // 3. REGISTRASI GLOBAL (Fix: Menggunakan Alpine.data untuk Robustness)
 // =========================
+window.MapInput = MapInput;
 window.Alpine = Alpine;
 
 // Ganti SEMUA penugasan 'window.xxx = xxx' menjadi Alpine.data()

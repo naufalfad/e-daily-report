@@ -5,33 +5,79 @@
 
 {{-- Banner sambutan --}}
 <section class="grid gap-4 lg:gap-5 lg:grid-cols-[1fr_380px]">
-    {{-- Banner kiri --}}
-    <div class="relative rounded-[20px] bg-[#1C7C54] text-white overflow-hidden
-             p-6 md:py-8 md:pl-8 md:pr-10 flex justify-between items-start h-[250px]">
+     {{-- CARD BANNER DASHBOARD (FULL) --}}
+    <div class="relative w-full h-[250px] rounded-[20px] overflow-hidden shadow-lg shadow-emerald-900/20 bg-[#1C7C54]">
 
-        {{-- Kolom teks kiri --}}
-        <div class="relative z-10 flex-1 max-w-[64%]">
-            {{-- Badge tanggal --}}
-            <div class="inline-flex items-center gap-2 rounded-[10px] bg-white/40 px-3 py-1
-                    text-sm ring-1 ring-white/20 mb-10">
-                <img src="{{ asset('assets/icon/date.svg') }}" alt="Tanggal"
-                    class="h-4 w-4 filter invert brightness-0" />
-                <span>{{ now()->setTimezone('Asia/Jayapura')->translatedFormat('d F Y | H:i') }} WIT</span>
+        {{-- LAYER 1: SLIDESHOW BACKGROUND (Alpine.js) --}}
+        <div x-data="{
+                active: 0,
+                images: [
+                    '{{ asset('assets/icon/banner/1.png') }}',
+                    '{{ asset('assets/icon/banner/2.png') }}',
+                    '{{ asset('assets/icon/banner/3.png') }}',
+                    '{{ asset('assets/icon/banner/4.png') }}'
+                ],
+                startInterval() {
+                    setInterval(() => {
+                        this.active = (this.active + 1) % this.images.length;
+                    }, 4000); 
+                }
+            }" 
+            x-init="startInterval()"
+            class="absolute inset-0 z-0 w-full h-full">
+
+            <template x-for="(img, index) in images" :key="index">
+                <img :src="img" 
+                    alt="Background Banner"
+                    x-show="active === index"
+                    x-transition:enter="transition ease-out duration-1000"
+                    x-transition:enter-start="opacity-0 scale-105"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-1000"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-105"
+                    class="absolute inset-0 w-full h-full object-cover object-right select-none pointer-events-none" />
+            </template>
+            
+            {{-- Preload Images --}}
+            <div class="hidden">
+                <img src="{{ asset('assets/icon/banner/1.png') }}">
+                <img src="{{ asset('assets/icon/banner/2.png') }}">
+                <img src="{{ asset('assets/icon/banner/3.png') }}">
+                <img src="{{ asset('assets/icon/banner/4.png') }}">
+            </div>
+        </div>
+
+        {{-- LAYER 2: GRADIENT OVERLAY (Agar teks tetap terbaca jelas) --}}
+        {{-- Kiri: Hijau Pekat | Kanan: Hijau Transparan --}}
+        <div class="absolute inset-0 z-10 bg-gradient-to-r from-[#1C7C54] via-[#1C7C54]/30 to-[#1C7C54]/5 mix-blend-multiply md:mix-blend-normal"></div>
+
+        {{-- Opsional: Texture Overlay --}}
+        <div class="absolute inset-0 z-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
+
+        {{-- LAYER 3: KONTEN TEKS (Relative Z-20) --}}
+        <div class="relative z-20 flex flex-col justify-between h-full p-6 md:py-8 md:pl-8 md:pr-10 text-white">
+            
+            {{-- Badge Tanggal --}}
+            <div>
+                <div class="inline-flex items-center gap-2 rounded-[10px] bg-white/20 px-3 py-1.5 text-sm font-medium ring-1 ring-white/30 backdrop-blur-md shadow-sm">
+                    <img src="{{ asset('assets/icon/date.svg') }}" alt="Tanggal" class="h-4 w-4 filter invert brightness-0 opacity-90" />
+                    <span>{{ now()->setTimezone('Asia/Jayapura')->translatedFormat('d F Y | H:i') }} WIT</span>
+                </div>
             </div>
 
-            {{-- Teks utama --}}
-            <p class="text-[20px] md:text-[28px] font-bold leading-tight">Selamat Datang,</p>
-            <h1 class="text-[20px] md:text-[28px] font-bold leading-tight mt-1 md:whitespace-nowrap" id="banner-nama">
-                User...
-            </h1>
-            <p class="mt-3 text-white/90 text-[16px]">Semoga harimu menyenangkan!</p>
+            {{-- Teks Sapaan --}}
+            <div class="max-w-2xl">
+                <p class="text-[18px] md:text-[22px] font-medium leading-tight text-white/90 drop-shadow-sm">Selamat Datang,</p>
+                <h1 class="text-[24px] md:text-[32px] font-bold leading-tight mt-1 tracking-wide truncate drop-shadow-md">
+                    {{ auth()->user()->name ?? 'User' }}
+                </h1>
+                <p class="mt-2 text-emerald-50 text-[14px] md:text-[16px] font-light drop-shadow-sm">
+                    Semoga harimu menyenangkan dan produktif!
+                </p>
+            </div>
         </div>
 
-        {{-- Ilustrasi kanan --}}
-        <div class="relative flex-shrink-0 self-center">
-            <img src="{{ asset('img/dashboard-illustration.svg') }}" alt="Dashboard Illustration"
-                class="w-[197px] h-[218px] object-contain select-none pointer-events-none translate-x-2" />
-        </div>
     </div>
 
     {{-- CARD PROFIL SAYA --}}
@@ -47,7 +93,7 @@
                 <div class="flex-shrink-0">
                     <div class="h-[78px] w-[78px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-slate-100">
                         {{-- [INTEGRASI] Logika Foto: Cek Storage dulu, kalau null pakai default asset --}}
-                        <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : asset('assets/icon/avatar.png') }}" 
+                        <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : asset('assets/icon/avatar_1.png') }}" 
                              class="h-full w-full object-cover"
                              alt="Avatar">
                     </div>

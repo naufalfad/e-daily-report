@@ -169,13 +169,15 @@ class PengumumanController extends Controller
     {
         $q = $request->q;
 
-        if (!$q || strlen($q) < 2) {
-            return response()->json([]);
-        }
+	   if (!$q || strlen($q) < 3) { // Best Practice: Batasi minimal 3 huruf
+        return response()->json([]);
+    }
 
-        $pengumuman = \App\Models\Pengumuman::with('creator') // relasi ke users
-            ->where('judul', 'ILIKE', "%$q%")
-            ->orWhere('isi_pengumuman', 'ILIKE', "%$q%")
+    	$pengumuman = \App\Models\Pengumuman::with('creator')
+	    ->whereRaw(
+                "to_tsvector('indonesian', judul || ' ' || COALESCE(isi_pengumuman, '')) @@ plainto_tsquery('indonesian', ?)", 
+       	      [$q]
+             )
             ->orWhereHas('creator', function($user) use ($q) {
                 $user->where('name', 'ILIKE', "%$q%");
             })

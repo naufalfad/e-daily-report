@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\NotificationType;
+use App\Models\LaporanHarian;
 use App\Models\Notifikasi;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model; // Import Model
+use Illuminate\Database\Eloquent\Model;
 
 class NotificationService
 {
@@ -91,5 +93,33 @@ class NotificationService
         }
 
         self::sendBatch($payload);
+    }
+
+    /**
+     * [BARU] Method khusus untuk notifikasi ke Atasan LKH
+     * Dipanggil oleh SubmitLkhAction
+     */
+    public function notifyAtasan(LaporanHarian $lkh)
+    {
+        // 1. Cek apakah ada atasan (jika null, skip)
+        if (!$lkh->atasan_id) {
+            return;
+        }
+
+        // 2. Load data user pengirim agar nama tampil di pesan
+        // (Menggunakan lazy loading jika relasi belum ter-load)
+        $namaPegawai = $lkh->user->name ?? 'Pegawai';
+        $tanggal = Carbon::parse($lkh->tanggal_laporan)->translatedFormat('d F Y');
+
+        // 3. Susun Pesan
+        $message = "Pegawai {$namaPegawai} mengajukan LKH baru tanggal {$tanggal}.";
+
+        // 4. Kirim menggunakan method static send()
+        self::send(
+            $lkh->atasan_id,
+            NotificationType::LKH_NEW_SUBMISSION->value, // Ambil value string dari Enum
+            $message,
+            $lkh // Pass object LKH untuk polymorphic relation
+        );
     }
 }

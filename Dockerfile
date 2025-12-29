@@ -32,6 +32,8 @@ RUN echo "upload_max_filesize=100M" > /usr/local/etc/php/conf.d/uploads.ini \
 
 # 4. Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
+
 
 # 5. Set working dir
 WORKDIR /var/www

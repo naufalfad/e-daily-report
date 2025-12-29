@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\LocationProvider; // Added: Import Enum baru
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -33,13 +34,22 @@ class LaporanHarian extends Model
         'is_luar_lokasi',
         'lokasi',
         'atasan_id',
-        'mode_lokasi',
+        'mode_lokasi', // Legacy field (dipertahankan)
         'lokasi_teks',
+        
+        // --- NEW METADATA FIELDS (Phase 2.2) ---
+        'location_provider',
+        'location_accuracy',
+        'address_auto',
     ];
 
     protected $casts = [
         'tanggal_laporan' => 'date',
         'waktu_validasi' => 'datetime',
+        
+        // --- NEW CASTS (Phase 2.2) ---
+        'location_provider' => LocationProvider::class, // Auto-hydrate Enum
+        'location_accuracy' => 'decimal:2', // Presisi numerik
     ];
 
     // Hubungan ke Pengguna

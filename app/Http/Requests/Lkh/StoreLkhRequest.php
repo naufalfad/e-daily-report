@@ -44,8 +44,8 @@ class StoreLkhRequest extends FormRequest
         return [
             // --- 1. CORE DATA VALIDATION ---
             'tanggal_laporan' => ['required', 'date', 'before_or_equal:today'],
-            'jam_mulai'       => ['required', 'date_format:H:i'],
-            'jam_selesai'     => ['required', 'date_format:H:i', 'after:jam_mulai'],
+            'waktu_mulai'       => ['required', 'date_format:H:i'],
+            'waktu_selesai'     => ['required', 'date_format:H:i', 'after:jam_mulai'],
             'jenis_kegiatan'  => ['required', 'string', 'max:100'],
             'deskripsi_aktivitas' => ['required', 'string', 'min:10'],
 

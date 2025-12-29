@@ -61,6 +61,10 @@ class SubmitLkhAction
             $data['atasan_id'] = $user->atasan_id; // Chain of Responsibility: Atasan langsung
             $data['is_luar_lokasi'] = $isLuarLokasi;
             
+            // [FIX] Paksa status menjadi 'waiting_review' agar masuk ke list validasi atasan
+            // Default database adalah 'draft', jadi harus di-override di sini.
+            $data['status'] = 'waiting_review'; 
+            
             // PostGIS Geometry Insertion using Raw SQL
             // ST_MakePoint(lng, lat): Urutan PostGIS adalah Longitude dulu, baru Latitude.
             // ST_SetSRID(..., 4326): Mengatur koordinat sistem ke WGS 84 (Standar GPS).
@@ -76,7 +80,7 @@ class SubmitLkhAction
             }
 
             // D. Trigger Notification (Side Effect)
-            // Hanya kirim notifikasi jika status bukan draft
+            // Kondisi ini sekarang akan bernilai TRUE (karena status sudah dipaksa 'waiting_review')
             if ($lkh->status === 'waiting_review' && $lkh->atasan_id) {
                 // Menggunakan try-catch internal agar error notifikasi tidak membatalkan transaksi utama
                 try {

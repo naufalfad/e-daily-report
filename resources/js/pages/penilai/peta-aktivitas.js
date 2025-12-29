@@ -4,29 +4,33 @@ export function penilaiMapData() {
     return {
 
         map: null,
-        markersLayer: null,
+        markersLayer: null, 
+        markerMap: {},      // Dictionary untuk pencarian cepat marker by ID
+        
+        // [BARU] State untuk Mode Tampilan ('staff' = Bawahan, 'personal' = Peta Saya)
+        viewMode: 'staff',
+
         allActivities: [],
         filter: {
             from: '',
             to: ''
         },
 
+        // State untuk marker lokasi pengguna (GPS)
+        currentLocationMarker: null, 
+
         // State Modal Detail
         showModal: false,
         selectedActivity: null,
 
-        // State Modal Reject (Legacy state, actually handled by Swal now)
-        showRejectModal: false,
-        rejectReason: '',
-        selectedIdForAction: null,
-
+        // Loading State
         loading: false,
 
         initMap() {
             this.$nextTick(() => {
-                // -------------------------------------------------------------
-                // 1. LOGIKA RESTORE ZOOM & POSISI (Agar tidak reset saat reload)
-                // -------------------------------------------------------------
+                // ------------------------------------------------------------------
+                // 1. RESTORE POSISI TERAKHIR (Sesuai Session Penilai)
+                // ------------------------------------------------------------------
                 const savedLat = sessionStorage.getItem('map_lat');
                 const savedLng = sessionStorage.getItem('map_lng');
                 const savedZoom = sessionStorage.getItem('map_zoom');
@@ -35,55 +39,249 @@ export function penilaiMapData() {
                 const initialLng = savedLng ? parseFloat(savedLng) : 136.8833;
                 const initialZoom = savedZoom ? parseInt(savedZoom) : 13;
 
-                // Bersihkan storage
-                sessionStorage.removeItem('map_lat');
-                sessionStorage.removeItem('map_lng');
-                sessionStorage.removeItem('map_zoom');
+                // ------------------------------------------------------------------
+                // 2. INISIALISASI PETA
+                // ------------------------------------------------------------------
+                this.map = L.map('map', { 
+                    zoomControl: false, // Custom placement
+                    attributionControl: false
+                }).setView([initialLat, initialLng], initialZoom);
 
-                this.map = L.map('map', { zoomControl: true }).setView([initialLat, initialLng], initialZoom);
+                // Zoom Control di kanan bawah
+                L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
-                const googleRoadmap = L.tileLayer(
-                    "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
-                    { attribution: "Google Maps", maxZoom: 20 }
-                );
+                // Layer Maps
+                const googleRoadmap = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { maxZoom: 20 });
+                const googleSatelite = L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", { maxZoom: 22 });
 
-                const googleSatelite = L.tileLayer(
-                    "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-                    { 
-                        attribution: "Google Satelite", 
-                        maxZoom: 20 // Max zoom bisa disesuaikan, Esri mendukung hingga 20
-                    }
-                );
-               const baseLayers = {
-                    "Google Maps": googleRoadmap,
-                    "Google Satelite": googleSatelite, // MENGGANTI LABEL DAN VARIABEL
-                };
-
-                L.control.layers(baseLayers).addTo(this.map);
+                const baseLayers = { "Peta Jalan": googleRoadmap, "Satelit": googleSatelite };
+                L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(this.map);
                 googleRoadmap.addTo(this.map);
 
-                // 3. Layer Markers
-                this.markersLayer = L.layerGroup().addTo(this.map);
+                // ------------------------------------------------------------------
+                // 3. KONFIGURASI MARKER CLUSTER (TEMA BIRU & OPTIMAL)
+                // ------------------------------------------------------------------
+                this.markersLayer = L.markerClusterGroup({
+                    zoomToBoundsOnClick: false, // Matikan zoom default agar List Popup muncul
+                    spiderfyOnMaxZoom: true,
+                    spiderfyDistanceMultiplier: 2, // Jarak antar marker lebih lega
+                    showCoverageOnHover: false,
+                    maxClusterRadius: 60,
+                    
+                    // Kustomisasi Icon Cluster (Biru Monokromatik)
+                    iconCreateFunction: function(cluster) {
+                        var count = cluster.getChildCount();
+                        var c = ' marker-cluster-';
+                        
+                        if (count < 10) { c += 'small'; } 
+                        else if (count < 50) { c += 'medium'; } 
+                        else { c += 'large'; }
+                
+                        return new L.DivIcon({ 
+                            html: '<div><span>' + count + '</span></div>', 
+                            className: 'marker-cluster-custom' + c, 
+                            iconSize: new L.Point(40, 40) 
+                        });
+                    }
+                });
 
-                // 4. Load Data Awal
+                // ------------------------------------------------------------------
+                // 4. EVENT LISTENER: KLIK CLUSTER -> LIST POPUP (UI HUMANIS)
+                // ------------------------------------------------------------------
+                this.markersLayer.on('clusterclick', (a) => {
+                    const markers = a.layer.getAllChildMarkers();
+                    const count = markers.length;
+
+                    // Tampilan Card Lebar (360px) & Header Humanis
+                    let content = `
+                        <div style="font-family: 'Poppins', sans-serif; width: 360px; overflow: hidden;">
+                            
+                            <div style="padding: 16px 20px; background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                                <div>
+                                    <h4 style="color: #0f172a; font-size: 15px; font-weight: 700; margin:0; line-height: 1.2;">
+                                        Lokasi Padat
+                                    </h4>
+                                    <span style="font-size: 11px; color: #64748b; font-weight: 500;">
+                                        <b>${count}</b> aktivitas pegawai di sini
+                                    </span>
+                                </div>
+                                <span style="background:#eff6ff; color:#3b82f6; font-size:10px; padding:4px 10px; border-radius:20px; font-weight:700; border: 1px solid #dbeafe;">
+                                    CLUSTER
+                                </span>
+                            </div>
+
+                            <ul style="list-style:none; padding: 0; margin:0; max-height: 320px; overflow-y: auto;">
+                    `;
+
+                    markers.forEach((marker, index) => {
+                        const data = marker.options.customData; 
+                        
+                        if(data) {
+                            // Logic Styling Status
+                            let statusBg = '#fff7ed'; // Amber Light
+                            let statusText = '#c2410c'; // Amber Dark
+                            let statusLabel = 'Menunggu';
+                            
+                            if(data.status === 'approved') { 
+                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui'; 
+                            } else if(data.status === 'rejected') { 
+                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak'; 
+                            }
+
+                            const borderStyle = index !== markers.length - 1 ? 'border-bottom: 1px solid #f1f5f9;' : '';
+
+                            content += `
+                                <li style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; ${borderStyle}" 
+                                    onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                                    
+                                    <div style="flex: 1; padding-right: 12px; min-width: 0;">
+                                        <div style="display:flex; justify-content: space-between; align-items:flex-start; margin-bottom: 4px;">
+                                            <span style="font-weight: 700; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
+                                                ${data.user}
+                                            </span>
+                                            <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">
+                                                ${statusLabel}
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+                                            ${data.kegiatan.length > 45 ? data.kegiatan.substring(0, 45) + '...' : data.kegiatan}
+                                        </div>
+                                    </div>
+
+                                    <button onclick="window.zoomToActivity(${data.id})" 
+                                        style="flex-shrink: 0; background: white; color: #0ea5e9; border: 1px solid #e0f2fe; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+                                        onmouseover="this.style.background='#0ea5e9'; this.style.color='white'" 
+                                        onmouseout="this.style.background='white'; this.style.color='#0ea5e9'">
+                                        Lihat
+                                    </button>
+                                </li>
+                            `;
+                        }
+                    });
+
+                    content += `</ul></div>`;
+
+                    L.popup({ 
+                        offset: [0, -10], 
+                        closeButton: true,
+                        autoPan: true,
+                        maxWidth: 400,
+                        className: 'custom-cluster-popup' 
+                    })
+                    .setLatLng(a.latlng)
+                    .setContent(content)
+                    .openOn(this.map);
+                });
+
+                this.map.addLayer(this.markersLayer);
+
+                // 5. LOAD DATA & OBSERVERS
                 this.loadData();
                 this.initDatePickers();
+                
+                new ResizeObserver(() => {
+                    this.map.invalidateSize();
+                }).observe(document.querySelector('.map-container'));
 
-                new ResizeObserver(() => this.map.invalidateSize()).observe(document.getElementById('map'));
-
-                // Register Global Functions
+                // 6. REGISTER GLOBAL FUNCTIONS
                 window.openActivityDetail = (id) => this.openModal(id);
                 window.approveActivity = (id) => this.confirmApprove(id);
                 window.rejectActivity = (id) => this.handleReject(id);
+                
+                // [BARU] Helper Redirect untuk Perbaiki Laporan (Mode Personal Penilai)
+                window.editActivity = (id) => {
+                    window.location.href = `/penilai/input-laporan/${id}`;
+                };
+                
+                // Helper Navigasi Cluster
+                window.zoomToActivity = (id) => this.handleZoomToId(id);
             });
         },
 
-        // ---------------- LOGIC DATA (SERVER SIDE) ----------------
+        // [BARU] Fungsi Switch Mode (Logic Tahap 2)
+        switchMode(mode) {
+            if (this.viewMode === mode) return; // Mencegah reload jika mode sama
+            this.viewMode = mode;
+            this.loadData();
+        },
+
+        // ------------------------------------------------------------------
+        // FITUR: ZOOM KE ITEM DARI LIST CLUSTER (SPIDERFY)
+        // ------------------------------------------------------------------
+        handleZoomToId(id) {
+            this.map.closePopup(); 
+            const targetMarker = this.markerMap[id];
+
+            if (targetMarker) {
+                this.markersLayer.zoomToShowLayer(targetMarker, () => {
+                    targetMarker.openPopup();
+                });
+            } else {
+                console.warn("Marker ID " + id + " tidak ditemukan.");
+            }
+        },
+
+        // ------------------------------------------------------------------
+        // FITUR: GPS SAYA
+        // ------------------------------------------------------------------
+        zoomToCurrentLocation() {
+            if (!navigator.geolocation) {
+                Swal.fire({ icon: 'warning', title: 'Gagal', text: 'Browser tidak mendukung Geolocation.' });
+                return;
+            }
+
+            this.loading = true; 
+
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
+
+            this.map.locate({ setView: true, maxZoom: 17, timeout: 10000, enableHighAccuracy: true })
+            .on('locationfound', (e) => {
+                this.loading = false;
+                const latlng = e.latlng;
+                
+                const locationMarker = L.circleMarker(latlng, {
+                    radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1
+                });
+
+                const accuracyCircle = L.circle(latlng, e.accuracy, {
+                    color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false
+                });
+
+                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
+                
+                locationMarker.bindPopup(`
+                    <div style="text-align:center; font-family: 'Poppins', sans-serif; padding: 4px;">
+                        <b style="color:#1e293b;">Lokasi Anda</b><br>
+                        <span style="font-size:11px; color:#64748b;">Akurasi: ${Math.round(e.accuracy)}m</span>
+                    </div>
+                `).openPopup();
+                
+                setTimeout(() => {
+                    if (this.currentLocationMarker) {
+                        this.map.removeLayer(this.currentLocationMarker);
+                        this.currentLocationMarker = null;
+                    }
+                }, 10000);
+            })
+            .on('locationerror', (e) => {
+                this.loading = false;
+                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal mendapatkan lokasi GPS.' });
+            });
+        },
+
+        // ------------------------------------------------------------------
+        // DATA FETCHING (ENDPOINT PENILAI)
+        // ------------------------------------------------------------------
         loadData() {
             this.loading = true;
             
-            // Endpoint Khusus Penilai (Bawahan)
-            let url = '/api/staf-aktivitas'; 
+            // [UPDATE] Endpoint Dinamis Berdasarkan viewMode (Logic Tahap 3)
+            let url = (this.viewMode === 'staff') 
+                ? '/api/staf-aktivitas'      // Endpoint Data Bawahan (Existing)
+                : '/api/peta-aktivitas';     // Endpoint Data Pribadi (New)
             
             const params = [];
             if (this.filter.from) params.push(`from_date=${this.filter.from}`);
@@ -103,166 +301,107 @@ export function penilaiMapData() {
                     this.loadMarkers(data.data);
                 }
             })
-            .catch(err => console.error("Gagal memuat data:", err))
+            .catch(err => {
+                console.error("Error loading map data:", err);
+            })
             .finally(() => { this.loading = false; });
         },
 
         loadMarkers(data) {
             this.markersLayer.clearLayers();
+            this.markerMap = {}; 
+
             if (data.length === 0) return;
+            
+            if (this.currentLocationMarker) {
+                this.map.removeLayer(this.currentLocationMarker);
+                this.currentLocationMarker = null;
+            }
 
             const latlngs = [];
-
+            
             data.forEach(act => {
                 if (!act.lat || !act.lng) return;
 
-                // Logic Warna Marker
-                let color = '#f59e0b'; // Kuning (Waiting)
+                // Warna Status Marker Individual
+                let color = '#f59e0b'; 
                 let statusLabel = 'Menunggu';
                 
                 if (act.status === 'approved') {
-                    color = '#22c55e'; // Hijau
+                    color = '#10b981'; 
                     statusLabel = 'Disetujui';
                 } else if (act.status === 'rejected') {
-                    color = '#ef4444'; // Merah
+                    color = '#f43f5e'; 
                     statusLabel = 'Ditolak';
                 }
 
-                // Button "Lihat Detail" di Popup (Aksi Validasi ada di dalam Modal)
-                const actionButton = `
-                    <div style="margin-top:12px; padding-top:8px; border-top:1px dashed #e2e8f0; text-align:right;">
-                        <button onclick="window.openActivityDetail(${act.id})"
-                           style="background:#0E7A4A; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                           Lihat Detail
-                        </button>
-                    </div>
-                `;
-
+                // Popup Detail Single Marker
                 const popupContent = `
-                    <div style="padding: 5px; min-width: 240px;">
-                        <strong style="color:#1C7C54; display:block; margin-bottom:4px; font-size:13px;">${act.kegiatan}</strong>
-                        <div style="font-size:11px; color:#64748b; margin-bottom:8px;">
-                            👤 <b>${act.user}</b> <br>
-                            📅 ${act.tanggal} • ⏰ ${act.waktu}
+                    <div style="padding: 12px 8px; min-width: 240px; font-family:'Poppins',sans-serif;">
+                        <div style="font-weight:700; color:#0f172a; font-size:14px; line-height:1.4; margin-bottom:8px;">
+                            ${act.kegiatan}
                         </div>
-                        <span style="font-size:10px; font-weight:600; color:${color}; background:${color}20; padding:2px 8px; border-radius:10px; border:1px solid ${color}40;">
-                            ${statusLabel}
-                        </span>
-                        ${actionButton}
+                        <div style="font-size:12px; color:#64748b; margin-bottom:12px; border-left: 3px solid #cbd5e1; padding-left:10px;">
+                            <div style="font-weight:600; color:#334155; margin-bottom:2px;">${act.user}</div>
+                            <div>${act.tanggal} • ${act.waktu}</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; font-weight:600; color:${color}; background:${color}15; padding:4px 10px; border-radius:12px; border:1px solid ${color}30;">
+                                ${statusLabel}
+                            </span>
+                            <button onclick="window.openActivityDetail(${act.id})"
+                                style="background:#0f172a; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:500; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                Detail Penuh
+                            </button>
+                        </div>
                     </div>
                 `;
 
-                L.circleMarker([act.lat, act.lng], {
-                    radius: 8,
+                const marker = L.circleMarker([act.lat, act.lng], {
+                    radius: 7, 
                     fillColor: color,
-                    color: '#FFF',
+                    color: '#ffffff', 
                     weight: 2,
-                    fillOpacity: 0.9
+                    fillOpacity: 1,
+                    customData: act 
                 })
-                .bindPopup(popupContent)
-                .addTo(this.markersLayer);
+                .bindPopup(popupContent);
+
+                this.markersLayer.addLayer(marker);
+                this.markerMap[act.id] = marker;
                 
                 latlngs.push([act.lat, act.lng]);
             });
 
-            if (latlngs.length > 0 && !sessionStorage.getItem('map_lat')) {
-                this.map.fitBounds(latlngs, { padding: [50, 50] });
-            }
-        },
-
-        // ---------------- ACTION HANDLERS (SWEETALERT) ----------------
-        
-        // 1. APPROVE (Updated: Now with Input Field)
-        confirmApprove(id) {
-            this.closeModal(); // Tutup modal detail agar fokus ke alert
-
-            Swal.fire({
-                title: 'Setujui Laporan?',
-                input: 'textarea', // [BARU] Tambah input textarea
-                inputLabel: 'Catatan Validasi (Opsional)',
-                inputPlaceholder: 'Berikan catatan untuk staf (boleh dikosongkan)...',
-                inputAttributes: {
-                    'aria-label': 'Catatan validasi'
-                },
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#22c55e',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Setujui',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // [PENTING] Kirim string kosong '' jika user tidak mengisi, jangan null
-                    const reason = result.value || ''; 
-                    this.sendValidation(id, 'approved', reason);
-                } else {
-                    // Opsional: Buka kembali modal detail jika dibatalkan
-                    this.openModal(id);
-                }
-            });
-        },
-
-        // 2. REJECT (Wajib ada alasan)
-        handleReject(id) {
-            this.closeModal(); // Tutup modal detail
-
-            Swal.fire({
-                title: 'Tolak Laporan',
-                input: 'textarea',
-                inputLabel: 'Alasan Penolakan (Wajib)',
-                inputPlaceholder: 'Tuliskan alasan penolakan disini...',
-                inputAttributes: {
-                    'aria-label': 'Tuliskan alasan penolakan disini'
-                },
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Kirim Penolakan',
-                cancelButtonText: 'Batal',
-                inputValidator: (value) => {
-                    if (!value) {
-                        return 'Alasan penolakan wajib diisi!'
-                    }
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.sendValidation(id, 'rejected', result.value);
-                } else {
-                    this.openModal(id);
-                }
-            });
-
-            // Auto Zoom ke area marker jika ada data
             if (latlngs.length > 0) {
-                this.map.fitBounds(latlngs, { padding: [50, 50] });
+                if (!sessionStorage.getItem('map_lat')) {
+                    this.map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
+                }
             }
         },
 
-        // 3. CORE VALIDATION (Strict Mode: Async/Await)
+        // ------------------------------------------------------------------
+        // VALIDASI (ENDPOINT PENILAI)
+        // ------------------------------------------------------------------
         async sendValidation(id, status, reason) {
-            // A. Simpan Posisi Peta
             const center = this.map.getCenter();
             sessionStorage.setItem('map_lat', center.lat);
             sessionStorage.setItem('map_lng', center.lng);
             sessionStorage.setItem('map_zoom', this.map.getZoom());
 
-            // B. Loading UI
             Swal.fire({
-                title: 'Memproses...',
-                text: 'Mohon tunggu sebentar',
-                allowOutsideClick: false,
+                title: 'Menyimpan...', text: 'Mohon tunggu sebentar', allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading() }
             });
 
-            // [PENTING] Pastikan komentar_validasi adalah STRING (bukan null)
             const payload = { 
                 status: status, 
-                komentar_validasi: reason || "", // Force string empty jika undefined/null
+                komentar_validasi: reason || "", 
                 _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             };
 
             try {
-                // C. Fetch Request
+                // [UPDATE] Endpoint Penilai
                 const response = await fetch(`/penilai/validasi-laporan/${id}`, {
                     method: 'POST',
                     headers: {
@@ -276,44 +415,64 @@ export function penilaiMapData() {
 
                 const data = await response.json();
 
-                // Cek Status Code HTTP (Harus 200-299)
-                if (!response.ok) {
-                    // Jika validasi gagal (misal field null), lempar error
-                    throw new Error(data.message || JSON.stringify(data.errors) || 'Gagal memproses validasi.');
-                }
+                if (!response.ok) throw new Error(data.message || 'Gagal validasi.');
 
-                // D. Jika Sukses -> Tampilkan Pesan & Reload
                 await Swal.fire({
-                    icon: 'success',
-                    title: status === 'approved' ? 'Disetujui!' : 'Ditolak!',
-                    text: 'Data berhasil diperbarui. Halaman akan dimuat ulang.',
-                    timer: 1500,
-                    showConfirmButton: false
+                    icon: 'success', title: 'Berhasil!',
+                    text: status === 'approved' ? 'Laporan disetujui.' : 'Laporan ditolak.',
+                    timer: 1500, showConfirmButton: false
                 });
 
-                // E. Reload Halaman
                 window.location.reload();
 
             } catch (error) {
                 console.error("Validation Error:", error);
-                
-                // Tampilkan Error Asli dari Server di SweetAlert
-                let errorMsg = error.message;
-                // Jika error berupa object JSON string (dari Laravel Validation), parse sedikit biar rapi
-                try {
-                    const parsedObj = JSON.parse(error.message);
-                    if(parsedObj.komentar_validasi) errorMsg = parsedObj.komentar_validasi[0];
-                } catch(e) {}
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Memproses',
-                    text: errorMsg || 'Terjadi kesalahan pada sistem.'
-                });
+                Swal.fire({ icon: 'error', title: 'Gagal', text: error.message || 'Terjadi kesalahan sistem.' });
             }
         },
-        
-        // ---------------- MODAL DETAIL & UTILS ----------------
+
+        confirmApprove(id) {
+            this.closeModal();
+            Swal.fire({
+                title: 'Setujui Laporan?',
+                text: 'Pastikan data laporan sudah sesuai.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Setujui',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.sendValidation(id, 'approved', '');
+                } else {
+                    this.openModal(id);
+                }
+            });
+        },
+
+        handleReject(id) {
+            this.closeModal();
+            Swal.fire({
+                title: 'Tolak Laporan',
+                input: 'textarea',
+                inputLabel: 'Alasan Penolakan',
+                inputPlaceholder: 'Contoh: Lokasi tidak sesuai...',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Kirim Penolakan',
+                cancelButtonText: 'Batal',
+                inputValidator: (value) => { if (!value) return 'Wajib menyertakan alasan!' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.sendValidation(id, 'rejected', result.value);
+                } else {
+                    this.openModal(id);
+                }
+            });
+        },
+
         openModal(id) {
             const found = this.allActivities.find(item => item.id == id);
             if (found) {
@@ -332,74 +491,30 @@ export function penilaiMapData() {
             this.$nextTick(() => {
                 ['tgl_dari', 'tgl_sampai'].forEach(id => {
                     const el = document.getElementById(id);
-                    const btn = document.getElementById(id + '_btn');
-                    if (el && btn) btn.addEventListener('click', () => el.showPicker ? el.showPicker() : el.focus());
+                    if (el) el.addEventListener('click', () => el.showPicker ? el.showPicker() : el.focus());
                 });
             });
         },
+        
+        // ---------- EXPORT PETA (PDF) ----------
         exportMap() {
-
-            const googleMaps = L.tileLayer(
-                "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
-                { maxZoom: 20 }
-            );
-
-            let activeGoogleLayer = null;
-
-            this.map.eachLayer(layer => {
-                if (layer._url?.includes("google")) {
-                    activeGoogleLayer = layer;
-                    this.map.removeLayer(layer);
-                }
-            });
-
-            googleMaps.addTo(this.map);
-
             Swal.fire({
-                title: "Export Peta?",
-                text: "Peta aktivitas akan diproses menjadi PDF.",
-                icon: "question",
+                title: "Export PDF",
+                text: "Memproses laporan peta aktivitas...",
+                icon: "info",
                 showCancelButton: true,
-                confirmButtonColor: "#1C7C54",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, Export",
-            }).then((result) => {
-
-                if (!result.isConfirmed) {
-                    if (activeGoogleLayer) activeGoogleLayer.addTo(this.map);
-                    this.map.removeLayer(googleMaps);
-                    return;
+                confirmButtonColor: "#0ea5e9",
+                confirmButtonText: "Ya, Download",
+                cancelButtonText: "Batal",
+                showLoaderOnConfirm: true, 
+                preConfirm: () => {
+                    const fromDate = this.filter.from || '';
+                    const toDate = this.filter.to || '';
+                    // Menggunakan endpoint global preview-map-pdf
+                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
+                    window.open(url, "_blank");
+                    return true; 
                 }
-
-                const mapEl = document.getElementById("map");
-
-                html2canvas(mapEl, {
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: "#ffffff",
-                }).then((canvas) => {
-
-                    const imgData = canvas.toDataURL("image/png");
-
-                    fetch("/export-map", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                            "Authorization": "Bearer " + localStorage.getItem("auth_token")
-                        },
-                        body: JSON.stringify({ image: imgData }),
-                    })
-                    .then(res => res.blob())
-                    .then(blob => {
-
-                        // === BUKA TAB BARU DENGAN PDF ===
-                        const pdfUrl = URL.createObjectURL(blob);
-                        window.open(pdfUrl, "_blank");
-
-                    });
-
-                });
             });
         },
     }

@@ -56,9 +56,27 @@ class KadisValidatorController extends Controller
             });
         }
 
-        // === SORT: Prioritas waiting_review ===
+        // 3. Filter Tahun
+        $query->when($request->filled('year'), function ($q) use ($request) {
+            $q->whereYear('tanggal_laporan', $request->year);
+        });
+
+        // 4. Search (Nama User / Deskripsi)
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+
+            $q->where(function ($sub) use ($search, $like) {
+                $sub->whereHas('user', function ($u) use ($search, $like) {
+                    $u->where('name', $like, "%{$search}%");
+                })
+                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
+            });
+        });
+
+        // Sorting: Waiting Review Paling Atas
         $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
-              ->latest('tanggal_laporan');
+            ->latest('tanggal_laporan');
 
         return response()->json($query->paginate(10));
     }
@@ -176,7 +194,7 @@ class KadisValidatorController extends Controller
         $query->when($request->month, fn($q, $m) => $q->whereMonth('tanggal_laporan', $m));
         $query->when($request->year, fn($q, $y) => $q->whereYear('tanggal_laporan', $y));
 
-        // === SEARCH ===
+        // 2. Search (Cari nama staf tertentu)
         $query->when($request->search, function ($q, $search) {
             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
             $q->whereHas('user', fn($u) => $u->where('name', $like, "%{$search}%"));

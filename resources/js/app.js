@@ -1,3 +1,5 @@
+// resources/js/app.js
+
 // =========================
 // GLOBAL STYLE & LOGIN
 // =========================
@@ -9,6 +11,8 @@ import '../js/profile-modal.js'
 // 1. IMPORT ENGINE ALPINE (WAJIB UNTUK MODAL)
 // =========================
 import Alpine from 'alpinejs';
+
+import MapInput from './components/map-input.js';
 
 // =========================
 // 2. IMPORT LOGIKA HALAMAN ADMIN
@@ -29,23 +33,23 @@ import { logActivityDataAdmin } from './pages/admin/log-aktivitas.js';
 
 
 // =========================
-// 3. REGISTRASI GLOBAL (Agar Blade Bisa Panggil)
+// 3. REGISTRASI GLOBAL (Fix: Menggunakan Alpine.data untuk Robustness)
 // =========================
+window.MapInput = MapInput;
 window.Alpine = Alpine;
-// Registrasi Manajemen Pegawai (Eksisting)
-window.manajemenPegawaiData = manajemenPegawaiData;
-// Registrasi Akun Pengguna (Eksisting)
-window.akunPenggunaData = akunPenggunaData;
-// [PERBAIKAN UTAMA] Registrasi Pengaturan Sistem
-window.systemSettingsData = systemSettingsData;
-// [PERBAIKAN MAP] Registrasi Peta Aktivitas (Penilai)
-window.penilaiMapData = penilaiMapData;
-window.stafMapData = stafMapData;
-window.kadisMapData = kadisMapData;
-window.riwayatDataPenilai = riwayatDataPenilai;
-window.riwayatDataStaf = riwayatDataStaf;
-window.logActivityKadis = logActivityKadis;
-window.logActivityDataAdmin = logActivityDataAdmin;
+
+// Ganti SEMUA penugasan 'window.xxx = xxx' menjadi Alpine.data()
+Alpine.data('manajemenPegawaiData', manajemenPegawaiData); 
+Alpine.data('akunPenggunaData', akunPenggunaData);
+Alpine.data('systemSettingsData', systemSettingsData);
+Alpine.data('penilaiMapData', penilaiMapData);
+Alpine.data('stafMapData', stafMapData); // FIX UTAMA: Registrasi sebagai komponen Alpine
+Alpine.data('kadisMapData', kadisMapData);
+Alpine.data('riwayatDataPenilai', riwayatDataPenilai);
+Alpine.data('riwayatDataStaf', riwayatDataStaf);
+Alpine.data('logActivityKadis', logActivityKadis);
+Alpine.data('logActivityDataAdmin', logActivityDataAdmin);
+
 
 // =========================
 // 4. NYALAKAN MESIN ALPINE (KUNCI UTAMA)
@@ -65,8 +69,7 @@ import './utils/auth-fetch';
 // =========================
 import './pages/staf/input-skp.js';
 import './pages/staf/log-aktivitas.js';
-import './pages/staf/peta-aktivitas.js'; // <-- Biarkan, asumsikan ini untuk staf. Jika ada error, ini perlu diekspor dan didaftarkan global juga.
-// import './pages/staf/riwayat.js';
+import './pages/staf/peta-aktivitas.js'; 
 import './pages/staf/pengumuman.js';
 
 // =========================

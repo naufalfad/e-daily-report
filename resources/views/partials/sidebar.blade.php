@@ -1,90 +1,123 @@
 @php
-// ==================== DEFINISI MENU PER ROLE ====================
+// ============================================================================
+// 1. AUTO DETECT ROLE (LOGIC BARU)
+// ============================================================================
+// Ini perbaikan intinya. Jika Controller lupa kirim $role, Sidebar cek sendiri ke Auth.
+
+if (!isset($role)) {
+    $user = auth()->user();
+    $dbRole = $user ? ($user->roles->first()->nama_role ?? 'Staf') : 'Staf';
+
+    // Mapping Nama Role dari Database -> Key Array Menu
+    $roleMap = [
+        'Super Admin'   => 'admin',
+        'Administrator' => 'admin', // Jaga-jaga
+        'Admin'         => 'admin',
+        'Kadis'         => 'kadis',
+        'Kepala Dinas'  => 'kadis',
+        'Penilai'       => 'penilai',
+        'Staf'          => 'staf'
+    ];
+
+    // Ambil role key, default ke 'staf' jika tidak dikenali
+    $roleKey = $roleMap[$dbRole] ?? 'staf';
+} else {
+    // Jika Controller kirim $role, pakai itu
+    $roleKey = $role;
+    if ($roleKey === 'kepala-dinas') $roleKey = 'kadis';
+}
+
+// ============================================================================
+// 2. DEFINISI MENU
+// ============================================================================
 $menusByRole = [
 
-// ==================== ROLE STAF ====================
-'staf' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'staf.dashboard'],
-['key' => 'lkh', 'label' => 'Input LKH', 'icon' => 'file-edit', 'route' => 'staf.input-lkh'],
-['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => 'staf.input-skp'],
-['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'staf.peta-aktivitas'],
-['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => 'staf.riwayat-lkh'],
-['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'staf.log-aktivitas'],
-['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'staf.pengumuman'],
-],
+    // ==================== ROLE STAF ====================
+    'staf' => [
+        ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'staf.dashboard'],
+        ['key' => 'lkh', 'label' => 'Input LKH', 'icon' => 'file-edit', 'route' => 'staf.input-lkh'],
+        ['key' => 'skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => 'staf.input-skp'],
+        ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'staf.peta-aktivitas'],
+        ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => 'staf.riwayat-lkh'],
+        ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'staf.log-aktivitas'],
+        ['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'staf.pengumuman'],
+    ],
 
-// ==================== ROLE PENILAI ====================
-'penilai' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'penilai.dashboard'],
-['key' => 'input-laporan', 'label' => 'Input Laporan', 'icon' => 'file-edit', 'route' => 'penilai.input-laporan'],
-['key' => 'input-skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => 'penilai.input-skp'],
-['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => 'penilai.validasi-laporan'],
-['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => 'penilai.skoring-kinerja'],
-['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'penilai.peta-aktivitas'],
-['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => 'penilai.riwayat'],
-['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'penilai.log-aktivitas'],
-['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'penilai.pengumuman.index'],
-],
+    // ==================== ROLE PENILAI ====================
+    'penilai' => [
+        ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'penilai.dashboard'],
+        ['key' => 'input-laporan', 'label' => 'Input Laporan', 'icon' => 'file-edit', 'route' => 'penilai.input-laporan'],
+        ['key' => 'input-skp', 'label' => 'Input SKP', 'icon' => 'doc-skp', 'route' => 'penilai.input-skp'],
+        ['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => 'penilai.validasi-laporan'],
+        ['key' => 'skoring', 'label' => 'Skoring Kinerja', 'icon' => 'skoring', 'route' => 'penilai.skoring-kinerja'],
+        ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'penilai.peta-aktivitas'],
+        ['key' => 'riwayat', 'label' => 'Riwayat', 'icon' => 'history', 'route' => 'penilai.riwayat'],
+        ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'penilai.log-aktivitas'],
+        ['key' => 'pengumuman', 'label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'penilai.pengumuman.index'],
+    ],
 
-// ==================== ROLE KEPALA DINAS ====================
-'kadis' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'kadis.dashboard'],
-['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => 'kadis.validasi-laporan'],
-['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'kadis.log-aktivitas'],
-['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'kadis.pengumuman.index'],
-['key' => 'skoring-bidang','label' => 'Skoring Kinerja Per Bidang','icon'=>'skoring','route'=>'kadis.skoring-bidang'],
-['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'kadis.peta-aktivitas'],
-],
+    // ==================== ROLE KEPALA DINAS ====================
+    'kadis' => [
+        ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'kadis.dashboard'],
+        ['key' => 'validasi', 'label' => 'Validasi Laporan', 'icon' => 'validation', 'route' => 'kadis.validasi-laporan'],
+        ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'kadis.log-aktivitas'],
+        ['key' => 'pengumuman','label' => 'Pengumuman', 'icon' => 'announcement', 'route' => 'kadis.pengumuman.index'],
+        ['key' => 'skoring-bidang','label' => 'Skoring Kinerja Per Bidang','icon'=>'skoring','route'=>'kadis.skoring-bidang'],
+        ['key' => 'map', 'label' => 'Peta Aktivitas', 'icon' => 'map-pin', 'route' => 'kadis.peta-aktivitas'],
+    ],
 
-// ==================== ROLE ADMIN ====================
-'admin' => [
-['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home', 'route' => 'admin.dashboard'],
-['key' => 'manajemen-pegawai', 'label' => 'Manajemen Pegawai', 'icon' => 'manajemen-pegawai', 'route' =>
-'admin.manajemen-pegawai'],
-['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => 'admin.akun-pengguna'],
-['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'setting', 'route' => 'admin.pengaturan-sistem'],
-['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'admin.log-aktivitas'],
-],
+    // ==================== ROLE ADMIN ====================
+    'admin' => [
+        ['key' => 'manajemen-pegawai', 'label' => 'Manajemen Pegawai', 'icon' => 'manajemen-pegawai', 'route' => 'admin.manajemen-pegawai'],
+        ['key' => 'akun-pengguna', 'label' => 'Akun Pengguna', 'icon' => 'akun', 'route' => 'admin.akun-pengguna'],
+        
+        // [BARU] Master Data (Unit Kerja)
+        ['key' => 'master-unit', 'label' => 'Master Unit Kerja', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.unit-kerja.index'],
+        
+        // [ON-HOLD] Bidang & Jabatan (Nanti dibuka)
+        ['key' => 'master-bidang', 'label' => 'Master Bidang', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.bidang.index'],
+        ['key' => 'master-jabatan', 'label' => 'Master Jabatan', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.jabatan.index'],
+        
+        ['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'setting', 'route' => 'admin.pengaturan-sistem'],
+        ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'admin.log-aktivitas'],
+    ],
 ];
 
 
-// =============== ROLE MAPPING ===============
-
-$roleKey = $role ?? 'staf';
-if ($roleKey === 'kepala-dinas') $roleKey = 'kadis';
+// =============== MENU ASSIGNMENT ===============
 
 $activeMenu = $active ?? null;
 $menus = $menusByRole[$roleKey] ?? $menusByRole['staf'];
 
 
-// =============== INSERT "PROFIL SAYA" UNIVERSAL MENU ===============
+// =============== INSERT "PROFIL SAYA" (Kecuali Admin) ===============
 
-$menus[] = [
-'key' => 'profil',
-'label' => 'Profil Saya',
-'icon' => 'profil',
-'route' => 'profil.edit' // *NAMA ROUTE*, bukan URL
-];
+if ($roleKey !== 'admin') {
+    $menus[] = [
+        'key' => 'profil',
+        'label' => 'Profil Saya',
+        'icon' => 'profil',
+        'route' => 'profil.edit'
+    ];
+}
 
 
 // =============== ICON MAP ===============
-$iconsWithoutInvert = ['home.svg','maps.svg','skoring.svg','map-pin.svg'];
-
 $iconMap = [
-'home' => 'home.svg',
-'file-edit' => 'doc-laporan.svg',
-'doc-skp' => 'doc-skp.svg',
-'map-pin' => 'maps.svg',
-'history' => 'history.svg',
-'clock' => 'log.svg',
-'settings' => 'settings.svg',
-'announcement' => 'pengumuman.svg',
-'validation' => 'validation.svg',
-'skoring' => 'skoring.svg',
-'manajemen-pegawai' => 'manajemen-pegawai.svg',
-'akun' => 'akun.svg',
-'setting' => 'setting.svg',
-'profil' => 'profile-saya.svg',
+    'home' => 'home.svg',
+    'file-edit' => 'doc-laporan.svg',
+    'doc-skp' => 'doc-skp.svg',
+    'map-pin' => 'maps.svg',
+    'history' => 'history.svg',
+    'clock' => 'log.svg',
+    'settings' => 'settings.svg',
+    'announcement' => 'pengumuman.svg',
+    'validation' => 'validation.svg',
+    'skoring' => 'skoring.svg',
+    'manajemen-pegawai' => 'manajemen-pegawai.svg', 
+    'akun' => 'akun.svg',
+    'setting' => 'setting.svg',
+    'profil' => 'profile-saya.svg',
 ];
 @endphp
 
@@ -112,8 +145,7 @@ $iconMap = [
         @foreach ($menus as $menu)
         @php
         $iconFile = $iconMap[$menu['icon']] ?? 'home.svg';
-
-        // ACTIVE STATE: PAKAI routeIs() DENGAN NAMA ROUTE
+        // Active state check
         $isActive = request()->routeIs($menu['route'].'*');
         @endphp
 

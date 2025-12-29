@@ -5,19 +5,22 @@
 
 {{-- Style Tambahan untuk Hasil Pencarian Peta --}}
 <style>
-    .search-results::-webkit-scrollbar {
-        width: 6px;
-    }
-    .search-results::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-    .search-results::-webkit-scrollbar-thumb {
-        background: #ccc;
-        border-radius: 4px;
-    }
-    .search-results::-webkit-scrollbar-thumb:hover {
-        background: #aaa;
-    }
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
 </style>
 
 {{-- GRID UTAMA --}}
@@ -27,11 +30,9 @@
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5">
         <h2 class="text-[20px] font-normal mb-4">Form Input LKH</h2>
 
-        <form id="form-lkh" 
-     	    method="POST"
-	        enctype="multipart/form-data">>
+        <form id="form-lkh" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="status" id="status_input" value="draft">
-            
+
             {{-- Mode Lokasi Hidden Input (Default: geofence) --}}
             <input type="hidden" name="mode_lokasi" id="mode_lokasi_input" value="geofence">
 
@@ -55,12 +56,12 @@
 
                     {{-- Jenis Kegiatan (Alpine Optimized) --}}
                     <div x-data="{
-                                open: false,
-                                value: '',
-                                label: 'Pilih Jenis Kegiatan',
-                                options: ['Rapat', 'Pelayanan Publik', 'Penyusunan Dokumen', 'Kunjungan Lapangan', 'Lainnya'],
-                                select(opt) { this.value = opt; this.label = opt; this.open = false; }
-                            }">
+                            open: false,
+                            value: '',
+                            label: 'Pilih Jenis Kegiatan',
+                            options: ['Rapat', 'Pelayanan Publik', 'Penyusunan Dokumen', 'Kunjungan Lapangan', 'Lainnya'],
+                            select(opt) { this.value = opt; this.label = opt; this.open = false; }
+                        }">
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jenis Kegiatan</label>
                         <input type="hidden" name="jenis_kegiatan" x-model="value">
 
@@ -318,15 +319,27 @@
                 </div>
                 {{-- Row 8: Bukti & Lokasi Modern --}}
                 <div class="grid md:grid-cols-2 gap-4">
-                    {{-- Upload Bukti --}}
+                    {{-- Unggah Bukti --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
+
+                        {{-- Input File Utama --}}
                         <label
-                            class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100">
-                            <span id="bukti_filename" class="truncate">Pilih File</span>
+                            class="w-full flex items-center justify-between rounded-[10px] border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <span id="bukti_label_text" class="truncate">Pilih File Baru</span>
                             <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70">
-                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden">
+                            <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden"
+                                onchange="handleNewFiles(this)">
                         </label>
+
+                        <div id="preview_file_baru" class="mt-2 space-y-2"></div>
+
+                        {{-- Container untuk Menampung Input Hidden ID File yang akan Dihapus --}}
+                        <div id="container_hapus_bukti"></div>
+
+                        {{-- Container Preview File Lama (Akan diisi via JS saat Edit) --}}
+                        <div id="preview_file_lama" class="mt-3 space-y-2">
+                        </div>
                     </div>
 
                     {{-- Modul Input Lokasi Dual Mode --}}
@@ -402,11 +415,11 @@
                                 this.status = `Dipilih: ${item.display_name.substring(0, 30)}...`;
                             }
                         }">
-                        
+
                         {{-- Header Label + Switcher Mode --}}
                         <div class="flex items-center justify-between mb-[10px]">
                             <label class="block font-normal text-[15px] text-[#5B687A]">Lokasi</label>
-                            
+
                             {{-- Switcher --}}
                             <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                                 <button type="button" @click="mode = 'geofence'"
@@ -436,10 +449,18 @@
                                 class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center transition-colors"
                                 :class="loading ? 'opacity-70 cursor-wait' : ''">
                                 <template x-if="!loading">
-                                    <img src="{{ asset('assets/icon/location.svg') }}" class="h-5 w-5 brightness-0 invert">
+                                    <img src="{{ asset('assets/icon/location.svg') }}"
+                                        class="h-5 w-5 brightness-0 invert">
                                 </template>
                                 <template x-if="loading">
-                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
                                 </template>
                             </button>
                         </div>
@@ -447,11 +468,10 @@
                         {{-- Tampilan Mode Geocoding (Search) --}}
                         <div x-show="mode === 'geocoding'" class="relative">
                             <div class="relative">
-                                <input type="text" x-model="searchText"
-                                    @keydown.enter.prevent="searchLocation()"
+                                <input type="text" x-model="searchText" @keydown.enter.prevent="searchLocation()"
                                     class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#155FA6]/30 focus:border-[#155FA6]"
                                     placeholder="Ketik nama lokasi (misal: Hotel Horison)...">
-                                
+
                                 <button type="button" @click="searchLocation()"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-md text-slate-500 transition-colors">
                                     <img src="{{ asset('assets/icon/search.svg') }}" class="h-4 w-4 opacity-60">
@@ -464,14 +484,17 @@
                                 <template x-for="item in searchResults" :key="item.place_id">
                                     <button type="button" @click="selectLocation(item)"
                                         class="w-full text-left px-4 py-3 text-xs hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors">
-                                        <div class="font-medium text-slate-800" x-text="item.display_name.split(',')[0]"></div>
-                                        <div class="text-slate-500 truncate mt-0.5" x-text="item.display_name"></div>
+                                        <div class="font-medium text-slate-800"
+                                            x-text="item.display_name.split(',')[0]"></div>
+                                        <div class="text-slate-500 truncate mt-0.5" x-text="item.display_name">
+                                        </div>
                                     </button>
                                 </template>
                             </div>
-                            
+
                             {{-- Pesan Status Search --}}
-                            <div x-show="loading" class="absolute right-10 top-3 text-xs text-slate-400">Mencari...</div>
+                            <div x-show="loading" class="absolute right-10 top-3 text-xs text-slate-400">Mencari...
+                            </div>
                         </div>
 
                         <p class="text-[11px] text-slate-400 mt-1">
@@ -483,43 +506,105 @@
 
                 {{-- Action Buttons --}}
                 <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
-                    <button type="button" onclick="exportPDF()"
-                        class="rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555]">Export
-                        PDF</button>
-                    <button type="button" onclick="submitForm('draft')"
-                        class="rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87]">Simpan Draft</button>
-                    <button type="button" onclick="submitForm('waiting_review')"
-                        class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b]">Kirim
-                        LKH</button>
+                    <button type="button" onclick="exportPDF(this)"
+                        class="btn-action rounded-[10px] bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Export PDF
+                    </button>
+
+                    <button type="button" onclick="submitForm('draft', this)"
+                        class="btn-action rounded-[10px] bg-[#155FA6] px-4 py-2 text-sm text-white hover:bg-[#104d87] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Simpan Draft
+                    </button>
+
+                    <button type="button" onclick="submitForm('waiting_review', this)"
+                        class="btn-action rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm text-white hover:bg-[#0b633b] disabled:opacity-50 disabled:cursor-not-allowed">
+                        Kirim LKH
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 
-    {{-- KANAN ATAS: PANDUAN SINGKAT --}}
+    {{-- KANAN ATAS: PANDUAN SINGKAT (REVISI DETAIL) --}}
     <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col h-full">
-        <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
+        <h3 class="text-lg font-semibold text-slate-800 mb-3">Panduan Pengisian Detil LKH</h3>
 
-        <div class="mt-3 space-y-2 flex-1 overflow-y-auto pr-1">
-            @foreach ([
-                ['title' => 'Tanggal', 'desc' => 'Pilih tanggal kegiatan dilakukan.'],
-                ['title' => 'Jenis Kegiatan', 'desc' => 'Pilih jenis kegiatan yang dilakukan.'],
-                ['title' => 'Lokasi (Baru)', 'desc' => 'Gunakan "Cari Peta" jika lokasi Anda berbeda dengan posisi GPS saat ini.'],
-                ['title' => 'Uraian Kegiatan', 'desc' => 'Isi dengan kalimat yang ringkas dan jelas.'],
-                ['title' => 'Kategori', 'desc' => 'Pilih kategori SKP jika kegiatan terkait target kinerja.'],
-                ['title' => 'Unggah Bukti', 'desc' => 'Wajib lampirkan foto kegiatan.'],
-            ] as $guide)
-            <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
-                <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
-                <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
+        <div class="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+            {{-- Panduan Umum --}}
+            <div class="rounded-[10px] bg-[#155FA6] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">1. Data Waktu & Tupoksi</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>Tanggal & Waktu: Pastikan Jam Mulai < Jam Selesai. Pengisian harus logis.</li>
+                    <li>Jenis Kegiatan: Pilih kategori yang paling sesuai (Rapat, Pelayanan, dll.).</li>
+                    <li>Tupoksi: Kaitkan dengan uraian tugas Anda.</li>
+                    <li>Uraian Kegiatan: Tulis deskripsi yang ringkas, padat, dan jelas mengenai apa yang dikerjakan.</li>
+                </ul>
             </div>
-            @endforeach
+
+            {{-- Panduan Kategori & SKP (Alur Logis) --}}
+            <div class="rounded-[10px] bg-[#0E7A4A] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">2. Kategori Kinerja & Output</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>Non-SKP: Isi Output (misalnya: *Notulensi*) dan tentukan Satuan secara manual (*Jam*, *Dokumen*).</li>
+                    <li>SKP: Pilih Target SKP dari daftar. Sistem akan mengunci Satuan untuk menjaga konsistensi dengan target kinerja Anda.</li>
+                    <li>Volume: Jumlah kuantitas Output yang dihasilkan (Wajib diisi saat Kirim LKH).</li>
+                </ul>
+            </div>
+            
+            {{-- Panduan Lokasi (Alur Teknis) --}}
+            <div class="rounded-[10px] bg-[#B6241C] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">3. Lokasi (Geospatial) - Wajib Kirim LKH</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>GPS (Otomatis/Geofence): Digunakan untuk kegiatan di tempat dengan GPS. Tekan tombol lokasi untuk mengunci posisi.</li>
+                    <li>Cari Peta (Geocoding): Digunakan untuk kegiatan yang lokasinya tidak dapat dijangkau GPS. Cari nama lokasi (misal: Alamat Kantor atau kota tempat dinas), lalu pilih untuk menyimpan koordinat dan nama lokasi.</li>
+                    <li>Penting: Koordinat atau lokasi kerja harus terisi sebelum Kirim LKH.</li>
+                </ul>
+            </div>
+
+            {{-- Panduan Bukti --}}
+            <div class="rounded-[10px] bg-[#6B7280] px-4 py-3 text-white leading-normal">
+                <p class="text-[14px] font-bold">4. Unggah Bukti Kegiatan</p>
+                <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
+                    <li>Wajib lampirkan dokumen (Gambar/PDF).</li>
+                    <li>Penambahan: File baru ditambahkan ke daftar.</li>
+                    <li>Penghapusan: Klik 'X' pada file yang sudah tersimpan untuk menghapus lampiran tersebut.</li>
+                </ul>
+            </div>
         </div>
     </div>
 
     {{-- KIRI BAWAH: DRAFT LKH (Tidak berubah banyak) --}}
-    <div x-data="{ openDraftModal: false, draftsLimit: [], draftsAll: [] }"
-        @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" x-cloak
+    <div x-data="{ openDraftModal: false, draftsLimit: [], draftsAll: [], deleteDraft(id) {
+        // Implementasi deleteDraft untuk tombol Hapus
+        Swal.fire({
+            title: 'Hapus Draft?',
+            text: 'Draft ini akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#B6241C',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Ya, Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Panggil API Hapus
+                fetch(`/api/lkh/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'Accept': 'application/json'
+                    }
+                }).then(res => {
+                    if (res.ok) {
+                        Swal.fire('Terhapus!', 'Draft berhasil dihapus.', 'success');
+                        // Refresh drafts
+                        fetchDashboardStats();
+                    } else {
+                        Swal.fire('Gagal!', 'Gagal menghapus draft.', 'error');
+                    }
+                });
+            }
+        });
+    }}" @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" x-cloak
         class="rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-3 shadow-sm h-full flex flex-col">
 
         <div class="flex items-center justify-between mb-3 shrink-0">
@@ -535,12 +620,13 @@
                 <p class="text-sm text-slate-400 italic">Tidak ada draft.</p>
             </template>
             <template x-for="item in draftsLimit" :key="item.id">
-                <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
+                <div
+                    class="bg-[#F8F9FA] rounded-[12px] p-4 flex items-center justify-between gap-3 border border-slate-100">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
                     </div>
-                    <a :href="'/penilai/input-laporan/' + item.id" 
+                    <a :href="'/penilai/input-laporan/' + item.id"
                         class="bg-[#0E7A4A] text-white text-[12px] px-3 py-1.5 rounded-[8px]">
                         Lanjutkan
                     </a>
@@ -563,7 +649,8 @@
                 </div>
                 <div class="overflow-y-auto p-6 space-y-3">
                     <template x-for="item in draftsAll" :key="item.id">
-                        <div class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
+                        <div
+                            class="bg-[#F8F9FA] rounded-[12px] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
                             <div>
                                 <h4 class="text-[12px] font-medium" x-text="item.deskripsi"></h4>
                                 <p class="text-[10px] text-slate-500" x-text="item.waktu_simpan"></p>
@@ -596,6 +683,9 @@
 
 @push('scripts')
 <script>
+// --- Global DataTransfer & Helper ---
+let newFilesDataTransfer = new DataTransfer();
+
 function updateAlpineDropdown(inputName, value, label = null) {
     const el = document.querySelector(`input[name="${inputName}"]`);
     if (el) {
@@ -612,6 +702,164 @@ function setAlpineValue(selector, key, value) {
     }
 }
 
+function handleNewFiles(inputElement) {
+    const files = inputElement.files;
+    for (let i = 0; i < files.length; i++) {
+        newFilesDataTransfer.items.add(files[i]);
+    }
+    inputElement.files = newFilesDataTransfer.files;
+    updateNewFileUI();
+}
+
+function removeNewFile(index) {
+    const dt = new DataTransfer();
+    const currentFiles = newFilesDataTransfer.files;
+
+    for (let i = 0; i < currentFiles.length; i++) {
+        if (i !== index) {
+            dt.items.add(currentFiles[i]);
+        }
+    }
+
+    newFilesDataTransfer = dt;
+    document.getElementById('bukti_input').files = dt.files;
+    updateNewFileUI();
+}
+
+function updateNewFileUI() {
+    const inputElement = document.getElementById('bukti_input');
+    const labelText = document.getElementById('bukti_label_text');
+    const container = document.getElementById('preview_file_baru');
+    const files = inputElement.files;
+
+    // 1. Update Label Text
+    labelText.textContent = files.length === 0 ?
+        "Pilih File Baru" :
+        `${files.length} file baru akan diunggah`;
+
+    // 2. Render Preview List
+    container.innerHTML = '';
+
+    if (files.length > 0) {
+        const header = document.createElement('p');
+        header.className = "text-[11px] text-[#155FA6] font-medium mb-1 mt-3";
+        header.innerText = "Akan diunggah (Baru):";
+        container.appendChild(header);
+    }
+
+    Array.from(files).forEach((file, index) => {
+        const isImage = file.type.startsWith('image/');
+        const fileSizeKB = (file.size / 1024).toFixed(1);
+
+        const div = document.createElement('div');
+        div.className =
+            "flex items-center justify-between bg-[#F0F7FF] border border-[#155FA6]/30 rounded-[8px] p-2 shadow-sm relative group";
+
+        let thumbnailHtml =
+            `<div class="h-10 w-10 shrink-0 rounded bg-white flex items-center justify-center border border-blue-100 text-[9px] font-bold text-blue-500 uppercase">${file.name.split('.').pop()}</div>`;
+
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden w-full">
+                <div id="thumb-new-${index}" class="shrink-0">
+                    ${thumbnailHtml}
+                </div>
+                
+                <div class="min-w-0 flex-1">
+                    <p class="text-[12px] font-medium text-slate-700 truncate">${file.name}</p>
+                    <p class="text-[10px] text-slate-400">${fileSizeKB} KB <span class="text-emerald-600 ml-1">• Baru</span></p>
+                </div>
+
+                <button type="button" onclick="removeNewFile(${index})" 
+                    class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(div);
+
+        if (isImage) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgContainer = document.getElementById(`thumb-new-${index}`);
+                if (imgContainer) {
+                    imgContainer.innerHTML = `
+                        <div class="h-10 w-10 shrink-0 rounded bg-white overflow-hidden border border-blue-100">
+                            <img src="${e.target.result}" class="h-full w-full object-cover">
+                        </div>`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// --- FUNGSI BARU: RENDER FILE LAMA ---
+function renderExistingFiles(files) {
+    const container = document.getElementById('preview_file_lama');
+    container.innerHTML = ''; // Reset container
+
+    if (!files || files.length === 0) return;
+
+    container.innerHTML =
+        '<p class="text-[11px] text-slate-400 mb-1">File tersimpan (Klik silang untuk menghapus):</p>';
+
+    files.forEach(file => {
+        // Cek ekstensi untuk menentukan icon (Gambar vs Dokumen)
+        const ext = file.file_type ? file.file_type.toLowerCase() : 'file';
+        const isImage = ['jpg', 'jpeg', 'png', 'webp'].includes(ext);
+
+        // URL File (Sesuaikan path storage Anda)
+        // Menggunakan file.file_path yang sudah dikirim dari API
+        const fileUrl = `/storage/${file.file_path}`;
+
+        const div = document.createElement('div');
+        div.className =
+            "flex items-center justify-between bg-white border border-slate-200 rounded-[8px] p-2 shadow-sm";
+        div.id = `file-wrapper-${file.id}`;
+
+        div.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden">
+                <div class="h-10 w-10 shrink-0 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100">
+                    ${isImage 
+                        ? `<img src="${fileUrl}" class="h-full w-full object-cover">` 
+                        : `<span class="text-[9px] font-bold text-slate-500 uppercase">${ext}</span>`
+                    }
+                </div>
+                <div class="min-w-0">
+                    <a href="${fileUrl}" target="_blank" class="text-[12px] font-medium text-slate-700 hover:text-[#155FA6] hover:underline truncate block">
+                        ${file.file_name_original || 'File Tanpa Nama'}
+                    </a>
+                    <p class="text-[10px] text-slate-400">${(file.file_size / 1024).toFixed(1)} KB</p>
+                </div>
+            </div>
+            <button type="button" onclick="markFileForDeletion(${file.id})" 
+                class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                title="Hapus file ini">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// --- FUNGSI BARU: TANDAI HAPUS ---
+function markFileForDeletion(id) {
+    const inputContainer = document.getElementById('container_hapus_bukti');
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'hapus_bukti[]';
+    input.value = id;
+    inputContainer.appendChild(input);
+
+    const wrapper = document.getElementById(`file-wrapper-${id}`);
+    if (wrapper) wrapper.remove();
+}
+
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
@@ -621,29 +869,10 @@ document.addEventListener("DOMContentLoaded", async function() {
         "Authorization": "Bearer " + token
     };
 
-    // File preview
-    const fileInput = document.getElementById("bukti_input");
-    if (fileInput) {
-        fileInput.addEventListener("change", () => {
-            const count = fileInput.files.length;
-            document.getElementById("bukti_filename").textContent =
-                count === 0 ? "Pilih File" :
-                count === 1 ? fileInput.files[0].name :
-                `${count} file dipilih`;
-        });
-    }
-
     // Load dashboard stats
-    try {
-        const res = await fetch("/api/dashboard/stats", { headers });
-        if (res.ok) {
-            const data = await res.json();
-            renderAktivitas(data.aktivitas_terbaru || []);
-            renderDrafts(data.draft_terbaru || []);
-        }
-    } catch (e) { console.error("Stats Error", e); }
+    fetchDashboardStats();
 
-    // Edit mode logic
+    // Load Data Edit
     if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
 
     // Date/Time pickers trigger
@@ -654,6 +883,27 @@ document.addEventListener("DOMContentLoaded", async function() {
     });
 });
 
+// --- FETCH DASHBOARD STATS (DIPISAH) ---
+async function fetchDashboardStats() {
+    const token = localStorage.getItem("auth_token");
+    const headers = {
+        "Accept": "application/json",
+        "Authorization": "Bearer " + token
+    };
+    try {
+        const res = await fetch("/api/dashboard/stats", {
+            headers
+        });
+        if (res.ok) {
+            const data = await res.json();
+            renderAktivitas(data.aktivitas_terbaru || []);
+            renderDrafts(data.draft_terbaru || []);
+        }
+    } catch (e) {
+        console.error("Stats Error", e);
+    }
+}
+
 function renderAktivitas(list) {
     const el = document.getElementById("aktivitas-list");
     el.innerHTML = "";
@@ -662,9 +912,12 @@ function renderAktivitas(list) {
         return;
     }
     list.forEach(item => {
-        const color = item.status === "approved" ? "bg-[#128C60]/50" : item.status.includes("reject") ? "bg-[#B6241C]/50" : "bg-slate-200";
-        const icon = item.status === "approved" ? "{{ asset('assets/icon/approve.svg') }}" : "{{ asset('assets/icon/pending.svg') }}";
-        const text = item.status === "approved" ? "Disetujui" : item.status.includes("reject") ? "Ditolak" : "Menunggu";
+        const color = item.status === "approved" ? "bg-[#128C60]/50" : item.status.includes("reject") ?
+            "bg-[#B6241C]/50" : "bg-slate-200";
+        const icon = item.status === "approved" ? "{{ asset('assets/icon/approve.svg') }}" :
+            "{{ asset('assets/icon/pending.svg') }}";
+        const text = item.status === "approved" ? "Disetujui" : item.status.includes("reject") ? "Ditolak" :
+            "Menunggu";
         el.insertAdjacentHTML("beforeend", `
             <li class="flex items-start gap-3">
                 <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${color}">
@@ -688,100 +941,133 @@ function renderDrafts(data) {
         deskripsi: d.deskripsi_aktivitas || "Draft",
         waktu_simpan: new Date(d.updated_at).toLocaleString()
     }));
-    window.dispatchEvent(new CustomEvent("update-drafts", { detail: { limit: drafts.slice(0, 3), all: drafts } }));
+    window.dispatchEvent(new CustomEvent("update-drafts", {
+        detail: {
+            limit: drafts.slice(0, 3),
+            all: drafts
+        }
+    }));
 }
 
 async function loadEditLKH(id, headers) {
     try {
-        const res = await fetch(`/api/lkh/${id}`, { headers });
+        const res = await fetch(`/api/lkh/${id}`, {
+            headers
+        });
         const json = await res.json();
         const data = json.data;
 
-        // 1. Populate Standard Inputs
-        // Fix: Format tanggal dari ISO (YYYY-MM-DDTHH:mm:ss...) ke YYYY-MM-DD
-        if (data.tanggal_laporan) {
-            document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
-        }
-        
+        // Populate Standard Inputs
+        if (data.tanggal_laporan) document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
-        
-        // Deskripsi & Output
+
         const deskripsiEl = document.querySelector('textarea[name="deskripsi_aktivitas"]');
-        if(deskripsiEl) deskripsiEl.value = data.deskripsi_aktivitas ?? "";
+        if (deskripsiEl) deskripsiEl.value = data.deskripsi_aktivitas ?? "";
 
         const outputEl = document.querySelector('input[name="output_hasil_kerja"]');
-        if(outputEl) outputEl.value = data.output_hasil_kerja ?? "";
-        
-        // Volume
-        const volumeEl = document.querySelector('input[name="volume"]');
-        if(volumeEl) volumeEl.value = data.volume ?? "";
+        if (outputEl) outputEl.value = data.output_hasil_kerja ?? "";
 
-        // Satuan (Input hidden atau text biasa jika tidak pakai Alpine)
+        const volumeEl = document.querySelector('input[name="volume"]');
+        if (volumeEl) volumeEl.value = data.volume ?? "";
+
         const satuanEl = document.querySelector('input[name="satuan"]');
-        if(satuanEl) satuanEl.value = data.satuan ?? "";
+        if (satuanEl) satuanEl.value = data.satuan ?? "";
 
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi.uraian_tugas || 'Tupoksi Terpilih');
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi ? data.tupoksi.uraian_tugas :
+            'Tupoksi Terpilih');
 
-        // 2. Populate Mode Lokasi & Koordinat
+        // Populate File Lama (Bukti)
+        if (data.bukti) {
+            renderExistingFiles(data.bukti);
+        }
+
+        // Populate Mode Lokasi
         const modeLokasi = data.mode_lokasi || 'geofence';
         const lokasiContainer = document.querySelector('[x-data*="mode:"]');
-        
-        if(lokasiContainer && lokasiContainer.__x) {
+
+        // Cek Alpine scope
+        if (lokasiContainer && Alpine.raw(lokasiContainer.__x.isRoot)) {
             const alpine = lokasiContainer.__x.$data;
             alpine.mode = modeLokasi;
-            alpine.lat = data.lat; 
+            alpine.lat = data.lat;
             alpine.lng = data.lng;
             alpine.lokasiTeksFinal = data.lokasi_teks || '';
-            
-            if(modeLokasi === 'geocoding') {
+
+            if (modeLokasi === 'geocoding') {
                 alpine.searchText = data.lokasi_teks || '';
                 alpine.status = `Tersimpan: ${data.lokasi_teks}`;
             } else {
-                // Tampilkan koordinat jika geofence/manual map
                 alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
             }
         }
 
-        // 3. Logic Kategori & SKP
-        const isSkp = !!data.skp_rencana_id; // Cek apakah ada ID SKP
+        // Logic Kategori & SKP
+        const isSkp = !!data.skp_rencana_id;
         const kategoriInput = document.querySelector('input[name="kategori"]');
-        if(kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";
-        
-        // Trigger Alpine update untuk Kategori
+        if (kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";
+
         const mainLogicDiv = document.querySelector('[x-data*="kategori:"]');
-        if(mainLogicDiv && mainLogicDiv.__x) {
+        if (mainLogicDiv && Alpine.raw(mainLogicDiv.__x.isRoot)) {
             const alpineData = mainLogicDiv.__x.$data;
-            
-            // Set state kategori di Alpine
             alpineData.setKategori(isSkp ? "skp" : "non-skp");
 
             setTimeout(() => {
-                // Populate data SKP jika kategori adalah SKP
                 if (isSkp && data.rencana) {
                     alpineData.skpId = data.skp_rencana_id;
                     alpineData.skpLabel = data.rencana.rencana_hasil_kerja;
-                    
-                    // PERBAIKAN: Ambil satuan langsung dari root data.satuan
-                    // karena di JSON tidak ada data.rencana.targets
-                    alpineData.satuanValue = data.satuan; 
-                    alpineData.isSatuanLocked = true; // Biasanya SKP satuannya dikunci
+
+                    // Ambil satuan dari root data
+                    alpineData.satuanValue = data.satuan;
+                    alpineData.isSatuanLocked = true;
                 } else {
-                    // Jika Non-SKP
                     alpineData.satuanValue = data.satuan;
                     alpineData.isSatuanLocked = false;
                 }
-            }, 300); // Sedikit delay agar transisi Alpine selesai
+            }, 300);
         }
 
-    } catch (e) { 
+    } catch (e) {
         console.error("Edit Load Error", e);
-        alert("Gagal memuat data LKH.");
     }
 }
 
-async function submitForm(type) {
+// --- HELPER FUNCTION UNTUK DISABLE TOMBOL ---
+function toggleLoading(isLoading, activeBtn = null) {
+    const allButtons = document.querySelectorAll('.btn-action');
+
+    allButtons.forEach(btn => {
+        if (isLoading) {
+            // Simpan teks asli jika belum disimpan
+            if (!btn.dataset.originalText) {
+                btn.dataset.originalText = btn.innerHTML;
+            }
+            btn.disabled = true; // Matikan tombol
+        } else {
+            btn.disabled = false; // Hidupkan tombol
+            // Kembalikan teks asli
+            if (btn.dataset.originalText) {
+                btn.innerHTML = btn.dataset.originalText;
+            }
+        }
+    });
+
+    // Ubah teks tombol yang diklik menjadi loading spinner/text
+    if (isLoading && activeBtn) {
+        activeBtn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg> Memproses...`;
+    }
+}
+
+// --- FUNGSI SUBMIT FORM UTAMA ---
+async function submitForm(type, btnElement) {
+    // 1. Matikan semua tombol agar user tidak klik 2x
+    toggleLoading(true, btnElement);
+
     const form = document.getElementById("form-lkh");
     const formData = new FormData(form);
     formData.set("status", type);
@@ -789,11 +1075,23 @@ async function submitForm(type) {
     // Validasi Sederhana
     if (type === "waiting_review") {
         if (!formData.get("output_hasil_kerja") || !formData.get("satuan")) {
-            return Swal.fire({ icon: "warning", title: "Belum Lengkap", text: "Output dan Satuan wajib diisi" });
+            Swal.fire({
+                icon: "warning",
+                title: "Belum Lengkap",
+                text: "Output dan Satuan wajib diisi"
+            });
+            toggleLoading(false); // Hidupkan tombol lagi jika validasi gagal
+            return;
         }
         // Validasi Lokasi
         if (!formData.get("latitude") || !formData.get("longitude")) {
-            return Swal.fire({ icon: "warning", title: "Lokasi Kosong", text: "Mohon ambil lokasi GPS atau cari lokasi di peta." });
+            Swal.fire({
+                icon: "warning",
+                title: "Lokasi Kosong",
+                text: "Mohon ambil lokasi GPS atau cari lokasi di peta."
+            });
+            toggleLoading(false); // Hidupkan tombol lagi
+            return;
         }
     }
 
@@ -801,50 +1099,109 @@ async function submitForm(type) {
         const url = lkhIdToEdit ? `/api/lkh/update/${lkhIdToEdit}` : "/api/lkh";
         const res = await fetch(url, {
             method: "POST",
-            headers: { "Authorization": `Bearer ${localStorage.getItem("auth_token")}`, "Accept": "application/json" },
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+                "Accept": "application/json"
+            },
             body: formData
         });
         const json = await res.json();
 
         if (res.ok) {
-            Swal.fire({ icon: "success", title: "Berhasil", showConfirmButton: false, timer: 1500 });
+            Swal.fire({
+                icon: "success",
+                title: "Berhasil",
+                showConfirmButton: false,
+                timer: 1500
+            });
+            // Jika sukses, biarkan tombol tetap DISABLED agar user tidak klik lagi saat menunggu redirect
             setTimeout(() => window.location.href = "/penilai/dashboard", 1000);
         } else {
             throw new Error(json.message || "Gagal menyimpan data");
         }
     } catch (e) {
-        Swal.fire({ icon: "error", title: "Gagal", text: e.message });
+        Swal.fire({
+            icon: "error",
+            title: "Gagal",
+            text: e.message
+        });
+        toggleLoading(false); // Hidupkan tombol lagi jika error API
     }
 }
 
-async function exportPDF() {
+// --- FUNGSI EXPORT PDF ---
+async function exportPDF(btnElement) {
     const res = await Swal.fire({
-        title: "Export PDF?",
+        title: "Preview PDF?",
+        text: "Sistem akan memvalidasi data dan membuka preview di tab baru.",
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Ya",
+        confirmButtonText: "Ya, Buka PDF",
         confirmButtonColor: "#1C7C54"
     });
 
     if (!res.isConfirmed) return;
 
+    toggleLoading(true, btnElement);
+
     try {
         const resp = await fetch("/api/lkh/export-pdf", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`
+                "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
+                "Accept": "application/json"
             },
             body: new FormData(document.getElementById("form-lkh"))
         });
 
-        if (resp.ok) {
+        const contentType = resp.headers.get("content-type");
+
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            // --- KASUS GAGAL (Validasi Error) ---
+            const json = await resp.json();
+
+            let errorMsg = json.message;
+            if (json.details && Array.isArray(json.details)) {
+                errorMsg +=
+                    "<br><br><div style='text-align:left; font-size:12px; max-height:200px; overflow-y:auto;'><ul>";
+                json.details.forEach(err => {
+                    errorMsg += `<li class="text-red-600 mb-1">• ${err}</li>`;
+                });
+                errorMsg += "</ul></div>";
+            }
+
+            Swal.fire({
+                title: "Data Tidak Lengkap",
+                html: errorMsg,
+                icon: "error"
+            });
+
+        } else if (resp.ok) {
+            // --- KASUS SUKSES (Membuka Tab Baru) ---
             const blob = await resp.blob();
-            window.open(URL.createObjectURL(blob), "_blank");
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'PDF berhasil dibuka'
+            });
+
         } else {
-            throw new Error("Gagal export");
+            throw new Error("Terjadi kesalahan server");
         }
+
     } catch (e) {
-        Swal.fire("Error", "Gagal export PDF", "error");
+        console.error(e);
+        Swal.fire("Error", "Gagal menghubungi server", "error");
+    } finally {
+        toggleLoading(false, btnElement);
     }
 }
 </script>

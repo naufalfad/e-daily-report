@@ -2,13 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==== DOM ELEMENTS ====
     const listContainer = document.getElementById('lkh-validation-list');
     
-    // Filters Elements (NEW)
+    // Filters Elements
     const filterStatus = document.getElementById('filter-status');
     const filterMonth = document.getElementById('filter-month');
     const filterYear = document.getElementById('filter-year');
     const filterSearch = document.getElementById('filter-search');
 
-    // Pagination Elements (NEW)
+    // Pagination Elements
     const btnPrev = document.getElementById('prev-page');
     const btnNext = document.getElementById('next-page');
     const paginationInfo = document.getElementById('pagination-info');
@@ -18,14 +18,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const approveModal = document.getElementById('modal-approve');
     const rejectModal = document.getElementById('modal-reject');
     
+    // NEW Modal Elements
+    const buktiListModal = document.getElementById('modal-bukti-list');
+    const buktiListContainer = document.getElementById('bukti-list-container');
+    const previewModal = document.getElementById('modal-preview');
+    const previewContent = document.getElementById('preview-content');
+
     // Action Buttons
     const btnSubmitApprove = document.getElementById('btn-submit-approve');
     const btnSubmitReject = document.getElementById('btn-submit-reject');
     const rejectError = document.getElementById('reject-error');
+    
+    // NEW Bukti Button
+    const btnOpenBukti = document.querySelector('.js-open-bukti');
 
     // State Variables
     let currentPage = 1;
     let searchTimeout = null;
+    // NEW State for Bukti
+    let daftarBukti = [];
+    let selectedBukti = null;
 
     // ==== HELPERS ====
     const getToken = () => localStorage.getItem('auth_token');
@@ -59,6 +71,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const style = config[status] || config['waiting_review'];
         return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${style.css}">${style.label}</span>`;
     };
+    
+    // NEW Helper: Get File Type
+    const getFileType = (url) => {
+        if (!url) return "other";
+        const ext = url.split(".").pop().toLowerCase();
+
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+            return "image";
+        if (ext === "pdf") return "pdf";
+        if (["mp4", "mov", "webm"].includes(ext)) return "video";
+        return "other";
+    };
+
+    // Helper: Mengubah string kosong menjadi null
+    const emptyToNull = (str) => {
+        return (typeof str === 'string' && str.trim() === '') ? null : str;
+    };
 
     // ==== MAIN FUNCTION: FETCH DATA ====
     async function fetchLkhList(page = 1) {
@@ -84,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Construct Query Params (LOGIC BARU)
+        // Construct Query Params
         const params = new URLSearchParams({
             page: page,
             status: filterStatus ? filterStatus.value : 'waiting_review',
@@ -102,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const data = await response.json();
             
-            // Render Data & Update Pagination
             renderTable(data.data);
             updatePagination(data);
             currentPage = page;
@@ -209,12 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnNext) btnNext.disabled = !response.next_page_url;
     }
 
-    // ==== FILTER EVENT LISTENERS (LOGIC BARU) ====
+    // ==== FILTER EVENT LISTENERS ====
     if (filterStatus) filterStatus.addEventListener('change', () => fetchLkhList(1));
     if (filterMonth) filterMonth.addEventListener('change', () => fetchLkhList(1));
     if (filterYear) filterYear.addEventListener('change', () => fetchLkhList(1));
     
-    // Search with Debounce (Agar tidak spam API)
+    // Search with Debounce
     if (filterSearch) {
         filterSearch.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
@@ -237,10 +265,168 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ==== MODAL LOGIC (Detail, Approve, Reject) ====
+
+    // ==== MODAL LOGIC (Detail, Approve, Reject, Bukti, Preview) ====
+    
+    function openModalFlex(modalEl) {
+        modalEl.classList.remove('hidden');
+        modalEl.classList.add('flex');
+    }
+
+    function closeModals() {
+        detailModal.classList.add('hidden');
+        approveModal.classList.add('hidden');
+        approveModal.classList.remove('flex');
+        rejectModal.classList.add('hidden');
+        rejectModal.classList.remove('flex');
+        buktiListModal.classList.add('hidden');
+        buktiListModal.classList.remove('flex');
+        previewModal.classList.add('hidden');
+        previewModal.classList.remove('flex');
+    };
+
+    document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject, .js-close-bukti, .js-close-preview').forEach(btn => {
+        btn.addEventListener('click', closeModals);
+    });
+
+    // NEW Bukti List Modal Logic
+    document.querySelector('#modal-detail')?.addEventListener('click', (e) => {
+        if (e.target.closest('.js-open-bukti')) {
+            const btn = e.target.closest('.js-open-bukti');
+            if (btn.disabled) return;
+            
+            if (daftarBukti && daftarBukti.length > 0) {
+                renderBuktiList(daftarBukti);
+                openModalFlex(buktiListModal);
+            } else {
+                Swal.fire({
+                    icon: "info",
+                    title: "Tidak Ada Bukti",
+                    text: "Laporan ini tidak memiliki lampiran bukti.",
+                    confirmButtonColor: "#155FA6",
+                });
+            }
+        }
+    });
+
+    // NEW Render Bukti List
+    function renderBuktiList(buktiArray) {
+        buktiListContainer.innerHTML = '';
+        
+        if (!buktiArray || buktiArray.length === 0) return;
+
+        buktiArray.forEach((bukti, index) => {
+            const type = getFileType(bukti.file_url);
+            let thumbnailHtml = '';
+
+            switch(type) {
+                case 'image':
+                    thumbnailHtml = `<img src="${bukti.file_url}" class="w-full h-32 object-cover rounded-lg shadow-sm" />`;
+                    break;
+                case 'pdf':
+                    thumbnailHtml = `
+                        <div class="w-full h-32 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                            <i class="fas fa-file-pdf text-4xl"></i>
+                        </div>`;
+                    break;
+                case 'video':
+                    thumbnailHtml = `
+                        <div class="w-full h-32 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                            <i class="fas fa-video text-4xl"></i>
+                        </div>`;
+                    break;
+                default:
+                    thumbnailHtml = `
+                        <div class="w-full h-32 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600">
+                            <i class="fas fa-file text-4xl"></i>
+                        </div>`;
+                    break;
+            }
+
+            const item = document.createElement('div');
+            item.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:bg-blue-50 transition cursor-pointer js-bukti-item";
+            item.innerHTML = `
+                ${thumbnailHtml}
+                <p class="mt-2 text-sm font-medium text-slate-700 truncate">Lampiran ${index + 1}</p>
+                <p class="text-xs text-slate-500 truncate" title="${bukti.file_url.split('/').pop()}">${bukti.file_url.split('/').pop()}</p>
+            `;
+            item.addEventListener('click', () => previewBukti(bukti));
+            buktiListContainer.appendChild(item);
+        });
+    }
+
+    // NEW Preview Bukti
+    function previewBukti(bukti) {
+        selectedBukti = bukti;
+        const type = getFileType(bukti.file_url);
+        previewContent.innerHTML = '';
+
+        let content = '';
+
+        switch(type) {
+            case 'image':
+                content = `<img src="${bukti.file_url}" class="w-full rounded-lg shadow" />`;
+                break;
+            case 'pdf':
+                content = `<iframe src="${bukti.file_url}" class="w-full h-[500px] rounded-lg"></iframe>`;
+                break;
+            case 'video':
+                content = `
+                    <video controls class="w-full rounded-lg">
+                        <source src="${bukti.file_url}" type="video/mp4">
+                        Maaf, browser Anda tidak mendukung tag video.
+                    </video>`;
+                break;
+            default:
+                content = `
+                    <p class="text-center text-slate-600">
+                        File tidak dapat dipreview. Silakan download:
+                    </p>
+                    <div class="text-center">
+                        <a href="${bukti.file_url}" target="_blank"
+                            class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg shadow">
+                            Download File
+                        </a>
+                    </div>`;
+                break;
+        }
+        
+        previewContent.innerHTML = content;
+        openModalFlex(previewModal);
+    }
+    
+    // Helper untuk mengubah struktur data bukti dari API
+    function normalizeBukti(buktiArray) {
+        if (!buktiArray) return [];
+        // Pastikan array
+        let arr = Array.isArray(buktiArray) ? buktiArray : 
+                    (typeof buktiArray === 'string' ? JSON.parse(buktiArray) : []);
+        
+        if (!Array.isArray(arr)) return [];
+
+        return arr.map((bukti) => {
+            if (typeof bukti === "string") {
+                return { file_url: `/storage/uploads/bukti/${bukti}` };
+            }
+            // Mengasumsikan struktur API yang paling umum
+            if (bukti.file_path) {
+                return { file_url: `/storage/${bukti.file_path}` };
+            }
+            if (bukti.file_url) {
+                return bukti;
+            }
+            return null;
+        }).filter(Boolean);
+    };
+
+    // Logic Modal Detail
     function openDetailModal(e) {
         const lkhData = JSON.parse(e.currentTarget.dataset.lkhData);
         detailModal.dataset.lkhId = lkhData.id;
+        
+        // Reset bukti state dan simpan data baru
+        daftarBukti = normalizeBukti(lkhData.bukti || []);
+        selectedBukti = null;
 
         const setMap = {
             'detail-tanggal': formatDate(lkhData.tanggal_laporan),
@@ -248,8 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'detail-nama': lkhData.jenis_kegiatan || '-',
             'detail-uraian': lkhData.deskripsi_aktivitas,
             'detail-output': lkhData.output_hasil_kerja || '-',
-            'detail-volume': lkhData.volume || '-',
-            'detail-satuan': lkhData.satuan || '',
+            'detail-volume': `${lkhData.volume || '-'} ${lkhData.satuan || ''}`,
             'detail-kategori': lkhData.skp_rencana_id ? 'SKP' : 'Non-SKP',
             'detail-jam': `${lkhData.waktu_mulai?.substring(0, 5)} - ${lkhData.waktu_selesai?.substring(0, 5)}`,
             'detail-lokasi': lkhData.lokasi_manual_text || (lkhData.is_luar_lokasi ? 'Luar Kantor' : 'Dalam Kantor')
@@ -259,6 +444,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById(id);
             if (el) el.textContent = value;
         });
+        
+        // Pisahkan penanganan volume dan satuan untuk elemen terpisah
+        const [volumeValue, ...satuanParts] = setMap['detail-volume'].split(' ');
+        document.getElementById('detail-volume').textContent = volumeValue;
+        document.getElementById('detail-satuan').textContent = satuanParts.join(' ');
+
 
         document.getElementById('detail-status').innerHTML = createStatusBadge(lkhData.status);
 
@@ -267,6 +458,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const catText = document.getElementById('detail-catatan');
         if (lkhData.komentar_validasi) {
             catWrap.classList.remove('hidden');
+            catWrap.classList.remove('bg-rose-50', 'border-rose-100');
+            catWrap.classList.add('bg-amber-50', 'border-amber-100'); // Ganti warna default
             catText.textContent = `"${lkhData.komentar_validasi}"`;
         } else {
             catWrap.classList.add('hidden');
@@ -287,12 +480,12 @@ document.addEventListener('DOMContentLoaded', () => {
             info?.classList.add('flex');
         }
 
-        // Handle Button Bukti
+        // Handle Button Bukti (DIUBAH)
         const buktiBtn = document.getElementById('detail-bukti-btn');
         if (buktiBtn) {
-            if (lkhData.bukti && lkhData.bukti.length > 0) {
+            if (daftarBukti.length > 0) {
                 buktiBtn.disabled = false;
-                buktiBtn.onclick = () => window.open(lkhData.bukti[0].file_url, "_blank");
+                // Listener akan dipicu oleh event delegation (js-open-bukti)
             } else {
                 buktiBtn.disabled = true;
             }
@@ -301,30 +494,12 @@ document.addEventListener('DOMContentLoaded', () => {
         detailModal.classList.remove('hidden');
     }
 
-    // Modal Close Logic
-    const closeModals = () => {
-        detailModal.classList.add('hidden');
-        approveModal.classList.add('hidden');
-        approveModal.classList.remove('flex');
-        rejectModal.classList.add('hidden');
-        rejectModal.classList.remove('flex');
-    };
-
-    document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject').forEach(btn => {
-        btn.addEventListener('click', closeModals);
-    });
-
-    // Helper untuk buka modal confirm
-    function openModalFlex(modalEl) {
-        modalEl.classList.remove('hidden');
-        modalEl.classList.add('flex');
-    }
-
     // Button Open Approve/Reject from Detail
     const btnOpenApprove = document.querySelector('.js-open-approve');
     if (btnOpenApprove) {
         btnOpenApprove.addEventListener('click', () => {
             detailModal.classList.add('hidden');
+            document.getElementById('approve-note').value = ''; // Reset Catatan
             openModalFlex(approveModal);
         });
     }
@@ -339,10 +514,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // SUBMIT ACTIONS
+    // SUBMIT ACTIONS (PERBAIKAN: Menggunakan emptyToNull untuk catatan persetujuan)
     async function submitValidation(status, note, btn) {
         const lkhId = detailModal.dataset.lkhId;
         const originalText = btn.innerHTML;
+        
+        // Khusus Approved, Catatan boleh NULL
+        const finalNote = (status === 'approved') ? emptyToNull(note) : note; 
+
         btn.disabled = true;
         btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-white inline mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Proses...`;
 
@@ -354,20 +533,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ status, komentar_validasi: note })
+                body: JSON.stringify({ status, komentar_validasi: finalNote }) // Menggunakan finalNote
             });
 
             if (res.ok) {
                 closeModals();
-                fetchLkhList(currentPage); // Refresh list maintain current page
-                alert('Berhasil memvalidasi laporan.');
+                fetchLkhList(currentPage); 
+                if(typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Laporan berhasil divalidasi.', confirmButtonColor: '#0E7A4A' });
+                } else {
+                    alert('Berhasil memvalidasi laporan.');
+                }
             } else {
                 const data = await res.json();
-                alert(data.message || 'Gagal memproses validasi');
+                if(typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Gagal!', text: data.message || 'Gagal memproses validasi', confirmButtonColor: '#d33' });
+                } else {
+                    alert(data.message || 'Gagal memproses validasi');
+                }
             }
         } catch (e) {
             console.error(e);
-            alert('Terjadi kesalahan jaringan');
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Error Jaringan', text: 'Terjadi kesalahan jaringan atau server.', confirmButtonColor: '#d33' });
+            } else {
+                alert('Terjadi kesalahan jaringan');
+            }
         } finally {
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -376,7 +567,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubmitApprove) {
         btnSubmitApprove.addEventListener('click', () => {
-            submitValidation('approved', document.getElementById('approve-note').value, btnSubmitApprove);
+            const note = document.getElementById('approve-note').value;
+            // Catatan dipastikan boleh kosong (akan diubah jadi null oleh emptyToNull)
+            submitValidation('approved', note, btnSubmitApprove);
         });
     }
 

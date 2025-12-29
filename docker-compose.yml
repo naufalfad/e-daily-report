@@ -25,6 +25,34 @@ services:
     restart: unless-stopped
     volumes:
       - ./:/var/www
+    environment:
+      # Pastikan variabel environment DB terbaca
+      DB_HOST: db
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+  # --- TAMBAHAN SERVICE QUEUE ---
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edaily-queue
+    restart: unless-stopped
+    # Perintah untuk menjalankan worker
+    command: php artisan queue:work --tries=3 --timeout=90
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - app
+      - db
+    environment:
+      # Environment variables harus sama dengan app agar bisa konek DB
+      DB_HOST: db
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      # Tambahkan env lain jika perlu, misal REDIS_HOST jika pakai Redis
 
   db:
     image: postgis/postgis:14-3.4
@@ -45,6 +73,19 @@ services:
     volumes:
       - ./docker/certbot/conf:/etc/letsencrypt
       - ./docker/certbot/www:/var/www/certbot
+
+  renderer:
+    build:
+      context: ./map-renderer-service
+      dockerfile: Dockerfile
+    container_name: edaily-renderer
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app # Opsional, tapi baik untuk memastikan urutan
+    networks:
+      - default
 
 volumes:
   db_data:

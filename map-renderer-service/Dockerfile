@@ -1,9 +1,7 @@
 # map-renderer-service/Dockerfile
-# Menggunakan Node.js sebagai base image
 FROM node:20-slim
 
-# Instalasi dependencies sistem untuk Puppeteer
-# Chromium membutuhkan beberapa library umum.
+# Install dependencies sistem untuk Chromium (Wajib untuk Puppeteer di Linux)
 RUN apt-get update && apt-get install -y \
     chromium \
     libnss3 \
@@ -18,21 +16,26 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     libasound2 \
     libxshmfence-dev \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
-# Atur Puppeteer agar menggunakan instalasi Chromium dari sistem
+# Config Environment untuk Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Set working directory
 WORKDIR /usr/src/app
 
-# Salin package.json dan instal dependencies
+# Copy dependency definition
 COPY package*.json ./
+
+# Install dependency Node.js
 RUN npm install
 
-# Salin kode service
+# Copy source code
 COPY renderer.js ./
 
-# Jalankan service Node.js
+# Expose port
 EXPOSE 3000
-CMD [ "npm", "start" ]
+
+# Start command
+CMD [ "node", "renderer.js" ]

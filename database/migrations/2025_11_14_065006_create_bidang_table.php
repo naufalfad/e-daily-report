@@ -10,13 +10,17 @@ return new class extends Migration
     {
         Schema::create('bidang', function (Blueprint $table) {
             $table->id();
-            // Relasi ke Unit Kerja (Contoh: Bapenda)
-            $table->foreignId('unit_kerja_id')
-                  ->constrained('unit_kerja')
-                  ->onDelete('cascade'); 
             
-            $table->string('nama_bidang'); // Contoh: 'Sekretariat', 'Bidang Pajak'
+            // Relasi ke Unit Kerja
+            // [AMAN] Kita hapus 'cascade' agar database tidak sembarangan menghapus data anak
+            $table->foreignId('unit_kerja_id')
+                  ->constrained('unit_kerja'); 
+            
+            $table->string('nama_bidang'); 
             $table->timestamps();
+            
+            // [WAJIB] Fitur Tong Sampah
+            $table->softDeletes();
         });
     }
 

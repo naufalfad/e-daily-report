@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- [PERBAIKAN 1] Meta Tag Identitas User & CSRF --}}
-    {{-- Ini PENTING agar JavaScript (pengumuman.js) bisa membaca ID user yang sedang login --}}
+    {{-- Meta Tag Identitas User & CSRF --}}
     <meta name="user-id" content="{{ auth()->id() }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -15,18 +14,39 @@
 
     {{-- Anti-FOUC: sembunyikan body sebelum CSS & asset siap --}}
     <style>
-    html.loading body {
-        visibility: hidden;
-    }
+        html.loading body {
+            visibility: hidden;
+        }
     </style>
 
     <script>
-    document.documentElement.classList.add("loading");
+        document.documentElement.classList.add("loading");
     </script>
 
     {{-- Favicon --}}
     <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
     <link rel="shortcut icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
+
+    {{-- 1. jQuery (Wajib ada paling atas agar $ dikenali) --}}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+    {{-- 2. DataTables JS (Untuk tabel canggih) --}}
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    
+    {{-- 3. DataTables CSS (Agar tabel rapi, walau kita override dengan Tailwind) --}}
+    <style>
+        /* Override DataTables Default Style agar selaras dengan Tailwind */
+        .dataTables_wrapper .dataTables_length select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #e2e8f0 !important; /* slate-200 */
+        }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -43,58 +63,53 @@
     @stack('styles')
 
     <style>
-    body {
-        font-family: 'Poppins', ui-sans-serif, system-ui;
-    }
-
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-
-    .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-    /* Loader Spin */
-    .loader-spin {
-        animation: spin .8s linear infinite;
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
+        body {
+            font-family: 'Poppins', ui-sans-serif, system-ui;
         }
 
-        to {
-            transform: rotate(360deg);
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
         }
-    }
 
-    /* Hapus icon bawaan input tanggal */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-        opacity: 0 !important;
-        display: none !important;
-    }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
-    /* Hapus icon bawaan input time */
-    input[type="time"]::-webkit-calendar-picker-indicator {
-        opacity: 0 !important;
-        display: none !important;
-    }
+        /* Loader Spin */
+        .loader-spin {
+            animation: spin .8s linear infinite;
+        }
 
-    /* Hilangkan spinners Android/Edge */
-    input[type="time"]::-webkit-inner-spin-button,
-    input[type="date"]::-webkit-inner-spin-button {
-        display: none !important;
-    }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hapus icon bawaan input tanggal */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0 !important;
+            display: none !important;
+        }
+
+        /* Hapus icon bawaan input time */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            opacity: 0 !important;
+            display: none !important;
+        }
+
+        /* Hilangkan spinners Android/Edge */
+        input[type="time"]::-webkit-inner-spin-button,
+        input[type="date"]::-webkit-inner-spin-button {
+            display: none !important;
+        }
     </style>
 
     {{-- Setelah semua CSS / asset siap → tampilkan halaman --}}
     <script>
-    window.addEventListener("load", () => {
-        document.documentElement.classList.remove("loading");
-    });
+        window.addEventListener("load", () => {
+            document.documentElement.classList.remove("loading");
+        });
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -103,23 +118,42 @@
 
 <body class="min-h-screen bg-[#EFF0F5] text-slate-800">
 
-    <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
+    {{-- [PERBAIKAN UTAMA: LOGIC ROLE DIPINDAH KE SINI] --}}
+    {{-- Ini wajib ada DI ATAS SEBELUM SIDEBAR DIPANGGIL --}}
+    @php
+        if (!isset($role)) {
+            // Ambil role dari database user yg login
+            $userRole = auth()->check() ? (auth()->user()->roles->first()->nama_role ?? 'staf') : 'staf';
+            
+            // Mapping Nama Role DB -> Key Switch Case
+            $roleMap = [
+                'Super Admin'   => 'admin',
+                'Administrator' => 'admin',
+                'Kadis'         => 'kadis',
+                'Penilai'       => 'penilai',
+                'Staf'          => 'staf'
+            ];
 
+            $role = $roleMap[$userRole] ?? 'staf';
+        }
+    @endphp
+
+    <div id="global-loader" class="fixed inset-0 bg-black/20 flex items-center justify-center z-[9999] hidden">
         <div class="flex flex-row gap-2">
             <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce"></div>
             <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce [animation-delay:-.3s]"></div>
             <div class="w-4 h-4 rounded-full bg-[#1C7C54] animate-bounce [animation-delay:-.5s]"></div>
         </div>
-
     </div>
 
     <div class="p-5 h-screen">
         <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 overflow-hidden">
 
             {{-- Sidebar --}}
+            {{-- Karena $role sudah di-set di atas, Sidebar sekarang menerima role yang BENAR --}}
             @include('partials.sidebar', [
-            'role' => $role ?? 'staf',
-            'active' => $active ?? null,
+                'role' => $role,
+                'active' => $active ?? null,
             ])
 
             {{-- KONTEN KANAN --}}
@@ -213,7 +247,6 @@
     @stack('scripts')
 
     {{-- Load script sesuai role --}}
-    {{-- [PERBAIKAN 2] Pastikan script pengumuman.js dipanggil untuk Staf & Kadis juga --}}
     @switch($role)
 
     @case('admin')
@@ -228,7 +261,6 @@
     @vite('resources/js/pages/staf/input-lkh.js')
     @vite('resources/js/pages/staf/input-skp.js')
     @vite('resources/js/pages/staf/log-aktivitas.js')
-    {{-- Tambahkan ini agar fitur pengumuman di role staf jalan --}}
     @vite('resources/js/pages/staf/pengumuman.js')
     @break
 
@@ -240,14 +272,13 @@
     @vite('resources/js/pages/penilai/input-skp.js')
     @vite('resources/js/pages/penilai/skoring-kinerja.js')
     @vite('resources/js/pages/penilai/peta-aktivitas.js')
-    @vite('resources/js/pages/penilai/log-aktivitas.js') s
+    @vite('resources/js/pages/penilai/log-aktivitas.js')
     @break
 
     @case('kadis')
     @vite('resources/js/pages/kadis/dashboard.js')
     @vite('resources/js/pages/kadis/validasi-laporan.js')
     @vite('resources/js/pages/kadis/skoring-bidang.js')
-    {{-- Tambahkan ini agar fitur pengumuman di role kadis jalan --}}
     @vite('resources/js/pages/kadis/pengumuman.js')
     @break
 

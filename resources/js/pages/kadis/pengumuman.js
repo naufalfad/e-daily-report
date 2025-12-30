@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const listEl = document.getElementById("announcement-list");
     const emptyEl = document.getElementById("announcement-empty");
     const loadingEl = document.getElementById("loading-indicator");
+    // [UPDATE] Container Pagination
+    const paginationContainer = document.getElementById("pagination-container");
 
     const modal = document.getElementById("modal-pengumuman");
     const btnOpen = document.getElementById("btn-open-pengumuman");
@@ -19,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const inputJudul = document.getElementById("input-judul");
     const inputIsi = document.getElementById("input-isi");
     
-    // [LOGIKA BARU] Element Select Bidang Khusus Kadis
+    // [KHUSUS KADIS] Element Select Bidang
     const selectTargetBidang = document.getElementById("select-target-bidang");
 
     const previewTitle = document.getElementById("preview-title");
@@ -30,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentUserId = null;
 
     // ======================================================
-    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN (Information Expert)
+    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN
     // ======================================================
     function initUser() {
         const metaId = document.querySelector('meta[name="user-id"]');
@@ -51,40 +53,100 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 1. LOAD LIST PENGUMUMAN
+    // 1. LOAD LIST PENGUMUMAN (DENGAN PAGINATION)
     // ======================================================
-    async function fetchPengumuman() {
-        // [FIX] Menggunakan rute universal sesuai web.php
-        const endpoint = "/api/pengumuman/list"; 
-
+    // [UPDATE] Menerima parameter url, default ke page 1
+    async function fetchPengumuman(url = "/api/pengumuman/list") { 
         try {
-            if (loadingEl) {
-                loadingEl.classList.remove("hidden");
+            // Tampilkan loading state
+            if (listEl.children.length === 0) {
+                if (loadingEl) loadingEl.classList.remove("hidden");
                 listEl.classList.add("hidden");
                 emptyEl.classList.add("hidden");
+            } else {
+                listEl.classList.add("opacity-50"); // Efek loading halus
             }
 
-            const response = await authFetch(endpoint, {
-                method: "GET"
-            });
-
+            const response = await authFetch(url, { method: "GET" });
             if (!response.ok) throw new Error("Gagal memuat data");
 
             const result = await response.json();
+            
+            // Laravel Paginate Structure
             const data = result.data ?? result;
 
             renderList(data);
+
+            // [UPDATE] Render Pagination jika ada links
+            if (result.links && result.links.length > 3) {
+                renderPagination(result.links);
+            } else {
+                if (paginationContainer) paginationContainer.innerHTML = "";
+            }
 
         } catch (err) {
             console.error(err);
             if (listEl) listEl.innerHTML = `<p class="text-rose-500 text-center py-4 bg-rose-50 rounded-lg border border-rose-100">Gagal memuat data. Silakan refresh halaman.</p>`;
         } finally {
             if (loadingEl) loadingEl.classList.add("hidden");
+            listEl.classList.remove("opacity-50");
         }
     }
 
     // ======================================================
-    // 2. RENDER LIST (Strict Ownership & Dynamic Scope Badge)
+    // 2. RENDER PAGINATION
+    // ======================================================
+    function renderPagination(links) {
+        if (!paginationContainer) return;
+        paginationContainer.innerHTML = "";
+
+        const nav = document.createElement("nav");
+        nav.className = "flex items-center justify-center gap-1";
+
+        links.forEach(link => {
+            if (link.url === null && link.label === '...') {
+                const span = document.createElement("span");
+                span.className = "px-3 py-1 text-slate-400 text-sm";
+                span.innerHTML = link.label;
+                nav.appendChild(span);
+                return;
+            }
+
+            const btn = document.createElement("button");
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = link.label;
+            const labelText = tempDiv.textContent || tempDiv.innerText || "";
+
+            let btnClass = "px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ";
+            if (link.active) {
+                btnClass += "bg-[#1C7C54] text-white border-[#1C7C54] shadow-md";
+            } else if (link.url === null) {
+                btnClass += "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed";
+            } else {
+                btnClass += "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54]/30";
+            }
+            
+            btn.className = btnClass;
+            btn.innerHTML = labelText;
+
+            if (link.url) {
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    fetchPengumuman(link.url);
+                };
+            } else {
+                btn.disabled = true;
+            }
+
+            nav.appendChild(btn);
+        });
+
+        paginationContainer.appendChild(nav);
+    }
+
+    // ======================================================
+    // 3. RENDER LIST (Strict Ownership & Scope Badge)
     // ======================================================
     function renderList(data) {
         listEl.innerHTML = "";
@@ -92,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!data || data.length === 0) {
             listEl.classList.add("hidden");
             emptyEl.classList.remove("hidden");
+            if (paginationContainer) paginationContainer.innerHTML = "";
             return;
         }
 
@@ -105,8 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function createCard(item) {
         const article = document.createElement("article");
-        article.className =
-            "rounded-[18px] border border-[#BFD4FF] bg-[#F4F8FF] px-5 py-4 shadow-sm relative group hover:shadow-md transition-all h-full flex flex-col justify-between";
+        article.className = "rounded-[18px] border border-[#BFD4FF] bg-[#F4F8FF] px-5 py-4 shadow-sm relative group hover:shadow-md transition-all h-full flex flex-col justify-between";
 
         const dateStr = new Date(item.created_at).toLocaleDateString("id-ID", {
             day: 'numeric', month: 'long', year: 'numeric'
@@ -120,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
             scopeBadge = `<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mb-2 inline-block font-bold">UMUM</span>`;
         }
 
+        // Delete Button Logic (Strict Ownership)
         let deleteBtnHtml = '';
         if (currentUserId && item.user_id_creator === currentUserId) {
             deleteBtnHtml = `
@@ -167,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 3. CREATE / STORE (Logical Target Integration)
+    // 3. CREATE / STORE (Handling Dropdown Value)
     // ======================================================
     async function storePengumuman() {
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
@@ -181,22 +244,22 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // [LOGIKA BARU] Pemetaan nilai dropdown Kadis
+        // [LOGIKA KHUSUS KADIS] Pemetaan nilai dropdown
         const dropdownValue = selectTargetBidang.value;
         const payload = {
             judul: inputJudul.value,
             isi_pengumuman: inputIsi.value,
+            // Jika pilih 'umum' -> target 'umum', else -> target 'divisi'
             target: dropdownValue === 'umum' ? 'umum' : 'divisi',
+            // Jika pilih ID -> kirim ID, else -> null
             target_bidang_id: dropdownValue === 'umum' ? null : dropdownValue
         };
 
         btnSubmit.disabled = true;
-        btnSubmit.dataset.processing = "true";
         const originalText = btnSubmit.innerHTML;
-        btnSubmit.innerHTML = `<svg class="animate-spin h-4 w-4 text-white inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...`;
+        btnSubmit.innerHTML = `<span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Menyimpan...`;
 
         try {
-            // [FIX] Menggunakan rute universal store sesuai web.php
             const res = await authFetch("/api/pengumuman/store", {
                 method: "POST",
                 headers: {
@@ -213,7 +276,7 @@ document.addEventListener("DOMContentLoaded", () => {
             closeModal();
             inputJudul.value = "";
             inputIsi.value = "";
-            selectTargetBidang.value = "umum"; // Reset dropdown
+            selectTargetBidang.value = "umum"; // Reset dropdown ke default
 
             Swal.fire({
                 icon: "success",
@@ -223,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 timer: 1600,
             });
 
-            fetchPengumuman();
+            fetchPengumuman(); // Reload ke halaman 1
         } catch (err) {
             Swal.fire({
                 icon: "error",
@@ -232,7 +295,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         } finally {
             btnSubmit.disabled = false;
-            btnSubmit.dataset.processing = "false";
             btnSubmit.innerHTML = originalText;
         }
     }
@@ -304,12 +366,12 @@ document.addEventListener("DOMContentLoaded", () => {
         previewTitle.textContent = inputJudul.value || "Judul Pengumuman...";
         previewBody.textContent = inputIsi.value || "Isi arahan akan muncul di sini...";
         
-        // [LOGIKA BARU] Update Preview Badge berdasarkan Dropdown
+        // [LOGIKA KHUSUS KADIS] Update Preview Badge berdasarkan Dropdown Text
         if (previewBadge && selectTargetBidang) {
             const selectedText = selectTargetBidang.options[selectTargetBidang.selectedIndex].text;
             const isUmum = selectTargetBidang.value === 'umum';
             
-            previewBadge.textContent = isUmum ? 'UMUM' : selectedText;
+            previewBadge.textContent = isUmum ? 'UMUM' : selectedText.toUpperCase();
             previewBadge.className = `text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
                 isUmum ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700'
             }`;
@@ -327,23 +389,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnSubmit) {
         btnSubmit.onclick = (e) => {
             e.preventDefault();
-            if (btnSubmit.disabled || btnSubmit.dataset.processing === "true") return;
             storePengumuman();
         };
     }
 
-    if (inputJudul) inputJudul.addEventListener("input", updatePreview);
-    if (inputIsi) inputIsi.addEventListener("input", updatePreview);
+    inputJudul?.addEventListener("input", updatePreview);
+    inputIsi?.addEventListener("input", updatePreview);
     
-    // [LOGIKA BARU] Listener untuk perubahan dropdown target
+    // Listener untuk perubahan dropdown target
     if (selectTargetBidang) selectTargetBidang.addEventListener("change", updatePreview);
 
-    modal.addEventListener("click", (e) => {
+    modal?.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
     });
 
     // --- EXECUTE ---
     initUser(); 
-    fetchPengumuman(); 
-    updatePreview();
+    fetchPengumuman(); // Default load page 1
 });

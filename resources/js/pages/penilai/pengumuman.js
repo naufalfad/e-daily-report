@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const listEl = document.getElementById("announcement-list");
     const emptyEl = document.getElementById("announcement-empty");
     const loadingEl = document.getElementById("loading-indicator");
+    // [UPDATE] Container Pagination
+    const paginationContainer = document.getElementById("pagination-container");
 
     const modal = document.getElementById("modal-pengumuman");
     const btnOpen = document.getElementById("btn-open-pengumuman");
@@ -29,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentUserId = null;
 
     // ======================================================
-    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN (Information Expert)
+    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN
     // ======================================================
     function initUser() {
         const metaId = document.querySelector('meta[name="user-id"]');
@@ -50,37 +52,101 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 1. LOAD LIST PENGUMUMAN
+    // 1. LOAD LIST PENGUMUMAN (DENGAN PAGINATION)
     // ======================================================
-    async function fetchPengumuman() {
-        // Menggunakan rute universal yang sudah kita definisikan di web.php
-        const endpoint = "/api/pengumuman/list"; 
-
+    // [UPDATE] Menerima parameter url untuk navigasi halaman
+    async function fetchPengumuman(url = "/api/pengumuman/list") { 
         try {
-            if (loadingEl) {
-                loadingEl.classList.remove("hidden");
+            // Tampilkan loading state
+            if (listEl.children.length === 0) {
+                if (loadingEl) loadingEl.classList.remove("hidden");
                 listEl.classList.add("hidden");
                 emptyEl.classList.add("hidden");
+            } else {
+                listEl.classList.add("opacity-50"); // Efek loading halus saat ganti page
             }
 
-            const response = await authFetch(endpoint, { method: "GET" });
+            const response = await authFetch(url, { method: "GET" });
             if (!response.ok) throw new Error("Gagal memuat data");
 
             const result = await response.json();
+            
+            // Laravel Paginate Structure: { data: [...], links: [...], current_page: 1 }
+            // Jika backend mengirim raw array (belum paginate), fallback ke result
             const data = result.data ?? result;
 
             renderList(data);
+
+            // [UPDATE] Render Pagination jika ada links
+            if (result.links && result.links.length > 3) {
+                renderPagination(result.links);
+            } else {
+                if (paginationContainer) paginationContainer.innerHTML = "";
+            }
 
         } catch (err) {
             console.error(err);
             if (listEl) listEl.innerHTML = `<p class="text-rose-500 text-center py-4 bg-rose-50 rounded-lg border border-rose-100">Gagal memuat data.</p>`;
         } finally {
             if (loadingEl) loadingEl.classList.add("hidden");
+            listEl.classList.remove("opacity-50");
         }
     }
 
     // ======================================================
-    // 2. RENDER LIST (Strict Ownership & Badge Scope)
+    // 2. RENDER PAGINATION
+    // ======================================================
+    function renderPagination(links) {
+        if (!paginationContainer) return;
+        paginationContainer.innerHTML = "";
+
+        const nav = document.createElement("nav");
+        nav.className = "flex items-center justify-center gap-1";
+
+        links.forEach(link => {
+            if (link.url === null && link.label === '...') {
+                const span = document.createElement("span");
+                span.className = "px-3 py-1 text-slate-400 text-sm";
+                span.innerHTML = link.label;
+                nav.appendChild(span);
+                return;
+            }
+
+            const btn = document.createElement("button");
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = link.label; // Decode HTML entities like &laquo;
+            const labelText = tempDiv.textContent || tempDiv.innerText || "";
+
+            let btnClass = "px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 border ";
+            if (link.active) {
+                btnClass += "bg-[#1C7C54] text-white border-[#1C7C54] shadow-md";
+            } else if (link.url === null) {
+                btnClass += "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed";
+            } else {
+                btnClass += "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54]/30";
+            }
+            
+            btn.className = btnClass;
+            btn.innerHTML = labelText;
+
+            if (link.url) {
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    fetchPengumuman(link.url);
+                };
+            } else {
+                btn.disabled = true;
+            }
+
+            nav.appendChild(btn);
+        });
+
+        paginationContainer.appendChild(nav);
+    }
+
+    // ======================================================
+    // 3. RENDER LIST (Strict Ownership & Scope Badge)
     // ======================================================
     function renderList(data) {
         listEl.innerHTML = "";
@@ -88,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!data || data.length === 0) {
             listEl.classList.add("hidden");
             emptyEl.classList.remove("hidden");
+            if (paginationContainer) paginationContainer.innerHTML = "";
             return;
         }
 
@@ -107,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
-        // Badge Logic: Deteksi scope berdasarkan keberadaan bidang_id
+        // Badge Logic
         let scopeBadge = '';
         if (item.bidang_id) {
             scopeBadge = `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full mb-2 inline-block font-bold">DIVISI</span>`;
@@ -115,6 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
             scopeBadge = `<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mb-2 inline-block font-bold">UMUM</span>`;
         }
 
+        // Delete Button Logic (Strict Ownership)
         let deleteBtnHtml = '';
         if (currentUserId && item.user_id_creator === currentUserId) {
             deleteBtnHtml = `
@@ -160,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 3. CREATE / STORE (Menangani Opsi Target)
+    // 4. CREATE / STORE (Menangani Opsi Target)
     // ======================================================
     async function storePengumuman() {
         const targetEl = document.querySelector('input[name="target"]:checked');
@@ -182,16 +250,16 @@ document.addEventListener("DOMContentLoaded", () => {
         btnSubmit.innerHTML = `<span class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span> Menyimpan...`;
 
         try {
-            // Menggunakan endpoint universal sesuai web.php
             const res = await authFetch("/api/pengumuman/store", { 
                 method: "POST",
-                headers: { "Content-Type": "application/json",
+                headers: { 
+                    "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
                     judul: inputJudul.value,
                     isi_pengumuman: inputIsi.value,
-                    target: selectedTarget // Parameter krusial untuk backend
+                    target: selectedTarget // Parameter Wajib
                 }),
             });
 
@@ -210,7 +278,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 timer: 1600,
             });
 
-            fetchPengumuman();
+            // Reload data ke halaman pertama
+            fetchPengumuman(); 
         } catch (err) {
             Swal.fire({
                 icon: "error",
@@ -224,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 4. DELETE (Security Handling)
+    // 5. DELETE (Security Handling)
     // ======================================================
     async function deletePengumuman(id) {
         const confirm = await Swal.fire({
@@ -240,7 +309,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirm.isConfirmed) return;
 
         try {
-            // Menggunakan endpoint universal sesuai web.php
             const res = await authFetch(`/api/pengumuman/${id}`, { method: "DELETE" }); 
             const data = await res.json();
 
@@ -254,14 +322,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 showConfirmButton: false,
             });
 
-            fetchPengumuman();
+            // Refresh halaman saat ini
+            fetchPengumuman(); 
         } catch (err) {
             Swal.fire({ icon: "error", title: "Gagal Menghapus", text: err.message });
         }
     }
 
     // ======================================================
-    // 5. MODAL + ENHANCED PREVIEW
+    // 6. MODAL + ENHANCED PREVIEW
     // ======================================================
     function openModal() {
         modal.classList.remove("hidden");
@@ -289,8 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 selectedTarget === 'divisi' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
             }`;
         }
-
-        // Auto-expand textarea
+        
         inputIsi.style.height = 'auto';
         inputIsi.style.height = inputIsi.scrollHeight + 'px';
     }
@@ -309,7 +377,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     inputJudul?.addEventListener("input", updatePreview);
     inputIsi?.addEventListener("input", updatePreview);
-    // Listener untuk perubahan radio button agar preview badge ikut berubah
     inputTargets.forEach(radio => radio.addEventListener("change", updatePreview));
 
     modal?.addEventListener("click", (e) => {
@@ -318,5 +385,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- EXECUTE ---
     initUser();
-    fetchPengumuman();
+    fetchPengumuman(); // Load default page 1
 });

@@ -1,12 +1,27 @@
 @extends('layouts.app', ['title' => 'Pengumuman', 'role' => 'kadis', 'active' => 'pengumuman'])
 
 @section('content')
-<section id="pengumuman-root" class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-5 flex flex-col h-full min-h-[500px]">
+{{-- Main Card Container --}}
+<section id="pengumuman-root"
+    class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-6 flex flex-col h-auto relative">
 
-    <h2 class="text-[18px] font-normal mb-4">Pengumuman</h2>
+    {{-- Header Section --}}
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <h2 class="text-[20px] font-bold text-slate-800">Pengumuman & Instruksi</h2>
+            <p class="text-sm text-slate-500 mt-1">Kelola dan distribusikan informasi ke seluruh unit kerja</p>
+        </div>
+        
+        {{-- Action Button --}}
+        <button id="btn-open-pengumuman" type="button"
+            class="inline-flex items-center gap-2 rounded-[12px] bg-[#0E7A4A] text-white text-[13px] font-medium px-5 py-2.5 shadow-sm hover:bg-[#0b633c] hover:shadow-md transition-all active:scale-95">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-sm leading-none font-bold">+</span>
+            <span>Buat Instruksi Baru</span>
+        </button>
+    </div>
 
-    {{-- Tips Section --}}
-    <div class="rounded-[20px] bg-[#1C7C54] text-white flex items-center gap-6 px-6 py-5 mb-4 shadow-lg shadow-emerald-700/20">
+    {{-- Tips Banner (Kadis Version) --}}
+    <div class="rounded-[20px] bg-[#1C7C54] text-white flex items-center gap-6 px-6 py-5 mb-6 shadow-lg shadow-emerald-700/20">
         <div class="hidden md:block">
             <img src="{{ asset('assets/tips.svg') }}" alt="Tips Pengumuman" class="w-[150px] h-auto object-contain drop-shadow-md">
         </div>
@@ -19,41 +34,43 @@
         </div>
     </div>
 
-    {{-- Action Button --}}
-    <div class="mb-4 flex justify-between items-center">
-        <button id="btn-open-pengumuman" type="button"
-            class="inline-flex items-center gap-2 rounded-[12px] bg-[#0E7A4A] text-white text-[13px] font-medium px-5 py-2.5 shadow-sm hover:bg-[#0b633c] hover:shadow-md transition-all active:scale-95">
-            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-sm leading-none font-bold">+</span>
-            <span>Buat Pengumuman Baru</span>
-        </button>
-    </div>
-
-    {{-- STATE 1: LOADING --}}
-    <div id="loading-indicator" class="hidden text-center py-20">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#1C7C54]"></div>
-        <p class="mt-2 text-xs text-slate-400 font-medium">Sedang memuat data...</p>
-    </div>
-
-    {{-- STATE 2: KOSONG --}}
-    <div id="announcement-empty" class="hidden flex-1 flex flex-col items-center justify-center gap-4 py-16">
-        <div class="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center mb-2">
-            <img src="{{ asset('assets/icon/pengumuman.svg') }}" alt="Empty" class="w-10 h-10 opacity-30 grayscale">
+    {{-- Content Area --}}
+    <div class="flex-1 relative">
+        {{-- Loader --}}
+        <div id="loading-indicator" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[1px] rounded-xl h-[300px]">
+            <div class="animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-[#1C7C54]"></div>
+            <p class="mt-3 text-xs text-slate-500 font-bold tracking-wide">MEMUAT...</p>
         </div>
-        <div class="text-center">
+
+        {{-- Empty State --}}
+        <div id="announcement-empty" class="hidden flex flex-col items-center justify-center py-16">
+            <div class="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                <img src="{{ asset('assets/icon/pengumuman.svg') }}" alt="Empty" class="w-10 h-10 opacity-30 grayscale">
+            </div>
             <p class="text-slate-800 font-semibold mb-1">Belum ada pengumuman</p>
-            <p class="text-[13px] text-slate-500 max-w-xs mx-auto">
+            <p class="text-[13px] text-slate-500 max-w-xs text-center">
                 Riwayat instruksi Anda akan muncul di sini.
             </p>
         </div>
+
+        {{-- List Grid (12 Item Layout) --}}
+        <div id="announcement-list" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pb-4">
+            {{-- Cards di-inject oleh JS --}}
+        </div>
     </div>
 
-    {{-- STATE 3: LIST PENGUMUMAN --}}
-    <div id="announcement-list" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {{-- Cards akan di-inject oleh JavaScript --}}
+    {{-- Pagination Footer --}}
+    <div class="mt-auto pt-6 border-t border-slate-50">
+        <div id="pagination-container" class="flex justify-center items-center w-full">
+            {{-- Skeleton Pagination --}}
+            <div class="flex gap-1 animate-pulse opacity-50">
+                <div class="h-9 w-20 bg-slate-100 rounded-lg"></div> 
+                <div class="h-9 w-9 bg-slate-100 rounded-lg"></div>  
+                <div class="h-9 w-9 bg-slate-100 rounded-lg"></div>  
+                <div class="h-9 w-20 bg-slate-100 rounded-lg"></div> 
+            </div>
+        </div>
     </div>
-    
-    {{-- Pagination Container --}}
-    <div id="pagination-container" class="mt-auto pt-6 flex justify-center"></div>
 
 </section>
 

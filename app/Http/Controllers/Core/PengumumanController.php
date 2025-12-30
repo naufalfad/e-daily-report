@@ -33,6 +33,7 @@ class PengumumanController extends Controller
                 $q->whereNull('bidang_id')
                 // Skenario B: Pengumuman Spesifik Divisi/Bidang User
                   ->orWhere('bidang_id', $user->bidang_id)
+                // Skenario C: Tampilkan semua yang DIBUAT oleh user ini (agar bisa dikelola/dihapus)
                   ->orWhere('user_id_creator', $user->id);
             });
 
@@ -44,7 +45,8 @@ class PengumumanController extends Controller
             });
         }
 
-        $data = $query->latest()->paginate(10);
+        // [UPDATE] Menggunakan 12 item per halaman untuk Layout Grid yang presisi
+        $data = $query->latest()->paginate(12);
 
         return response()->json($data);
     }
@@ -193,14 +195,18 @@ class PengumumanController extends Controller
 
         $pengumuman = Pengumuman::with('creator')
             ->where(function($query) use ($user) {
-                $query->whereNull('bidang_id')->orWhere('bidang_id', $user->bidang_id);
+                $query->whereNull('bidang_id')
+                      ->orWhere('bidang_id', $user->bidang_id)
+                      // [UPDATE] Tambahkan kondisi owner juga di search agar konsisten
+                      ->orWhere('user_id_creator', $user->id);
             })
             ->where(function($query) use ($q) {
                 $query->whereRaw("to_tsvector('indonesian', judul || ' ' || COALESCE(isi_pengumuman, '')) @@ plainto_tsquery('indonesian', ?)", [$q])
                       ->orWhereHas('creator', fn($u) => $u->where('name', 'ILIKE', "%$q%"));
             })
             ->orderBy('created_at', 'desc')
-            ->limit(10)
+            // [UPDATE] Limit disamakan dengan pagination
+            ->limit(12)
             ->get();
 
         return response()->json($pengumuman);

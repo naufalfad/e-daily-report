@@ -1,7 +1,11 @@
 @extends('layouts.app', ['title' => 'Pengumuman', 'role' => 'kadis', 'active' => 'pengumuman'])
 
 @section('content')
-{{-- Main Card Container --}}
+{{-- 
+    [FIX LAYOUT]: 
+    - Menggunakan 'h-auto' agar tinggi container mengikuti konten.
+    - 'min-h-[600px]' menjaga estetika saat data kosong/sedikit.
+--}}
 <section id="pengumuman-root"
     class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-6 flex flex-col h-auto relative">
 
@@ -18,6 +22,57 @@
             <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-sm leading-none font-bold">+</span>
             <span>Buat Instruksi Baru</span>
         </button>
+    </div>
+
+    {{-- [NEW] Filter Bar Section --}}
+    <div class="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            {{-- Search Keyword --}}
+            <div class="md:col-span-5">
+                <label for="filter-search" class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Cari Instruksi</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" id="filter-search" 
+                        class="block w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all" 
+                        placeholder="Judul, isi, atau nama pembuat...">
+                </div>
+            </div>
+
+            {{-- Date Range Start --}}
+            <div class="md:col-span-3">
+                <label for="filter-start-date" class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Dari Tanggal</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <input type="date" id="filter-start-date" 
+                        class="block w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer">
+                </div>
+            </div>
+
+            {{-- Date Range End --}}
+            <div class="md:col-span-3">
+                <label for="filter-end-date" class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Sampai Tanggal</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <input type="date" id="filter-end-date" 
+                        class="block w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer">
+                </div>
+            </div>
+
+            {{-- Reset Button --}}
+            <div class="md:col-span-1">
+                <button id="btn-reset-filter" type="button" 
+                    class="w-full h-[42px] flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-rose-500 hover:border-rose-200 transition-all"
+                    title="Reset Filter">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+            </div>
+        </div>
     </div>
 
     {{-- Tips Banner (Kadis Version) --}}

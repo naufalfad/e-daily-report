@@ -18,6 +18,7 @@ class PengumumanController extends Controller
 {
     /**
      * 1. LIST PENGUMUMAN (API)
+     * Menggabungkan List Basic, Filter Tanggal, Search Keyword, dan Scope dalam satu endpoint.
      */
     public function index(Request $request)
     {
@@ -27,17 +28,43 @@ class PengumumanController extends Controller
             return response()->json(['message' => 'Unauthorized - Sesi Habis'], 401);
         }
 
-        $query = Pengumuman::with('creator')
-            ->where(function($q) use ($user) {
-                // Skenario A: Pengumuman UMUM (bidang_id null)
-                $q->whereNull('bidang_id')
-                // Skenario B: Pengumuman Spesifik Divisi/Bidang User
-                  ->orWhere('bidang_id', $user->bidang_id)
-                // Skenario C: Tampilkan semua yang DIBUAT oleh user ini (agar bisa dikelola/dihapus)
-                  ->orWhere('user_id_creator', $user->id);
-            });
+        // Mulai Query dengan Eager Loading User Creator
+        $query = Pengumuman::with('creator');
 
-        // Filter Unit Kerja tetap dipertahankan sebagai scope organisasi
+        // --- FILTER 1: SEARCH KEYWORD (Judul, Isi, Nama Pembuat) ---
+        if ($request->filled('q')) {
+            $keyword = $request->q;
+            // Jika keyword < 3 karakter, biasanya diabaikan untuk performance, 
+            // tapi untuk fleksibilitas kita izinkan search apa adanya.
+            $query->where(function($subQ) use ($keyword) {
+                // Full Text Search PostgreSQL untuk performa (jika sudah di-setup)
+                // Atau fallback ke ILIKE standar Laravel
+                $subQ->whereRaw("to_tsvector('indonesian', judul || ' ' || COALESCE(isi_pengumuman, '')) @@ plainto_tsquery('indonesian', ?)", [$keyword])
+                     ->orWhere('judul', 'ILIKE', "%{$keyword}%") // Fallback manual
+                     ->orWhere('isi_pengumuman', 'ILIKE', "%{$keyword}%")
+                     ->orWhereHas('creator', function($creatorQ) use ($keyword) {
+                         $creatorQ->where('name', 'ILIKE', "%{$keyword}%");
+                     });
+            });
+        }
+
+        // --- FILTER 2: DATE RANGE (Rentang Tanggal) ---
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // --- FILTER 3: SCOPE & HAK AKSES (Logic Inti) ---
+        // Logika dasar: Tampilkan yang (UMUM) OR (BIDANG SAYA) OR (SAYA BUAT)
+        $query->where(function($q) use ($user) {
+            $q->whereNull('bidang_id') // Umum
+              ->orWhere('bidang_id', $user->bidang_id) // Bidang User
+              ->orWhere('user_id_creator', $user->id); // Owner (Penting untuk Kadis)
+        });
+
+        // --- FILTER 4: UNIT KERJA (Global Scope) ---
         if ($user->unit_kerja_id) {
             $query->where(function($q) use ($user) {
                 $q->where('unit_kerja_id', $user->unit_kerja_id)
@@ -45,15 +72,17 @@ class PengumumanController extends Controller
             });
         }
 
-        // [UPDATE] Menggunakan 12 item per halaman untuk Layout Grid yang presisi
+        // Eksekusi Pagination (12 item per halaman untuk Grid 3 kolom)
         $data = $query->latest()->paginate(12);
+
+        // Pertahankan query string (q, start_date, dll) pada link pagination
+        $data->appends($request->all());
 
         return response()->json($data);
     }
 
     /**
      * 2. CREATE PENGUMUMAN (API)
-     * Mendukung multi-role logic: Staf/Penilai (Auto-bidang) vs Kadis (Manual-bidang)
      */
     public function store(Request $request)
     {
@@ -71,7 +100,6 @@ class PengumumanController extends Controller
             'judul' => 'required|string|max:255',
             'isi_pengumuman' => 'required|string',
             'target' => 'required|in:umum,divisi',
-            // Jika Kadis memilih divisi, wajib menyertakan target_bidang_id
             'target_bidang_id' => $isKadis && $request->target === 'divisi' ? 'required|exists:bidang,id' : 'nullable'
         ]);
 
@@ -82,14 +110,11 @@ class PengumumanController extends Controller
         try {
             DB::beginTransaction();
 
-            // LOGIKA PENENTUAN BIDANG_ID
             $bidangId = null;
             if ($request->target === 'divisi') {
                 if ($isKadis) {
-                    // Kadis: Ambil dari dropdown/input pilihan
                     $bidangId = $request->target_bidang_id;
                 } else {
-                    // Staf/Penilai: Ambil otomatis dari profil pengirim
                     $bidangId = $user->bidang_id;
                 }
             }
@@ -102,7 +127,6 @@ class PengumumanController extends Controller
                 'bidang_id'       => $bidangId,
             ]);
             
-            // Trigger Notifikasi ke audiens yang tepat
             $this->dispatchNotification($pengumuman, $user);
 
             DB::commit();
@@ -129,7 +153,6 @@ class PengumumanController extends Controller
             return response()->json(['message' => 'Pengumuman tidak ditemukan'], 404);
         }
 
-        // Validasi Kepemilikan (Strict Ownership)
         if ($pengumuman->user_id_creator != Auth::id()) {
             return response()->json(['message' => 'Anda tidak memiliki otoritas menghapus pesan ini.'], 403);
         }
@@ -139,7 +162,7 @@ class PengumumanController extends Controller
     }
 
     /**
-     * Helper Private: Mengirim Notifikasi secara efisien.
+     * Helper Private: Mengirim Notifikasi
      */
     private function dispatchNotification($pengumuman, $sender)
     {
@@ -149,10 +172,8 @@ class PengumumanController extends Controller
         $recipientQuery = User::where('id', '!=', $sender->id);
 
         if ($pengumuman->bidang_id) {
-            // Target hanya orang di bidang/divisi yang ditunjuk
             $recipientQuery->where('bidang_id', $pengumuman->bidang_id);
         } else {
-            // Target semua orang di Unit Kerja yang sama
             if ($pengumuman->unit_kerja_id) {
                 $recipientQuery->where('unit_kerja_id', $pengumuman->unit_kerja_id);
             }
@@ -182,33 +203,13 @@ class PengumumanController extends Controller
     }
 
     /**
-     * SEARCH (FTS PostgreSQL)
+     * SEARCH (DEPRECATED - MERGED INTO INDEX)
+     * Method ini bisa dihapus atau di-redirect ke index() jika masih ada frontend lama yg manggil.
+     * Tapi sebaiknya frontend diarahkan ke index() dengan parameter ?q=...
      */
     public function search(Request $request)
     {
-        $q = $request->q;
-        $user = Auth::user();
-
-        if (!$q || strlen($q) < 3) {
-            return response()->json([]);
-        }
-
-        $pengumuman = Pengumuman::with('creator')
-            ->where(function($query) use ($user) {
-                $query->whereNull('bidang_id')
-                      ->orWhere('bidang_id', $user->bidang_id)
-                      // [UPDATE] Tambahkan kondisi owner juga di search agar konsisten
-                      ->orWhere('user_id_creator', $user->id);
-            })
-            ->where(function($query) use ($q) {
-                $query->whereRaw("to_tsvector('indonesian', judul || ' ' || COALESCE(isi_pengumuman, '')) @@ plainto_tsquery('indonesian', ?)", [$q])
-                      ->orWhereHas('creator', fn($u) => $u->where('name', 'ILIKE', "%$q%"));
-            })
-            ->orderBy('created_at', 'desc')
-            // [UPDATE] Limit disamakan dengan pagination
-            ->limit(12)
-            ->get();
-
-        return response()->json($pengumuman);
+        // Redirect ke index dengan parameter pencarian
+        return $this->index($request);
     }
 }

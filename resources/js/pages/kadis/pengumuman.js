@@ -5,13 +5,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("pengumuman-root");
     if (!root) return;
 
-    // --- DOM ELEMENTS ---
+    // --- DOM ELEMENTS (MAIN LIST) ---
     const listEl = document.getElementById("announcement-list");
     const emptyEl = document.getElementById("announcement-empty");
     const loadingEl = document.getElementById("loading-indicator");
-    // [UPDATE] Container Pagination
     const paginationContainer = document.getElementById("pagination-container");
 
+    // --- DOM ELEMENTS (MODAL & FORM) ---
     const modal = document.getElementById("modal-pengumuman");
     const btnOpen = document.getElementById("btn-open-pengumuman");
     const btnClose = document.getElementById("btn-close-pengumuman");
@@ -28,11 +28,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewBody = document.getElementById("preview-body");
     const previewBadge = document.getElementById("preview-scope-badge");
 
+    // --- DOM ELEMENTS (FILTER BAR - NEW) ---
+    const filterSearch = document.getElementById("filter-search");
+    const filterStartDate = document.getElementById("filter-start-date");
+    const filterEndDate = document.getElementById("filter-end-date");
+    const btnResetFilter = document.getElementById("btn-reset-filter");
+
     // --- VARIABLES ---
     let currentUserId = null;
+    let searchTimeout = null; // Variabel untuk Debounce
 
     // ======================================================
-    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN
+    // 0. INIT & UTILS
     // ======================================================
     function initUser() {
         const metaId = document.querySelector('meta[name="user-id"]');
@@ -52,11 +59,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Fungsi Debounce untuk search text (mencegah spam request)
+    function debounce(func, wait) {
+        return function (...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
     // ======================================================
-    // 1. LOAD LIST PENGUMUMAN (DENGAN PAGINATION)
+    // 1. LOAD LIST PENGUMUMAN (SMART FILTERING)
     // ======================================================
-    // [UPDATE] Menerima parameter url, default ke page 1
-    async function fetchPengumuman(url = "/api/pengumuman/list") { 
+    /**
+     * @param {string|null} url - Jika null, bangun URL dari filter. Jika ada (pagination), pakai itu.
+     */
+    async function fetchPengumuman(url = null) { 
         try {
             // Tampilkan loading state
             if (listEl.children.length === 0) {
@@ -64,10 +81,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 listEl.classList.add("hidden");
                 emptyEl.classList.add("hidden");
             } else {
-                listEl.classList.add("opacity-50"); // Efek loading halus
+                listEl.classList.add("opacity-50", "pointer-events-none"); // Efek loading halus
             }
 
-            const response = await authFetch(url, { method: "GET" });
+            let endpoint = url;
+
+            // Jika URL tidak diberikan (bukan klik pagination), bangun dari Filter Input
+            if (!endpoint) {
+                const params = new URLSearchParams();
+                
+                // Ambil value dari input filter
+                if (filterSearch && filterSearch.value.trim()) {
+                    params.append("q", filterSearch.value.trim());
+                }
+                if (filterStartDate && filterStartDate.value) {
+                    params.append("start_date", filterStartDate.value);
+                }
+                if (filterEndDate && filterEndDate.value) {
+                    params.append("end_date", filterEndDate.value);
+                }
+
+                endpoint = `/api/pengumuman/list?${params.toString()}`;
+            }
+
+            const response = await authFetch(endpoint, { method: "GET" });
             if (!response.ok) throw new Error("Gagal memuat data");
 
             const result = await response.json();
@@ -77,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             renderList(data);
 
-            // [UPDATE] Render Pagination jika ada links
+            // Render Pagination jika ada links
             if (result.links && result.links.length > 3) {
                 renderPagination(result.links);
             } else {
@@ -86,10 +123,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (err) {
             console.error(err);
-            if (listEl) listEl.innerHTML = `<p class="text-rose-500 text-center py-4 bg-rose-50 rounded-lg border border-rose-100">Gagal memuat data. Silakan refresh halaman.</p>`;
+            if (listEl) listEl.innerHTML = `<div class="col-span-full text-center py-10"><p class="text-rose-500 bg-rose-50 inline-block px-4 py-2 rounded-lg border border-rose-100">Gagal memuat data.</p></div>`;
         } finally {
             if (loadingEl) loadingEl.classList.add("hidden");
-            listEl.classList.remove("opacity-50");
+            listEl.classList.remove("opacity-50", "pointer-events-none");
         }
     }
 
@@ -186,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let deleteBtnHtml = '';
         if (currentUserId && item.user_id_creator === currentUserId) {
             deleteBtnHtml = `
-                <button class="btn-delete opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-rose-600 p-1 rounded-full hover:bg-rose-50" 
+                <button class="btn-delete opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-rose-600 p-1.5 rounded-full hover:bg-rose-50" 
                         title="Hapus Pengumuman" data-id="${item.id}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -197,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         article.innerHTML = `
             <div>
-                <div class="flex justify-between items-start">
+                <div class="flex justify-between items-start mb-2">
                     ${scopeBadge}
                     ${deleteBtnHtml}
                 </div>
@@ -230,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 3. CREATE / STORE (Handling Dropdown Value)
+    // 4. CREATE / STORE (Handling Dropdown Value)
     // ======================================================
     async function storePengumuman() {
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
@@ -286,7 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 timer: 1600,
             });
 
-            fetchPengumuman(); // Reload ke halaman 1
+            // Reload data ke halaman awal (reset filter)
+            resetFilter();
         } catch (err) {
             Swal.fire({
                 icon: "error",
@@ -300,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 4. DELETE (Handling 403 Forbidden)
+    // 5. DELETE (Handling 403 Forbidden)
     // ======================================================
     async function deletePengumuman(id) {
         const confirm = await Swal.fire({
@@ -337,7 +375,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showConfirmButton: false,
             });
 
-            fetchPengumuman();
+            fetchPengumuman(); // Refresh current view
         } catch (err) {
             Swal.fire({
                 icon: "error",
@@ -348,8 +386,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 5. MODAL + ENHANCED PREVIEW
+    // 6. HELPER: MODAL & RESET
     // ======================================================
+    function resetFilter() {
+        if (filterSearch) filterSearch.value = "";
+        if (filterStartDate) filterStartDate.value = "";
+        if (filterEndDate) filterEndDate.value = "";
+        fetchPengumuman(); // Load ulang data bersih
+    }
+
     function openModal() {
         modal.classList.remove("hidden");
         modal.classList.add("flex");
@@ -381,7 +426,28 @@ document.addEventListener("DOMContentLoaded", () => {
         inputIsi.style.height = inputIsi.scrollHeight + 'px';
     }
 
-    // --- SETUP EVENT LISTENERS ---
+    // ======================================================
+    // 7. EVENT LISTENERS
+    // ======================================================
+    
+    // -- Filter Listeners --
+    if (filterSearch) {
+        filterSearch.addEventListener("input", debounce(() => {
+            fetchPengumuman(); // Reset ke page 1 dengan filter baru
+        }, 500));
+    }
+
+    if (filterStartDate) filterStartDate.addEventListener("change", () => fetchPengumuman());
+    if (filterEndDate) filterEndDate.addEventListener("change", () => fetchPengumuman());
+    
+    if (btnResetFilter) {
+        btnResetFilter.addEventListener("click", (e) => {
+            e.preventDefault();
+            resetFilter();
+        });
+    }
+
+    // -- Modal Listeners --
     if (btnOpen) btnOpen.addEventListener("click", openModal);
     if (btnClose) btnClose.addEventListener("click", closeModal);
     if (btnCancel) btnCancel.addEventListener("click", closeModal);

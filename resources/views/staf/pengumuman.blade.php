@@ -3,15 +3,18 @@
 @section('content')
 {{-- 
     [FIX LAYOUT]: 
-    - Menggunakan 'h-auto' agar tinggi container mengikuti konten (tidak terpotong).
-    - 'min-h-[600px]' menjaga estetika saat data kosong/sedikit.
+    - Menggunakan 'h-auto' agar tinggi container mengikuti konten.
+    - 'min-h-[600px]' menjaga estetika.
 --}}
 <section id="pengumuman-root"
     class="rounded-2xl bg-white ring-1 ring-slate-200 px-6 py-6 flex flex-col h-auto relative">
 
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <h2 class="text-[20px] font-bold text-slate-800">Papan Pengumuman</h2>
+        <div>
+            <h2 class="text-[20px] font-bold text-slate-800">Papan Pengumuman</h2>
+            <p class="text-sm text-slate-500 mt-1">Informasi terkini dan agenda kegiatan kantor</p>
+        </div>
         
         <button id="btn-open-pengumuman" type="button"
             class="inline-flex items-center gap-2 rounded-[12px] bg-[#0E7A4A] text-white text-[13px] font-medium px-5 py-2.5 shadow-sm hover:bg-[#0b633c] hover:shadow-md transition-all active:scale-95">
@@ -20,7 +23,58 @@
         </button>
     </div>
 
-    {{-- Tips Section (KEMBALI KE AWAL) --}}
+    {{-- [NEW] Filter Bar Section --}}
+    <div class="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            {{-- Search Keyword --}}
+            <div class="md:col-span-5">
+                <label for="filter-search" class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Cari Pengumuman</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" id="filter-search" 
+                        class="block w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all" 
+                        placeholder="Judul, isi, atau nama pembuat...">
+                </div>
+            </div>
+
+            {{-- Date Range Start --}}
+            <div class="md:col-span-3">
+                <label for="filter-start-date" class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Dari Tanggal</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <input type="date" id="filter-start-date" 
+                        class="block w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer">
+                </div>
+            </div>
+
+            {{-- Date Range End --}}
+            <div class="md:col-span-3">
+                <label for="filter-end-date" class="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Sampai Tanggal</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <input type="date" id="filter-end-date" 
+                        class="block w-full pl-9 pr-3 py-2.5 rounded-lg border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer">
+                </div>
+            </div>
+
+            {{-- Reset Button --}}
+            <div class="md:col-span-1">
+                <button id="btn-reset-filter" type="button" 
+                    class="w-full h-[42px] flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-rose-500 hover:border-rose-200 transition-all"
+                    title="Reset Filter">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Tips Section --}}
     <div class="rounded-[20px] bg-[#1C7C54] text-white flex items-center gap-6 px-6 py-5 mb-6 shadow-lg shadow-emerald-700/20">
         <div class="hidden md:block">
             <img src="{{ asset('assets/tips.svg') }}" alt="Tips Pengumuman" class="w-[150px] h-auto object-contain drop-shadow-md">
@@ -47,9 +101,9 @@
             <div class="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center mb-3">
                 <img src="{{ asset('assets/icon/pengumuman.svg') }}" alt="Empty" class="w-10 h-10 opacity-30 grayscale">
             </div>
-            <p class="text-slate-800 font-semibold mb-1">Belum ada pengumuman</p>
+            <p class="text-slate-800 font-semibold mb-1">Tidak ada pengumuman ditemukan</p>
             <p class="text-[13px] text-slate-500 max-w-xs text-center">
-                Informasi penting yang Anda buat akan muncul di sini.
+                Coba ubah kata kunci atau filter tanggal pencarian Anda.
             </p>
         </div>
 
@@ -62,7 +116,7 @@
     {{-- Pagination Footer --}}
     <div class="mt-auto pt-6 border-t border-slate-50">
         <div id="pagination-container" class="flex justify-center items-center w-full">
-            {{-- Skeleton Pagination: Agar tombol terlihat "ada" dari awal --}}
+            {{-- Skeleton Pagination --}}
             <div class="flex gap-1 animate-pulse opacity-50">
                 <div class="h-9 w-20 bg-slate-100 rounded-lg"></div> 
                 <div class="h-9 w-9 bg-slate-100 rounded-lg"></div>  
@@ -74,7 +128,7 @@
 
 </section>
 
-{{-- Modal Form --}}
+{{-- Modal Form (Sama seperti sebelumnya) --}}
 <div id="modal-pengumuman" class="fixed inset-0 z-50 hidden items-center justify-center">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" id="modal-backdrop"></div>
 
@@ -149,7 +203,7 @@
                         <h4 id="preview-title" class="text-[15px] font-bold text-slate-800 truncate pr-4">Judul Pengumuman...</h4>
                         <span id="preview-scope-badge" class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">UMUM</span>
                     </div>
-                    <p id="preview-body" class="text-[13px] text-slate-600 leading-relaxed line-clamp-2 italic">Isi pengumuman...</p>
+                    <p id="preview-body" class="text-[13px] text-slate-600 leading-relaxed line-clamp-2 italic">Isi pengumuman akan muncul di sini...</p>
                 </div>
             </div>
 

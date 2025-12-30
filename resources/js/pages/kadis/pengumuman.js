@@ -18,28 +18,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const inputJudul = document.getElementById("input-judul");
     const inputIsi = document.getElementById("input-isi");
+    
+    // [LOGIKA BARU] Element Select Bidang Khusus Kadis
+    const selectTargetBidang = document.getElementById("select-target-bidang");
 
     const previewTitle = document.getElementById("preview-title");
     const previewBody = document.getElementById("preview-body");
+    const previewBadge = document.getElementById("preview-scope-badge");
 
     // --- VARIABLES ---
     let currentUserId = null;
 
     // ======================================================
-    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN
+    // 0. INIT: AMBIL ID USER YANG SEDANG LOGIN (Information Expert)
     // ======================================================
     function initUser() {
-        // Cara 1: Cek Meta Tag (Best Practice di Laravel Blade)
-        // Pastikan di layout app.blade.php ada: <meta name="user-id" content="{{ auth()->id() }}">
         const metaId = document.querySelector('meta[name="user-id"]');
         if (metaId) {
             currentUserId = parseInt(metaId.content);
             return;
         }
 
-        // Cara 2: Cek LocalStorage (Jika disimpan saat login)
         try {
-            const storedUser = localStorage.getItem('user'); // Sesuaikan key penyimpanan Anda
+            const storedUser = localStorage.getItem('user'); 
             if (storedUser) {
                 const userObj = JSON.parse(storedUser);
                 currentUserId = userObj.id;
@@ -53,7 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. LOAD LIST PENGUMUMAN
     // ======================================================
     async function fetchPengumuman() {
-        const endpoint = "/api/kadis/pengumuman/list"; // Endpoint khusus Kadis
+        // [FIX] Menggunakan rute universal sesuai web.php
+        const endpoint = "/api/pengumuman/list"; 
 
         try {
             if (loadingEl) {
@@ -69,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!response.ok) throw new Error("Gagal memuat data");
 
             const result = await response.json();
-            // Handle struktur data paginate vs array biasa
             const data = result.data ?? result;
 
             renderList(data);
@@ -83,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 2. RENDER LIST (DENGAN LOGIKA STRICT OWNERSHIP)
+    // 2. RENDER LIST (Strict Ownership & Dynamic Scope Badge)
     // ======================================================
     function renderList(data) {
         listEl.innerHTML = "";
@@ -111,13 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
             day: 'numeric', month: 'long', year: 'numeric'
         });
 
-        // Badge Unit vs Global
-        const badge = item.unit_kerja_id
-            ? `<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mb-2 inline-block font-medium">Unit Kerja</span>`
-            : `<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full mb-2 inline-block font-medium">Global</span>`;
+        // [LOGIKA BARU] Badge Logic berdasarkan Bidang ID
+        let scopeBadge = '';
+        if (item.bidang_id) {
+            scopeBadge = `<span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full mb-2 inline-block font-bold">DIVISI</span>`;
+        } else {
+            scopeBadge = `<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mb-2 inline-block font-bold">UMUM</span>`;
+        }
 
-        // [LOGIC STRICT OWNERSHIP]
-        // Tombol hapus hanya muncul jika ID Pembuat == ID User Login
         let deleteBtnHtml = '';
         if (currentUserId && item.user_id_creator === currentUserId) {
             deleteBtnHtml = `
@@ -133,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
         article.innerHTML = `
             <div>
                 <div class="flex justify-between items-start">
-                    ${badge}
+                    ${scopeBadge}
                     ${deleteBtnHtml}
                 </div>
                 
@@ -148,12 +150,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 </p>
                 <p class="text-[11px] font-medium text-slate-500 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                    ${item.creator?.name || "Admin"}
+                    ${item.creator?.name || "Kepala Badan"}
                 </p>
             </div>
         `;
 
-        // Attach Event Listener jika tombol delete ada
         const delBtn = article.querySelector(".btn-delete");
         if (delBtn) {
             delBtn.addEventListener("click", (e) => {
@@ -166,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 3. CREATE / STORE
+    // 3. CREATE / STORE (Logical Target Integration)
     // ======================================================
     async function storePengumuman() {
         if (!inputJudul.value.trim() || !inputIsi.value.trim()) {
@@ -180,22 +181,29 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // [LOGIKA BARU] Pemetaan nilai dropdown Kadis
+        const dropdownValue = selectTargetBidang.value;
+        const payload = {
+            judul: inputJudul.value,
+            isi_pengumuman: inputIsi.value,
+            target: dropdownValue === 'umum' ? 'umum' : 'divisi',
+            target_bidang_id: dropdownValue === 'umum' ? null : dropdownValue
+        };
+
         btnSubmit.disabled = true;
         btnSubmit.dataset.processing = "true";
         const originalText = btnSubmit.innerHTML;
         btnSubmit.innerHTML = `<svg class="animate-spin h-4 w-4 text-white inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...`;
 
         try {
-            const res = await authFetch("/api/pengumuman", {
+            // [FIX] Menggunakan rute universal store sesuai web.php
+            const res = await authFetch("/api/pengumuman/store", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({
-                    judul: inputJudul.value,
-                    isi_pengumuman: inputIsi.value,
-                    unit_kerja_id: null, // Asumsi Kadis bisa post Global
-                }),
+                body: JSON.stringify(payload),
             });
 
             const data = await res.json();
@@ -205,11 +213,12 @@ document.addEventListener("DOMContentLoaded", () => {
             closeModal();
             inputJudul.value = "";
             inputIsi.value = "";
+            selectTargetBidang.value = "umum"; // Reset dropdown
 
             Swal.fire({
                 icon: "success",
                 title: "Berhasil!",
-                text: "Pengumuman berhasil diterbitkan.",
+                text: "Pengumuman strategis berhasil diterbitkan.",
                 showConfirmButton: false,
                 timer: 1600,
             });
@@ -238,7 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
             confirmButtonText: "Ya, Hapus",
             cancelButtonText: "Batal",
         });
@@ -253,7 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             if (!res.ok) {
-                // Handling spesifik jika Backend menolak (Strict Ownership)
                 if (res.status === 403) {
                     throw new Error("Anda tidak memiliki izin menghapus pengumuman ini karena bukan milik Anda.");
                 }
@@ -279,11 +286,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ======================================================
-    // 5. MODAL + PREVIEW
+    // 5. MODAL + ENHANCED PREVIEW
     // ======================================================
     function openModal() {
         modal.classList.remove("hidden");
-        modal.classList.add("flex"); // Flex untuk centering
+        modal.classList.add("flex");
         inputJudul.focus();
         updatePreview();
     }
@@ -295,9 +302,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updatePreview() {
         previewTitle.textContent = inputJudul.value || "Judul Pengumuman...";
-        previewBody.textContent = inputIsi.value || "Isi pengumuman akan muncul di sini...";
+        previewBody.textContent = inputIsi.value || "Isi arahan akan muncul di sini...";
         
-        // Auto resize textarea (Opsional, nice to have)
+        // [LOGIKA BARU] Update Preview Badge berdasarkan Dropdown
+        if (previewBadge && selectTargetBidang) {
+            const selectedText = selectTargetBidang.options[selectTargetBidang.selectedIndex].text;
+            const isUmum = selectTargetBidang.value === 'umum';
+            
+            previewBadge.textContent = isUmum ? 'UMUM' : selectedText;
+            previewBadge.className = `text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded ${
+                isUmum ? 'bg-slate-200 text-slate-600' : 'bg-emerald-100 text-emerald-700'
+            }`;
+        }
+
         inputIsi.style.height = 'auto';
         inputIsi.style.height = inputIsi.scrollHeight + 'px';
     }
@@ -317,14 +334,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (inputJudul) inputJudul.addEventListener("input", updatePreview);
     if (inputIsi) inputIsi.addEventListener("input", updatePreview);
+    
+    // [LOGIKA BARU] Listener untuk perubahan dropdown target
+    if (selectTargetBidang) selectTargetBidang.addEventListener("change", updatePreview);
 
-    // Close on backdrop
     modal.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
     });
 
     // --- EXECUTE ---
-    initUser(); // Ambil ID dulu
-    fetchPengumuman(); // Baru fetch data
+    initUser(); 
+    fetchPengumuman(); 
     updatePreview();
 });

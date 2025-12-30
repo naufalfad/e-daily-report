@@ -39,7 +39,7 @@
                     <div class="flex-shrink-0 relative">
                         <div class="h-[80px] w-[80px] rounded-full overflow-hidden bg-slate-100 ring-4 ring-white shadow-md">
                             <img id="profile-foto" 
-                                 src="{{ Auth::user()->foto_profil_url ?? asset('assets/icon/avatar.png') }}" 
+                                 src="{{ Auth::user()->foto_profil_url ?? asset('assets/man.png') }}" 
                                  class="h-full w-full object-cover" alt="Avatar">
                         </div>
                         <div class="absolute bottom-0 right-0 h-5 w-5 bg-emerald-500 border-2 border-white rounded-full" title="Online"></div>

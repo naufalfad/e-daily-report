@@ -26,9 +26,6 @@
             <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-sm leading-none font-bold">+</span>
             <span>Buat Pengumuman Baru</span>
         </button>
-        
-        {{-- Filter Target (Opsional, disembunyikan dulu jika belum perlu) --}}
-        {{-- <div class="text-xs text-slate-500">Menampilkan semua pengumuman</div> --}}
     </div>
 
     {{-- STATE 1: LOADING --}}
@@ -40,7 +37,7 @@
     {{-- STATE 2: KOSONG --}}
     <div id="announcement-empty" class="hidden flex-1 flex flex-col items-center justify-center gap-4 py-16">
         <div class="h-24 w-24 bg-slate-50 rounded-full flex items-center justify-center mb-2">
-            <img src="{{ asset('assets/icon/announcement.svg') }}" alt="Empty" class="w-10 h-10 opacity-30 grayscale">
+            <img src="{{ asset('assets/icon/pengumuman.svg') }}" alt="Empty" class="w-10 h-10 opacity-30 grayscale">
         </div>
         <div class="text-center">
             <p class="text-slate-800 font-semibold mb-1">Belum ada pengumuman</p>
@@ -51,7 +48,7 @@
         </div>
     </div>
 
-    {{-- STATE 3: LIST PENGUMUMAN (Container untuk JS) --}}
+    {{-- STATE 3: LIST PENGUMUMAN --}}
     <div id="announcement-list" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {{-- Cards akan di-inject oleh JavaScript di sini --}}
     </div>
@@ -76,7 +73,7 @@
 
         <div class="mb-6">
             <h3 class="text-xl font-bold text-slate-800">Buat Pengumuman</h3>
-            <p class="text-sm text-slate-500 mt-1">Bagikan informasi ke seluruh pegawai atau unit kerja.</p>
+            <p class="text-sm text-slate-500 mt-1">Bagikan informasi strategis kepada pegawai atau rekan sejawat.</p>
         </div>
 
         <form id="form-pengumuman" class="space-y-5">
@@ -85,7 +82,31 @@
                 <label for="input-judul" class="block text-[13px] font-semibold text-slate-700 mb-1.5">Judul Pengumuman <span class="text-red-500">*</span></label>
                 <input id="input-judul" name="judul" type="text" required
                     class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all placeholder:text-slate-400"
-                    placeholder="Contoh: Agenda Rapat Senin Pagi">
+                    placeholder="Contoh: Agenda Rapat Koordinasi">
+            </div>
+
+            {{-- Input Target Penerima (NEW) --}}
+            <div>
+                <label class="block text-[13px] font-semibold text-slate-700 mb-2">Penerima Pengumuman <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 focus-within:ring-2 focus-within:ring-[#1C7C54]/20 transition-all hover:bg-slate-100">
+                        <input type="radio" name="target" value="umum" class="sr-only" checked>
+                        <div class="flex flex-col">
+                            <span class="text-[13px] font-bold text-slate-800">Seluruh Kantor</span>
+                            <span class="text-[11px] text-slate-500">Pesan bersifat Global</span>
+                        </div>
+                        <div class="radio-custom-marker ml-auto self-center h-4 w-4 rounded-full border-2 border-slate-300"></div>
+                    </label>
+                    
+                    <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 focus-within:ring-2 focus-within:ring-[#1C7C54]/20 transition-all hover:bg-slate-100">
+                        <input type="radio" name="target" value="divisi" class="sr-only">
+                        <div class="flex flex-col">
+                            <span class="text-[13px] font-bold text-slate-800">Divisi Saya</span>
+                            <span class="text-[11px] text-slate-500">Hanya rekan se-Bidang</span>
+                        </div>
+                        <div class="radio-custom-marker ml-auto self-center h-4 w-4 rounded-full border-2 border-slate-300"></div>
+                    </label>
+                </div>
             </div>
 
             {{-- Input Isi --}}
@@ -93,11 +114,8 @@
                 <label for="input-isi" class="block text-[13px] font-semibold text-slate-700 mb-1.5">Isi Pesan <span class="text-red-500">*</span></label>
                 <textarea id="input-isi" name="isi_pengumuman" rows="4" required
                     class="w-full rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all placeholder:text-slate-400 resize-none"
-                    placeholder="Tulis detail pengumuman di sini..."></textarea>
+                    placeholder="Tulis detail instruksi atau informasi di sini..."></textarea>
             </div>
-
-            {{-- Pilihan Target (Hidden Logic by default global/unit based on controller logic, or add radio here if needed) --}}
-            {{-- Default: Global/Unit handled by Controller based on User Role/Input. Kita biarkan simple dulu. --}}
 
             {{-- Preview Mini --}}
             <div class="pt-2">
@@ -105,12 +123,12 @@
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     Live Preview
                 </p>
-                <div class="rounded-[16px] border border-blue-100 bg-blue-50/50 px-5 py-4">
-                    <h4 id="preview-title" class="text-[15px] font-bold text-slate-800 mb-1 truncate">Judul Pengumuman...</h4>
-                    <p id="preview-body" class="text-[13px] text-slate-600 leading-relaxed line-clamp-2">Isi pengumuman akan muncul di sini...</p>
-                    <div class="mt-3 flex items-center gap-2">
-                         <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-500 border border-slate-100">Baru saja</span>
+                <div class="rounded-[16px] border border-emerald-100 bg-emerald-50/30 px-5 py-4">
+                    <div class="flex justify-between items-start mb-1">
+                        <h4 id="preview-title" class="text-[15px] font-bold text-slate-800 truncate pr-4">Judul Pengumuman...</h4>
+                        <span id="preview-scope-badge" class="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">UMUM</span>
                     </div>
+                    <p id="preview-body" class="text-[13px] text-slate-600 leading-relaxed line-clamp-2 italic">Isi pengumuman akan muncul di sini...</p>
                 </div>
             </div>
 
@@ -128,6 +146,18 @@
         </form>
     </div>
 </div>
+
+<style>
+    /* Custom CSS untuk marker radio agar sesuai dengan brand (emerald) */
+    input[type="radio"]:checked + div + .radio-custom-marker {
+        border-color: #1C7C54;
+        background-color: #1C7C54;
+        box-shadow: inset 0 0 0 3px white;
+    }
+    input[type="radio"]:checked ~ div span:first-child {
+        color: #1C7C54;
+    }
+</style>
 @endsection
 
 @push('scripts')

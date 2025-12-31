@@ -35,10 +35,10 @@
 </style>
 
 {{-- x-data Wrapper --}}
-<div x-data="manajemenPegawaiData()" x-init="initPage()" class="w-full h-full px-6 py-6 flex flex-col relative min-h-screen">
+<div x-data="manajemenPegawaiData()" x-init="initPage()" class="w-full h-full px-6 flex flex-col relative min-h-screen">
 
     {{-- HEADER SECTION --}}
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-5 shrink-0">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-5 shrink-0">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Data Master Pegawai</h1>
             <p class="text-sm text-slate-500 mt-1">Kelola data kepegawaian, jabatan, dan struktur organisasi.</p>
@@ -71,7 +71,7 @@
     </div>
 
     {{-- FILTER BAR --}}
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-6 shrink-0">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-3 shrink-0">
         {{-- Search Input --}}
         <div class="md:col-span-8 lg:col-span-9 relative">
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

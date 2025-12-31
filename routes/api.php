@@ -90,6 +90,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
 
         // 1. DOMAIN HR: MANAJEMEN PEGAWAI
+        // [VERIFIED] Menggunakan UserManagementController::index (Pagination & Search)
+        // URL: GET /api/admin/pegawai
         Route::apiResource('pegawai', UserManagementController::class);
 
         // 2. DOMAIN IT: AKUN PENGGUNA (BARU)
@@ -103,8 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // 3. MASTER DATA & SETTINGS
         Route::prefix('master')->group(function() {
             
-            // [API BARU] Unit Kerja Resource (Index, Store, Update, Destroy)
-            // Ini menggantikan rute manual sebelumnya untuk mendukung Pagination & AJAX
+            // [API BARU] Unit Kerja Resource
             Route::apiResource('unit-kerja', UnitKerjaController::class);
 
             // [API BARU] Jabatan Resource
@@ -113,7 +114,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // [API BARU] Bidang Resource
             Route::apiResource('bidang', BidangController::class);
 
-            // Tupoksi (Masih pakai controller lama jika belum di-refactor)
+            // Tupoksi
             Route::get('tupoksi', [MasterDataController::class, 'indexTupoksi']);
             Route::post('tupoksi', [MasterDataController::class, 'storeTupoksi']);
             Route::put('tupoksi/{id}', [MasterDataController::class, 'updateTupoksi']);

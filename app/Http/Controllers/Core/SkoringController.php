@@ -24,59 +24,66 @@ class SkoringController extends Controller
     /**
      * API Endpoint untuk mengambil data tabel & statistik di halaman web.
      * Route: GET /api/skoring-kinerja
-     * Menerima parameter: month, year, search
+     * * [UPDATE] Mengembalikan 2 payload:
+     * 1. table_data: Data list pegawai dengan pagination
+     * 2. global_stats: Statistik agregat (Total, Rata-rata, dll) dari seluruh data
      */
     public function index(Request $request)
     {
         $atasanId = auth()->id();
         
-        // 1. Penangkapan Parameter Filter dari Request Frontend
+        // 1. Penangkapan Parameter Filter
         $month  = $request->input('month');
         $year   = $request->input('year');
         $search = $request->input('search');
+        $perPage = $request->input('per_page', 10); // Default 10 baris per halaman
 
-        // 2. Distribusi Parameter ke Service
-        // Service akan mengembalikan Collection data yang sudah dihitung & difilter
-        $data = $this->skoringService->getBawahanReports($atasanId, $month, $year, $search);
+        // 2. Ambil Data Tabel (Paginated)
+        // Menggunakan method getBawahanReports yang sudah diupdate menjadi paginate()
+        $tableData = $this->skoringService->getBawahanReports($atasanId, $month, $year, $search, $perPage);
 
+        // 3. Ambil Data Statistik Global (Non-Paginated)
+        // Method baru ini melakukan query agregat database yang efisien
+        $globalStats = $this->skoringService->getBawahanStats($atasanId, $month, $year);
+
+        // 4. Return JSON Terstruktur
         return response()->json([
-            'message' => 'Data skoring berhasil dimuat',
-            'data'    => $data
+            'message'      => 'Data skoring berhasil dimuat',
+            'table_data'   => $tableData,   // Object Pagination (data, links, meta)
+            'global_stats' => $globalStats  // Object Statistik (avg, total, dll)
         ]);
     }
 
     /**
      * Generate PDF Laporan Kinerja.
      * Route: GET /penilai/skoring/export-pdf
-     * Menerima parameter: month, year (via Query String)
      */
     public function exportPdf(Request $request)
     {
-        // 1. Ambil User Atasan (Untuk Header Laporan)
+        // 1. Ambil User Atasan (Header Laporan)
         $atasan = User::with(['unitKerja', 'bidang', 'jabatan'])
                     ->find(auth()->id());
 
-        // 2. Penangkapan Parameter Filter dari URL
-        // Contoh: /export-pdf?month=5&year=2024
+        // 2. Filter
         $month = $request->input('month');
         $year  = $request->input('year');
 
-        // 3. Distribusi Parameter ke Service
-        // Kita tidak mengirim 'search' karena laporan PDF biasanya mencetak semua bawahan
-        $bawahan = $this->skoringService->getBawahanReports($atasan->id, $month, $year);
+        // 3. Ambil Data Bawahan (Untuk PDF kita butuh SEMUA data, bukan per halaman)
+        // Trik: Kita minta limit yang sangat besar (misal 1000) untuk "mematikan" efek paginasi di PDF
+        $paginator = $this->skoringService->getBawahanReports($atasan->id, $month, $year, null, 1000);
+        $bawahanCollection = $paginator->getCollection(); // Mengambil Collection murni dari Paginator
 
-        // 4. Hitung Statistik Agregat (Header Laporan PDF)
-        $avgScore  = $bawahan->avg('capaian') ?? 0;
-        $pembinaan = $bawahan->where('capaian', '<', 60)->count();
+        // 4. Ambil Statistik Agregat (Menggunakan Service yang sama dengan Dashboard)
+        // Ini menjamin angka di PDF sama persis dengan angka di Dashboard Web
+        $stats = $this->skoringService->getBawahanStats($atasan->id, $month, $year);
 
-        // 5. Render PDF dengan Data yang Terfilter
+        // 5. Render PDF
         $pdf = Pdf::loadView('pdf.skoring-kinerja', [
             'atasan'    => $atasan,
-            'bawahan'   => $bawahan,
-            'avgScore'  => round($avgScore, 1),
-            'pembinaan' => $pembinaan,
+            'bawahan'   => $bawahanCollection,
+            'avgScore'  => $stats['avg_skor'],   // Ambil dari hasil Service
+            'pembinaan' => $stats['pembinaan'],  // Ambil dari hasil Service
             'periode'   => [
-                // Jika null, gunakan bulan/tahun saat ini untuk label
                 'bulan' => $month ?? now()->month,
                 'tahun' => $year ?? now()->year
             ]

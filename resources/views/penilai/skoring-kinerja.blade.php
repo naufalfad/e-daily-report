@@ -37,7 +37,7 @@
     </div>
 
     {{-- TABEL DATA --}}
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden min-h-[400px]">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden min-h-[400px] flex flex-col">
         
         {{-- TOOLBAR: Filter & Search --}}
         <div class="px-6 py-4 border-b border-gray-100 flex flex-col lg:flex-row justify-between lg:items-center gap-4 bg-gray-50">
@@ -48,7 +48,6 @@
                 {{-- Filter Bulan --}}
                 <select id="filter-month" 
                     class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer bg-white">
-                    {{-- Default ke bulan ini dihandle di controller/js, tapi option tetap lengkap --}}
                     @foreach(range(1, 12) as $m)
                         <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
                             {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
@@ -82,7 +81,8 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto relative">
+        {{-- Table Container --}}
+        <div class="overflow-x-auto relative flex-1">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-100 text-gray-600 uppercase text-xs font-semibold tracking-wider">
@@ -118,6 +118,33 @@
                 <p class="text-gray-500">Data tidak ditemukan.</p>
             </div>
         </div>
+
+        {{-- [NEW] PAGINATION WRAPPER --}}
+        <div class="px-6 py-4 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4"
+            id="pagination-wrapper">
+            
+            {{-- Info Halaman --}}
+            <span class="text-xs text-gray-500 font-medium" id="pagination-info">Menyiapkan data...</span>
+            
+            {{-- Kontrol Navigasi --}}
+            <div class="flex items-center gap-1">
+                {{-- Tombol Previous --}}
+                <button id="prev-page"
+                    class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-lg hover:bg-gray-50 active:bg-gray-100">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                {{-- Container Angka Halaman (Diisi JS) --}}
+                <div id="pagination-numbers" class="flex items-center gap-1"></div>
+
+                {{-- Tombol Next --}}
+                <button id="next-page"
+                    class="p-2 text-gray-600 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-lg hover:bg-gray-50 active:bg-gray-100">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
 </div>
 

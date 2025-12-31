@@ -202,13 +202,13 @@
     {{-- CONTENT WRAPPER --}}
     <div class="content-wrapper">
 
-        {{-- INFO SINGKAT (LOGIC FIXED HERE) --}}
+        {{-- INFO SINGKAT --}}
         <table style="width: 100%; margin-bottom: 25px;">
             <tr>
                 <td style="width: 50%; vertical-align: top;">
                     <span style="color:#64748b; font-size:10px; font-weight:bold; letter-spacing:1px;">UNIT KERJA / BIDANG</span><br>
                     <span style="font-size:14px; font-weight:bold; color:#0f172a;">
-                        {{-- FIX: Cek Unit Kerja dulu, kalau kosong cek Bidang, kalau kosong default --}}
+                        {{-- Atasan masih berupa Object Eloquent, jadi gunakan -> --}}
                         {{ 
                             $atasan->unitKerja->nama 
                             ?? ($atasan->bidang->nama_bidang 
@@ -271,36 +271,34 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>
-                        <div style="font-weight:bold; color:#0f172a;">{{ $b->name }}</div>
-                        <div style="font-size:10px; color:#64748b; margin-top:2px;">NIP. {{ $b->nip ?? '-' }}</div>
+                        {{-- FIX: Menggunakan Array Access $b['key'] --}}
+                        <div style="font-weight:bold; color:#0f172a;">{{ $b['nama'] }}</div>
+                        <div style="font-size:10px; color:#64748b; margin-top:2px;">NIP. {{ $b['nip'] ?? '-' }}</div>
                     </td>
                     <td>
                         <div style="font-size:12px; font-weight:bold;">
-                            {{ $b->acc_lkh }} <span style="font-weight:normal; color:#94a3b8;">/ {{ $b->total_lkh }}</span>
+                            {{ $b['realisasi'] }} <span style="font-weight:normal; color:#94a3b8;">/ {{ $b['target'] }}</span>
                         </div>
-                        {{-- Visual Bar --}}
-                        @php
-                            $persen = $b->total_lkh > 0 ? ($b->acc_lkh / $b->total_lkh) * 100 : 0;
-                        @endphp
+                        {{-- Visual Bar: Langsung pakai capaian karena sudah berupa persentase di Service --}}
                         <div class="bar-bg">
-                            <div class="bar-fill" style="width: {{ $persen }}%;"></div>
+                            <div class="bar-fill" style="width: {{ $b['capaian'] }}%;"></div>
                         </div>
                     </td>
                     <td style="text-align:center;">
                         <span style="font-size:14px; font-weight:800; color:#1e293b;">
-                            {{ $b->skor }}%
+                            {{ $b['capaian'] }}%
                         </span>
                     </td>
                     <td style="text-align:center;">
                         @php
-                            $p = strtolower(str_replace(' ', '', $b->predikat));
+                            $p = strtolower(str_replace(' ', '', $b['predikat']));
                             $cls = 'badge-k';
                             if($p == 'sangatbaik') $cls = 'badge-sb';
                             elseif($p == 'baik') $cls = 'badge-b';
                             elseif($p == 'cukup') $cls = 'badge-c';
                         @endphp
                         <span class="badge {{ $cls }}">
-                            {{ $b->predikat }}
+                            {{ $b['predikat'] }}
                         </span>
                     </td>
                 </tr>
@@ -322,13 +320,12 @@
                 
                 <div class="signature-line"></div>
                 
+                {{-- Atasan tetap menggunakan Object access karena tidak melalui SkoringService transformation --}}
                 <div style="margin-top: 5px; font-weight:bold; text-decoration:underline;">{{ $atasan->name }}</div>
                 <div style="font-size:11px; color:#64748b;">NIP. {{ $atasan->nip ?? '-' }}</div>
             </div>
             <div style="clear:both;"></div>
         </div>
-
     </div>
-
 </body>
 </html>

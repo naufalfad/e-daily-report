@@ -40,7 +40,7 @@ class LaporanHarian extends Model
         // --- NEW METADATA FIELDS (Phase 2.2) ---
         'location_provider',
         'location_accuracy',
-        'address_auto',
+        'address_auto', // Field baru untuk reverse geocoding
     ];
 
     protected $casts = [
@@ -108,13 +108,14 @@ class LaporanHarian extends Model
     public function getLatAttribute()
     {
         if (!$this->lokasi) return null;
+        // Mengambil latitude (Y) dari kolom geometry
         return (float) \DB::selectOne("SELECT ST_Y(lokasi) AS lat FROM laporan_harian WHERE id = ?", [$this->id])->lat;
     }
 
     public function getLngAttribute()
     {
         if (!$this->lokasi) return null;
+        // Mengambil longitude (X) dari kolom geometry
         return (float) \DB::selectOne("SELECT ST_X(lokasi) AS lng FROM laporan_harian WHERE id = ?", [$this->id])->lng;
     }
-
 }

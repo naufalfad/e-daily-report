@@ -4,23 +4,47 @@
 @section('content')
 
 {{-- Style Tambahan untuk Hasil Pencarian Peta --}}
+{{-- Style Tambahan untuk Map & Animasi --}}
 <style>
-.search-results::-webkit-scrollbar {
-    width: 6px;
-}
+    .search-results::-webkit-scrollbar { width: 6px; }
+    .search-results::-webkit-scrollbar-track { background: #f1f1f1; }
+    .search-results::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+    .search-results::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
-.search-results::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
+    /* Animasi Pin Melompat */
+    @keyframes pinJump {
+        0% { transform: translate(-50%, -50%) translateY(0); }
+        50% { transform: translate(-50%, -50%) translateY(-15px); }
+        100% { transform: translate(-50%, -50%) translateY(-15px); }
+    }
+    @keyframes pinLand {
+        0% { transform: translate(-50%, -50%) translateY(-15px); }
+        100% { transform: translate(-50%, -50%) translateY(0); }
+    }
+    
+    /* Animasi Bayangan */
+    @keyframes shadowShrink {
+        0% { transform: scale(1); opacity: 0.4; }
+        100% { transform: scale(0.6); opacity: 0.2; }
+    }
+    @keyframes shadowGrow {
+        0% { transform: scale(0.6); opacity: 0.2; }
+        80% { transform: scale(1.2); opacity: 0.5; }
+        100% { transform: scale(1); opacity: 0.4; }
+    }
 
-.search-results::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-
-.search-results::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
+    /* Utilitas Animasi */
+    .animate-pin-jump { animation: pinJump 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .animate-pin-land { animation: pinLand 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .animate-shadow-shrink { animation: shadowShrink 0.2s forwards; }
+    .animate-shadow-grow { animation: shadowGrow 0.2s forwards; }
+    
+    /* Animasi Panel Riwayat */
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-up { animation: slideUpFade 0.3s ease-out forwards; }
 </style>
 
 {{-- GRID UTAMA --}}
@@ -346,163 +370,37 @@
                         </div>
                     </div>
 
-                    {{-- Modul Input Lokasi Dual Mode --}}
-                    <div x-data="{
-                            mode: 'geofence', // geofence or geocoding
-                            status: 'Klik tombol untuk ambil lokasi',
-                            lat: '',
-                            lng: '',
-                            loading: false,
-                            searchText: '',
-                            searchResults: [],
-                            showResults: false,
-                            lokasiTeksFinal: '',
+                    {{-- Modul Input Lokasi (UPDATED: Fullscreen Trigger) --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi Kegiatan</label>
 
-                            init() {
-                                // Sinkronisasi mode ke input hidden utama
-                                this.$watch('mode', value => {
-                                    document.getElementById('mode_lokasi_input').value = value;
-                                    // Reset nilai saat ganti mode
-                                    if(value === 'geofence') {
-                                        this.searchText = '';
-                                        this.lokasiTeksFinal = '';
-                                        this.status = 'Klik tombol untuk ambil lokasi';
-                                    } else {
-                                        this.status = 'Cari lokasi pada kolom input';
-                                    }
-                                    this.lat = '';
-                                    this.lng = '';
-                                });
-                            },
+                        {{-- Hidden Inputs Data --}}
+                        <input type="hidden" name="latitude" id="input_lat">
+                        <input type="hidden" name="longitude" id="input_lng">
+                        <input type="hidden" name="lokasi_teks" id="input_lokasi_teks">
+                        <input type="hidden" name="address_auto" id="input_address_auto"> {{-- NEW: Hasil Reverse Geocoding --}}
+                        <input type="hidden" name="location_provider" id="input_provider" value="manual_pin">
 
-                            // Logic Geofence (GPS)
-                            getGPS() {
-                                this.loading = true; this.status = 'Mencari koordinat GPS...';
-                                if(navigator.geolocation) {
-                                    navigator.geolocation.getCurrentPosition(
-                                        (pos) => { 
-                                            this.lat = pos.coords.latitude; 
-                                            this.lng = pos.coords.longitude; 
-                                            this.status = `Terkunci: ${this.lat.toFixed(5)}, ${this.lng.toFixed(5)}`; 
-                                            this.loading = false; 
-                                        },
-                                        () => { this.status = 'Gagal mengambil GPS.'; this.loading = false; }
-                                    );
-                                } else { this.status = 'Browser tidak mendukung GPS.'; this.loading = false; }
-                            },
-
-                            // Logic Geocoding (Nominatim API)
-                            async searchLocation() {
-                                if(this.searchText.length < 3) return;
-                                this.loading = true;
-                                try {
-                                    // Menggunakan OpenStreetMap Nominatim (Gratis, No Key)
-                                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchText)}&limit=5`;
-                                    const res = await fetch(url);
-                                    const data = await res.json();
-                                    this.searchResults = data;
-                                    this.showResults = true;
-                                } catch(e) {
-                                    console.error(e);
-                                    this.status = 'Gagal mencari lokasi';
-                                } finally {
-                                    this.loading = false;
-                                }
-                            },
-
-                            selectLocation(item) {
-                                this.lat = item.lat;
-                                this.lng = item.lon;
-                                this.lokasiTeksFinal = item.display_name;
-                                this.searchText = item.display_name; // Tampilkan nama di input
-                                this.showResults = false;
-                                this.status = `Dipilih: ${item.display_name.substring(0, 30)}...`;
-                            }
-                        }">
-
-                        {{-- Header Label + Switcher Mode --}}
-                        <div class="flex items-center justify-between mb-[10px]">
-                            <label class="block font-normal text-[15px] text-[#5B687A]">Lokasi</label>
-
-                            {{-- Switcher --}}
-                            <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                                <button type="button" @click="mode = 'geofence'"
-                                    class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
-                                    :class="mode === 'geofence' ? 'bg-white text-[#1C7C54] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
-                                    GPS (Otomatis)
-                                </button>
-                                <button type="button" @click="mode = 'geocoding'"
-                                    class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
-                                    :class="mode === 'geocoding' ? 'bg-white text-[#1C7C54] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
-                                    Cari Peta
-                                </button>
+                        <div class="flex gap-2">
+                            {{-- Preview Lokasi (Readonly) --}}
+                            <div class="relative w-full">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <img src="{{ asset('assets/icon/location.svg') }}" class="w-4 h-4 opacity-50">
+                                </div>
+                                <input type="text" id="preview_lokasi" readonly
+                                    class="w-full rounded-[10px] border border-slate-200 bg-slate-50 pl-10 pr-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed truncate"
+                                    placeholder="Belum ada lokasi dipilih...">
                             </div>
-                        </div>
 
-                        {{-- Hidden Inputs untuk Form Submission --}}
-                        <input type="hidden" name="latitude" x-model="lat">
-                        <input type="hidden" name="longitude" x-model="lng">
-                        <input type="hidden" name="lokasi_teks" x-model="lokasiTeksFinal">
-
-                        {{-- Tampilan Mode Geofence --}}
-                        <div x-show="mode === 'geofence'" class="flex gap-2">
-                            <input type="text"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
-                                x-model="status" readonly>
-                            <button type="button" @click="getGPS()" :disabled="loading"
-                                class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center transition-colors"
-                                :class="loading ? 'opacity-70 cursor-wait' : ''">
-                                <template x-if="!loading">
-                                    <img src="{{ asset('assets/icon/location.svg') }}"
-                                        class="h-5 w-5 brightness-0 invert">
-                                </template>
-                                <template x-if="loading">
-                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                                        fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
-                                    </svg>
-                                </template>
+                            {{-- Tombol Trigger Fullscreen --}}
+                            <button type="button" id="btnOpenMap"
+                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-4 py-2.5 rounded-[10px] text-sm flex items-center gap-2 transition-colors shadow-sm">
+                                <span>📍</span>
+                                <span class="hidden md:inline">Buka Peta</span>
                             </button>
                         </div>
-
-                        {{-- Tampilan Mode Geocoding (Search) --}}
-                        <div x-show="mode === 'geocoding'" class="relative">
-                            <div class="relative">
-                                <input type="text" x-model="searchText" @keydown.enter.prevent="searchLocation()"
-                                    class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#155FA6]/30 focus:border-[#155FA6]"
-                                    placeholder="Ketik nama lokasi (misal: Hotel Horison)...">
-
-                                <button type="button" @click="searchLocation()"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-md text-slate-500 transition-colors">
-                                    <img src="{{ asset('assets/icon/search.svg') }}" class="h-4 w-4 opacity-60">
-                                </button>
-                            </div>
-
-                            {{-- Dropdown Hasil Pencarian --}}
-                            <div x-show="showResults && searchResults.length" @click.outside="showResults = false"
-                                class="search-results absolute z-30 mt-1 w-full bg-white rounded-[10px] shadow-xl border border-slate-200 max-h-60 overflow-y-auto">
-                                <template x-for="item in searchResults" :key="item.place_id">
-                                    <button type="button" @click="selectLocation(item)"
-                                        class="w-full text-left px-4 py-3 text-xs hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors">
-                                        <div class="font-medium text-slate-800"
-                                            x-text="item.display_name.split(',')[0]"></div>
-                                        <div class="text-slate-500 truncate mt-0.5" x-text="item.display_name"></div>
-                                    </button>
-                                </template>
-                            </div>
-
-                            {{-- Pesan Status Search --}}
-                            <div x-show="loading" class="absolute right-10 top-3 text-xs text-slate-400">Mencari...
-                            </div>
-                        </div>
-
                         <p class="text-[11px] text-slate-400 mt-1">
-                            <span x-show="mode === 'geofence'">*Pastikan GPS aktif.</span>
-                            <span x-show="mode === 'geocoding'">*Gunakan pencarian untuk lokasi spesifik.</span>
+                            *Klik "Buka Peta" untuk menentukan titik koordinat presisi & alamat otomatis.
                         </p>
                     </div>
                 </div>
@@ -687,6 +585,140 @@
         <ul class="space-y-3" id="aktivitas-list">
             <li class="text-sm text-slate-400 italic">Memuat...</li>
         </ul>
+    </div>
+
+    {{-- MODAL FULLSCREEN MAP (FINAL UX UPDATE) --}}
+    <div id="fullscreenMapModal" class="fixed inset-0 z-[9999] bg-white hidden flex-col font-sans">
+        
+        {{-- 1. Top Bar: Search & Close --}}
+        <div class="absolute top-4 left-4 right-4 z-[1001] flex gap-2 max-w-3xl mx-auto w-full">
+            {{-- Search Bar --}}
+            <div class="relative flex-1 shadow-lg rounded-[12px]">
+                <input type="text" id="mapSearchInput" 
+                    class="w-full h-12 pl-12 pr-4 rounded-[12px] border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-[#155FA6] text-base placeholder:text-slate-400"
+                    placeholder="Cari jalan, gedung, atau daerah...">
+                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                {{-- Search Results Dropdown --}}
+                <div id="mapSearchResults" class="absolute top-14 left-0 w-full bg-white rounded-[12px] shadow-xl border border-slate-100 hidden overflow-hidden flex flex-col"></div>
+            </div>
+
+            {{-- Close Button --}}
+            <button type="button" id="btnCloseMap" 
+                class="h-12 w-12 bg-white rounded-[12px] shadow-lg flex items-center justify-center hover:bg-red-50 border border-slate-200 text-slate-500 hover:text-red-500 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        {{-- 2. Map Container --}}
+        <div id="map_fullscreen" class="w-full h-full bg-slate-100 relative z-0"></div>
+
+        {{-- 3. Fixed Center Pin (Visual Element) --}}
+        <div class="center-pin-wrapper absolute top-1/2 left-1/2 z-[1000] pointer-events-none flex flex-col items-center pb-[40px] transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-100">
+            {{-- Pin Merah Besar --}}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-[#DC2626] drop-shadow-2xl filter" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
+                <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+            </svg>
+            {{-- Titik Fokus Lantai --}}
+            <div class="absolute bottom-[38px] w-1 h-1 bg-black rounded-full opacity-50"></div>
+            {{-- Bayangan --}}
+            <div class="pin-shadow w-3 h-1.5 bg-black/40 rounded-[100%] mt-[-4px] blur-[1px]"></div>
+        </div>
+
+        {{-- 4. Floating Controls Area (Bottom) --}}
+        <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full flex flex-col gap-3">
+            
+            {{-- Baris Tombol Kontrol (Floating di atas Card) --}}
+            <div class="flex justify-between items-end px-1">
+                
+                {{-- KIRI: Tombol Recent Location --}}
+                <div class="relative">
+                    <button type="button" id="btnRecentLocations" 
+                        class="h-12 w-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#155FA6] hover:scale-105 active:scale-95 transition-all"
+                        title="Riwayat Lokasi">
+                        {{-- Icon History --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+
+                    {{-- Panel Riwayat (Hidden by default) --}}
+                    <div id="recentLocationsPanel" class="absolute bottom-14 left-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-100 hidden overflow-hidden flex flex-col animate-slide-up">
+                        <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            Lokasi Terakhir
+                        </div>
+                        {{-- List item akan di-inject via JS --}}
+                    </div>
+                </div>
+
+                {{-- KANAN: Tombol Layer & GPS (Vertical Stack) --}}
+                <div class="flex flex-col gap-3">
+                    {{-- Tombol Layer --}}
+                    <button type="button" id="btnLayerSatellite" 
+                        class="h-12 w-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                        title="Ganti Mode Peta">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    </button>
+
+                    {{-- Tombol Current Location (Geofencing Manual) --}}
+                    <button type="button" id="btnMyLocation" 
+                        class="h-12 w-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-700 hover:text-[#155FA6] active:scale-95 transition-all relative"
+                        title="Lokasi Saya Saat Ini">
+                        {{-- Icon Target / Crosshair --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        {{-- Titik Merah Kecil (Indikator Aktif) --}}
+                        <div class="absolute top-3 right-3 w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></div>
+                    </button>
+                </div>
+            </div>
+
+            {{-- 5. Main Info Card (BIGGER & CLEANER) --}}
+            <div class="bg-white rounded-2xl shadow-2xl p-5 ring-1 ring-black/5 animate-slide-up">
+                <div class="flex items-start gap-4 mb-4">
+                    {{-- Icon Lokasi Besar --}}
+                    <div class="mt-1 shrink-0 bg-red-50 p-2.5 rounded-full border border-red-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-[#DC2626]">
+                            <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    {{-- Teks Alamat --}}
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lokasi Terpilih</p>
+                        
+                        {{-- Alamat Utama --}}
+                        <p id="mapAddressPreview" class="text-[15px] font-semibold text-slate-800 leading-snug line-clamp-2">
+                            Sedang mencari lokasi...
+                        </p>
+                        
+                        {{-- Koordinat Kecil --}}
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="bg-slate-50 text-slate-500 text-[10px] px-2 py-0.5 rounded font-mono border border-slate-100" id="mapCoordsPreview">
+                                -
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Tombol Konfirmasi Besar --}}
+                <button type="button" id="btnConfirmLocation" 
+                    class="w-full bg-[#1C7C54] hover:bg-[#156343] text-white font-bold text-[15px] py-3.5 rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group">
+                    <span>Pilih Lokasi Ini</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -900,6 +932,10 @@ document.addEventListener("DOMContentLoaded", async function() {
             document.getElementById(id).showPicker()
         );
     });
+
+    if (typeof window.initMapComponent === 'function') {
+        window.initMapComponent();
+    }
 });
 
 // --- FETCH DASHBOARD STATS ---

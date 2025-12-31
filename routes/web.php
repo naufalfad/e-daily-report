@@ -90,7 +90,7 @@ Route::middleware(['auth'])->group(function () {
             return view('staf.input-lkh', ['id' => $id]);
         })->name('input-lkh');
         Route::view('/input-skp', 'staf.input-skp')->name('input-skp');
-        Route::view('/riwayat-lkh', 'staf.riwayat-lkh')->name('riwayat-lkh');
+        Route::get('/riwayat-lkh', [RiwayatController::class, 'indexStaf'])->name('riwayat-lkh');
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
         Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
         // View Pengumuman Staf
@@ -112,10 +112,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/validasi-laporan/{id}', [App\Http\Controllers\Core\ValidatorController::class, 'validateLkh'])->name('validasi.store');
         Route::view('/skoring-kinerja', 'penilai.skoring-kinerja')->name('skoring-kinerja');
         Route::view('/peta-aktivitas', 'penilai.peta-aktivitas')->name('peta-aktivitas');
-        Route::view('/riwayat', 'penilai.riwayat')->name('riwayat');
+        Route::get('/riwayat', [RiwayatController::class, 'indexPenilai'])->name('riwayat');
         Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');
-        // View Pengumuman Penilai
-        // ... di dalam prefix penilai ...
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
             Route::view('/', 'penilai.pengumuman')->name('index'); // <--- PASTIKAN INI ADA
         });

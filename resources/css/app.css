@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* [WAJIB] Alpine.js Cloak - Mencegah element 'kedip' sebelum JS load */
+[x-cloak] {
+    display: none !important;
+}
+
 /* Warna placeholder (tanggal sebelum dipilih) */
 .tanggal-placeholder::-webkit-datetime-edit-text,
 .tanggal-placeholder::-webkit-datetime-edit-month-field,

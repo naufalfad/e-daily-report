@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController;
 
+// Core Controllers
 use App\Http\Controllers\Core\ActivityLogController;
 use App\Http\Controllers\Core\PengumumanController;
 use App\Http\Controllers\Core\SkpController;
@@ -13,7 +14,14 @@ use App\Http\Controllers\Core\RiwayatController;
 use App\Http\Controllers\Core\PetaAktivitasController;
 use App\Http\Controllers\Core\SkoringController;
 use App\Http\Controllers\Core\LkhController;
-use App\Http\Controllers\Core\KadisValidatorController; 
+use App\Http\Controllers\Core\KadisValidatorController;
+use App\Http\Controllers\Core\BidangSkoringController;
+
+// Admin Controllers
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\Master\UnitKerjaController;
+use App\Http\Controllers\Admin\Master\BidangController;
+use App\Http\Controllers\Admin\Master\JabatanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,9 +66,6 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     | UNIVERSAL PENGUMUMAN API (Accessible by All Roles)
     |--------------------------------------------------------------------------
-    | Logika: Karena Staf, Penilai, dan Kadis sekarang memiliki hak akses 
-    | yang sama untuk mengelola pengumuman mereka sendiri, rute API 
-    | diletakkan di level global agar konsisten.
     */
     Route::prefix('api/pengumuman')->name('pengumuman.api.')->group(function () {
         Route::get('/list', [PengumumanController::class, 'index'])->name('list');
@@ -93,7 +98,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/riwayat-lkh', [RiwayatController::class, 'indexStaf'])->name('riwayat-lkh');
         Route::view('/peta-aktivitas', 'staf.peta-aktivitas')->name('peta-aktivitas');
         Route::view('/log-aktivitas', 'staf.log-aktivitas')->name('log-aktivitas');
-        // View Pengumuman Staf
         Route::view('/pengumuman', 'staf.pengumuman')->name('pengumuman');
     });
 
@@ -115,7 +119,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/riwayat', [RiwayatController::class, 'indexPenilai'])->name('riwayat');
         Route::view('/log-aktivitas', 'penilai.log-aktivitas')->name('log-aktivitas');
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
-            Route::view('/', 'penilai.pengumuman')->name('index'); // <--- PASTIKAN INI ADA
+            Route::view('/', 'penilai.pengumuman')->name('index'); 
         });
     });
 
@@ -141,8 +145,8 @@ Route::middleware(['auth'])->group(function () {
         })->name('skoring-bidang');
         Route::view('/log-aktivitas', 'kadis.log-aktivitas')->name('log-aktivitas');
         Route::view('/peta-aktivitas', 'kadis.peta-aktivitas')->name('peta-aktivitas');
-        Route::get('/skoring-bidang/export-pdf', [App\Http\Controllers\Core\BidangSkoringController::class, 'exportPdf'])->name('skoring-bidang.export.pdf');
-        // [FIX] View Pengumuman Kadis dengan Data Supply Bidang
+        Route::get('/skoring-bidang/export-pdf', [BidangSkoringController::class, 'exportPdf'])->name('skoring-bidang.export.pdf');
+        
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
             Route::get('/', function () {
                 $bidangs = \App\Models\Bidang::orderBy('nama_bidang', 'asc')->get();
@@ -154,20 +158,29 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ADMIN ROUTES
+    | ADMIN ROUTES (MODIFIED FOR PAGINATION)
     |--------------------------------------------------------------------------
     */
     Route::prefix('admin')->name('admin.')->group(function () {
+        
         Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
-        Route::view('/manajemen-pegawai', 'admin.manajemen-pegawai')->name('manajemen-pegawai');
+        
+        // [FIXED] Menggunakan Controller untuk render view agar bisa inject data dropdown
+        Route::get('/manajemen-pegawai', [UserManagementController::class, 'index'])->name('manajemen-pegawai');
+        
         Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
 
         Route::prefix('master')->name('master.')->group(function () {
-            Route::resource('unit-kerja', \App\Http\Controllers\Admin\Master\UnitKerjaController::class)->except(['show', 'create', 'edit']);
-            Route::resource('bidang', \App\Http\Controllers\Admin\Master\BidangController::class)->except(['show', 'create', 'edit']);
-            Route::resource('jabatan', \App\Http\Controllers\Admin\Master\JabatanController::class)->except(['show', 'create', 'edit']);
+            // [FIXED] Menggunakan controller spesifik yang sudah kita buat (support Pagination & JSON)
+            // Method index pada controller ini mendeteksi jika request biasa -> return View.
+            Route::get('unit-kerja', [UnitKerjaController::class, 'index'])->name('unit-kerja.index');
+            Route::get('bidang', [BidangController::class, 'index'])->name('bidang.index');
+            Route::get('jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
+            
+            // Note: Operasi CRUD (Store, Update, Delete) sudah di-handle via API Route (AJAX)
+            // Jadi di sini kita cukup define route untuk View saja.
         });
     });
 });

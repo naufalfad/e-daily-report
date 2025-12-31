@@ -249,7 +249,7 @@ class SkpController extends Controller
                 'id' => $staff->id,
                 'nama' => $staff->name,
                 'nip'  => $staff->nip,
-                'foto' => $staff->foto_profil_url ?? asset('assets/icon/avatar.png'),
+                'foto' => $staff->foto_profil_url ?? asset('assets/man.png'),
                 'rhk' => $staff->unitKerja->nama_unit ?? 'Non-Unit', 
                 'target' => $totalSubmitted,   
                 'realisasi' => $totalApproved, 

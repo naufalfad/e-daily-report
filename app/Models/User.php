@@ -44,7 +44,7 @@ class User extends Authenticatable
     {
         return $this->foto_profil
             ? Storage::disk('public')->url($this->foto_profil)
-            : asset('assets/icon/avatar.png'); // FIX: Default avatar path disesuaikan
+            : asset('assets/man.png'); // FIX: Default avatar path disesuaikan
     }
 
     // ---------------------------------------------------------------------

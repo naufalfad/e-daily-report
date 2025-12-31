@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterYear = document.getElementById('filter-year');
     const filterStatus = document.getElementById('filter-status');
 
+    // Pagination Elements (NEW)
+    const btnPrev = document.getElementById('prev-page');
+    const btnNext = document.getElementById('next-page');
+    const paginationInfo = document.getElementById('pagination-info');
+    const paginationNumbers = document.getElementById('pagination-numbers');
+
     // Modals
     const detailModal = document.getElementById('modal-detail');
     const approveModal = document.getElementById('modal-approve');
@@ -23,17 +29,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const buktiListContainer = document.getElementById('bukti-list-container');
     const previewModal = document.getElementById('modal-preview');
     const previewContent = document.getElementById('preview-content');
-    const btnOpenBukti = document.getElementById('detail-bukti-btn'); // Tombol di Modal Detail
+    const btnOpenBukti = document.getElementById('detail-bukti-btn'); 
 
     // Buttons
     const btnSubmitApprove = document.getElementById('btn-submit-approve');
     const btnSubmitReject = document.getElementById('btn-submit-reject');
     const rejectError = document.getElementById('reject-error');
 
-    // STATE MANAGEMENT (Simpan Data Lokal)
+    // STATE MANAGEMENT
     let currentLkhData = []; 
-    let daftarBukti = []; // NEW State for Bukti
-    let selectedBukti = null; // NEW State for Preview
+    let daftarBukti = []; 
+    let selectedBukti = null; 
+    let currentPage = 1; // NEW: Track Current Page
+    let searchTimeout = null; // NEW: Debounce Search
 
     if (!listContainer) return;
 
@@ -52,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const closeAllModals = () => { // NEW Helper to close all related modals
+    const closeAllModals = () => {
         hide(detailModal);
         hide(approveModal);
         hide(rejectModal);
@@ -86,46 +94,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded-full ${cls}">${lbl}</span>`;
     };
     
-    // NEW Helper: Get File Type
     const getFileType = (url) => {
         if (!url) return "other";
         const ext = url.split(".").pop().toLowerCase();
-
-        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
-            return "image";
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
         if (ext === "pdf") return "pdf";
         if (["mp4", "mov", "webm"].includes(ext)) return "video";
         return "other";
     };
 
-    // NEW Helper: Normalisasi Bukti (ditempatkan di scope ini)
     const normalizeBukti = (buktiArray) => {
         if (!buktiArray) return [];
-        
-        // Pastikan array
         let arr = Array.isArray(buktiArray) ? buktiArray : 
                     (typeof buktiArray === 'string' ? JSON.parse(buktiArray) : []);
-        
         if (!Array.isArray(arr)) return [];
-
         return arr.map((bukti) => {
-            if (typeof bukti === "string") {
-                // Asumsi: Jika string, itu nama file yang ada di folder 'bukti'
-                return { file_url: `/storage/uploads/bukti/${bukti}` };
-            }
-            if (bukti.path) {
-                // Asumsi: path relatif dari storage
-                return { file_url: `/storage/${bukti.path}` };
-            }
-            if (bukti.file_url) {
-                return bukti;
-            }
+            if (typeof bukti === "string") return { file_url: `/storage/uploads/bukti/${bukti}` };
+            if (bukti.path) return { file_url: `/storage/${bukti.path}` };
+            if (bukti.file_url) return bukti;
             return null;
         }).filter(Boolean);
     };
 
     // === MAIN FUNCTION: FETCH DATA ===
-    async function fetchLkhList() {
+    async function fetchLkhList(page = 1) {
         // 1. Set Loading State
         listContainer.innerHTML = `
             <tr>
@@ -140,28 +132,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             </tr>`;
 
-        // 2. Build Query Params (Default to Current Date if null)
+        // 2. Build Query Params
         const params = new URLSearchParams({
             month: filterMonth ? filterMonth.value : new Date().getMonth() + 1,
             year: filterYear ? filterYear.value : new Date().getFullYear(),
             status: filterStatus ? filterStatus.value : 'all',
             search: filterSearch ? filterSearch.value : '',
-            page: 1 
+            page: page, // Dynamic Page
+            per_page: 10 // Consistent with controller
         });
 
         try {
             // 3. Fetch Data
             const res = await authFetch(`/api/validator/kadis/lkh?${params.toString()}`);
-            const json = await res.json();
+            const json = await res.json(); // Biasanya JSON langsung berisi object Paginator (data, current_page, etc) atau dibungkus 'data'
 
-            const dataToRender = json.data?.data || json.data || [];
+            // Handle Laravel Pagination Response Structure
+            // Kadang response: { data: [...], current_page: 1 ... } 
+            // Kadang response: { data: { data: [...], current_page: 1 ... } } tergantung Resource Class
+            const paginationData = json.data?.data ? json.data : json; 
+            const rows = paginationData.data || [];
 
             if (!res.ok) throw new Error(json.message || "Gagal memuat data");
 
-            // Simpan data ke variabel global agar bisa diakses Modal
-            currentLkhData = dataToRender;
+            // Simpan data ke variabel global
+            currentLkhData = rows;
+            currentPage = page;
 
             renderTable(currentLkhData);
+            updatePagination(paginationData); // Update UI Paginasi
 
         } catch (err) {
             console.error(err);
@@ -191,7 +190,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let waktu = `${lkh.waktu_mulai.substring(0, 5)} - ${lkh.waktu_selesai.substring(0, 5)}`;
             let pegawai = lkh.user ? lkh.user.name : 'Unknown';
             
-            // Kita hanya simpan ID di tombol. Data diambil dari currentLkhData
             const row = `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
                     <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-700">${formatDate(lkh.tanggal_laporan)}</td>
@@ -224,50 +222,161 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === EVENT DELEGATION (KUNCI PERBAIKAN TOMBOL DETAIL) ===
+    // === PAGINATION LOGIC (PHASE 3 & 4 Implementation) ===
+    function updatePagination(data) {
+        if (!paginationInfo) return;
+
+        const { current_page, last_page, from, to, total, prev_page_url, next_page_url } = data;
+
+        // 1. Update Info Text
+        paginationInfo.textContent = `Menampilkan ${from || 0}-${to || 0} dari ${total || 0} data`;
+
+        // 2. Update Prev/Next Buttons
+        if (btnPrev) {
+            btnPrev.disabled = !prev_page_url;
+            btnPrev.classList.toggle('opacity-50', !prev_page_url);
+            btnPrev.classList.toggle('cursor-not-allowed', !prev_page_url);
+        }
+        if (btnNext) {
+            btnNext.disabled = !next_page_url;
+            btnNext.classList.toggle('opacity-50', !next_page_url);
+            btnNext.classList.toggle('cursor-not-allowed', !next_page_url);
+        }
+
+        // 3. Render Numeric Links (Sliding Window)
+        renderPaginationLinks(current_page, last_page);
+    }
+
+    function renderPaginationLinks(current, lastPage) {
+        if (!paginationNumbers) return;
+        paginationNumbers.innerHTML = '';
+
+        // Helper: Create Button
+        const createBtn = (page, isActive) => {
+            const btn = document.createElement('button');
+            btn.className = isActive 
+                ? `w-8 h-8 flex items-center justify-center rounded-lg bg-[#1C7C54] text-white text-sm font-medium shadow-sm transition-all`
+                : `w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-all js-page-link`;
+            btn.textContent = page;
+            if(!isActive) btn.dataset.page = page;
+            return btn;
+        };
+
+        // Helper: Create Ellipsis
+        const createDots = () => {
+            const span = document.createElement('span');
+            span.className = "px-1 text-slate-400 text-sm";
+            span.textContent = "...";
+            return span;
+        };
+
+        // Algorithm
+        if (lastPage <= 7) {
+            for (let i = 1; i <= lastPage; i++) paginationNumbers.appendChild(createBtn(i, i === current));
+        } else {
+            // Always show first
+            paginationNumbers.appendChild(createBtn(1, 1 === current));
+
+            if (current > 4) paginationNumbers.appendChild(createDots());
+
+            let start = Math.max(2, current - 1);
+            let end = Math.min(lastPage - 1, current + 1);
+
+            if (current <= 4) end = 5;
+            if (current >= lastPage - 3) start = lastPage - 4;
+
+            for (let i = start; i <= end; i++) paginationNumbers.appendChild(createBtn(i, i === current));
+
+            if (current < lastPage - 3) paginationNumbers.appendChild(createDots());
+
+            // Always show last
+            paginationNumbers.appendChild(createBtn(lastPage, lastPage === current));
+        }
+    }
+
+    // === EVENT HANDLERS (PHASE 4) ===
+
+    // 1. Pagination Number Click (Event Delegation)
+    if (paginationNumbers) {
+        paginationNumbers.addEventListener('click', (e) => {
+            const target = e.target.closest('.js-page-link');
+            if (target) {
+                e.preventDefault();
+                const page = parseInt(target.dataset.page);
+                if (page && page !== currentPage) {
+                    fetchLkhList(page);
+                    // UX: Scroll to Top of Table
+                    document.querySelector('.overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+        });
+    }
+
+    // 2. Prev/Next Click
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            if (currentPage > 1) {
+                fetchLkhList(currentPage - 1);
+                document.querySelector('.overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            // Kita bisa cek btnNext.disabled, tapi fetchLkhList akan handle page logic
+            fetchLkhList(currentPage + 1);
+            document.querySelector('.overflow-x-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // 3. Filters
+    if (filterForm) {
+        filterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchLkhList(1); // Reset to page 1 on filter
+        });
+    }
+    
+    // Live search with debounce
+    if (filterSearch) {
+        filterSearch.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetchLkhList(1);
+            }, 500);
+        });
+    }
+
+    // 4. Detail Button (Event Delegation)
     listContainer.addEventListener('click', function(e) {
-        // Cek apakah elemen yang diklik adalah (atau ada di dalam) tombol .js-open-detail
         const btn = e.target.closest('.js-open-detail');
         if (btn) {
             const id = btn.dataset.id;
-            // Cari data objek lengkap dari array global
             const lkhData = currentLkhData.find(item => item.id == id);
-            
-            if (lkhData) {
-                openDetailModal(lkhData);
-            } else {
-                console.error("Data LKH tidak ditemukan untuk ID:", id);
-            }
+            if (lkhData) openDetailModal(lkhData);
         }
     });
 
     // === MODAL LOGIC ===
     function openDetailModal(lkhData) {
         detailModal.dataset.lkhId = lkhData.id;
-        
-        // Reset bukti state dan simpan data baru
-        // Kita gunakan normalizeBukti di sini
         daftarBukti = normalizeBukti(lkhData.bukti || []);
         selectedBukti = null;
 
-        // Helper untuk mengisi teks dengan aman
         const setText = (id, value) => {
             const el = document.getElementById(id);
             if (el) el.textContent = value;
         };
 
-        // Isi Data ke Modal
         setText('detail-tanggal', formatDate(lkhData.tanggal_laporan));
         setText('detail-pegawai', lkhData.user?.name ?? '-');
         setText('detail-nama', lkhData.jenis_kegiatan ?? '-');
         setText('detail-uraian', lkhData.deskripsi_aktivitas ?? '-');
         setText('detail-output', lkhData.output_hasil_kerja ?? '-');
         setText('detail-volume', `${lkhData.volume ?? '-'} ${lkhData.satuan ?? ''}`);
-        // setText('detail-satuan', lkhData.satuan ?? '-'); // Digabung dengan volume
         
         const kategori = lkhData.skp_rencana_id ? 'SKP' : 'Non-SKP';
         setText('detail-kategori', kategori);
-        
         setText('detail-jam-mulai', lkhData.waktu_mulai.substring(0, 5));
         setText('detail-jam-selesai', lkhData.waktu_selesai.substring(0, 5));
 
@@ -277,7 +386,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusEl = document.getElementById('detail-status');
         if(statusEl) statusEl.innerHTML = createStatusBadge(lkhData.status);
 
-        // Tombol Bukti (DIUBAH)
         if (btnOpenBukti) {
             if (daftarBukti.length > 0) {
                 btnOpenBukti.disabled = false;
@@ -290,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Catatan Validasi
         const catWrap = document.getElementById('detail-catatan-wrapper');
         if (catWrap) {
             if (lkhData.komentar_validasi) {
@@ -301,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Tombol Aksi (Hanya muncul jika Waiting Review)
         const actions = document.getElementById('validation-actions');
         const info = document.getElementById('validation-info');
 
@@ -318,11 +424,10 @@ document.addEventListener('DOMContentLoaded', () => {
         show(detailModal);
     }
     
-    // NEW: Fungsi untuk menampilkan modal list bukti
     function openBuktiListModal() {
         if (daftarBukti.length > 0) {
             renderBuktiList(daftarBukti);
-            hide(detailModal); // Sembunyikan modal detail dulu
+            hide(detailModal);
             show(buktiListModal);
         } else {
             Swal.fire({
@@ -334,30 +439,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // NEW: Fungsi untuk me-render daftar bukti di modal
     function renderBuktiList(buktiArray) {
         buktiListContainer.innerHTML = '';
-        
         if (!buktiArray || buktiArray.length === 0) return;
 
         buktiArray.forEach((bukti, index) => {
             const type = getFileType(bukti.file_url);
             let thumbnailHtml = '';
 
-            // Render Thumbnail berdasarkan tipe file
             switch(type) {
-                case 'image':
-                    thumbnailHtml = `<img src="${bukti.file_url}" class="w-full h-24 object-cover rounded-lg shadow-sm" />`;
-                    break;
-                case 'pdf':
-                    thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-red-100 flex items-center justify-center text-red-600"><i class="fas fa-file-pdf text-3xl"></i></div>`;
-                    break;
-                case 'video':
-                    thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600"><i class="fas fa-video text-3xl"></i></div>`;
-                    break;
-                default:
-                    thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600"><i class="fas fa-file text-3xl"></i></div>`;
-                    break;
+                case 'image': thumbnailHtml = `<img src="${bukti.file_url}" class="w-full h-24 object-cover rounded-lg shadow-sm" />`; break;
+                case 'pdf': thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-red-100 flex items-center justify-center text-red-600"><i class="fas fa-file-pdf text-3xl"></i></div>`; break;
+                case 'video': thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600"><i class="fas fa-video text-3xl"></i></div>`; break;
+                default: thumbnailHtml = `<div class="w-full h-24 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600"><i class="fas fa-file text-3xl"></i></div>`; break;
             }
 
             const item = document.createElement('div');
@@ -367,11 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="mt-2 text-xs font-medium text-slate-700 truncate">Lampiran ${index + 1}</p>
                 <p class="text-[10px] text-slate-500 truncate" title="${bukti.file_url.split('/').pop()}">${bukti.file_url.split('/').pop()}</p>
             `;
-            item.dataset.index = index; // Simpan index untuk preview
+            item.dataset.index = index;
             buktiListContainer.appendChild(item);
         });
         
-        // Tambahkan listener untuk preview
         document.querySelectorAll('.js-preview-bukti').forEach(item => {
             item.addEventListener('click', (e) => {
                 const index = e.currentTarget.dataset.index;
@@ -380,48 +473,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // NEW: Fungsi untuk menampilkan modal preview
     function previewBukti(bukti) {
         selectedBukti = bukti;
         const type = getFileType(bukti.file_url);
         previewContent.innerHTML = '';
-        hide(buktiListModal); // Sembunyikan list bukti
+        hide(buktiListModal);
 
         let content = '';
         const filename = bukti.file_url.split('/').pop();
 
         switch(type) {
-            case 'image':
-                content = `<img src="${bukti.file_url}" class="w-full rounded-lg shadow" />`;
-                break;
-            case 'pdf':
-                content = `<iframe src="${bukti.file_url}" class="w-full h-[500px] rounded-lg"></iframe>`;
-                break;
-            case 'video':
-                content = `
-                    <video controls class="w-full rounded-lg">
-                        <source src="${bukti.file_url}" type="video/mp4">
-                        <p>Browser Anda tidak mendukung video.</p>
-                    </video>`;
-                break;
-            default:
-                content = `
-                    <div class="text-center py-8">
-                        <p class="text-center text-slate-600 mb-4">
-                            File **${filename}** tidak dapat dipreview.
-                        </p>
-                        <a href="${bukti.file_url}" target="_blank"
-                            class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg shadow">
-                            <i class="fas fa-download"></i> Download File
-                        </a>
-                    </div>`;
-                break;
+            case 'image': content = `<img src="${bukti.file_url}" class="w-full rounded-lg shadow" />`; break;
+            case 'pdf': content = `<iframe src="${bukti.file_url}" class="w-full h-[500px] rounded-lg"></iframe>`; break;
+            case 'video': content = `<video controls class="w-full rounded-lg"><source src="${bukti.file_url}" type="video/mp4"></video>`; break;
+            default: content = `
+                <div class="text-center py-8">
+                    <p class="text-center text-slate-600 mb-4">File **${filename}** tidak dapat dipreview.</p>
+                    <a href="${bukti.file_url}" target="_blank" class="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg shadow"><i class="fas fa-download"></i> Download File</a>
+                </div>`; break;
         }
         
         previewContent.innerHTML = `<h4 class="text-sm font-bold text-slate-700 mb-2 truncate">Preview: ${filename}</h4>` + content;
         show(previewModal);
     }
-    
 
     // === SUBMIT VALIDATION ===
     async function submitValidation(status, note) {
@@ -437,10 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await authFetch(`/api/validator/kadis/lkh/${lkhId}/validate`, {
                 method: 'POST',
-                // [PERBAIKAN UTAMA]: Menambahkan Content-Type Header
-                headers: {
-                    'Content-Type': 'application/json' 
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     status: status, 
                     komentar_validasi: note || null
@@ -449,12 +520,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const json = await res.json();
             
-            // Penanganan Error 422 dari Backend
             if (res.status === 422) {
                 let errorMessage = "Data validasi tidak lengkap.";
-                if (json.errors) {
-                    errorMessage = Object.values(json.errors).flat().join('; ');
-                }
+                if (json.errors) errorMessage = Object.values(json.errors).flat().join('; ');
                 throw new Error(errorMessage);
             }
 
@@ -469,53 +537,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 showConfirmButton: false
             });
 
-            closeAllModals(); // Gunakan fungsi baru untuk menutup semua
-            
-            fetchLkhList(); // Refresh data
+            closeAllModals();
+            fetchLkhList(currentPage); // Refresh current page
 
         } catch (err) {
-            Swal.fire({
-                icon: "error",
-                title: "Gagal",
-                text: err.message,
-                confirmButtonColor: "#B6241C"
-            });
+            Swal.fire({ icon: "error", title: "Gagal", text: err.message, confirmButtonColor: "#B6241C" });
         }
     }
 
-    // === EVENT LISTENERS ===
-
-    if(filterForm) {
-        filterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            fetchLkhList();
-        });
-    }
-
-    // Listener Modal Close (Diperbarui)
+    // === MODAL LISTENERS ===
     document.querySelectorAll('.js-close-detail, .js-close-approve, .js-close-reject').forEach(btn => {
         btn.addEventListener('click', closeAllModals);
     });
     
-    // NEW Listener untuk menutup modal Bukti dan Preview
     document.querySelector('.js-close-bukti')?.addEventListener('click', () => {
         hide(buktiListModal);
-        show(detailModal); // Kembali ke modal detail
+        show(detailModal);
     });
     
     document.querySelector('.js-close-preview')?.addEventListener('click', () => {
         hide(previewModal);
-        show(buktiListModal); // Kembali ke modal list bukti
+        show(buktiListModal);
     });
 
-    // NEW Listener untuk membuka modal list bukti dari modal detail
     btnOpenBukti?.addEventListener('click', (e) => {
-        if (!e.currentTarget.disabled) {
-            openBuktiListModal();
-        }
+        if (!e.currentTarget.disabled) openBuktiListModal();
     });
 
-    // Listener untuk Approve/Reject flow
     document.querySelector('.js-open-approve')?.addEventListener('click', () => {
         hide(detailModal);
         show(approveModal);
@@ -524,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnSubmitApprove?.addEventListener('click', () => {
-        // Pada kasus Approve, komentar tidak required, jadi langsung submit
         const note = document.getElementById('approve-note').value;
         submitValidation('approved', note);
     });
@@ -538,7 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnSubmitReject?.addEventListener('click', () => {
-        // Komentar required untuk Rejected
         const note = document.getElementById('reject-note').value;
         if (!note.trim()) {
             if(rejectError) rejectError.classList.remove('hidden');
@@ -548,5 +594,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial Load
-    fetchLkhList();
+    fetchLkhList(1);
 });

@@ -19,6 +19,7 @@ use App\Http\Controllers\Core\BidangSkoringController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\UserAccountController; // [NEW] Import Controller Akun
 use App\Http\Controllers\Admin\Master\UnitKerjaController;
 use App\Http\Controllers\Admin\Master\BidangController;
 use App\Http\Controllers\Admin\Master\JabatanController;
@@ -165,22 +166,21 @@ Route::middleware(['auth'])->group(function () {
         
         Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
         
-        // [FIXED] Menggunakan Controller untuk render view agar bisa inject data dropdown
+        // [HR] Manajemen Pegawai
         Route::get('/manajemen-pegawai', [UserManagementController::class, 'index'])->name('manajemen-pegawai');
         
-        Route::view('/akun-pengguna', 'admin.akun-pengguna')->name('akun-pengguna');
+        // [IT] Akun Pengguna (MODIFIED)
+        // Menggunakan Controller agar bisa inject data Roles ke View
+        Route::get('/akun-pengguna', [UserAccountController::class, 'index'])->name('akun-pengguna');
+        
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
 
         Route::prefix('master')->name('master.')->group(function () {
-            // [FIXED] Menggunakan controller spesifik yang sudah kita buat (support Pagination & JSON)
-            // Method index pada controller ini mendeteksi jika request biasa -> return View.
+            // Master Data Pagination
             Route::get('unit-kerja', [UnitKerjaController::class, 'index'])->name('unit-kerja.index');
             Route::get('bidang', [BidangController::class, 'index'])->name('bidang.index');
             Route::get('jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
-            
-            // Note: Operasi CRUD (Store, Update, Delete) sudah di-handle via API Route (AJAX)
-            // Jadi di sini kita cukup define route untuk View saja.
         });
     });
 });

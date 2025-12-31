@@ -9,10 +9,10 @@ use App\Http\Controllers\Auth\ProfileController;
 
 // ADMIN
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\UserAccountController;
+use App\Http\Controllers\Admin\UserAccountController; // [NEW] Controller Akun
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\SystemSettingController;
-// [NEW] Controller Master Data Spesifik
+// Controller Master Data Spesifik
 use App\Http\Controllers\Admin\Master\UnitKerjaController;
 use App\Http\Controllers\Admin\Master\JabatanController;
 use App\Http\Controllers\Admin\Master\BidangController;
@@ -90,31 +90,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
 
         // 1. DOMAIN HR: MANAJEMEN PEGAWAI
-        // [VERIFIED] Menggunakan UserManagementController::index (Pagination & Search)
-        // URL: GET /api/admin/pegawai
+        // GET /api/admin/pegawai -> UserManagementController@index (Pagination)
         Route::apiResource('pegawai', UserManagementController::class);
 
-        // 2. DOMAIN IT: AKUN PENGGUNA (BARU)
+        // 2. DOMAIN IT: AKUN PENGGUNA (BARU & DIPERBARUI)
         Route::prefix('akun')->group(function() {
+            // List Akun (Pagination & Filter)
             Route::get('/', [UserAccountController::class, 'index']); 
+            
+            // Reset Password / Ganti Username
             Route::patch('/{id}/credentials', [UserAccountController::class, 'updateCredentials']); 
+            
+            // Ubah Role / Hak Akses
             Route::patch('/{id}/role', [UserAccountController::class, 'updateRole']); 
+            
+            // Blokir / Aktifkan Akun (Suspend)
             Route::patch('/{id}/status', [UserAccountController::class, 'updateStatus']); 
         });
 
         // 3. MASTER DATA & SETTINGS
         Route::prefix('master')->group(function() {
             
-            // [API BARU] Unit Kerja Resource
+            // Unit Kerja Resource
             Route::apiResource('unit-kerja', UnitKerjaController::class);
 
-            // [API BARU] Jabatan Resource
+            // Jabatan Resource
             Route::apiResource('jabatan', JabatanController::class);
 
-            // [API BARU] Bidang Resource
+            // Bidang Resource
             Route::apiResource('bidang', BidangController::class);
 
-            // Tupoksi
+            // Tupoksi (Legacy Controller)
             Route::get('tupoksi', [MasterDataController::class, 'indexTupoksi']);
             Route::post('tupoksi', [MasterDataController::class, 'storeTupoksi']);
             Route::put('tupoksi/{id}', [MasterDataController::class, 'updateTupoksi']);
@@ -143,7 +149,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('settings', [SystemSettingController::class, 'index']);
         Route::post('settings', [SystemSettingController::class, 'update']);
 
-        //Import CSV
+        // Import CSV Pegawai
         Route::post('pegawai/import', [UserImportController::class, 'import']);
     });
 

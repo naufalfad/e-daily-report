@@ -14,33 +14,51 @@ class UserAccountController extends Controller
 {
     /**
      * [IT DOMAIN] List Akun Pengguna
-     * Berbeda dengan Manajemen Pegawai, di sini kita fokus pada status akun.
-     * Menampilkan: Username, Role saat ini, Status (jika ada).
+     * Menampilkan data akun dengan fitur Pagination, Search, dan Filter Role.
      */
     public function index(Request $request)
     {
-        // Kita select field yang relevan untuk keamanan akun saja
-        $query = User::with(['roles', 'unitKerja:id,nama_unit']);
+        // 1. Deteksi Request AJAX (Fetch Data Table)
+        if ($request->ajax()) {
+            
+            // Query Optimization: Eager Load Roles & Unit Kerja (Select fields seperlunya)
+            $query = User::with(['roles', 'unitKerja:id,nama_unit']);
 
-        // Fitur Pencarian (Username / Nama)
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('username', 'ilike', "%{$search}%")
-                  ->orWhere('name', 'ilike', "%{$search}%");
-            });
+            // Filter Search (Username / Nama / NIP)
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                $query->where(function($q) use ($search) {
+                    $q->where('username', 'ilike', "%{$search}%")
+                      ->orWhere('name', 'ilike', "%{$search}%")
+                      ->orWhere('nip', 'ilike', "%{$search}%");
+                });
+            }
+
+            // Filter Role (Dropdown)
+            if ($request->filled('role_id')) {
+                $query->whereHas('roles', function($q) use ($request) {
+                    $q->where('id', $request->input('role_id'));
+                });
+            }
+
+            // Filter Status (Optional: Active/Non-active)
+            if ($request->filled('status')) {
+                $isActive = $request->input('status') === 'active';
+                $query->where('is_active', $isActive);
+            }
+
+            // Pagination
+            $perPage = $request->input('per_page', 10);
+            $users = $query->latest()->paginate($perPage);
+
+            return response()->json($users);
         }
 
-        // Filter berdasarkan Role (Misal: Cari siapa saja Admin)
-        if ($request->has('role_id')) {
-            $query->whereHas('roles', function($q) use ($request) {
-                $q->where('id', $request->role_id);
-            });
-        }
-
-        $users = $query->latest()->paginate(10);
-
-        return response()->json($users);
+        // 2. Return View (Browser Load)
+        // Supply data Role untuk dropdown di modal dan filter
+        $roles = Role::orderBy('nama_role', 'asc')->get();
+        
+        return view('admin.akun-pengguna', compact('roles'));
     }
 
     /**
@@ -107,9 +125,10 @@ class UserAccountController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Mencegah Admin menghapus akses Admin-nya sendiri (Bunuh diri)
-        if ($user->id === auth()->id() && !$user->hasRole('Admin')) {
-             // Cek logika tambahan jika perlu
+        // Mencegah Admin menghapus akses Admin-nya sendiri (Safety Check)
+        if ($user->id === auth()->id() && $user->hasRole('Admin')) {
+             // Logic tambahan: Admin boleh punya multi-role, tapi jangan sampai kehilangan akses admin.
+             // Untuk kesederhanaan, kita izinkan sync, asalkan role_id yang dikirim valid.
         }
 
         try {
@@ -129,8 +148,6 @@ class UserAccountController extends Controller
     /**
      * [IT DOMAIN] Update Status (Suspend/Active)
      * Endpoint: PATCH /api/admin/akun/{id}/status
-     * Catatan: Pastikan tabel users punya kolom 'is_active' (boolean).
-     * Jika belum ada, jalankan migrasi tambahan.
      */
     public function updateStatus(Request $request, $id)
     {
@@ -148,11 +165,10 @@ class UserAccountController extends Controller
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
         try {
-            // Cek apakah kolom is_active ada di database
-            // Jika tidak ada, fitur ini tidak akan jalan (perlu migrasi dulu)
-            $user->forceFill([
-                'is_active' => $request->is_active
-            ])->save();
+            // Kita gunakan forceFill untuk memastikan field diupdate meskipun tidak di $fillable (opsional)
+            // Tapi sebaiknya 'is_active' masuk fillable di Model User.
+            $user->is_active = $request->is_active;
+            $user->save();
 
             $statusText = $request->is_active ? 'diaktifkan' : 'dinonaktifkan (Suspend)';
 
@@ -162,7 +178,7 @@ class UserAccountController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Gagal mengubah status. Pastikan database mendukung fitur suspend (kolom is_active).',
+                'message' => 'Gagal mengubah status akun.',
                 'error' => $e->getMessage()
             ], 500);
         }

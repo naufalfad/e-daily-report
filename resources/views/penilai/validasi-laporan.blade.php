@@ -21,17 +21,17 @@ $rows = [
 @section('content')
 
 {{-- Main Container --}}
-<div class="flex flex-col h-full space-y-6">
+<div class="flex flex-col h-full">
 
-    {{-- Header Section & Filter Toolbar (DIPERBAIKI) --}}
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    {{-- Header Section & Filter Toolbar --}}
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-2 mb-3">
         <div>
             <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Validasi Laporan</h2>
             <p class="text-sm text-slate-500 mt-1">Tinjau dan validasi laporan kinerja harian pegawai.</p>
         </div>
 
         {{-- Filter Group --}}
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-3">
 
             {{-- 1. Filter Status --}}
             <div class="relative">
@@ -82,7 +82,7 @@ $rows = [
                 </div>
             </div>
 
-            {{-- 4. Search Bar (Diberi ID filter-search) --}}
+            {{-- 4. Search Bar --}}
             <div class="relative group">
                 <input type="text" id="filter-search" placeholder="Cari pegawai..."
                     class="pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all w-64 shadow-sm">
@@ -113,32 +113,25 @@ $rows = [
                 </thead>
                 <tbody class="divide-y divide-slate-100 bg-white" id="lkh-validation-list">
                     {{-- 
-                        DATA DUMMY RENDER (Hanya untuk initial view sebelum JS mengambil alih)
+                        DATA DUMMY RENDER 
                     --}}
                     @foreach($rows as $row)
                     <tr class="hover:bg-slate-50/80 transition-colors group">
-                        {{-- Tanggal --}}
                         <td class="px-6 py-4 align-top">
                             <div class="text-sm font-semibold text-slate-700">
                                 {{ explode('|', $row['tanggal_dikirim'])[0] }}</div>
                             <div class="text-xs text-slate-400 mt-1 font-medium">
                                 {{ explode('|', $row['tanggal_dikirim'])[1] ?? '' }}</div>
                         </td>
-
-                        {{-- Kegiatan --}}
                         <td class="px-6 py-4 align-top">
                             <div class="text-sm font-medium text-slate-900">{{ $row['nama_kegiatan'] }}</div>
                         </td>
-
-                        {{-- Waktu --}}
                         <td class="px-6 py-4 align-top">
                             <span
                                 class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                                 {{ $row['waktu'] }}
                             </span>
                         </td>
-
-                        {{-- Pegawai --}}
                         <td class="px-6 py-4 align-top">
                             <div class="flex items-center gap-3">
                                 <div
@@ -149,8 +142,6 @@ $rows = [
                                     class="text-sm text-slate-700 font-medium truncate max-w-[150px]">{{ $row['pegawai'] }}</span>
                             </div>
                         </td>
-
-                        {{-- Lokasi --}}
                         <td class="px-6 py-4 align-top">
                             <div class="text-sm text-slate-500 flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
@@ -163,16 +154,12 @@ $rows = [
                                 {{ $row['lokasi'] }}
                             </div>
                         </td>
-
-                        {{-- Status --}}
                         <td class="px-6 py-4 align-top text-center">
                             <span
                                 class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-100">
                                 Pending
                             </span>
                         </td>
-
-                        {{-- Aksi --}}
                         <td class="px-6 py-4 align-top text-right">
                             <button
                                 class="js-open-detail text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline decoration-blue-600/30 underline-offset-4 transition-all">
@@ -185,19 +172,34 @@ $rows = [
             </table>
         </div>
 
-        {{-- Footer Table (Pagination Control - DIPERBAIKI) --}}
-        <div class="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between"
+        {{-- 
+            MODIFIKASI PAGINATION WRAPPER 
+            Menambahkan container #pagination-numbers di antara tombol Prev dan Next
+        --}}
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4"
             id="pagination-wrapper">
-            <span class="text-xs text-slate-500" id="pagination-info">Menampilkan data...</span>
-            <div class="flex gap-2">
+            
+            {{-- Info Paginasi --}}
+            <span class="text-xs text-slate-500 font-medium" id="pagination-info">Menyiapkan data...</span>
+            
+            {{-- Kontrol Paginasi --}}
+            <div class="flex items-center gap-1">
+                {{-- Tombol Previous --}}
                 <button id="prev-page"
-                    class="p-1 text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed">
+                    class="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-lg hover:bg-slate-50 active:bg-slate-100">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
+
+                {{-- Container Angka Halaman (Akan diisi oleh JS) --}}
+                <div id="pagination-numbers" class="flex items-center gap-1">
+                    {{-- JS injection point: <button class="...">1</button> ... --}}
+                </div>
+
+                {{-- Tombol Next --}}
                 <button id="next-page"
-                    class="p-1 text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed">
+                    class="p-2 text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-lg hover:bg-slate-50 active:bg-slate-100">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -391,7 +393,7 @@ $rows = [
     </div>
 </div>
 
-{{-- ================= MODAL APPROVE (TIDAK BERUBAH) ================= --}}
+{{-- ================= MODAL APPROVE ================= --}}
 <div id="modal-approve" class="fixed inset-0 z-[60] hidden items-center justify-center" role="dialog">
     <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px]"></div>
     <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">
@@ -419,7 +421,7 @@ $rows = [
     </div>
 </div>
 
-{{-- ================= MODAL REJECT (TIDAK BERUBAH) ================= --}}
+{{-- ================= MODAL REJECT ================= --}}
 <div id="modal-reject" class="fixed inset-0 z-[60] hidden items-center justify-center" role="dialog">
     <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px]"></div>
     <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden transform transition-all">

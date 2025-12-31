@@ -16,7 +16,7 @@ class ValidatorController extends Controller
 {
     /**
      * 1. LIST LKH BAWAHAN (Inbox Validasi)
-     * [REFACTORED] Filter lengkap server-side
+     * [REFACTORED] Filter lengkap server-side & Dynamic Pagination
      */
     public function index(Request $request)
     {
@@ -63,7 +63,18 @@ class ValidatorController extends Controller
         $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
             ->latest('tanggal_laporan');
 
-        $data = $query->paginate(10);
+        // --- PAGINATION LOGIC UPDATE ---
+        // Mengizinkan frontend meminta jumlah baris per halaman (default: 10)
+        // Sanitasi: Pastikan integer, minimal 1, dan maksimal 100 untuk performa.
+        $perPage = (int) $request->input('per_page', 10);
+        if ($perPage <= 0 || $perPage > 100) {
+            $perPage = 10;
+        }
+
+        // paginate() mengembalikan object LengthAwarePaginator
+        // Saat di-return sebagai JSON, strukturnya otomatis mencakup:
+        // current_page, data[], first_page_url, last_page, links[], total, dll.
+        $data = $query->paginate($perPage);
 
         return response()->json($data);
     }

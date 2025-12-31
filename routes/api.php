@@ -30,6 +30,7 @@ use App\Http\Controllers\Core\KadisValidatorController;
 use App\Http\Controllers\Core\PetaAktivitasController;
 use App\Http\Controllers\Core\BidangSkoringController; 
 use App\Http\Controllers\Core\UserImportController;
+use App\Http\Controllers\Core\SkoringController;
 
 
 /*
@@ -254,7 +255,7 @@ Route::middleware('auth:sanctum')->group(function () {
     | I. SKORING KINERJA (BAWAHAN)
     |--------------------------------------------------------------------------
     */
-    Route::get('/skoring-kinerja', [SkpController::class, 'getSkoringData']);
+    Route::get('/skoring-kinerja', [SkoringController::class, 'index']);
 
 
     /*

@@ -1,55 +1,87 @@
 <?php
 
 namespace App\Http\Controllers\Core;
+
 use App\Http\Controllers\Controller;
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\User;
+use App\Services\SkoringService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class SkoringController extends Controller
 {
-    public function exportPdf()
+    protected $skoringService;
+
+    /**
+     * Inject SkoringService agar controller tetap 'Slim'.
+     * Logika bisnis didelegasikan ke Service.
+     */
+    public function __construct(SkoringService $skoringService)
     {
-        // [FIX LOGIC] Ambil User Fresh dari DB + Load Relasi UnitKerja & Bidang
-        // Jangan cuma auth()->user(), karena relasi unitKerja belum tentu ke-load
+        $this->skoringService = $skoringService;
+    }
+
+    /**
+     * API Endpoint untuk mengambil data tabel & statistik di halaman web.
+     * Route: GET /api/skoring-kinerja
+     * Menerima parameter: month, year, search
+     */
+    public function index(Request $request)
+    {
+        $atasanId = auth()->id();
+        
+        // 1. Penangkapan Parameter Filter dari Request Frontend
+        $month  = $request->input('month');
+        $year   = $request->input('year');
+        $search = $request->input('search');
+
+        // 2. Distribusi Parameter ke Service
+        // Service akan mengembalikan Collection data yang sudah dihitung & difilter
+        $data = $this->skoringService->getBawahanReports($atasanId, $month, $year, $search);
+
+        return response()->json([
+            'message' => 'Data skoring berhasil dimuat',
+            'data'    => $data
+        ]);
+    }
+
+    /**
+     * Generate PDF Laporan Kinerja.
+     * Route: GET /penilai/skoring/export-pdf
+     * Menerima parameter: month, year (via Query String)
+     */
+    public function exportPdf(Request $request)
+    {
+        // 1. Ambil User Atasan (Untuk Header Laporan)
         $atasan = User::with(['unitKerja', 'bidang', 'jabatan'])
                     ->find(auth()->id());
 
-        // Ambil bawahan (Logic tetap sama, sudah benar)
-        $bawahan = User::where('atasan_id', $atasan->id)
-            ->with('unitKerja') // Ini untuk tabel bawahan
-            ->get()
-            ->map(function ($item) {
-                $validStatuses = ['approved', 'rejected']; 
-                $item->total_lkh = $item->lkh()
-                ->whereIn('status', $validStatuses)
-                ->count();
-                $item->acc_lkh = $item->lkh()
-                ->where('status', 'approved')
-                ->count();
-                $item->skor = $item->total_lkh > 0
-                    ? round(($item->acc_lkh / $item->total_lkh) * 100)
-                    : 0;
+        // 2. Penangkapan Parameter Filter dari URL
+        // Contoh: /export-pdf?month=5&year=2024
+        $month = $request->input('month');
+        $year  = $request->input('year');
 
-                $item->predikat = $item->skor >= 90 ? 'Sangat Baik' :
-                    ($item->skor >= 75 ? 'Baik' :
-                        ($item->skor >= 60 ? 'Cukup' : 'Kurang'));
+        // 3. Distribusi Parameter ke Service
+        // Kita tidak mengirim 'search' karena laporan PDF biasanya mencetak semua bawahan
+        $bawahan = $this->skoringService->getBawahanReports($atasan->id, $month, $year);
 
-                return $item;
-            });
+        // 4. Hitung Statistik Agregat (Header Laporan PDF)
+        $avgScore  = $bawahan->avg('capaian') ?? 0;
+        $pembinaan = $bawahan->where('capaian', '<', 60)->count();
 
-        // Statistik
-        $avgScore = $bawahan->avg('skor') ?? 0;
-        $pembinaan = $bawahan->where('skor', '<', 60)->count();
-
-        // Render PDF
-        $pdf = PDF::loadView('pdf.skoring-kinerja', [
-            'atasan' => $atasan,
-            'bawahan' => $bawahan,
-            'avgScore' => $avgScore,
-            'pembinaan' => $pembinaan
+        // 5. Render PDF dengan Data yang Terfilter
+        $pdf = Pdf::loadView('pdf.skoring-kinerja', [
+            'atasan'    => $atasan,
+            'bawahan'   => $bawahan,
+            'avgScore'  => round($avgScore, 1),
+            'pembinaan' => $pembinaan,
+            'periode'   => [
+                // Jika null, gunakan bulan/tahun saat ini untuk label
+                'bulan' => $month ?? now()->month,
+                'tahun' => $year ?? now()->year
+            ]
         ])->setPaper('a4', 'portrait');
 
-        return $pdf->stream('Laporan Skoring Kinerja.pdf');
+        return $pdf->stream('Laporan_Skoring_Kinerja.pdf');
     }
-
 }

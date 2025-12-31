@@ -30,6 +30,7 @@ import { riwayatDataPenilai } from './pages/penilai/riwayat.js';
 import { riwayatDataStaf} from './pages/staf/riwayat.js';
 import { logActivityKadis } from './pages/kadis/log-aktivitas.js';
 import { logActivityDataAdmin } from './pages/admin/log-aktivitas.js';
+import { riwayatCore } from './public/riwayat-core.js';
 
 
 // =========================
@@ -49,6 +50,7 @@ Alpine.data('riwayatDataPenilai', riwayatDataPenilai);
 Alpine.data('riwayatDataStaf', riwayatDataStaf);
 Alpine.data('logActivityKadis', logActivityKadis);
 Alpine.data('logActivityDataAdmin', logActivityDataAdmin);
+Alpine.data('riwayatCore', riwayatCore);
 
 
 // =========================
@@ -63,6 +65,7 @@ Alpine.start();
 import './global/loader.js';
 import './global/notification.js';
 import './utils/auth-fetch';
+import './public/riwayat-core.js';
 
 // =========================
 // STAF

@@ -2,25 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------------------------------------- */
+/* GLOBAL UTILITIES & HELPERS                                                 */
+/* -------------------------------------------------------------------------- */
+
 /* [WAJIB] Alpine.js Cloak - Mencegah element 'kedip' sebelum JS load */
 [x-cloak] {
     display: none !important;
 }
 
-/* Warna placeholder (tanggal sebelum dipilih) */
+/* Warna placeholder input type date (tanggal sebelum dipilih) */
 .tanggal-placeholder::-webkit-datetime-edit-text,
 .tanggal-placeholder::-webkit-datetime-edit-month-field,
 .tanggal-placeholder::-webkit-datetime-edit-day-field,
 .tanggal-placeholder::-webkit-datetime-edit-year-field {
-    color: #9CA3AF; /* abu-abu placeholder */
+    color: #9CA3AF; /* gray-400 */
 }
 
 /* Setelah user memilih tanggal → warna normal */
 .tanggal-placeholder:not(:placeholder-shown) {
-    color: #374151; /* slate-700 */
+    color: #374151; /* gray-700 */
 }
 
-/* HIDE SCROLLBAR (Cross‑Browser) */
+/* -------------------------------------------------------------------------- */
+/* SCROLLBAR CUSTOMIZATION                                                    */
+/* -------------------------------------------------------------------------- */
+
+/* 1. HIDE SCROLLBAR (Cross‑Browser) */
+/* Digunakan untuk container yang bisa discroll tapi tidak ingin bar terlihat */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
@@ -31,6 +40,7 @@
     scroll-behavior: smooth;
 }
 
+/* 2. SIDEBAR SCROLL (Tipis & Transparan) */
 .sidebar-scroll {
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.4) transparent;
@@ -49,18 +59,109 @@
     background: transparent;
 }
 
-/* Scrollbar Tipis & Elegan */
+/* 3. GENERAL CONTENT SCROLL (Tipis & Elegan) */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
+    height: 6px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
     background: #f1f5f9; /* slate-100 */
-    border-radius: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1; /* slate-300 */
+    background-color: #cbd5e1; /* slate-300 */
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8; /* slate-400 */
+}
+
+/* -------------------------------------------------------------------------- */
+/* [BARU] MAP & GEOTAGGING COMPONENTS                                         */
+/* -------------------------------------------------------------------------- */
+
+/* Scrollbar khusus untuk dropdown hasil pencarian peta */
+.map-search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.map-search-results::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+.map-search-results::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
     border-radius: 4px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8; /* slate-400 */
+
+.map-search-results::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Animasi Pin Melompat (Saat peta digeser/drag end) */
+@keyframes pinJump {
+    0% { transform: translate(-50%, -50%) translateY(0); }
+    50% { transform: translate(-50%, -50%) translateY(-15px); }
+    100% { transform: translate(-50%, -50%) translateY(-15px); }
+}
+
+@keyframes pinLand {
+    0% { transform: translate(-50%, -50%) translateY(-15px); }
+    100% { transform: translate(-50%, -50%) translateY(0); }
+}
+
+/* Animasi Bayangan Pin (Efek realistis saat pin terangkat) */
+@keyframes shadowShrink {
+    0% { transform: scale(1); opacity: 0.4; }
+    100% { transform: scale(0.6); opacity: 0.2; }
+}
+
+@keyframes shadowGrow {
+    0% { transform: scale(0.6); opacity: 0.2; }
+    100% { transform: scale(1); opacity: 0.4; }
+}
+
+/* Utility Class untuk trigger animasi via JS */
+.animate-pin-jump {
+    animation: pinJump 0.3s ease-out forwards;
+}
+
+.animate-pin-land {
+    animation: pinLand 0.3s ease-in forwards;
+}
+
+.animate-shadow-shrink {
+    animation: shadowShrink 0.3s ease-out forwards;
+}
+
+.animate-shadow-grow {
+    animation: shadowGrow 0.3s ease-in forwards;
+}
+
+/* Leaflet UI Overrides (Opsional: Mempercantik kontrol bawaan Leaflet) */
+.leaflet-touch .leaflet-bar a {
+    width: 34px;
+    height: 34px;
+    line-height: 34px;
+    color: #475569; /* slate-600 */
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.leaflet-touch .leaflet-bar a:hover {
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+
+/* Hilangkan border radius yang menumpuk dari Leaflet default */
+.leaflet-touch .leaflet-bar {
+    border: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }

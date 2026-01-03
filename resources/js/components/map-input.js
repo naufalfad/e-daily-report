@@ -1,7 +1,7 @@
 /**
  * @file resources/js/components/map-input.js
  * @description Modul kontroler untuk Unified Map Interface (Fullscreen Mode).
- * Termasuk: Caching Logic, Red Pin, Inline SVG Controls.
+ * Termasuk: Caching Logic, Red Pin, Inline SVG Controls, dan Current Location.
  *
  * @author Senior Software Architect
  */
@@ -15,6 +15,7 @@ export default class MapInput {
 
         this.config = config;
         this.map = null;
+        this.marker = null;
         this.isInitialized = false;
         
         // State Management
@@ -38,374 +39,382 @@ export default class MapInput {
             btnOpen: document.getElementById('btnOpenMap'),
             btnClose: document.getElementById('btnCloseMap'),
             btnConfirm: document.getElementById('btnConfirmLocation'),
+            btnLocateMe: document.getElementById('btnLocateMe'), // [BARU] Tombol Locate Me
             
             // Floating Controls
             searchInput: document.getElementById('mapSearchInput'),
             searchResults: document.getElementById('mapSearchResults'),
+            btnLayerSatellite: document.getElementById('btnLayerSatellite'),
             btnUndo: document.getElementById('btnUndoMap'),
-            btnLayerSat: document.getElementById('btnLayerSatellite'),
             
-            // Info Display
-            addressPreview: document.getElementById('mapAddressPreview'),
-            coordsPreview: document.getElementById('mapCoordsPreview'),
-            
-            // Main Form Inputs (Hidden/Readonly)
+            // Inputs Form Utama (Target Pengisian)
             inputLat: document.getElementById('input_lat'),
             inputLng: document.getElementById('input_lng'),
-            inputAddress: document.getElementById('input_lokasi_teks'), // Nama Tempat/Jalan
-            inputAddressAuto: document.getElementById('input_address_auto'), // Alamat Lengkap
+            inputAddress: document.getElementById('input_lokasi_teks'),
+            inputAddressAuto: document.getElementById('input_address_auto'),
             inputProvider: document.getElementById('input_provider'),
-            previewInput: document.getElementById('preview_lokasi')
+            previewInput: document.getElementById('preview_lokasi'),
+            
+            // UI Preview di dalam Modal
+            modalAddressPreview: document.getElementById('mapAddressPreview'),
+            modalCoordsPreview: document.getElementById('mapCoordsPreview'),
         };
 
-        // 3. Bind Events
-        this.initEventListeners();
+        // Bind methods agar 'this' tetap merujuk ke instance class
+        this.init = this.init.bind(this);
+        this.openMap = this.openMap.bind(this);
+        this.closeMap = this.closeMap.bind(this);
+        this.handleSearchInput = this.handleSearchInput.bind(this);
+        this.handleMapMove = this.handleMapMove.bind(this);
+        this.confirmLocation = this.confirmLocation.bind(this);
+        this.toggleLayer = this.toggleLayer.bind(this);
+        this.handleUndo = this.handleUndo.bind(this);
+        this.handleLocateMe = this.handleLocateMe.bind(this); // [BARU]
+
+        // Jalankan inisialisasi listener
+        this.init();
     }
 
-    initEventListeners() {
-        // Buka Modal -> Init Map
+    /**
+     * Inisialisasi Event Listener
+     */
+    init() {
         if (this.dom.btnOpen) {
-            this.dom.btnOpen.addEventListener('click', () => this.openMap());
+            this.dom.btnOpen.addEventListener('click', this.openMap);
         }
-
-        // Tutup Modal
         if (this.dom.btnClose) {
-            this.dom.btnClose.addEventListener('click', () => this.closeMap());
+            this.dom.btnClose.addEventListener('click', this.closeMap);
         }
-
-        // Konfirmasi Lokasi
         if (this.dom.btnConfirm) {
-            this.dom.btnConfirm.addEventListener('click', () => this.confirmLocation());
+            this.dom.btnConfirm.addEventListener('click', this.confirmLocation);
         }
-
-        // Search Input (Debounce & Enter)
+        
+        // Search Input dengan Debounce
         if (this.dom.searchInput) {
-            this.dom.searchInput.addEventListener('input', (e) => this.handleSearchInput(e.target.value));
-            this.dom.searchInput.addEventListener('keydown', (e) => {
-                if(e.key === 'Enter') this.searchLocation(e.target.value);
+            this.dom.searchInput.addEventListener('input', (e) => {
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => this.handleSearchInput(e.target.value), 500);
             });
         }
 
-        // Undo Button
-        if (this.dom.btnUndo) {
-            this.dom.btnUndo.addEventListener('click', () => this.undoLastMove());
+        // Layer Control
+        if (this.dom.btnLayerSatellite) {
+            this.dom.btnLayerSatellite.addEventListener('click', this.toggleLayer);
         }
 
-        // Layer Switcher
-        if (this.dom.btnLayerSat) {
-            this.dom.btnLayerSat.addEventListener('click', () => this.toggleLayer());
+        // Undo Control
+        if (this.dom.btnUndo) {
+            this.dom.btnUndo.addEventListener('click', this.handleUndo);
+        }
+
+        // [BARU] Locate Me Control
+        if (this.dom.btnLocateMe) {
+            this.dom.btnLocateMe.addEventListener('click', this.handleLocateMe);
         }
     }
 
+    /**
+     * Membuka Modal dan Inisialisasi Peta (Lazy Load)
+     */
     openMap() {
         this.dom.modal.classList.remove('hidden');
-        this.dom.modal.classList.add('flex'); // Gunakan flex agar centering content jalan
-
+        this.dom.modal.classList.add('flex');
+        
         if (!this.isInitialized) {
-            this.initMapInstance();
+            this.initLeaflet();
+            this.isInitialized = true;
         } else {
-            this.map.invalidateSize(); // Refresh layout leaflet saat modal visible
-            
-            // Panggil logika penentuan lokasi pintar
-            this.determineInitialLocation();
+            // Refresh ukuran peta agar tidak abu-abu
+            setTimeout(() => {
+                this.map.invalidateSize();
+            }, 200);
         }
+
+        // Reset pencarian
+        if(this.dom.searchInput) this.dom.searchInput.value = '';
+        if(this.dom.searchResults) {
+            this.dom.searchResults.innerHTML = '';
+            this.dom.searchResults.classList.add('hidden');
+        }
+
+        // Tentukan Lokasi Awal
+        this.determineInitialLocation();
     }
 
+    /**
+     * Menutup Modal
+     */
     closeMap() {
         this.dom.modal.classList.add('hidden');
         this.dom.modal.classList.remove('flex');
     }
 
-    initMapInstance() {
-        // Default Jakarta
-        const defaultCenter = [-6.200000, 106.816666];
+    /**
+     * Setup Leaflet JS
+     */
+    initLeaflet() {
+        // Default ke Mimika jika tidak ada koordinat
+        const defaultLat = -4.546759;
+        const defaultLng = 136.883713;
 
-        // 1. Layers Setup
+        // Inisialisasi Map
+        this.map = L.map(this.config.mapContainerId, {
+            center: [defaultLat, defaultLng],
+            zoom: 13,
+            zoomControl: false // Kita pakai tombol custom kalau perlu, atau default di pojok
+        });
+
+        // Pindahkan Zoom Control ke pojok kanan bawah agar rapi
+        L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+
+        // Setup Tile Layers
         this.layers = {
             roadmap: L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-                maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: 'Google Maps'
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: 'Google Maps'
             }),
             satellite: L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-                maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: 'Google Satellite'
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: 'Google Satellite'
             })
         };
 
-        // 2. Create Map (Zoom Control di-offkan dulu agar bisa custom posisi nanti jika mau, atau pakai default)
-        this.map = L.map(this.config.mapContainerId, {
-            center: defaultCenter,
-            zoom: 13,
-            layers: [this.layers.roadmap], // Default layer
-            zoomControl: false // Kita pakai tombol custom/default di posisi lain
+        this.layers.roadmap.addTo(this.map);
+
+        // Event Listener saat peta digeser selesai
+        this.map.on('moveend', () => {
+            if (this.isUndoAction) {
+                this.isUndoAction = false;
+                return;
+            }
+            this.handleMapMove();
         });
-
-        L.control.zoom({ position: 'bottomright' }).addTo(this.map);
-
-        // 3. Event Listeners Core (Fixed Center Pin Logic)
-        this.map.on('moveend', () => this.handleMapMoveEnd());
-        this.map.on('movestart', () => {
-            this.dom.addressPreview.textContent = "Menggeser peta...";
-            this.dom.addressPreview.classList.add('text-slate-400');
-        });
-
-        this.isInitialized = true;
-        this.currentLayer = 'roadmap';
-
-        // Panggil penentuan lokasi awal
-        this.determineInitialLocation();
     }
 
     /**
-     * SMART LOCATION LOGIC
-     * 1. Cek apakah sedang Edit (ada value di hidden input).
-     * 2. Jika tidak, cek LocalStorage (Cache).
-     * 3. Jika tidak, minta GPS.
+     * Logika Penentuan Lokasi Awal (Priority System)
      */
     determineInitialLocation() {
-        const editLat = parseFloat(this.dom.inputLat.value);
-        const editLng = parseFloat(this.dom.inputLng.value);
-        
-        const cachedLat = parseFloat(localStorage.getItem(this.CACHE_KEY_LAT));
-        const cachedLng = parseFloat(localStorage.getItem(this.CACHE_KEY_LNG));
+        const editLat = this.dom.inputLat.value;
+        const editLng = this.dom.inputLng.value;
+        const cachedLat = localStorage.getItem(this.CACHE_KEY_LAT);
+        const cachedLng = localStorage.getItem(this.CACHE_KEY_LNG);
 
-        if (!isNaN(editLat) && !isNaN(editLng) && editLat !== 0) {
-            // Priority 1: Edit Mode
+        if (editLat && editLng) {
+            // Prioritas 1: Data Edit
+            this.updateMarker(parseFloat(editLat), parseFloat(editLng));
             this.map.setView([editLat, editLng], 18);
-            this.fetchAddress(editLat, editLng); // Refresh alamat
-        } else if (!isNaN(cachedLat) && !isNaN(cachedLng)) {
-            // Priority 2: Cache / History
-            this.map.setView([cachedLat, cachedLng], 17);
-            this.fetchAddress(cachedLat, cachedLng);
-            console.log("Restored location from cache");
+        } else if (cachedLat && cachedLng) {
+            // Prioritas 2: Cache Terakhir
+            this.updateMarker(parseFloat(cachedLat), parseFloat(cachedLng));
+            this.map.setView([cachedLat, cachedLng], 15);
         } else {
-            // Priority 3: Fresh GPS
-            this.locateUser();
+            // Prioritas 3: GPS Browser
+            this.handleLocateMe(); // Gunakan fungsi locate me untuk inisialisasi juga
         }
     }
 
-    // --- Core Logic: Map Movement & Reverse Geocoding ---
+    /**
+     * [BARU] Handle Tombol Locate Me (GPS)
+     */
+    handleLocateMe() {
+        if (!navigator.geolocation) {
+            alert("Browser Anda tidak mendukung Geolocation.");
+            return;
+        }
 
-    handleMapMoveEnd() {
+        // Visual Feedback: Ubah icon jadi spinner
+        const originalIcon = this.dom.btnLocateMe.innerHTML;
+        this.dom.btnLocateMe.innerHTML = `
+            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        `;
+        this.dom.btnLocateMe.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy; // Akurasi dalam meter
+
+                // Update Peta
+                this.updateMarker(lat, lng);
+                this.map.flyTo([lat, lng], 18, {
+                    animate: true,
+                    duration: 1.5
+                });
+
+                // Update Provider Metadata menjadi GPS Device
+                if(this.dom.inputProvider) this.dom.inputProvider.value = 'gps_device';
+
+                // Kembalikan Icon
+                this.dom.btnLocateMe.innerHTML = originalIcon;
+                this.dom.btnLocateMe.disabled = false;
+                
+                console.log(`GPS Locked: ${lat}, ${lng} (Akurasi: ${accuracy}m)`);
+            },
+            (error) => {
+                console.error("Error Geolocation:", error);
+                
+                let msg = "Gagal mengambil lokasi.";
+                if(error.code === 1) msg = "Izin lokasi ditolak. Mohon aktifkan izin lokasi di browser.";
+                else if(error.code === 2) msg = "Sinyal GPS tidak tersedia.";
+                else if(error.code === 3) msg = "Waktu permintaan habis (timeout).";
+
+                alert(msg);
+
+                // Kembalikan Icon
+                this.dom.btnLocateMe.innerHTML = originalIcon;
+                this.dom.btnLocateMe.disabled = false;
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    /**
+     * Update State saat peta digeser (Center Pivot)
+     */
+    async handleMapMove() {
         const center = this.map.getCenter();
         const lat = center.lat;
         const lng = center.lng;
 
-        // Update UI Koordinat
-        this.dom.coordsPreview.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-
-        // Push to History (Only if not undo action)
-        if (!this.isUndoAction) {
-            this.addToHistory({ lat, lng, zoom: this.map.getZoom() });
-        }
-        this.isUndoAction = false; // Reset flag
-
-        // Trigger Reverse Geocoding (Debounced 800ms)
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = setTimeout(() => {
-            this.fetchAddress(lat, lng);
-        }, 800);
-    }
-
-    addToHistory(state) {
-        // Batasi stack history maks 10 langkah
-        if (this.historyStack.length >= 10) {
-            this.historyStack.shift(); // Hapus yang terlama
-        }
+        // Push ke history stack untuk fitur Undo
+        this.historyStack.push({ lat, lng });
+        if (this.historyStack.length > 10) this.historyStack.shift(); // Limit history
         
-        // Jangan simpan duplikat berturut-turut
-        const last = this.historyStack[this.historyStack.length - 1];
-        // Cegah duplikat stack yg berdekatan (kurang dari 0.00001 derajat)
-        if (last && Math.abs(last.lat - state.lat) < 0.00001 && Math.abs(last.lng - state.lng) < 0.00001) return;
+        // Aktifkan tombol Undo jika ada history
+        if(this.dom.btnUndo) this.dom.btnUndo.disabled = this.historyStack.length <= 1;
 
-        this.historyStack.push(state);
-        
-        // Enable/Disable Undo Button UI
-        this.updateUndoButtonState();
-    }
+        // Update UI Preview Coordinates
+        if(this.dom.modalCoordsPreview) this.dom.modalCoordsPreview.innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = "Memuat alamat...";
 
-    undoLastMove() {
-        if (this.historyStack.length < 2) return; // Butuh min 2 state (current & previous)
-
-        this.historyStack.pop(); // Buang state "sekarang"
-        const prevState = this.historyStack[this.historyStack.length - 1]; // Ambil state "sebelumnya"
-
-        if (prevState) {
-            this.isUndoAction = true; // Tandai agar tidak masuk history lagi
-            this.map.flyTo([prevState.lat, prevState.lng], prevState.zoom);
-        }
-        
-        this.updateUndoButtonState();
-    }
-
-    updateUndoButtonState() {
-        if(this.dom.btnUndo) {
-            if (this.historyStack.length > 1) {
-                // Style Active
-                this.dom.btnUndo.classList.remove('text-slate-400', 'cursor-not-allowed');
-                this.dom.btnUndo.classList.add('text-slate-700', 'hover:text-[#155FA6]');
-                this.dom.btnUndo.disabled = false;
-            } else {
-                // Style Disabled
-                this.dom.btnUndo.classList.add('text-slate-400', 'cursor-not-allowed');
-                this.dom.btnUndo.classList.remove('text-slate-700', 'hover:text-[#155FA6]');
-                this.dom.btnUndo.disabled = true;
-            }
-        }
-    }
-
-    // --- API Interactions ---
-
-    locateUser() {
-        if (!navigator.geolocation) {
-            alert("Browser tidak mendukung GPS");
-            return;
-        }
-
-        this.dom.addressPreview.textContent = "Mencari sinyal GPS...";
-        
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const { latitude, longitude } = pos.coords;
-                this.map.flyTo([latitude, longitude], 18, {
-                    animate: true, duration: 1.5
-                });
-                // Note: moveend will trigger handleMapMoveEnd automatically
-            },
-            (err) => {
-                console.error(err);
-                this.dom.addressPreview.textContent = "Gagal mengambil GPS. Silakan geser peta.";
-            },
-            { enableHighAccuracy: true, timeout: 5000 }
-        );
-    }
-
-    async fetchAddress(lat, lng) {
-        this.dom.addressPreview.classList.remove('text-slate-400');
-        this.dom.addressPreview.innerHTML = '<span class="animate-pulse">Mengambil alamat...</span>';
-
+        // Reverse Geocoding (Nominatim)
         try {
-            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
-            const res = await fetch(url, { headers: { 'User-Agent': 'EDailyReport/1.0' } });
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+                headers: { 'User-Agent': 'E-Daily-Report-App' }
+            });
+            const data = await response.json();
             
-            if (!res.ok) throw new Error("Network error");
-            
-            const data = await res.json();
-            
-            // Format Alamat yang user-friendly
-            const addr = data.address;
-            const street = addr.road || addr.pedestrian || addr.suburb || "";
-            const number = addr.house_number ? `No. ${addr.house_number}` : "";
-            const city = addr.city || addr.town || addr.county || "";
-            
-            const shortAddress = [street, number].filter(Boolean).join(" ").trim() || city;
+            const shortAddress = data.name || (data.address ? (data.address.road || data.address.village || data.address.suburb) : "Lokasi Terpilih");
             const fullAddress = data.display_name;
 
-            // Simpan di properti internal sementara
+            // Simpan ke state sementara
             this.currentLocationData = {
-                lat: lat,
-                lng: lng,
-                shortAddress: shortAddress || "Lokasi Terpilih",
-                fullAddress: fullAddress
+                lat, lng, shortAddress, fullAddress
             };
 
-            // Update UI Preview di Modal
-            this.dom.addressPreview.textContent = fullAddress;
+            // Update UI Preview
+            if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = shortAddress;
 
         } catch (e) {
-            console.error(e);
-            this.dom.addressPreview.textContent = "Alamat tidak ditemukan (Koordinat tersimpan)";
+            console.error("Geocoding error", e);
             this.currentLocationData = {
-                lat: lat,
-                lng: lng,
-                shortAddress: `${lat.toFixed(5)}, ${lng.toFixed(5)}`,
-                fullAddress: ""
+                lat, lng, shortAddress: "Lokasi Terpilih", fullAddress: ""
             };
+            if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = "Gagal memuat nama jalan";
         }
     }
 
-    // --- Search Logic ---
-
-    handleSearchInput(query) {
-        // Minimal 3 karakter untuk search
-        if (query.length < 3) {
-            this.dom.searchResults.classList.add('hidden');
-            return;
-        }
-
-        clearTimeout(this.debounceTimer);
-        this.debounceTimer = setTimeout(() => this.searchLocation(query), 600);
+    /**
+     * Memindahkan Marker Visual (Tanpa trigger event move map berlebih)
+     */
+    updateMarker(lat, lng) {
+        // Di mode Fullscreen dengan Center Pivot, marker sebenarnya adalah
+        // ikon diam di tengah layar (CSS). Jadi kita cukup setView map-nya.
+        this.map.setView([lat, lng], this.map.getZoom());
+        
+        // Trigger manual untuk load alamat
+        this.handleMapMove();
     }
 
-    async searchLocation(query) {
-        if (!query) return;
+    /**
+     * Logic Pencarian Lokasi
+     */
+    async handleSearchInput(query) {
+        if (query.length < 3) return;
 
         try {
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
-            const res = await fetch(url);
-            const data = await res.json();
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=id&limit=5`, {
+                headers: { 'User-Agent': 'E-Daily-Report-App' }
+            });
+            const results = await response.json();
 
-            this.renderSearchResults(data);
-        } catch (e) {
-            console.error(e);
-        }
-    }
+            this.dom.searchResults.innerHTML = '';
+            this.dom.searchResults.classList.remove('hidden');
 
-    renderSearchResults(results) {
-        const container = this.dom.searchResults;
-        container.innerHTML = '';
-        
-        if (results.length === 0) {
-            container.classList.add('hidden');
-            return;
-        }
+            if (results.length === 0) {
+                this.dom.searchResults.innerHTML = '<div class="p-3 text-sm text-slate-500 text-center">Tidak ditemukan</div>';
+                return;
+            }
 
-        results.forEach(item => {
-            const div = document.createElement('div');
-            div.className = "px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 text-left";
-            div.innerHTML = `
-                <p class="text-sm font-medium text-slate-800 truncate">${item.display_name.split(',')[0]}</p>
-                <p class="text-xs text-slate-500 truncate">${item.display_name}</p>
-            `;
-            
-            div.addEventListener('click', () => {
-                const lat = parseFloat(item.lat);
-                const lng = parseFloat(item.lon);
-                this.map.flyTo([lat, lng], 18);
-                this.dom.searchInput.value = ""; // Clear input
-                container.classList.add('hidden');
+            results.forEach(place => {
+                const item = document.createElement('div');
+                item.className = 'p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-0 text-sm text-slate-700';
+                item.innerText = place.display_name;
+                item.onclick = () => {
+                    const lat = parseFloat(place.lat);
+                    const lng = parseFloat(place.lon);
+                    
+                    this.map.flyTo([lat, lng], 17);
+                    this.updateMarker(lat, lng); // Ini akan trigger moveend -> handleMapMove
+                    
+                    // Sembunyikan search result
+                    this.dom.searchResults.classList.add('hidden');
+                    this.dom.inputProvider.value = 'manual_search'; // Update provider metadata
+                };
+                this.dom.searchResults.appendChild(item);
             });
 
-            container.appendChild(div);
-        });
-
-        container.classList.remove('hidden');
+        } catch (e) {
+            console.error("Search error", e);
+        }
     }
 
-    // --- UI Controls ---
-
+    /**
+     * Mengganti Layer Peta (Roadmap <-> Satellite)
+     */
     toggleLayer() {
         if (this.currentLayer === 'roadmap') {
             this.map.removeLayer(this.layers.roadmap);
-            this.map.addLayer(this.layers.satellite);
+            this.layers.satellite.addTo(this.map);
             this.currentLayer = 'satellite';
-            
-            // Visual Feedback: Active State (Updated for SVG logic)
-            this.dom.btnLayerSat.classList.add('bg-blue-50', 'border-blue-300');
-            const svg = this.dom.btnLayerSat.querySelector('svg');
-            if(svg) svg.classList.add('text-blue-600');
         } else {
             this.map.removeLayer(this.layers.satellite);
-            this.map.addLayer(this.layers.roadmap);
+            this.layers.roadmap.addTo(this.map);
             this.currentLayer = 'roadmap';
-            
-            this.dom.btnLayerSat.classList.remove('bg-blue-50', 'border-blue-300');
-            const svg = this.dom.btnLayerSat.querySelector('svg');
-            if(svg) svg.classList.remove('text-blue-600');
         }
     }
 
+    /**
+     * Fitur Undo Pergerakan
+     */
+    handleUndo() {
+        if (this.historyStack.length > 1) {
+            this.historyStack.pop(); // Buang posisi sekarang
+            const prev = this.historyStack[this.historyStack.length - 1]; // Ambil sebelumnya
+            
+            this.isUndoAction = true; // Flag agar tidak trigger moveend berlebih
+            this.map.flyTo([prev.lat, prev.lng], this.map.getZoom());
+            this.updateMarker(prev.lat, prev.lng);
+        }
+    }
+
+    /**
+     * Konfirmasi Pilihan Lokasi
+     */
     confirmLocation() {
         if (!this.currentLocationData) {
-            // Fallback jika user langsung klik confirm tanpa nunggu geocoding
+            // Fallback jika user langsung confirm tanpa nunggu geocoding
             const c = this.map.getCenter();
             this.currentLocationData = {
                 lat: c.lat,
@@ -422,7 +431,12 @@ export default class MapInput {
         this.dom.inputLng.value = data.lng;
         this.dom.inputAddress.value = data.shortAddress; // Nama jalan/tempat
         this.dom.inputAddressAuto.value = data.fullAddress; // Alamat lengkap
-        this.dom.inputProvider.value = 'manual_pin'; // Default karena hasil geser peta
+        
+        // Provider hanya diupdate ke manual_pin jika belum diset oleh GPS/Search
+        // atau jika user menggeser-geser peta setelah GPS lock
+        if (this.dom.inputProvider.value === '') {
+             this.dom.inputProvider.value = 'manual_pin';
+        }
 
         // 2. Update Visual Preview Input di Form Utama
         this.dom.previewInput.value = data.fullAddress || data.shortAddress;
@@ -443,7 +457,7 @@ window.initMapComponent = function() {
             modalId: 'fullscreenMapModal',
             mapContainerId: 'map_fullscreen'
         });
-        console.log("Map Component Initialized Successfully with Caching");
+        console.log("Map Component Initialized Successfully");
     } catch (e) {
         console.error("Map Init Failed:", e);
     }

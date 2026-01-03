@@ -660,23 +660,21 @@
                 <div class="flex flex-col gap-3">
                     {{-- Tombol Layer --}}
                     <button type="button" id="btnLayerSatellite" 
-                        class="h-12 w-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+                        class="h-10 w-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
                         title="Ganti Mode Peta">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
                     </button>
 
-                    {{-- Tombol Current Location (Geofencing Manual) --}}
-                    <button type="button" id="btnMyLocation" 
-                        class="h-12 w-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-700 hover:text-[#155FA6] active:scale-95 transition-all relative"
+                    {{-- [BARU] Tombol Locate Me (GPS) --}}
+                    <button type="button" id="btnLocateMe" 
+                        class="h-10 w-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 border border-slate-200 text-blue-600 transition-colors" 
                         title="Lokasi Saya Saat Ini">
-                        {{-- Icon Target / Crosshair --}}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        {{-- Icon Crosshair / Target --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
                         </svg>
-                        {{-- Titik Merah Kecil (Indikator Aktif) --}}
-                        <div class="absolute top-3 right-3 w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></div>
                     </button>
                 </div>
             </div>

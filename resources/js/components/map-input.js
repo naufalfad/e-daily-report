@@ -1,7 +1,7 @@
 /**
  * @file resources/js/components/map-input.js
  * @description Modul kontroler untuk Unified Map Interface (Fullscreen Mode).
- * Termasuk: Caching Logic, Red Pin, Inline SVG Controls, dan Current Location (Locate Me).
+ * Updates: Penambahan Fitur "Local Search Fallback" (Pencarian Wilayah Internal).
  *
  * @author Senior Software Architect
  */
@@ -29,6 +29,10 @@ export default class MapInput {
         this.CACHE_KEY_LAT = 'lkh_last_lat';
         this.CACHE_KEY_LNG = 'lkh_last_lng';
 
+        // Configuration Specific for Timika (Bisa dipindah ke env/meta tag nanti)
+        // Kode 9412 adalah Kode Wilayah Kab. Mimika (Papua Tengah)
+        this.DEFAULT_KABUPATEN_ID = config.kabupatenId || '9412'; 
+
         // 2. Cache DOM Elements
         this.dom = {
             // Modal & Map
@@ -39,7 +43,7 @@ export default class MapInput {
             btnOpen: document.getElementById('btnOpenMap'),
             btnClose: document.getElementById('btnCloseMap'),
             btnConfirm: document.getElementById('btnConfirmLocation'),
-            btnLocateMe: document.getElementById('btnLocateMe'), // Tombol Locate Me
+            btnLocateMe: document.getElementById('btnLocateMe'), 
             
             // Floating Controls
             searchInput: document.getElementById('mapSearchInput'),
@@ -185,6 +189,9 @@ export default class MapInput {
         // Add default layer
         this.layers.roadmap.addTo(this.map);
 
+        // [NEW FEATURE] Inject Local Search Control (Distrik/Kampung)
+        this.addLocalSearchControl();
+
         // Event Listener saat peta selesai digeser (Drag End)
         this.map.on('moveend', () => {
             if (this.isUndoAction) {
@@ -193,6 +200,178 @@ export default class MapInput {
             }
             this.handleMapMove();
         });
+    }
+
+    /**
+     * [NEW METHOD] Membuat Kontrol Pencarian Wilayah (Distrik -> Kelurahan)
+     * Menggunakan Data Internal Database
+     */
+    addLocalSearchControl() {
+        const self = this;
+
+        const WilayahControl = L.Control.extend({
+            onAdd: function(map) {
+                // Container Utama
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                container.style.backgroundColor = 'white';
+                container.style.padding = '5px';
+                container.style.borderRadius = '8px';
+                container.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                container.style.minWidth = '40px';
+                container.style.minHeight = '40px';
+
+                // UI Structure: Toggle Button & Dropdown Panel
+                container.innerHTML = `
+                    <div id="wilayah-toggle-btn" class="cursor-pointer flex items-center justify-center w-8 h-8 hover:bg-gray-100 rounded" title="Cari Wilayah (Distrik/Kampung)">
+                        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <div id="wilayah-panel" class="hidden mt-2 p-2 w-64">
+                        <div class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Wilayah Kerja (Timika)</div>
+                        
+                        <div class="mb-2">
+                            <select id="select-kecamatan" class="w-full text-sm border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 p-1">
+                                <option value="">-- Pilih Distrik --</option>
+                                <option value="loading" disabled>Memuat data...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-1">
+                            <select id="select-kelurahan" class="w-full text-sm border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 p-1" disabled>
+                                <option value="">-- Pilih Kampung/Kel --</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+
+                // Stop propagation agar klik di dropdown tidak menggeser peta
+                L.DomEvent.disableClickPropagation(container);
+
+                return container;
+            },
+
+            onRemove: function(map) {
+                // Clean up logic if needed
+            }
+        });
+
+        // Add Control to Map (Top Right)
+        this.map.addControl(new WilayahControl({ position: 'topright' }));
+
+        // --- Logic Handler ---
+        const btnToggle = document.getElementById('wilayah-toggle-btn');
+        const panel = document.getElementById('wilayah-panel');
+        const selectKecamatan = document.getElementById('select-kecamatan');
+        const selectKelurahan = document.getElementById('select-kelurahan');
+
+        // Toggle Visibility
+        btnToggle.addEventListener('click', () => {
+            panel.classList.toggle('hidden');
+            // Load Data Kecamatan on first open if empty
+            if (!panel.classList.contains('hidden') && selectKecamatan.options.length <= 2) {
+                this.loadKecamatan(selectKecamatan);
+            }
+        });
+
+        // Handle Change Kecamatan
+        selectKecamatan.addEventListener('change', (e) => {
+            const kecId = e.target.value;
+            if (kecId) {
+                this.loadKelurahan(kecId, selectKelurahan);
+            } else {
+                selectKelurahan.innerHTML = '<option value="">-- Pilih Kampung/Kel --</option>';
+                selectKelurahan.disabled = true;
+            }
+        });
+
+        // Handle Change Kelurahan (THE MAIN FEATURE)
+        selectKelurahan.addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const lat = parseFloat(selectedOption.getAttribute('data-lat'));
+            const lng = parseFloat(selectedOption.getAttribute('data-lng'));
+
+            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                // Action: Fly To Coordinates
+                self.map.flyTo([lat, lng], 16, {
+                    animate: true,
+                    duration: 1.5
+                });
+                self.updateMarker(lat, lng);
+                
+                // Set provider meta
+                if(self.dom.inputProvider) self.dom.inputProvider.value = 'internal_db_search';
+                
+                // Optional: Auto close panel on mobile/small screen
+                if (window.innerWidth < 640) panel.classList.add('hidden');
+                
+            } else {
+                alert("Maaf, Data Koordinat untuk Kampung/Kelurahan ini belum tersedia di database. Silakan geser pin secara manual.");
+            }
+        });
+    }
+
+    /**
+     * Fetch API Data Kecamatan
+     */
+    async loadKecamatan(selectElement) {
+        try {
+            // Gunakan Default Kabupaten ID (Mimika)
+            const response = await fetch(`/wilayah/kecamatan?kabupaten_id=${this.DEFAULT_KABUPATEN_ID}`);
+            const data = await response.json();
+
+            // Reset Options
+            selectElement.innerHTML = '<option value="">-- Pilih Distrik --</option>';
+            
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.text = item.nama;
+                selectElement.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Gagal memuat kecamatan:", error);
+            selectElement.innerHTML = '<option value="">Gagal memuat data</option>';
+        }
+    }
+
+    /**
+     * Fetch API Data Kelurahan + Coordinates
+     */
+    async loadKelurahan(kecamatanId, selectElement) {
+        selectElement.disabled = true;
+        selectElement.innerHTML = '<option>Memuat...</option>';
+
+        try {
+            const response = await fetch(`/wilayah/kelurahan?kecamatan_id=${kecamatanId}`);
+            const data = await response.json();
+
+            selectElement.innerHTML = '<option value="">-- Pilih Kampung/Kel --</option>';
+            
+            if (data.length === 0) {
+                selectElement.innerHTML = '<option value="">Data Kosong</option>';
+            }
+
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.text = item.nama;
+                
+                // Inject Coordinates ke Attribute Option
+                if (item.latitude && item.longitude) {
+                    option.setAttribute('data-lat', item.latitude);
+                    option.setAttribute('data-lng', item.longitude);
+                } else {
+                    option.text += ' (No Coord)'; // Visual cue
+                }
+                
+                selectElement.appendChild(option);
+            });
+            selectElement.disabled = false;
+        } catch (error) {
+            console.error("Gagal memuat kelurahan:", error);
+            selectElement.innerHTML = '<option value="">Gagal memuat data</option>';
+        }
     }
 
     /**

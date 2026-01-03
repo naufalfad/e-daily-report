@@ -394,13 +394,12 @@
 
                             {{-- Tombol Trigger Fullscreen --}}
                             <button type="button" id="btnOpenMap"
-                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-4 py-2.5 rounded-[10px] text-sm flex items-center gap-2 transition-colors shadow-sm">
-                                <span>📍</span>
-                                <span class="hidden md:inline">Buka Peta</span>
+                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-2 py-2.5 rounded-[10px] text-sm flex items-center transition-colors shadow-sm">
+                                <span class="hidden md:inline">📍 Buka Peta</span>
                             </button>
-                        </div>
-                        <p class="text-[11px] text-slate-400 mt-1">
-                            *Klik "Buka Peta" untuk menentukan titik koordinat presisi & alamat otomatis.
+                        </div>  
+                        <p class="text-[11px] text-slate-400 mt-1 leading-snug">
+                            *Gunakan tombol <strong class="text-slate-600">Gedung (🏢)</strong> di dalam peta untuk pencarian cepat berdasarkan <strong>Distrik & Kampung</strong>.
                         </p>
                     </div>
                 </div>
@@ -912,27 +911,50 @@ function markFileForDeletion(id) {
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
+    // 1. Setup Auth Headers
     const token = localStorage.getItem("auth_token");
     const headers = {
         "Accept": "application/json",
         "Authorization": "Bearer " + token
     };
 
-    // Load dashboard stats
+    // 2. Load Data Statistik Dashboard (Sidebar)
+    // Mengambil data aktivitas terbaru & draft tersimpan
     fetchDashboardStats();
 
-    // Load Data Edit
-    if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
+    // 3. Load Data Edit (Logic Mode Edit)
+    // Variable 'lkhIdToEdit' di-inject dari Blade di baris sebelumnya
+    if (lkhIdToEdit) {
+        console.log("Mode Edit Detected for ID:", lkhIdToEdit);
+        loadEditLKH(lkhIdToEdit, headers);
+    }
 
-    // Date/Time pickers trigger
+    // 4. UX Helper: Trigger Native Date/Time Pickers via Icons
+    // Memungkinkan user klik ikon kalender/jam untuk membuka picker
     ["tanggal_lkh", "jam_mulai", "jam_selesai"].forEach(id => {
-        document.getElementById(id + "_btn")?.addEventListener("click", () =>
-            document.getElementById(id).showPicker()
-        );
+        const btn = document.getElementById(id + "_btn");
+        const input = document.getElementById(id);
+        
+        if (btn && input) {
+            btn.addEventListener("click", () => {
+                // Fallback untuk browser yang mendukung showPicker()
+                if (typeof input.showPicker === "function") {
+                    input.showPicker();
+                } else {
+                    input.focus(); // Fallback focus biasa
+                }
+            });
+        }
     });
 
+    // 5. [INTEGRASI PETA & WILAYAH]
+    // Memanggil fungsi global dari map-input.js
     if (typeof window.initMapComponent === 'function') {
         window.initMapComponent();
+        console.log("GIS Module: Map Component & Local Search Initialized.");
+    } else {
+        // Warning untuk debugging jika peta tidak muncul
+        console.warn("GIS Module Error: window.initMapComponent is not defined. Pastikan script map-input.js termuat.");
     }
 });
 

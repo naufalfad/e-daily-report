@@ -19,10 +19,11 @@ use App\Http\Controllers\Core\BidangSkoringController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\UserAccountController; // [NEW] Import Controller Akun
+use App\Http\Controllers\Admin\UserAccountController;   
 use App\Http\Controllers\Admin\Master\UnitKerjaController;
 use App\Http\Controllers\Admin\Master\BidangController;
 use App\Http\Controllers\Admin\Master\JabatanController;
+use App\Http\Controllers\GIS\WilayahController;
 
 /*
 |--------------------------------------------------------------------------
@@ -182,5 +183,18 @@ Route::middleware(['auth'])->group(function () {
             Route::get('bidang', [BidangController::class, 'index'])->name('bidang.index');
             Route::get('jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
         });
+    });
+
+    Route::prefix('wilayah')->name('wilayah.')->group(function () {
+        // Dropdown Provinsi & Kabupaten (jika diperlukan perluasan area nanti)
+        Route::get('/provinsi', [WilayahController::class, 'provinsi'])->name('provinsi');
+        Route::get('/kabupaten', [WilayahController::class, 'kabupaten'])->name('kabupaten');
+
+        // [CORE FEATURE] Dropdown untuk pencarian lokasi LKH
+        // API 1: Mengambil list kecamatan berdasarkan kabupaten (Timika)
+        Route::get('/kecamatan', [WilayahController::class, 'kecamatan'])->name('kecamatan'); 
+        
+        // API 2: Mengambil kelurahan BESERTA koorinat (Lat/Long) untuk flyTo di peta
+        Route::get('/kelurahan', [WilayahController::class, 'kelurahan'])->name('kelurahan'); 
     });
 });

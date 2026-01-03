@@ -346,13 +346,12 @@
 
                             {{-- Tombol Trigger Fullscreen --}}
                             <button type="button" id="btnOpenMap"
-                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-4 py-2.5 rounded-[10px] text-sm flex items-center gap-2 transition-colors shadow-sm">
-                                <span>📍</span>
-                                <span class="hidden md:inline">Buka Peta</span>
+                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-2 py-2.5 rounded-[10px] text-sm flex items-center transition-colors shadow-sm">
+                                <span class="hidden md:inline">📍Buka Peta</span>
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">
-                            *Klik "Buka Peta" untuk menentukan titik koordinat presisi & alamat otomatis.
+                        <p class="text-[11px] text-slate-400 mt-1 leading-snug">
+                            *Gunakan tombol <strong class="text-slate-600">Gedung (🏢)</strong> di dalam peta untuk pencarian cepat berdasarkan <strong>Distrik & Kampung</strong>.
                         </p>
                     </div>
                 </div>
@@ -408,9 +407,9 @@
             <div class="rounded-[10px] bg-[#B6241C] px-4 py-3 text-white leading-normal">
                 <p class="text-[14px] font-bold">3. Lokasi (Geospatial) - Wajib Kirim LKH</p>
                 <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
-                    <li>GPS (Otomatis/Geofence): Digunakan untuk kegiatan di tempat dengan GPS. Tekan tombol lokasi untuk mengunci posisi.</li>
-                    <li>Cari Peta (Geocoding): Digunakan untuk kegiatan yang lokasinya tidak dapat dijangkau GPS. Cari nama lokasi (misal: Alamat Kantor atau kota tempat dinas), lalu pilih untuk menyimpan koordinat dan nama lokasi.</li>
-                    <li>Penting: Koordinat atau lokasi kerja harus terisi sebelum Kirim LKH.</li>
+                    <li>GPS (Otomatis/Geofence): Tekan tombol lokasi untuk mengunci posisi akurat di lapangan.</li>
+                    <li>Cari Peta (Geocoding): Gunakan kolom pencarian untuk nama jalan/gedung.</li>
+                    <li><strong>[BARU] Wilayah Kerja:</strong> Gunakan tombol ikon <span class="bg-white text-[#B6241C] px-1 rounded text-[10px] inline-block">🏢</span> di pojok kanan atas peta untuk mencari berdasarkan <strong>Distrik & Kampung/Kelurahan</strong> resmi.</li>
                 </ul>
             </div>
 
@@ -848,28 +847,44 @@ function markFileForDeletion(id) {
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
+    // 1. Setup Auth Headers
     const token = localStorage.getItem("auth_token");
     const headers = {
         "Accept": "application/json",
         "Authorization": "Bearer " + token
     };
-    // [BARU] Inisialisasi Map Component
-    if (typeof window.initMapComponent === 'function') {
-        window.initMapComponent();
-    }
 
-    // Load dashboard stats
+    // 2. Load Dashboard Stats
     fetchDashboardStats();
 
-    // Load Data Edit
-    if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
+    // 3. Load Data Edit (Jika ada ID LKH)
+    if (lkhIdToEdit) {
+        console.log("Mode Edit Detected for ID:", lkhIdToEdit);
+        loadEditLKH(lkhIdToEdit, headers);
+    }
 
-    // Date/Time pickers trigger
+    // 4. Setup Date/Time Picker Triggers
     ["tanggal_lkh", "jam_mulai", "jam_selesai"].forEach(id => {
-        document.getElementById(id + "_btn")?.addEventListener("click", () =>
-            document.getElementById(id).showPicker()
-        );
+        const btn = document.getElementById(id + "_btn");
+        const input = document.getElementById(id);
+        if (btn && input) {
+            btn.addEventListener("click", () => {
+                if (typeof input.showPicker === "function") {
+                    input.showPicker();
+                } else {
+                    input.focus();
+                }
+            });
+        }
     });
+
+    // 5. [INTEGRASI BARU] Inisialisasi Map Component dengan Safety Check
+    if (typeof window.initMapComponent === 'function') {
+        window.initMapComponent();
+        console.log("GIS Module: Map Component & Local Search Initialized.");
+    } else {
+        console.warn("GIS Module Error: window.initMapComponent is not defined. Pastikan script map-input.js termuat.");
+    }
 });
 
 // --- FETCH DASHBOARD STATS (DIPISAH) ---

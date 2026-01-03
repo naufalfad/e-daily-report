@@ -3,26 +3,6 @@
 
 @section('content')
 
-{{-- Style Tambahan untuk Hasil Pencarian Peta --}}
-<style>
-.search-results::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-results::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.search-results::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-
-.search-results::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
-</style>
-
 {{-- GRID UTAMA --}}
 <section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:auto-rows-min">
 
@@ -342,38 +322,39 @@
                         </div>
                     </div>
 
-                    {{-- Modul Input Lokasi Dual Mode --}}
+                    {{-- Modul Input Lokasi GeoTag --}}
                     <div>
-                    <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi Kegiatan</label>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi Kegiatan</label>
 
-                    {{-- 1. Hidden Inputs untuk Data Spasial --}}
-                    <input type="hidden" name="latitude" id="input_lat">
-                    <input type="hidden" name="longitude" id="input_lng">
-                    <input type="hidden" name="lokasi_teks" id="input_lokasi_teks">
-                    <input type="hidden" name="address_auto" id="input_address_auto">
-                    <input type="hidden" name="location_provider" id="input_provider" value="manual_pin">
+                        {{-- Hidden Inputs Data --}}
+                        <input type="hidden" name="latitude" id="input_lat">
+                        <input type="hidden" name="longitude" id="input_lng">
+                        <input type="hidden" name="lokasi_teks" id="input_lokasi_teks">
+                        <input type="hidden" name="address_auto" id="input_address_auto"> {{-- NEW: Hasil Reverse Geocoding --}}
+                        <input type="hidden" name="location_provider" id="input_provider" value="manual_pin">
 
-                    {{-- 2. Tampilan Preview & Tombol Trigger --}}
-                    <div class="flex gap-2">
-                        <div class="relative w-full">
-                            <input type="text" id="preview_lokasi" readonly
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
-                                placeholder="Lokasi belum dipilih (Klik tombol peta)">
-                            <img src="{{ asset('assets/icon/location.svg') }}" 
-                                class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50">
+                        <div class="flex gap-2">
+                            {{-- Preview Lokasi (Readonly) --}}
+                            <div class="relative w-full">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <img src="{{ asset('assets/icon/location.svg') }}" class="w-4 h-4 opacity-50">
+                                </div>
+                                <input type="text" id="preview_lokasi" readonly
+                                    class="w-full rounded-[10px] border border-slate-200 bg-slate-50 pl-10 pr-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed truncate"
+                                    placeholder="Belum ada lokasi dipilih...">
+                            </div>
+
+                            {{-- Tombol Trigger Fullscreen --}}
+                            <button type="button" id="btnOpenMap"
+                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-4 py-2.5 rounded-[10px] text-sm flex items-center gap-2 transition-colors shadow-sm">
+                                <span>📍</span>
+                                <span class="hidden md:inline">Buka Peta</span>
+                            </button>
                         </div>
-
-                        <button type="button" id="btnOpenMap"
-                            class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white rounded-[10px] px-4 py-2.5 flex items-center gap-2 transition-colors text-sm font-medium">
-                            <img src="{{ asset('assets/icon/maps.svg') }}" class="h-4 w-4 brightness-0 invert">
-                            Buka Peta
-                        </button>
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            *Klik "Buka Peta" untuk menentukan titik koordinat presisi & alamat otomatis.
+                        </p>
                     </div>
-                    
-                    <p class="text-[11px] text-slate-400 mt-1.5">
-                        *Wajib: Klik "Buka Peta" untuk menentukan titik koordinat lokasi.
-                    </p>
-                </div>
                 </div>
 
                 {{-- Action Buttons --}}

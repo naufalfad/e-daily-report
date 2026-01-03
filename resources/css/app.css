@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* -------------------------------------------------------------------------- */
-/* GLOBAL UTILITIES & HELPERS                                                 */
+/* 1. GLOBAL UTILITIES & HELPERS                                              */
 /* -------------------------------------------------------------------------- */
 
 /* [WAJIB] Alpine.js Cloak - Mencegah element 'kedip' sebelum JS load */
@@ -25,10 +25,10 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/* SCROLLBAR CUSTOMIZATION                                                    */
+/* 2. SCROLLBAR CUSTOMIZATION                                                 */
 /* -------------------------------------------------------------------------- */
 
-/* 1. HIDE SCROLLBAR (Cross‑Browser) */
+/* A. HIDE SCROLLBAR (Cross‑Browser) */
 /* Digunakan untuk container yang bisa discroll tapi tidak ingin bar terlihat */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -40,7 +40,7 @@
     scroll-behavior: smooth;
 }
 
-/* 2. SIDEBAR SCROLL (Tipis & Transparan) */
+/* B. SIDEBAR SCROLL (Tipis & Transparan) */
 .sidebar-scroll {
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.4) transparent;
@@ -59,7 +59,7 @@
     background: transparent;
 }
 
-/* 3. GENERAL CONTENT SCROLL (Tipis & Elegan) */
+/* C. GENERAL CONTENT SCROLL (Tipis & Elegan) */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -79,7 +79,7 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/* [BARU] MAP & GEOTAGGING COMPONENTS                                         */
+/* 3. MAP & GEOTAGGING COMPONENTS                                             */
 /* -------------------------------------------------------------------------- */
 
 /* Scrollbar khusus untuk dropdown hasil pencarian peta */
@@ -140,7 +140,8 @@
     animation: shadowGrow 0.3s ease-in forwards;
 }
 
-/* Leaflet UI Overrides (Opsional: Mempercantik kontrol bawaan Leaflet) */
+/* Leaflet UI Overrides */
+/* Mempercantik kontrol bawaan Leaflet agar seragam dengan tombol custom kita */
 .leaflet-touch .leaflet-bar a {
     width: 34px;
     height: 34px;
@@ -150,6 +151,7 @@
     background-color: white;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
     border: 1px solid #e2e8f0;
+    transition: background-color 0.2s;
 }
 
 .leaflet-touch .leaflet-bar a:hover {
@@ -157,7 +159,7 @@
     color: #0f172a;
 }
 
-/* Hilangkan border radius yang menumpuk dari Leaflet default */
+/* Hilangkan border radius yang menumpuk & margin default Leaflet */
 .leaflet-touch .leaflet-bar {
     border: none;
     box-shadow: none;

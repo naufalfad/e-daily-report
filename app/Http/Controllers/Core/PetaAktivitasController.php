@@ -136,7 +136,7 @@ class PetaAktivitasController extends Controller
     }
 
     /**
-     * Preview / Export PDF Peta Aktivitas (Advanced Traceability)
+     * Preview / Export PDF Peta Aktivitas (Dual Mode Support)
      */
     public function previewMapPdf(Request $request)
     {
@@ -144,7 +144,12 @@ class PetaAktivitasController extends Controller
             $user = Auth::user();
             $mapImageBase64 = null;
 
-            // 1. Logika Query Data & Filtering
+            // 1. TANGKAP INPUT MODE DARI USER
+            // 'heatmap' = Peta Sebaran (Gradasi Warna)
+            // 'cluster' = Peta Titik (Marker Grouping)
+            $mode = $request->input('mode', 'heatmap');
+
+            // 2. Logika Query Data & Filtering
             $query = LaporanHarian::with(['user.jabatan', 'user.unitKerja', 'tupoksi']);
                 
             // Filter Unit Kerja (Security Scope)
@@ -170,14 +175,14 @@ class PetaAktivitasController extends Controller
 
             $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
             
-            // 2. Data Mapping (Hanya valid coordinates)
+            // 3. Data Mapping (Hanya valid coordinates)
             $activities = $laporanHarian->map(function ($item) {
                 return $this->formatMapData($item);
             })->filter(function($item) {
                 return !empty($item['lat']) && !empty($item['lng']);
             });
             
-            // 3. Headless Renderer (External Service)
+            // 4. Headless Renderer (External Service)
             if ($activities->isNotEmpty()) {
                 try {
                     $client = new Client();
@@ -186,6 +191,7 @@ class PetaAktivitasController extends Controller
                     $centerLat = $firstActivity['lat'] ?? -4.5467;
                     $centerLng = $firstActivity['lng'] ?? 136.8833;
 
+                    // URL Service Node.js
                     $rendererUrl = env('MAP_RENDER_URL', 'http://127.0.0.1:3000') . '/render-map'; 
 
                     $response = $client->post($rendererUrl, [
@@ -196,7 +202,8 @@ class PetaAktivitasController extends Controller
                                 'lat' => $centerLat,
                                 'lng' => $centerLng
                             ],
-                            'zoom' => 13
+                            'zoom' => 13,
+                            'mode' => $mode // <-- INJEKSI PARAMETER MODE KE RENDERER
                         ]
                     ]);
 
@@ -211,12 +218,10 @@ class PetaAktivitasController extends Controller
                 }
             }
             
-            // 4. [NEW] TRACEABILITY & INTEGRITY METADATA
+            // 5. TRACEABILITY & INTEGRITY METADATA
             $now = Carbon::now('Asia/Jakarta');
             
             // Generate Transaction ID unik (Hash)
-            // Format: TRX-[USER_ID]-[HEX_TIMESTAMP]-[RANDOM_STRING]
-            // Contoh: TRX-15-654A9B1-X9K2
             $trxId = 'TRX-' . $user->id . '-' . strtoupper(dechex($now->timestamp)) . '-' . strtoupper(Str::random(4));
 
             // Logika Teks Periode (Human Readable)
@@ -243,18 +248,19 @@ class PetaAktivitasController extends Controller
                 
                 // Integrity
                 'trx_id'         => $trxId,
-                'security_hash'  => md5($trxId . $activities->count()), // Simple verification hash
-                'app_version'    => 'v2.1 (E-Daily Report)'
+                'security_hash'  => md5($trxId . $activities->count()), 
+                'app_version'    => 'v2.1 (E-Daily Report)',
+                'vis_mode'       => $mode === 'heatmap' ? 'Heatmap' : 'Clustering' // Info tambahan
             ];
 
-            // 5. Generate PDF
+            // 6. Generate PDF
             $pdf = Pdf::loadView('pdf.peta-aktivitas', [
                 'activities' => $activities,
                 'meta'       => $meta,
                 'image'      => $mapImageBase64, 
-            ])->setPaper('a4', 'portrait'); // Bisa diubah ke landscape jika peta lebar
+            ])->setPaper('a4', 'portrait');
 
-            // 6. Return PDF Stream
+            // 7. Return PDF Stream
             $safeFilename = 'Laporan_Peta_' . preg_replace('/[^A-Za-z0-9]/', '', $user->username) . '_' . $now->format('YmdHis') . '.pdf';
 
             return response($pdf->output(), 200)

@@ -11,24 +11,22 @@ use GuzzleHttp\Client;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Aktivitas;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PetaAktivitasController extends Controller
 {
     /**
      * Mengambil Peta Aktivitas User yang Sedang Login
-     * [UPDATED] Dengan Server-Side Filtering
      */
     public function getPetaAktivitas(Request $request)
     {
         try {
             $userId = Auth::id();
 
-            // 1. Build Query Dasar
             $query = LaporanHarian::with(['tupoksi', 'user'])
                 ->where('user_id', $userId)
                 ->whereNot('status', 'draft');
 
-            // 2. Terapkan Filter Tanggal (Jika ada request)
             if ($request->has('from_date') && !empty($request->from_date)) {
                 $query->whereDate('tanggal_laporan', '>=', $request->from_date);
             }
@@ -37,10 +35,8 @@ class PetaAktivitasController extends Controller
                 $query->whereDate('tanggal_laporan', '<=', $request->to_date);
             }
 
-            // 3. Eksekusi Query
             $lkh = $query->orderBy('tanggal_laporan', 'desc')->get();
 
-            // 4. Mapping Data (Sama seperti sebelumnya)
             $result = $lkh->map(function ($item) {
                 return $this->formatMapData($item);
             });
@@ -62,19 +58,16 @@ class PetaAktivitasController extends Controller
 
     /**
      * Mengambil Peta Aktivitas Bawahan (Untuk Atasan)
-     * [UPDATED] Dengan Server-Side Filtering
      */
     public function getStafAktivitas(Request $request)
     {
         try {
             $userId = Auth::id();
 
-            // 1. Build Query Dasar (Filter by Atasan ID)
             $query = LaporanHarian::with(['tupoksi', 'user'])
                 ->where('atasan_id', $userId)
                 ->whereNot('status', 'draft');
 
-            // 2. Terapkan Filter Tanggal
             if ($request->has('from_date') && !empty($request->from_date)) {
                 $query->whereDate('tanggal_laporan', '>=', $request->from_date);
             }
@@ -83,10 +76,8 @@ class PetaAktivitasController extends Controller
                 $query->whereDate('tanggal_laporan', '<=', $request->to_date);
             }
 
-            // 3. Eksekusi Query
             $lkh = $query->orderBy('tanggal_laporan', 'desc')->get();
 
-            // 4. Mapping Data
             $result = $lkh->map(function ($item) {
                 return $this->formatMapData($item);
             });
@@ -108,16 +99,13 @@ class PetaAktivitasController extends Controller
 
     /**
      * Mengambil Semua Aktivitas (Admin/Global)
-     * [UPDATED] Dengan Server-Side Filtering
      */
     public function getAllAktivitas(Request $request)
     {
         try {
-            // 1. Build Query Dasar
             $query = LaporanHarian::with(['tupoksi', 'user'])
                 ->whereNot('status', 'draft');
 
-            // 2. Terapkan Filter Tanggal
             if ($request->has('from_date') && !empty($request->from_date)) {
                 $query->whereDate('tanggal_laporan', '>=', $request->from_date);
             }
@@ -126,10 +114,8 @@ class PetaAktivitasController extends Controller
                 $query->whereDate('tanggal_laporan', '<=', $request->to_date);
             }
 
-            // 3. Eksekusi Query
             $lkh = $query->orderBy('tanggal_laporan', 'desc')->get();
 
-            // 4. Mapping Data
             $result = $lkh->map(function ($item) {
                 return $this->formatMapData($item);
             });
@@ -150,20 +136,18 @@ class PetaAktivitasController extends Controller
     }
 
     /**
-     * Preview / Export PDF Peta Aktivitas
-     * Menangani request AJAX untuk progress loading
+     * Preview / Export PDF Peta Aktivitas (Advanced Traceability)
      */
     public function previewMapPdf(Request $request)
     {
-        // Bungkus keseluruhan logic dalam try-catch untuk handling response
         try {
             $user = Auth::user();
             $mapImageBase64 = null;
 
-            // 1. Logika Pengambilan Data dan Filtering
-            $query = LaporanHarian::with(['user', 'tupoksi']);
+            // 1. Logika Query Data & Filtering
+            $query = LaporanHarian::with(['user.jabatan', 'user.unitKerja', 'tupoksi']);
                 
-            // Filter berdasarkan unit kerja (untuk Kepala Dinas/Unit)
+            // Filter Unit Kerja (Security Scope)
             if ($user->unit_kerja_id) {
                 $unitKerjaId = $user->unit_kerja_id;
                 $query->whereHas('user', function ($q) use ($unitKerjaId) {
@@ -173,7 +157,7 @@ class PetaAktivitasController extends Controller
             
             $query->whereNot('status', 'draft');
             
-            // 2. Terapkan Filter Tanggal
+            // Filter Tanggal
             $fromDate = $request->query('from_date');
             $toDate = $request->query('to_date');
             
@@ -186,29 +170,31 @@ class PetaAktivitasController extends Controller
 
             $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
             
-            // 3. Mapping Data untuk Renderer (Hanya yang punya koordinat)
+            // 2. Data Mapping (Hanya valid coordinates)
             $activities = $laporanHarian->map(function ($item) {
                 return $this->formatMapData($item);
             })->filter(function($item) {
                 return !empty($item['lat']) && !empty($item['lng']);
             });
             
-            // 4. Panggil Headless Renderer Service (External Microservice)
+            // 3. Headless Renderer (External Service)
             if ($activities->isNotEmpty()) {
                 try {
                     $client = new Client();
+                    // Ambil center dari titik pertama atau default center kabupaten
                     $firstActivity = $activities->first();
-                    
-                    // URL Service Node.js (Default port 3000)
+                    $centerLat = $firstActivity['lat'] ?? -4.5467;
+                    $centerLng = $firstActivity['lng'] ?? 136.8833;
+
                     $rendererUrl = env('MAP_RENDER_URL', 'http://127.0.0.1:3000') . '/render-map'; 
 
                     $response = $client->post($rendererUrl, [
-                        'timeout' => 20.0, // Timeout dinaikkan sedikit untuk safety
+                        'timeout' => 20.0, 
                         'json' => [
                             'activities' => $activities->values()->all(),
                             'center' => [
-                                'lat' => $firstActivity['lat'],
-                                'lng' => $firstActivity['lng']
+                                'lat' => $centerLat,
+                                'lng' => $centerLng
                             ],
                             'zoom' => 13
                         ]
@@ -220,41 +206,63 @@ class PetaAktivitasController extends Controller
                         $mapImageBase64 = $result['image'];
                     }
                 } catch (\Exception $e) {
-                    // Log error renderer tapi JANGAN gagalkan proses PDF.
-                    // PDF tetap tergenerate dengan fallback image.
                     Log::error('Map Renderer Service Failed: ' . $e->getMessage());
+                    // Fallback: Code akan lanjut tanpa gambar peta (View handle ini)
                 }
             }
             
-            // 5. Siapkan Metadata Laporan
+            // 4. [NEW] TRACEABILITY & INTEGRITY METADATA
+            $now = Carbon::now('Asia/Jakarta');
+            
+            // Generate Transaction ID unik (Hash)
+            // Format: TRX-[USER_ID]-[HEX_TIMESTAMP]-[RANDOM_STRING]
+            // Contoh: TRX-15-654A9B1-X9K2
+            $trxId = 'TRX-' . $user->id . '-' . strtoupper(dechex($now->timestamp)) . '-' . strtoupper(Str::random(4));
+
+            // Logika Teks Periode (Human Readable)
+            $scopeText = 'Semua Riwayat Data';
+            if ($fromDate && $toDate) {
+                $scopeText = Carbon::parse($fromDate)->translatedFormat('d F Y') . ' s.d ' . Carbon::parse($toDate)->translatedFormat('d F Y');
+            } elseif ($fromDate) {
+                $scopeText = 'Sejak ' . Carbon::parse($fromDate)->translatedFormat('d F Y');
+            } elseif ($toDate) {
+                $scopeText = 'Sampai dengan ' . Carbon::parse($toDate)->translatedFormat('d F Y');
+            }
+
             $meta = [
-                'nama'          => $user->name,
-                'role'          => $user->role,
-                'tanggal_cetak' => now()->format('d M Y, H:i'),
-                'periode'       => ($fromDate && $toDate) ? 
-                                   Carbon::parse($fromDate)->format('d M Y') . ' s.d ' . Carbon::parse($toDate)->format('d M Y') : 
-                                   'Semua Periode',
-                'unit_kerja'    => $user->unitKerja->nama_unit_kerja ?? '-',
-                'generated_by'  => $user->name . ' (' . ($user->nip ?? '-') . ')'
+                // Identity
+                'generated_by'   => $user->name,
+                'user_nip'       => $user->nip ?? '-',
+                'user_jabatan'   => $user->jabatan->nama_jabatan ?? ($user->role == 'kadis' ? 'Kepala Dinas' : 'Staff'),
+                'unit_kerja'     => $user->unitKerja->nama_unit_kerja ?? 'Pemerintah Kabupaten Mimika',
+                
+                // Timestamp & Scope
+                'timestamp'      => $now->format('d F Y, H:i') . ' WIB',
+                'filter_scope'   => $scopeText,
+                'data_count'     => $activities->count(),
+                
+                // Integrity
+                'trx_id'         => $trxId,
+                'security_hash'  => md5($trxId . $activities->count()), // Simple verification hash
+                'app_version'    => 'v2.1 (E-Daily Report)'
             ];
 
-            // 6. Generate PDF
+            // 5. Generate PDF
             $pdf = Pdf::loadView('pdf.peta-aktivitas', [
                 'activities' => $activities,
                 'meta'       => $meta,
                 'image'      => $mapImageBase64, 
-            ])->setPaper('a4', 'portrait');
+            ])->setPaper('a4', 'portrait'); // Bisa diubah ke landscape jika peta lebar
 
-            // 7. Return PDF Stream
-            $filename = 'Peta_Aktivitas_' . preg_replace('/[^A-Za-z0-9]/', '_', $user->username) . '_' . time() . '.pdf';
+            // 6. Return PDF Stream
+            $safeFilename = 'Laporan_Peta_' . preg_replace('/[^A-Za-z0-9]/', '', $user->username) . '_' . $now->format('YmdHis') . '.pdf';
 
             return response($pdf->output(), 200)
                 ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+                ->header('Content-Disposition', 'inline; filename="' . $safeFilename . '"');
 
         } catch (\Throwable $e) {
-            // [NEW] Adaptive Error Handling
-            // Jika request via AJAX (JS Export), return JSON 500 agar bisa dibaca Frontend
+            // Adaptive Error Handling (JSON for AJAX, HTML for Direct)
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -262,8 +270,6 @@ class PetaAktivitasController extends Controller
                     'trace'   => config('app.debug') ? $e->getTraceAsString() : null
                 ], 500);
             }
-
-            // Jika akses langsung via browser, lempar error standar Laravel
             throw $e;
         }
     }
@@ -276,7 +282,7 @@ class PetaAktivitasController extends Controller
             "deskripsi"          => $item->output_hasil_kerja,
             "kategori_aktivitas" => $item->jenis_kegiatan,
 
-            "tanggal"            => Carbon::parse($item->tanggal_laporan)->format('d M Y'),
+            "tanggal"            => Carbon::parse($item->tanggal_laporan)->translatedFormat('d M Y'),
             "tanggal_raw"        => $item->tanggal_laporan, 
             "waktu"              => substr($item->waktu_mulai, 0, 5) . " - " . substr($item->waktu_selesai, 0, 5),
 

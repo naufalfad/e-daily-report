@@ -3,26 +3,6 @@
 
 @section('content')
 
-{{-- Style Tambahan untuk Hasil Pencarian Peta --}}
-<style>
-.search-results::-webkit-scrollbar {
-    width: 6px;
-}
-
-.search-results::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-.search-results::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-
-.search-results::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
-</style>
-
 {{-- GRID UTAMA --}}
 <section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:auto-rows-min">
 
@@ -342,164 +322,36 @@
                         </div>
                     </div>
 
-                    {{-- Modul Input Lokasi Dual Mode --}}
-                    <div x-data="{
-                            mode: 'geofence', // geofence or geocoding
-                            status: 'Klik tombol untuk ambil lokasi',
-                            lat: '',
-                            lng: '',
-                            loading: false,
-                            searchText: '',
-                            searchResults: [],
-                            showResults: false,
-                            lokasiTeksFinal: '',
+                    {{-- Modul Input Lokasi GeoTag --}}
+                    <div>
+                        <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Lokasi Kegiatan</label>
 
-                            init() {
-                                // Sinkronisasi mode ke input hidden utama
-                                this.$watch('mode', value => {
-                                    document.getElementById('mode_lokasi_input').value = value;
-                                    // Reset nilai saat ganti mode
-                                    if(value === 'geofence') {
-                                        this.searchText = '';
-                                        this.lokasiTeksFinal = '';
-                                        this.status = 'Klik tombol untuk ambil lokasi';
-                                    } else {
-                                        this.status = 'Cari lokasi pada kolom input';
-                                    }
-                                    this.lat = '';
-                                    this.lng = '';
-                                });
-                            },
+                        {{-- Hidden Inputs Data --}}
+                        <input type="hidden" name="latitude" id="input_lat">
+                        <input type="hidden" name="longitude" id="input_lng">
+                        <input type="hidden" name="lokasi_teks" id="input_lokasi_teks">
+                        <input type="hidden" name="address_auto" id="input_address_auto"> {{-- NEW: Hasil Reverse Geocoding --}}
+                        <input type="hidden" name="location_provider" id="input_provider" value="manual_pin">
 
-                            // Logic Geofence (GPS)
-                            getGPS() {
-                                this.loading = true; this.status = 'Mencari koordinat GPS...';
-                                if(navigator.geolocation) {
-                                    navigator.geolocation.getCurrentPosition(
-                                        (pos) => { 
-                                            this.lat = pos.coords.latitude; 
-                                            this.lng = pos.coords.longitude; 
-                                            this.status = `Terkunci: ${this.lat.toFixed(5)}, ${this.lng.toFixed(5)}`; 
-                                            this.loading = false; 
-                                        },
-                                        () => { this.status = 'Gagal mengambil GPS.'; this.loading = false; }
-                                    );
-                                } else { this.status = 'Browser tidak mendukung GPS.'; this.loading = false; }
-                            },
-
-                            // Logic Geocoding (Nominatim API)
-                            async searchLocation() {
-                                if(this.searchText.length < 3) return;
-                                this.loading = true;
-                                try {
-                                    // Menggunakan OpenStreetMap Nominatim (Gratis, No Key)
-                                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(this.searchText)}&limit=5`;
-                                    const res = await fetch(url);
-                                    const data = await res.json();
-                                    this.searchResults = data;
-                                    this.showResults = true;
-                                } catch(e) {
-                                    console.error(e);
-                                    this.status = 'Gagal mencari lokasi';
-                                } finally {
-                                    this.loading = false;
-                                }
-                            },
-
-                            selectLocation(item) {
-                                this.lat = item.lat;
-                                this.lng = item.lon;
-                                this.lokasiTeksFinal = item.display_name;
-                                this.searchText = item.display_name; // Tampilkan nama di input
-                                this.showResults = false;
-                                this.status = `Dipilih: ${item.display_name.substring(0, 30)}...`;
-                            }
-                        }">
-
-                        {{-- Header Label + Switcher Mode --}}
-                        <div class="flex items-center justify-between mb-[10px]">
-                            <label class="block font-normal text-[15px] text-[#5B687A]">Lokasi</label>
-
-                            {{-- Switcher --}}
-                            <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                                <button type="button" @click="mode = 'geofence'"
-                                    class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
-                                    :class="mode === 'geofence' ? 'bg-white text-[#1C7C54] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
-                                    GPS (Otomatis)
-                                </button>
-                                <button type="button" @click="mode = 'geocoding'"
-                                    class="px-2 py-1 text-[10px] font-medium rounded-md transition-all"
-                                    :class="mode === 'geocoding' ? 'bg-white text-[#1C7C54] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
-                                    Cari Peta
-                                </button>
+                        <div class="flex gap-2">
+                            {{-- Preview Lokasi (Readonly) --}}
+                            <div class="relative w-full">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <img src="{{ asset('assets/icon/location.svg') }}" class="w-4 h-4 opacity-50">
+                                </div>
+                                <input type="text" id="preview_lokasi" readonly
+                                    class="w-full rounded-[10px] border border-slate-200 bg-slate-50 pl-10 pr-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed truncate"
+                                    placeholder="Belum ada lokasi dipilih...">
                             </div>
-                        </div>
 
-                        {{-- Hidden Inputs untuk Form Submission --}}
-                        <input type="hidden" name="latitude" x-model="lat">
-                        <input type="hidden" name="longitude" x-model="lng">
-                        <input type="hidden" name="lokasi_teks" x-model="lokasiTeksFinal">
-
-                        {{-- Tampilan Mode Geofence --}}
-                        <div x-show="mode === 'geofence'" class="flex gap-2">
-                            <input type="text"
-                                class="w-full rounded-[10px] border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed"
-                                x-model="status" readonly>
-                            <button type="button" @click="getGPS()" :disabled="loading"
-                                class="shrink-0 bg-[#1C7C54] hover:bg-[#156a44] text-white rounded-[10px] w-10 flex items-center justify-center transition-colors"
-                                :class="loading ? 'opacity-70 cursor-wait' : ''">
-                                <template x-if="!loading">
-                                    <img src="{{ asset('assets/icon/location.svg') }}"
-                                        class="h-5 w-5 brightness-0 invert">
-                                </template>
-                                <template x-if="loading">
-                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
-                                        fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
-                                    </svg>
-                                </template>
+                            {{-- Tombol Trigger Fullscreen --}}
+                            <button type="button" id="btnOpenMap"
+                                class="shrink-0 bg-[#155FA6] hover:bg-[#104d87] text-white px-2 py-2.5 rounded-[10px] text-sm flex items-center transition-colors shadow-sm">
+                                <span class="hidden md:inline">📍Buka Peta</span>
                             </button>
                         </div>
-
-                        {{-- Tampilan Mode Geocoding (Search) --}}
-                        <div x-show="mode === 'geocoding'" class="relative">
-                            <div class="relative">
-                                <input type="text" x-model="searchText" @keydown.enter.prevent="searchLocation()"
-                                    class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#155FA6]/30 focus:border-[#155FA6]"
-                                    placeholder="Ketik nama lokasi (misal: Hotel Horison)...">
-
-                                <button type="button" @click="searchLocation()"
-                                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-md text-slate-500 transition-colors">
-                                    <img src="{{ asset('assets/icon/search.svg') }}" class="h-4 w-4 opacity-60">
-                                </button>
-                            </div>
-
-                            {{-- Dropdown Hasil Pencarian --}}
-                            <div x-show="showResults && searchResults.length" @click.outside="showResults = false"
-                                class="search-results absolute z-30 mt-1 w-full bg-white rounded-[10px] shadow-xl border border-slate-200 max-h-60 overflow-y-auto">
-                                <template x-for="item in searchResults" :key="item.place_id">
-                                    <button type="button" @click="selectLocation(item)"
-                                        class="w-full text-left px-4 py-3 text-xs hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors">
-                                        <div class="font-medium text-slate-800"
-                                            x-text="item.display_name.split(',')[0]"></div>
-                                        <div class="text-slate-500 truncate mt-0.5" x-text="item.display_name">
-                                        </div>
-                                    </button>
-                                </template>
-                            </div>
-
-                            {{-- Pesan Status Search --}}
-                            <div x-show="loading" class="absolute right-10 top-3 text-xs text-slate-400">Mencari...
-                            </div>
-                        </div>
-
-                        <p class="text-[11px] text-slate-400 mt-1">
-                            <span x-show="mode === 'geofence'">*Pastikan GPS aktif.</span>
-                            <span x-show="mode === 'geocoding'">*Gunakan pencarian untuk lokasi spesifik.</span>
+                        <p class="text-[11px] text-slate-400 mt-1 leading-snug">
+                            *Gunakan tombol <strong class="text-slate-600">Gedung (🏢)</strong> di dalam peta untuk pencarian cepat berdasarkan <strong>Distrik & Kampung</strong>.
                         </p>
                     </div>
                 </div>
@@ -555,9 +407,9 @@
             <div class="rounded-[10px] bg-[#B6241C] px-4 py-3 text-white leading-normal">
                 <p class="text-[14px] font-bold">3. Lokasi (Geospatial) - Wajib Kirim LKH</p>
                 <ul class="mt-2 text-[12px] text-white/90 list-disc pl-4 space-y-1">
-                    <li>GPS (Otomatis/Geofence): Digunakan untuk kegiatan di tempat dengan GPS. Tekan tombol lokasi untuk mengunci posisi.</li>
-                    <li>Cari Peta (Geocoding): Digunakan untuk kegiatan yang lokasinya tidak dapat dijangkau GPS. Cari nama lokasi (misal: Alamat Kantor atau kota tempat dinas), lalu pilih untuk menyimpan koordinat dan nama lokasi.</li>
-                    <li>Penting: Koordinat atau lokasi kerja harus terisi sebelum Kirim LKH.</li>
+                    <li>GPS (Otomatis/Geofence): Tekan tombol lokasi untuk mengunci posisi akurat di lapangan.</li>
+                    <li>Cari Peta (Geocoding): Gunakan kolom pencarian untuk nama jalan/gedung.</li>
+                    <li><strong>[BARU] Wilayah Kerja:</strong> Gunakan tombol ikon <span class="bg-white text-[#B6241C] px-1 rounded text-[10px] inline-block">🏢</span> di pojok kanan atas peta untuk mencari berdasarkan <strong>Distrik & Kampung/Kelurahan</strong> resmi.</li>
                 </ul>
             </div>
 
@@ -678,6 +530,77 @@
         <ul class="space-y-3" id="aktivitas-list">
             <li class="text-sm text-slate-400 italic">Memuat...</li>
         </ul>
+    </div>
+
+    {{-- MODAL FULLSCREEN MAP (FINAL UX UPDATE) --}}
+    <div id="fullscreenMapModal" class="fixed inset-0 z-[9999] bg-white hidden flex-col font-sans">
+        
+        {{-- 1. Close Button (Floating Alone - Pojok Kiri Atas) --}}
+        <div class="absolute top-4 left-4 z-[1001]">
+            <button type="button" id="btnCloseMap" 
+                class="h-10 w-10 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-red-50 text-slate-500 hover:text-red-500 border border-slate-200 transition-all active:scale-95" title="Tutup Peta">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        {{-- 2. Map Container --}}
+        <div id="map_fullscreen" class="w-full h-full bg-slate-100 relative z-0"></div>
+
+        {{-- 3. Fixed Center Pin (Visual Element) --}}
+        <div class="center-pin-wrapper absolute top-1/2 left-1/2 z-[1000] pointer-events-none flex flex-col items-center pb-[40px] transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-100">
+            {{-- Pin Merah Besar --}}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-[#DC2626] drop-shadow-2xl filter" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">
+                <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+            </svg>
+            {{-- Titik Fokus Lantai --}}
+            <div class="absolute bottom-[38px] w-1 h-1 bg-black rounded-full opacity-50"></div>
+            {{-- Bayangan --}}
+            <div class="pin-shadow w-3 h-1.5 bg-black/40 rounded-[100%] mt-[-4px] blur-[1px]"></div>
+        </div>
+
+        {{-- 4. Floating Controls Area (Bottom) --}}
+        <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full flex flex-col gap-3">
+            
+            {{-- 5. Main Info Card (BIGGER & CLEANER) --}}
+            <div class="bg-white rounded-2xl shadow-2xl p-5 ring-1 ring-black/5 animate-slide-up">
+                <div class="flex items-start gap-4 mb-4">
+                    {{-- Icon Lokasi Besar --}}
+                    <div class="mt-1 shrink-0 bg-red-50 p-2.5 rounded-full border border-red-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-[#DC2626]">
+                            <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    {{-- Teks Alamat --}}
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Lokasi Terpilih</p>
+                        
+                        {{-- Alamat Utama --}}
+                        <p id="mapAddressPreview" class="text-[15px] font-semibold text-slate-800 leading-snug line-clamp-2">
+                            Sedang mencari lokasi...
+                        </p>
+                        
+                        {{-- Koordinat Kecil --}}
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="bg-slate-50 text-slate-500 text-[10px] px-2 py-0.5 rounded font-mono border border-slate-100" id="mapCoordsPreview">
+                                -
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Tombol Konfirmasi Besar --}}
+                <button type="button" id="btnConfirmLocation" 
+                    class="w-full bg-[#1C7C54] hover:bg-[#156343] text-white font-bold text-[15px] py-3.5 rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group">
+                    <span>Pilih Lokasi Ini</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -863,24 +786,44 @@ function markFileForDeletion(id) {
 const lkhIdToEdit = "{{ $id ?? '' }}";
 
 document.addEventListener("DOMContentLoaded", async function() {
+    // 1. Setup Auth Headers
     const token = localStorage.getItem("auth_token");
     const headers = {
         "Accept": "application/json",
         "Authorization": "Bearer " + token
     };
 
-    // Load dashboard stats
+    // 2. Load Dashboard Stats
     fetchDashboardStats();
 
-    // Load Data Edit
-    if (lkhIdToEdit) loadEditLKH(lkhIdToEdit, headers);
+    // 3. Load Data Edit (Jika ada ID LKH)
+    if (lkhIdToEdit) {
+        console.log("Mode Edit Detected for ID:", lkhIdToEdit);
+        loadEditLKH(lkhIdToEdit, headers);
+    }
 
-    // Date/Time pickers trigger
+    // 4. Setup Date/Time Picker Triggers
     ["tanggal_lkh", "jam_mulai", "jam_selesai"].forEach(id => {
-        document.getElementById(id + "_btn")?.addEventListener("click", () =>
-            document.getElementById(id).showPicker()
-        );
+        const btn = document.getElementById(id + "_btn");
+        const input = document.getElementById(id);
+        if (btn && input) {
+            btn.addEventListener("click", () => {
+                if (typeof input.showPicker === "function") {
+                    input.showPicker();
+                } else {
+                    input.focus();
+                }
+            });
+        }
     });
+
+    // 5. [INTEGRASI BARU] Inisialisasi Map Component dengan Safety Check
+    if (typeof window.initMapComponent === 'function') {
+        window.initMapComponent();
+        console.log("GIS Module: Map Component & Local Search Initialized.");
+    } else {
+        console.warn("GIS Module Error: window.initMapComponent is not defined. Pastikan script map-input.js termuat.");
+    }
 });
 
 // --- FETCH DASHBOARD STATS (DIPISAH) ---
@@ -949,6 +892,7 @@ function renderDrafts(data) {
     }));
 }
 
+// [UPDATED FUNCTION] Load Edit LKH dengan Logic Map Baru
 async function loadEditLKH(id, headers) {
     try {
         const res = await fetch(`/api/lkh/${id}`, {
@@ -957,7 +901,7 @@ async function loadEditLKH(id, headers) {
         const json = await res.json();
         const data = json.data;
 
-        // Populate Standard Inputs
+        // --- 1. Populate Standard Inputs ---
         if (data.tanggal_laporan) document.getElementById("tanggal_lkh").value = data.tanggal_laporan.split('T')[0];
         document.getElementById("jam_mulai").value = data.waktu_mulai;
         document.getElementById("jam_selesai").value = data.waktu_selesai;
@@ -974,36 +918,41 @@ async function loadEditLKH(id, headers) {
         const satuanEl = document.querySelector('input[name="satuan"]');
         if (satuanEl) satuanEl.value = data.satuan ?? "";
 
+        // Update Helper Alpine (Pastikan fungsi ini ada di scope global)
         updateAlpineDropdown('jenis_kegiatan', data.jenis_kegiatan);
-        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi ? data.tupoksi.uraian_tugas :
-            'Tupoksi Terpilih');
+        updateAlpineDropdown('tupoksi_id', data.tupoksi_id, data.tupoksi ? data.tupoksi.uraian_tugas : 'Tupoksi Terpilih');
 
-        // Populate File Lama (Bukti)
+        // --- 2. Populate File Lama (Bukti) ---
         if (data.bukti) {
             renderExistingFiles(data.bukti);
         }
 
-        // Populate Mode Lokasi
-        const modeLokasi = data.mode_lokasi || 'geofence';
-        const lokasiContainer = document.querySelector('[x-data*="mode:"]');
+        // --- 3. [NEW] Populate Data Lokasi ke Hidden Input ---
+        // Ini menggantikan logika Alpine "mode: geofence" yang lama
+        if (data.latitude || data.lokasi_teks) {
+            // Isi Hidden Inputs agar terbaca saat form disubmit atau peta dibuka
+            document.getElementById('input_lat').value = data.latitude ?? '';
+            document.getElementById('input_lng').value = data.longitude ?? '';
+            document.getElementById('input_lokasi_teks').value = data.lokasi_teks ?? '';
+            document.getElementById('input_address_auto').value = data.address_auto ?? '';
+            document.getElementById('input_provider').value = data.location_provider ?? 'manual_pin';
 
-        // Cek Alpine scope
-        if (lokasiContainer && Alpine.raw(lokasiContainer.__x.isRoot)) {
-            const alpine = lokasiContainer.__x.$data;
-            alpine.mode = modeLokasi;
-            alpine.lat = data.lat;
-            alpine.lng = data.lng;
-            alpine.lokasiTeksFinal = data.lokasi_teks || '';
-
-            if (modeLokasi === 'geocoding') {
-                alpine.searchText = data.lokasi_teks || '';
-                alpine.status = `Tersimpan: ${data.lokasi_teks}`;
-            } else {
-                alpine.status = `Terkunci: ${data.lat}, ${data.lng}`;
+            // Tentukan text untuk Preview (Readonly Input)
+            let displayLocation = "Lokasi tersimpan";
+            if (data.lokasi_teks) {
+                displayLocation = data.lokasi_teks;
+            } else if (data.address_auto) {
+                displayLocation = data.address_auto;
+            } else if (data.latitude) {
+                displayLocation = `${data.latitude}, ${data.longitude}`;
             }
+
+            // Tampilkan di UI
+            const previewEl = document.getElementById('preview_lokasi');
+            if (previewEl) previewEl.value = displayLocation;
         }
 
-        // Logic Kategori & SKP
+        // --- 4. Logic Kategori & SKP (Tetap Sama) ---
         const isSkp = !!data.skp_rencana_id;
         const kategoriInput = document.querySelector('input[name="kategori"]');
         if (kategoriInput) kategoriInput.value = isSkp ? "skp" : "non-skp";

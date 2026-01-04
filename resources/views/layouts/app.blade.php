@@ -48,6 +48,15 @@
         }
     </style>
 
+    {{-- 4. Leaflet JS & CSS (WAJIB UNTUK GEOTAGGING PETA) --}}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+     
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- App utama --}}
@@ -118,7 +127,7 @@
 
 <body class="min-h-screen bg-[#EFF0F5] text-slate-800">
 
-    {{-- [PERBAIKAN UTAMA: LOGIC ROLE DIPINDAH KE SINI] --}}
+    {{-- [LOGIC ROLE] --}}
     {{-- Ini wajib ada DI ATAS SEBELUM SIDEBAR DIPANGGIL --}}
     @php
         if (!isset($role)) {
@@ -180,9 +189,9 @@
                                 <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
                                     text-sm shadow-sm placeholder:text-slate-400
                                     focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
-                                    <div id="search-dropdown"
-                                        class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
-                                    </div>
+                                <div id="search-dropdown"
+                                    class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
+                                </div>
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                     <img src="{{ asset('assets/icon/search.svg') }}"
                                         class="h-[18px] w-[18px] opacity-70" />
@@ -202,10 +211,10 @@
 
                                         {{-- BADGE --}}
                                         <span id="notif-badge" class="absolute -top-1.5 -right-1.5
-                                                                w-4 h-4 min-w-[16px] px-[4px]
-                                                                bg-[#B6241C] text-white text-[10px] font-semibold 
-                                                                rounded-full flex items-center justify-center shadow-md
-                                                                border-2 border-white box-content">
+                                                                        w-4 h-4 min-w-[16px] px-[4px]
+                                                                        bg-[#B6241C] text-white text-[10px] font-semibold 
+                                                                        rounded-full flex items-center justify-center shadow-md
+                                                                        border-2 border-white box-content">
                                         </span>
                                     </div>
 
@@ -258,7 +267,7 @@
 
     @case('staf')
     @vite('resources/js/pages/staf/dashboard.js')
-    @vite('resources/js/pages/staf/input-lkh.js')
+    @vite('resources/js/pages/staf/input-lkh.js') {{-- Script Input LKH sudah ada di sini --}}
     @vite('resources/js/pages/staf/input-skp.js')
     @vite('resources/js/pages/staf/log-aktivitas.js')
     @vite('resources/js/pages/staf/pengumuman.js')

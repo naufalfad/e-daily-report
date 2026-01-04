@@ -139,6 +139,16 @@
             100% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0); }
         }
 
+        /* --- ANIMATION FOR EXPORT LOADER --- */
+        .animate-gradient-x {
+            background-size: 200% 200%;
+            animation: gradient-move 2s ease infinite;
+        }
+        @keyframes gradient-move {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
     </style>
 @endpush
 
@@ -147,6 +157,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    {{-- JS file akan di-handle di tahap selanjutnya --}}
+    @vite(['resources/js/pages/kadis/peta-aktivitas.js']) 
 @endpush
 
 @section('content')
@@ -177,7 +190,7 @@
                     Lokasi Saya
                 </button>
 
-                {{-- Export Button --}}
+                {{-- Export Button (UPDATED to Trigger JS) --}}
                 <button @click="exportMap()"
                     class="px-5 py-2.5 bg-[#1C7C54] text-white rounded-xl text-sm font-medium hover:bg-[#15683f] hover:shadow-lg hover:shadow-emerald-200 transition-all shadow-sm flex items-center gap-2">
                     <svg class="w-5 h-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -393,7 +406,74 @@
                     </div>
                 </template>
             </div>
+        </div>
+    </div>
 
+    {{-- MODAL LOADING EXPORT (NEW COMPONENT) --}}
+    {{-- Ini adalah modal khusus untuk visualisasi proses export yang berat --}}
+    <div x-show="isExporting"
+        style="display: none;"
+        class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm transition-all"
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden ring-1 ring-slate-900/5">
+            {{-- Decoration Bar (Animated) --}}
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-emerald-500 to-blue-500 animate-gradient-x"></div>
+
+            {{-- Icon / Spinner Area --}}
+            <div class="mb-6 flex justify-center">
+                <div class="relative w-20 h-20 flex items-center justify-center">
+                     {{-- Loading Spinner --}}
+                    <svg x-show="exportStatus !== 'success' && exportStatus !== 'error'" 
+                         class="animate-spin w-16 h-16 text-emerald-500 absolute" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    
+                    {{-- Success Icon (Animated Bounce) --}}
+                    <div x-show="exportStatus === 'success'" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center animate-bounce-small shadow-sm border border-emerald-200">
+                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+
+                    {{-- Error Icon --}}
+                    <div x-show="exportStatus === 'error'" class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center shadow-sm border border-rose-200">
+                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Text Status --}}
+            <h3 class="text-xl font-bold text-slate-800 mb-2 tracking-tight" x-text="exportTitle || 'Memproses'">Menyiapkan Dokumen</h3>
+            
+            <p class="text-sm text-slate-500 mb-8 leading-relaxed px-2" x-text="exportMessage || 'Mohon tunggu sebentar...'">
+                Sistem sedang merender peta visual dan menyusun laporan PDF.
+            </p>
+
+            {{-- Action Buttons --}}
+            <div x-show="exportStatus === 'success'">
+                <button @click="isExporting = false" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg hover:shadow-emerald-200 transform active:scale-[0.98]">
+                    Selesai & Tutup
+                </button>
+            </div>
+            
+            <div x-show="exportStatus === 'error'">
+                <button @click="isExporting = false" class="w-full py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold rounded-xl text-sm transition-all">
+                    Tutup
+                </button>
+            </div>
+            
+            {{-- Loading State (Non-interactive) --}}
+            <div x-show="exportStatus !== 'success' && exportStatus !== 'error'">
+               <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 animate-pulse rounded-full" style="width: 60%"></div>
+               </div>
+               <p class="text-[10px] text-slate-400 mt-2 font-medium">Jangan tutup halaman ini</p>
+            </div>
         </div>
     </div>
 </section>

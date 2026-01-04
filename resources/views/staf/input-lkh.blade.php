@@ -586,30 +586,15 @@
         </ul>
     </div>
 
-    {{-- MODAL FULLSCREEN MAP (FINAL UX UPDATE) --}}
-    <div id="fullscreenMapModal" class="fixed inset-0 z-[9999] bg-white hidden flex-col font-sans">
-        
-        {{-- 1. Top Bar: Search & Close --}}
-        <div class="absolute top-4 left-4 right-4 z-[1001] flex gap-2 max-w-3xl mx-auto w-full">
-            {{-- Search Bar --}}
-            <div class="relative flex-1 shadow-lg rounded-[12px]">
-                <input type="text" id="mapSearchInput" 
-                    class="w-full h-12 pl-12 pr-4 rounded-[12px] border-0 ring-1 ring-slate-200 focus:ring-2 focus:ring-[#155FA6] text-base placeholder:text-slate-400"
-                    placeholder="Cari jalan, gedung, atau daerah...">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                {{-- Search Results Dropdown --}}
-                <div id="mapSearchResults" class="absolute top-14 left-0 w-full bg-white rounded-[12px] shadow-xl border border-slate-100 hidden overflow-hidden flex flex-col"></div>
-            </div>
-
-            {{-- Close Button --}}
+        {{-- MODAL FULLSCREEN MAP (FINAL UX UPDATE) --}}
+        <div id="fullscreenMapModal" class="fixed inset-0 z-[9999] bg-white hidden flex-col font-sans">
+            
+            {{-- 1. Close Button (Floating Alone - Pojok Kiri Atas) --}}
+        <div class="absolute top-4 left-4 z-[1001]">
             <button type="button" id="btnCloseMap" 
-                class="h-12 w-12 bg-white rounded-[12px] shadow-lg flex items-center justify-center hover:bg-red-50 border border-slate-200 text-slate-500 hover:text-red-500 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                class="h-10 w-10 bg-white rounded-lg shadow-lg flex items-center justify-center hover:bg-red-50 text-slate-500 hover:text-red-500 border border-slate-200 transition-all active:scale-95" title="Tutup Peta">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
@@ -632,52 +617,6 @@
         {{-- 4. Floating Controls Area (Bottom) --}}
         <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full flex flex-col gap-3">
             
-            {{-- Baris Tombol Kontrol (Floating di atas Card) --}}
-            <div class="flex justify-between items-end px-1">
-                
-                {{-- KIRI: Tombol Recent Location --}}
-                <div class="relative">
-                    <button type="button" id="btnRecentLocations" 
-                        class="h-12 w-12 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#155FA6] hover:scale-105 active:scale-95 transition-all"
-                        title="Riwayat Lokasi">
-                        {{-- Icon History --}}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </button>
-
-                    {{-- Panel Riwayat (Hidden by default) --}}
-                    <div id="recentLocationsPanel" class="absolute bottom-14 left-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-100 hidden overflow-hidden flex flex-col animate-slide-up">
-                        <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            Lokasi Terakhir
-                        </div>
-                        {{-- List item akan di-inject via JS --}}
-                    </div>
-                </div>
-
-                {{-- KANAN: Tombol Layer & GPS (Vertical Stack) --}}
-                <div class="flex flex-col gap-3">
-                    {{-- Tombol Layer --}}
-                    <button type="button" id="btnLayerSatellite" 
-                        class="h-10 w-10 bg-white rounded-full shadow-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
-                        title="Ganti Mode Peta">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                    </button>
-
-                    {{-- [BARU] Tombol Locate Me (GPS) --}}
-                    <button type="button" id="btnLocateMe" 
-                        class="h-10 w-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-slate-50 border border-slate-200 text-blue-600 transition-colors" 
-                        title="Lokasi Saya Saat Ini">
-                        {{-- Icon Crosshair / Target --}}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-
             {{-- 5. Main Info Card (BIGGER & CLEANER) --}}
             <div class="bg-white rounded-2xl shadow-2xl p-5 ring-1 ring-black/5 animate-slide-up">
                 <div class="flex items-start gap-4 mb-4">

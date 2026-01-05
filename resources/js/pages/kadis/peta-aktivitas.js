@@ -1,5 +1,8 @@
 // resources/js/pages/kadis/peta-aktivitas.js
 
+// [FIX] Import Axios agar dikenali di scope module ini
+import axios from 'axios'; 
+
 export function kadisMapData() {
     return {
 
@@ -16,12 +19,21 @@ export function kadisMapData() {
         // State untuk marker lokasi pengguna (GPS)
         currentLocationMarker: null, 
 
-        // State Modal Detail
+        // State Modal Detail Aktivitas
         showModal: false,
         selectedActivity: null,
 
-        // Loading State
+        // State Loading Data Utama
         loading: false,
+
+        // ------------------------------------------------------------------
+        // [NEW] EXPORT PDF STATE MANAGEMENT
+        // ------------------------------------------------------------------
+        isExporting: false,      // Mengontrol visibilitas modal loading export
+        exportStatus: 'idle',    // 'idle' | 'loading' | 'success' | 'error'
+        exportMessage: '',       // Pesan dinamis (misal: "Merender peta...")
+        exportTitle: '',         // Judul modal
+        exportBlobUrl: null,     // URL Blob PDF hasil generate
 
         initMap() {
             this.$nextTick(() => {
@@ -292,6 +304,7 @@ export function kadisMapData() {
             if (this.filter.to) params.push(`to_date=${this.filter.to}`);
             if (params.length > 0) url += '?' + params.join('&');
 
+            // [NOTE] Disini kita pakai fetch native, jadi tidak kena error axios
             fetch(url, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
@@ -411,6 +424,7 @@ export function kadisMapData() {
             };
 
             try {
+                // [FIX] Validasi juga pakai fetch, aman dari axios error
                 const response = await fetch(`/kadis/validasi-laporan/${id}`, {
                     method: 'POST',
                     headers: {
@@ -505,22 +519,106 @@ export function kadisMapData() {
             });
         },
         
-        exportMap() {
-            Swal.fire({
-                title: "Export PDF",
-                text: "Memproses laporan peta aktivitas...",
-                icon: "info",
+        // ------------------------------------------------------------------
+        // [UPDATED] EXPORT MAP: HEATMAP VS CLUSTER
+        // ------------------------------------------------------------------
+        async exportMap() {
+            // 1. Tanyakan Mode Visualisasi (User Preference)
+            const result = await Swal.fire({
+                title: 'Pilih Visualisasi Peta',
+                text: 'Bagaimana data akan ditampilkan dalam laporan?',
+                icon: 'question',
+                input: 'radio',
+                inputOptions: {
+                    'heatmap': 'Peta Sebaran (Heatmap) - Intensitas',
+                    'cluster': 'Peta Titik (Clustering) - Detail Lokasi'
+                },
+                inputValue: 'heatmap', // Default Value
                 showCancelButton: true,
-                confirmButtonColor: "#0ea5e9",
-                confirmButtonText: "Ya, Download",
-                cancelButtonText: "Batal",
-                showLoaderOnConfirm: true, 
-                preConfirm: () => {
-                    const fromDate = this.filter.from || '';
-                    const toDate = this.filter.to || '';
-                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
-                    window.open(url, "_blank");
-                    return true; 
+                confirmButtonColor: '#1C7C54',
+                confirmButtonText: 'Lanjutkan Export',
+                cancelButtonText: 'Batal'
+            });
+
+            // Jika batal, berhenti
+            if (!result.isConfirmed) return;
+
+            // Ambil mode terpilih ('heatmap' atau 'cluster')
+            const selectedMode = result.value;
+
+            const fromDate = this.filter.from || '';
+            const toDate = this.filter.to || '';
+
+            // 2. Reset State & Show Modal Loading
+            this.isExporting = true;
+            this.exportStatus = 'loading';
+            this.exportTitle = 'Export Data Laporan';
+            this.exportMessage = 'Menghubungkan ke server peta...';
+            this.exportBlobUrl = null;
+
+            // 3. Simulasi Progress Text (Sesuai Mode)
+            let visualText = selectedMode === 'heatmap' ? 'Heatmap Intensitas' : 'Titik Clustering';
+            let progressSteps = [
+                'Mengambil data aktivitas...',
+                `Merender visualisasi: ${visualText}...`, 
+                'Menyusun dokumen PDF...',
+                'Finishing...'
+            ];
+            let stepIndex = 0;
+            
+            const progressInterval = setInterval(() => {
+                if (this.exportStatus === 'loading' && stepIndex < progressSteps.length) {
+                    this.exportMessage = progressSteps[stepIndex];
+                    stepIndex++;
+                }
+            }, 2500);
+
+            // 4. Request ke Backend via Axios Blob
+            // [NOTE] Kirim 'mode' sebagai parameter tambahan
+            axios.get(`/preview-map-pdf`, {
+                params: {
+                    from_date: fromDate,
+                    to_date: toDate,
+                    mode: selectedMode // <-- INJEKSI PARAMETER BARU
+                },
+                responseType: 'blob', 
+                timeout: 60000 
+            })
+            .then(response => {
+                clearInterval(progressInterval); 
+                
+                this.exportStatus = 'success';
+                this.exportTitle = 'Siap Diunduh!';
+                this.exportMessage = 'Dokumen PDF berhasil dibuat. Klik tombol di bawah untuk menutup.';
+
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                this.exportBlobUrl = url;
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `Peta_Aktivitas_${selectedMode}_${new Date().getTime()}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                this.exportStatus = 'error';
+                this.exportTitle = 'Gagal Export';
+                
+                if (error.response && error.response.data instanceof Blob) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        try {
+                            const errorJson = JSON.parse(reader.result);
+                            this.exportMessage = errorJson.message || 'Terjadi kesalahan pada server renderer.';
+                        } catch (e) {
+                            this.exportMessage = 'Terjadi kesalahan jaringan atau server timeout.';
+                        }
+                    };
+                    reader.readAsText(error.response.data);
+                } else {
+                    this.exportMessage = error.message || 'Service peta tidak merespon.';
                 }
             });
         },

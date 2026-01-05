@@ -103,12 +103,12 @@ class KabanSkoringService
     private function calculateLkhStats($userIds, $start, $end): array
     {
         // STATUS VALID SESUAI DATABASE
-        $submittedStatuses = ['approved', 'waiting_review', 'rejected'];
+        $submittedStatuses = ['approved', 'rejected'];
 
         // Query PostgreSQL yang valid
         $result = DB::table('laporan_harian')
             ->selectRaw("
-                COUNT(CASE WHEN status IN ('approved', 'waiting_review', 'rejected') THEN 1 END) AS total_submitted,
+                COUNT(CASE WHEN status IN ('approved', 'rejected') THEN 1 END) AS total_submitted,
                 COUNT(CASE WHEN status = 'approved' THEN 1 END) AS total_approved
             ")
             ->whereIn('user_id', $userIds)

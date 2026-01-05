@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB; // [FIX] Import DB Facade
+use Illuminate\Support\Facades\DB;
 
 // Import Service & Enum untuk Notifikasi
 use App\Services\NotificationService;
@@ -18,24 +18,65 @@ class PengumumanController extends Controller
 {
     /**
      * 1. LIST PENGUMUMAN (API)
+     * Menggabungkan List Basic, Filter Tanggal, Search Keyword, dan Scope dalam satu endpoint.
      */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // [FIX CRITICAL] Cek apakah user login. Jika sesi habis, return 401.
         if (!$user) {
             return response()->json(['message' => 'Unauthorized - Sesi Habis'], 401);
         }
 
-        // Logika: Tampilkan pengumuman Unit Kerja ATAU Global
-        $query = Pengumuman::with('creator')
-            ->where(function($q) use ($user) {
-                $q->where('unit_kerja_id', $user->unit_kerja_id)
-                  ->orWhereNull('unit_kerja_id'); // Global
-            });
+        // Mulai Query dengan Eager Loading User Creator
+        $query = Pengumuman::with('creator');
 
-        $data = $query->latest()->paginate(5);
+        // --- FILTER 1: SEARCH KEYWORD (Judul, Isi, Nama Pembuat) ---
+        if ($request->filled('q')) {
+            $keyword = $request->q;
+            // Jika keyword < 3 karakter, biasanya diabaikan untuk performance, 
+            // tapi untuk fleksibilitas kita izinkan search apa adanya.
+            $query->where(function($subQ) use ($keyword) {
+                // Full Text Search PostgreSQL untuk performa (jika sudah di-setup)
+                // Atau fallback ke ILIKE standar Laravel
+                $subQ->whereRaw("to_tsvector('indonesian', judul || ' ' || COALESCE(isi_pengumuman, '')) @@ plainto_tsquery('indonesian', ?)", [$keyword])
+                     ->orWhere('judul', 'ILIKE', "%{$keyword}%") // Fallback manual
+                     ->orWhere('isi_pengumuman', 'ILIKE', "%{$keyword}%")
+                     ->orWhereHas('creator', function($creatorQ) use ($keyword) {
+                         $creatorQ->where('name', 'ILIKE', "%{$keyword}%");
+                     });
+            });
+        }
+
+        // --- FILTER 2: DATE RANGE (Rentang Tanggal) ---
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // --- FILTER 3: SCOPE & HAK AKSES (Logic Inti) ---
+        // Logika dasar: Tampilkan yang (UMUM) OR (BIDANG SAYA) OR (SAYA BUAT)
+        $query->where(function($q) use ($user) {
+            $q->whereNull('bidang_id') // Umum
+              ->orWhere('bidang_id', $user->bidang_id) // Bidang User
+              ->orWhere('user_id_creator', $user->id); // Owner (Penting untuk Kadis)
+        });
+
+        // --- FILTER 4: UNIT KERJA (Global Scope) ---
+        if ($user->unit_kerja_id) {
+            $query->where(function($q) use ($user) {
+                $q->where('unit_kerja_id', $user->unit_kerja_id)
+                  ->orWhereNull('unit_kerja_id');
+            });
+        }
+
+        // Eksekusi Pagination (12 item per halaman untuk Grid 3 kolom)
+        $data = $query->latest()->paginate(12);
+
+        // Pertahankan query string (q, start_date, dll) pada link pagination
+        $data->appends($request->all());
 
         return response()->json($data);
     }
@@ -51,16 +92,15 @@ class PengumumanController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Validasi Akses
-        if ($user->roles->contains('nama_role', 'Pegawai') && count($user->roles) == 1) {
-            return response()->json(['message' => 'Anda tidak memiliki akses membuat pengumuman'], 403);
-        }
+        // Cek apakah user adalah Kadis/Kaban
+        $isKadis = $user->roles->contains('nama_role', 'Kadis') || $user->roles->contains('nama_role', 'Kaban');
 
         // Validasi Input
         $validator = Validator::make($request->all(), [
             'judul' => 'required|string|max:255',
             'isi_pengumuman' => 'required|string',
-            'unit_kerja_id' => 'nullable|exists:unit_kerja,id' // Null = Global
+            'target' => 'required|in:umum,divisi',
+            'target_bidang_id' => $isKadis && $request->target === 'divisi' ? 'required|exists:bidang,id' : 'nullable'
         ]);
 
         if ($validator->fails()) {
@@ -68,31 +108,35 @@ class PengumumanController extends Controller
         }
 
         try {
-            // [FIX] Mulai Transaksi Database
-            // Menjamin create data dan notifikasi berjalan atomik (sukses semua atau gagal semua)
             DB::beginTransaction();
 
-            // 1. Simpan ke Database
+            $bidangId = null;
+            if ($request->target === 'divisi') {
+                if ($isKadis) {
+                    $bidangId = $request->target_bidang_id;
+                } else {
+                    $bidangId = $user->bidang_id;
+                }
+            }
+
             $pengumuman = Pengumuman::create([
                 'user_id_creator' => $user->id,
-                'judul' => $request->judul,
-                'isi_pengumuman' => $request->isi_pengumuman,
-                'unit_kerja_id' => $request->unit_kerja_id,
+                'judul'           => $request->judul,
+                'isi_pengumuman'  => $request->isi_pengumuman,
+                'unit_kerja_id'   => $user->unit_kerja_id,
+                'bidang_id'       => $bidangId,
             ]);
             
-            // 2. Trigger Notifikasi (Hanya dieksekusi sekali di sini)
             $this->dispatchNotification($pengumuman, $user);
 
-            // [FIX] Commit Transaksi
             DB::commit();
 
             return response()->json([
-                'message' => 'Pengumuman berhasil dibuat dan disebarkan',
+                'message' => 'Pengumuman berhasil disebarkan',
                 'data' => $pengumuman
             ], 201);
 
         } catch (\Exception $e) {
-            // [FIX] Rollback jika ada error
             DB::rollBack();
             return response()->json(['message' => 'Gagal membuat pengumuman', 'error' => $e->getMessage()], 500);
         }
@@ -103,48 +147,41 @@ class PengumumanController extends Controller
      */
     public function destroy($id)
     {
-        // 1. Cari dulu datanya secara global (tanpa filter where user)
         $pengumuman = Pengumuman::find($id);
         
-        // Jika data benar-benar tidak ada di DB
         if (!$pengumuman) {
             return response()->json(['message' => 'Pengumuman tidak ditemukan'], 404);
         }
 
-        // 2. Validasi Kepemilikan (STRICT MODE)
-        // Cek apakah ID yang login SAMA DENGAN ID pembuat pengumuman?
         if ($pengumuman->user_id_creator != Auth::id()) {
-            return response()->json([
-                'message' => 'Anda tidak dapat menghapus pengumuman ini karena bukan milik Anda.'
-            ], 403); // 403 = Forbidden (Dilarang)
+            return response()->json(['message' => 'Anda tidak memiliki otoritas menghapus pesan ini.'], 403);
         }
         
-        // 3. Jika lolos validasi (Milik Pribadi), baru hapus
         $pengumuman->delete();
         return response()->json(['message' => 'Pengumuman berhasil dihapus']);
     }
 
     /**
-     * Helper Private: Mengirim Notifikasi ke Target Audience
+     * Helper Private: Mengirim Notifikasi
      */
     private function dispatchNotification($pengumuman, $sender)
     {
-        // Pastikan Enum NotificationType sudah ada, gunakan ->value untuk ambil string
         $type = NotificationType::PENGUMUMAN->value; 
-        $message = "📢 Pengumuman: " . $pengumuman->judul;
+        $message = "📢 Pengumuman " . ($pengumuman->bidang_id ? "(Divisi)" : "(Umum)") . ": " . $pengumuman->judul;
 
-        if ($pengumuman->unit_kerja_id) {
-            // SKENARIO A: Broadcast ke Unit Kerja Spesifik
-            NotificationService::broadcastToUnit(
-                $pengumuman->unit_kerja_id,
-                $type,
-                $message,
-                $pengumuman
-            );
+        $recipientQuery = User::where('id', '!=', $sender->id);
+
+        if ($pengumuman->bidang_id) {
+            $recipientQuery->where('bidang_id', $pengumuman->bidang_id);
         } else {
-            // SKENARIO B: Broadcast Global
-            $recipientIds = User::where('id', '!=', $sender->id)->pluck('id'); 
+            if ($pengumuman->unit_kerja_id) {
+                $recipientQuery->where('unit_kerja_id', $pengumuman->unit_kerja_id);
+            }
+        }
 
+        $recipientIds = $recipientQuery->pluck('id'); 
+
+        if ($recipientIds->isNotEmpty()) {
             $payload = [];
             $now = now();
 
@@ -165,31 +202,14 @@ class PengumumanController extends Controller
         }
     }
 
+    /**
+     * SEARCH (DEPRECATED - MERGED INTO INDEX)
+     * Method ini bisa dihapus atau di-redirect ke index() jika masih ada frontend lama yg manggil.
+     * Tapi sebaiknya frontend diarahkan ke index() dengan parameter ?q=...
+     */
     public function search(Request $request)
     {
-        $q = $request->q;
-
-	   if (!$q || strlen($q) < 3) { // Best Practice: Batasi minimal 3 huruf
-        return response()->json([]);
-    }
-
-    	$pengumuman = \App\Models\Pengumuman::with('creator')
-	    ->whereRaw(
-                "to_tsvector('indonesian', judul || ' ' || COALESCE(isi_pengumuman, '')) @@ plainto_tsquery('indonesian', ?)", 
-       	      [$q]
-             )
-            ->orWhereHas('creator', function($user) use ($q) {
-                $user->where('name', 'ILIKE', "%$q%");
-            })
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
-
-        return response()->json($pengumuman);
-    }
-
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'user_id_creator');
+        // Redirect ke index dengan parameter pencarian
+        return $this->index($request);
     }
 }

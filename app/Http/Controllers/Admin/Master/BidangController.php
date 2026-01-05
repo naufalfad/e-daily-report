@@ -10,21 +10,43 @@ use Illuminate\Http\Request;
 class BidangController extends Controller
 {
     /**
-     * Tampilkan halaman & Data JSON
+     * Tampilkan halaman & Data JSON dengan Pagination & Search
      */
     public function index(Request $request)
     {
+        // 1. Jika request via AJAX (fetch JS), kirim JSON Paginasi
         if ($request->ajax()) {
-            // Eager Load 'unitKerja' agar tidak N+1 Query
-            $data = Bidang::with('unitKerja')
-                ->withCount('users') // Hitung jumlah pegawai di bidang ini
-                ->latest()
-                ->get();
+            
+            // Inisialisasi Query + Eager Load 'unitKerja' agar efisien
+            // + Hitung jumlah pegawai ('users') di bidang ini
+            $query = Bidang::with('unitKerja')
+                ->withCount('users');
 
-            return response()->json(['data' => $data]);
+            // 2. Logic Pencarian (Server-side Search)
+            // Mencari di Nama Bidang ATAU Nama Unit Kerja (Relasi Parent)
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                
+                $query->where(function($q) use ($search) {
+                    $q->where('nama_bidang', 'ilike', "%{$search}%")
+                      ->orWhereHas('unitKerja', function($qUnit) use ($search) {
+                          $qUnit->where('nama_unit', 'ilike', "%{$search}%");
+                      });
+                });
+            }
+
+            // 3. Sorting & Pagination
+            // Default 10 data per halaman jika tidak diset oleh client
+            $perPage = $request->input('per_page', 10);
+            
+            $data = $query->latest()
+                          ->paginate($perPage);
+
+            return response()->json($data);
         }
 
-        // Ambil data Unit Kerja untuk isi Dropdown (Select Option)
+        // 4. Jika request browser biasa, kirim Data Dropdown untuk Modal Create/Edit
+        // Data ini statis, cukup diload sekali saat halaman dibuka
         $unitKerjas = UnitKerja::orderBy('nama_unit', 'asc')->get();
 
         return view('admin.master.bidang.index', compact('unitKerjas'));

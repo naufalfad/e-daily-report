@@ -93,7 +93,7 @@
                 <div class="flex-shrink-0">
                     <div class="h-[78px] w-[78px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-slate-100">
                         {{-- [INTEGRASI] Logika Foto: Cek Storage dulu, kalau null pakai default asset --}}
-                        <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : asset('assets/icon/avatar_1.png') }}" 
+                        <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : asset('assets/man.png') }}" 
                              class="h-full w-full object-cover"
                              alt="Avatar">
                     </div>

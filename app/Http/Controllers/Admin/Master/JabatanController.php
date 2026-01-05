@@ -10,20 +10,41 @@ use Illuminate\Http\Request;
 class JabatanController extends Controller
 {
     /**
-     * Tampilkan halaman & Data JSON
+     * Tampilkan halaman & Data JSON dengan Pagination
      */
     public function index(Request $request)
     {
+        // 1. Jika request via AJAX (fetch JS), kirim JSON Paginasi
         if ($request->ajax()) {
-            $data = Jabatan::with('unitKerja')
-                ->withCount('users') // Hitung jumlah pegawai yang menjabat
-                ->latest()
-                ->get();
+            
+            // Inisialisasi Query + Eager Load 'unitKerja' + Count 'users'
+            $query = Jabatan::with('unitKerja')
+                ->withCount('users');
 
-            return response()->json(['data' => $data]);
+            // 2. Logic Pencarian (Server-side Search)
+            // Mencari di Nama Jabatan ATAU Nama Unit Kerja (Relasi)
+            if ($request->filled('search')) {
+                $search = $request->input('search');
+                
+                $query->where(function($q) use ($search) {
+                    $q->where('nama_jabatan', 'ilike', "%{$search}%")
+                      ->orWhereHas('unitKerja', function($qUnit) use ($search) {
+                          $qUnit->where('nama_unit', 'ilike', "%{$search}%");
+                      });
+                });
+            }
+
+            // 3. Sorting & Pagination
+            $perPage = $request->input('per_page', 10);
+            
+            $data = $query->latest()
+                          ->paginate($perPage);
+
+            return response()->json($data);
         }
 
-        // Ambil data Unit Kerja untuk dropdown
+        // 4. Jika request browser biasa, kirim Data Dropdown untuk Modal
+        // Data ini tetap dikirim via View karena statis dan digunakan untuk form Create/Edit
         $unitKerjas = UnitKerja::orderBy('nama_unit', 'asc')->get();
 
         return view('admin.master.jabatan.index', compact('unitKerjas'));

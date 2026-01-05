@@ -16,6 +16,7 @@ class KadisValidatorController extends Controller
 {
     /**
      * LIST LKH KABID UNTUK KADIS
+     * [REFACTORED] Dynamic Pagination & Server-side Filtering
      */
     public function index(Request $request)
     {
@@ -56,29 +57,18 @@ class KadisValidatorController extends Controller
             });
         }
 
-        // 3. Filter Tahun
-        $query->when($request->filled('year'), function ($q) use ($request) {
-            $q->whereYear('tanggal_laporan', $request->year);
-        });
-
-        // 4. Search (Nama User / Deskripsi)
-        $query->when($request->filled('search'), function ($q) use ($request) {
-            $search = $request->search;
-            $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-
-            $q->where(function ($sub) use ($search, $like) {
-                $sub->whereHas('user', function ($u) use ($search, $like) {
-                    $u->where('name', $like, "%{$search}%");
-                })
-                    ->orWhere('deskripsi_aktivitas', $like, "%{$search}%");
-            });
-        });
-
         // Sorting: Waiting Review Paling Atas
         $query->orderByRaw("CASE WHEN status = 'waiting_review' THEN 1 ELSE 2 END")
             ->latest('tanggal_laporan');
 
-        return response()->json($query->paginate(10));
+        // --- PAGINATION LOGIC ---
+        // Sanitasi input per_page (Default: 10, Max: 100)
+        $perPage = (int) $request->input('per_page', 10);
+        if ($perPage <= 0 || $perPage > 100) {
+            $perPage = 10;
+        }
+
+        return response()->json($query->paginate($perPage));
     }
 
     /**
@@ -179,6 +169,7 @@ class KadisValidatorController extends Controller
 
     /**
      * MONITORING LKH STAF (yang sudah disetujui Kabid)
+     * [REFACTORED] Consistent Pagination
      */
     public function monitoringStaf(Request $request)
     {
@@ -200,8 +191,14 @@ class KadisValidatorController extends Controller
             $q->whereHas('user', fn($u) => $u->where('name', $like, "%{$search}%"));
         });
 
+        // --- PAGINATION LOGIC (Consistent with Index) ---
+        $perPage = (int) $request->input('per_page', 20); // Default beda (20) karena monitoring biasanya butuh view lebih banyak
+        if ($perPage <= 0 || $perPage > 100) {
+            $perPage = 20;
+        }
+
         return response()->json(
-            $query->latest('tanggal_laporan')->paginate(20)
+            $query->latest('tanggal_laporan')->paginate($perPage)
         );
     }
 }

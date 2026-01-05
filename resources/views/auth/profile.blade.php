@@ -48,7 +48,7 @@
                     <div class="mb-5 flex justify-center">
                         <div class="relative w-[140px] h-[140px]">
                             <img class="w-full h-full rounded-full object-cover border-4 border-white shadow-lg"
-                                src="{{ $user->foto_profil ? asset('storage/'.$user->foto_profil) : asset('assets/icon/avatar.png') }}"
+                                src="{{ $user->foto_profil ? asset('storage/'.$user->foto_profil) : asset('assets/man.png') }}"
                                 alt="Foto Profil">
                         </div>
                     </div>

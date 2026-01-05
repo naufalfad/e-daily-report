@@ -73,9 +73,11 @@ $title = 'Validasi Laporan';
         </form>
     </div>
 
-    {{-- ========================= TABEL ========================= --}}
-    <div class="flex-1 bg-white rounded-2xl ring-1 ring-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+    {{-- ========================= TABEL CARD ========================= --}}
+    <div class="flex-1 bg-white rounded-2xl ring-1 ring-slate-200 shadow-sm overflow-hidden flex flex-col">
+        
+        {{-- Table Container --}}
+        <div class="overflow-x-auto flex-1">
             <table class="min-w-full text-sm text-left">
                 <thead class="bg-slate-50 text-[12px] uppercase text-slate-500 font-semibold border-b border-slate-200">
                     <tr>
@@ -91,6 +93,37 @@ $title = 'Validasi Laporan';
                     {{-- JS inject row here --}}
                 </tbody>
             </table>
+        </div>
+
+        {{-- 
+            PAGINATION WRAPPER (NEW STRUCTURE) 
+            Konsisten dengan modul Penilai, menggunakan FontAwesome untuk ikon.
+        --}}
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4"
+            id="pagination-wrapper">
+            
+            {{-- Info Paginasi --}}
+            <span class="text-xs text-slate-500 font-medium" id="pagination-info">Menyiapkan data...</span>
+            
+            {{-- Kontrol Paginasi --}}
+            <div class="flex items-center gap-1">
+                {{-- Tombol Previous --}}
+                <button id="prev-page"
+                    class="p-2 text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-lg hover:bg-slate-50 active:bg-slate-100">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                {{-- Container Angka Halaman (Akan diisi oleh JS) --}}
+                <div id="pagination-numbers" class="flex items-center gap-1">
+                    {{-- JS injection point: <button class="...">1</button> ... --}}
+                </div>
+
+                {{-- Tombol Next --}}
+                <button id="next-page"
+                    class="p-2 text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all rounded-lg hover:bg-slate-50 active:bg-slate-100">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 

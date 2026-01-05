@@ -44,8 +44,8 @@ class StoreLkhRequest extends FormRequest
         return [
             // --- 1. CORE DATA VALIDATION ---
             'tanggal_laporan' => ['required', 'date', 'before_or_equal:today'],
-            'waktu_mulai'       => ['required', 'date_format:H:i'],
-            'waktu_selesai'     => ['required', 'date_format:H:i', 'after:jam_mulai'],
+            'waktu_mulai'     => ['required', 'date_format:H:i'],
+            'waktu_selesai'   => ['required', 'date_format:H:i', 'after:jam_mulai'],
             'jenis_kegiatan'  => ['required', 'string', 'max:100'],
             'deskripsi_aktivitas' => ['required', 'string', 'min:10'],
 
@@ -58,27 +58,35 @@ class StoreLkhRequest extends FormRequest
             'satuan'             => [$isSubmit ? 'required' : 'nullable', 'string', 'max:50'],
             'volume'             => [$isSubmit ? 'required' : 'nullable', 'numeric', 'min:0'],
 
-            // --- 2. GEOSPATIAL VALIDATION (STRICT) ---
-            // Validasi koordinat wajib numerik dan berada dalam range bumi yang valid.
-            'latitude' => [
-                $isSubmit ? 'required' : 'nullable', 
-                'numeric', 
-                'between:-90,90'
-            ],
-            'longitude' => [
-                $isSubmit ? 'required' : 'nullable', 
-                'numeric', 
-                'between:-180,180'
-            ],
+            // --- 2. GEOSPATIAL VALIDATION (STRICT & INTEGRITY CHECK) ---
             
-            // Type Safety: Menggunakan Enum untuk mencegah Magic Strings attack
+            // Validasi Provider: Wajib dan harus salah satu dari Enum
             'location_provider' => [
                 'required', 
                 Rule::enum(LocationProvider::class)
             ],
+
+            // Latitude: Wajib jika Submit ATAU jika provider menyatakan GPS Device
+            'latitude' => [
+                Rule::requiredIf(fn() => $isSubmit || $this->input('location_provider') === LocationProvider::GPS_DEVICE->value),
+                'nullable', 
+                'numeric', 
+                'between:-90,90'
+            ],
+            
+            // Longitude: Idem
+            'longitude' => [
+                Rule::requiredIf(fn() => $isSubmit || $this->input('location_provider') === LocationProvider::GPS_DEVICE->value),
+                'nullable', 
+                'numeric', 
+                'between:-180,180'
+            ],
             
             'location_accuracy' => ['nullable', 'numeric', 'min:0'],
             'lokasi_teks'       => ['nullable', 'string', 'max:500'],
+            
+            // NEW FIELD: Hasil Reverse Geocoding dari Peta Fullscreen
+            'address_auto'      => ['nullable', 'string', 'max:500'],
 
             // --- 3. FILE VALIDATION (ROBUST) ---
             // Menggunakan Custom Closure untuk menangani edge case MIME Type
@@ -154,6 +162,7 @@ class StoreLkhRequest extends FormRequest
             'location_provider' => 'Sumber Lokasi',
             'output_hasil_kerja' => 'Output Kegiatan',
             'bukti.*' => 'Lampiran Bukti',
+            'address_auto' => 'Alamat Otomatis',
         ];
     }
 

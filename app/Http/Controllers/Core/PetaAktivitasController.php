@@ -130,19 +130,25 @@ class PetaAktivitasController extends Controller
     }
 
     /**
-     * Preview / Export PDF Peta Aktivitas (Core Logic Update)
+     * Preview / Export PDF Peta Aktivitas (Dual Mode Support & Headless Rendering)
      * Menggunakan external Node.js service untuk rendering peta statis (Puppeteer).
      */
     public function previewMapPdf(Request $request)
     {
+        // ------------------------------------------------------------------
+        // FIX MEMORY LIMIT: Eskalasi resource khusus untuk proses PDF berat
+        // ------------------------------------------------------------------
+        // DOMPDF boros memori saat merender tabel panjang (Cellmap issue). 
+        // Kita naikkan limit ke 2GB dan timeout ke 10 menit untuk request ini saja.
+        ini_set('memory_limit', '2048M');
+        set_time_limit(600); 
+
         try {
             $user = Auth::user();
             $mapImageBase64 = null;
             $rendererUrl = env('MAP_RENDER_URL', 'http://map-renderer-service:3000'); // Default Docker internal URL
 
-            // ------------------------------------------------------------------
-            // TAHAPAN 1: Menangkap & Validasi Parameter Visualisasi
-            // ------------------------------------------------------------------
+            // 1. TANGKAP INPUT MODE
             // Default ke 'marker' jika tidak ada input valid
             $validModes = ['heatmap', 'clustering', 'marker'];
             $mode = $request->input('mode');
@@ -150,7 +156,7 @@ class PetaAktivitasController extends Controller
                 $mode = 'marker'; 
             }
 
-            // 2. Query Builder Standard
+            // 2. QUERY BUILDER
             $query = LaporanHarian::with(['user.jabatan', 'user.unitKerja', 'tupoksi'])
                 ->whereNot('status', 'draft')
                 // Filter Unit Kerja Scope (Jika user terikat unit kerja dan bukan superadmin)
@@ -179,18 +185,24 @@ class PetaAktivitasController extends Controller
             // ------------------------------------------------------------------
             if ($activities->isNotEmpty()) {
                 try {
-                    // Set timeout agak lama karena rendering peta butuh waktu
-                    $client = new Client(['timeout' => 30.0]); 
+                    // Set timeout client lebih lama untuk proses rendering peta
+                    $client = new Client(['timeout' => 60.0]); 
                     
                     // Tentukan titik tengah peta (Fallback ke Mimika jika data kosong/error)
                     $firstActivity = $activities->first();
                     $centerLat = $firstActivity['lat'] ?? -4.5467;
                     $centerLng = $firstActivity['lng'] ?? 136.8833;
 
+                    // OPTIMISASI: Buat array minimalis hanya Lat/Lng untuk dikirim ke Node.js
+                    // Ini mengurangi beban memory saat JSON encode dan transfer data
+                    $minimalDataForMap = $activities->map(function($act) {
+                        return ['lat' => $act['lat'], 'lng' => $act['lng']];
+                    })->values()->all();
+
                     // Kirim request ke Node.js Service
                     $response = $client->post($rendererUrl . '/render-map', [
                         'json' => [
-                            'activities' => $activities->values()->all(), // Re-index array
+                            'activities' => $minimalDataForMap,
                             'center' => [
                                 'lat' => (float) $centerLat,
                                 'lng' => (float) $centerLng
@@ -212,7 +224,6 @@ class PetaAktivitasController extends Controller
                 } catch (\Exception $e) {
                     // Fallback Strategy:
                     // Jika renderer mati, PDF tetap digenerate tapi tanpa gambar peta
-                    // User tetap dapat list datanya.
                     Log::error('Map Renderer Service Failed: ' . $e->getMessage());
                 }
             }
@@ -241,17 +252,26 @@ class PetaAktivitasController extends Controller
                 'filter_scope'   => $scopeText,
                 'data_count'     => $activities->count(),
                 'trx_id'         => $trxId,
-                'vis_mode'       => ucfirst($mode) // Info mode untuk ditampilkan di PDF
+                'vis_mode'       => ucfirst($mode), // Info mode untuk ditampilkan di PDF
+                'security_hash'  => md5($trxId . $activities->count() . config('app.key'))
             ];
 
             // 6. Generate PDF View
-            // Kita pass 'mode' ke view juga, jaga-jaga jika view perlu logika kondisional CSS
             $pdf = Pdf::loadView('pdf.peta-aktivitas', [
                 'activities' => $activities,
                 'meta'       => $meta,
                 'image'      => $mapImageBase64, // Hasil render dari Puppeteer
                 'mode'       => $mode 
-            ])->setPaper('a4', 'portrait'); // Bisa diubah landscape jika peta lebar
+            ]);
+            
+            // Setting Kertas & Optimasi DOMPDF
+            $pdf->setPaper('a4', 'portrait');
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'dpi' => 96,
+                'defaultFont' => 'sans-serif'
+            ]);
 
             // 7. Stream Download
             $safeFilename = 'Peta_Aktivitas_' . $mode . '_' . $now->format('Ymd_His') . '.pdf';
@@ -268,7 +288,10 @@ class PetaAktivitasController extends Controller
                     'message' => 'Gagal memproses dokumen PDF: ' . $e->getMessage(),
                 ], 500);
             }
-            abort(500, 'Terjadi kesalahan sistem saat memproses laporan peta.');
+            
+            // Return error text sederhana jika bukan AJAX
+            Log::error('PDF Gen Error: ' . $e->getMessage());
+            return response("Terjadi kesalahan sistem (Memory Limit Exhausted). Data terlalu banyak untuk dicetak sekaligus. Silakan persempit rentang tanggal laporan.", 500);
         }
     }
 

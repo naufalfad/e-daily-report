@@ -14,7 +14,6 @@ app.post('/render-map', async (req, res) => {
     let browser = null;
     try {
         // 1. Destructuring & Validation
-        // Mengambil parameter 'mode' yang dikirim dari Laravel
         const { activities, center, zoom, mode } = req.body;
         
         // Fallback default jika mode tidak terdefinisi
@@ -28,25 +27,23 @@ app.post('/render-map', async (req, res) => {
         // 2. Browser Initialization
         // Menggunakan executablePath ke Chromium di dalam container Docker
         browser = await puppeteer.launch({
-            executablePath: '/usr/bin/chromium',
+            executablePath: '/usr/bin/chromium-browser', // Sesuaikan dengan path di Alpine Linux (seringkali /usr/bin/chromium-browser)
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage', // Penting untuk performa di Docker
-                '--disable-gpu'
+                '--disable-dev-shm-usage', // Penting untuk performa di Docker agar tidak crash memory
+                '--disable-gpu',
+                '--disable-software-rasterizer' // Tambahan optimasi
             ],
             headless: 'new'
         });
 
         const page = await browser.newPage();
 
-        // Ukuran Viewport disesuaikan untuk proporsi PDF A4 (Landscape-ish dalam container)
+        // Ukuran Viewport disesuaikan untuk proporsi PDF A4
         await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
 
         // 3. HTML Template Construction
-        // Kita menginjeksi logika Javascript langsung ke dalam string HTML ini.
-        // Library dimuat via CDN untuk kesederhanaan (pastikan container punya akses internet),
-        // atau bisa diganti path lokal jika asset tersedia di folder nodejs.
         const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -104,8 +101,6 @@ app.post('/render-map', async (req, res) => {
                     rawData.forEach(function(item) {
                         if(item.lat && item.lng) {
                             var m = L.marker([item.lat, item.lng]);
-                            // Optional: Tambah popup meski tidak diklik (hanya untuk konteks jika perlu)
-                            // m.bindPopup(item.kegiatan); 
                             markers.addLayer(m);
                         }
                     });
@@ -156,18 +151,21 @@ app.post('/render-map', async (req, res) => {
                     if (rawData.length > 0) map.fitBounds(group.getBounds(), { padding: [50, 50] });
                 }
 
-                // Tanda untuk Puppeteer bahwa map sudah siap (opsional, tp good practice)
+                // Tanda untuk Puppeteer bahwa map sudah siap
                 document.body.setAttribute('data-ready', 'true');
             </script>
         </body>
         </html>`;
 
         // 4. Render & Screenshot
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        // PERBAIKAN: Menggunakan networkidle2 dan timeout yang lebih panjang (60 detik)
+        await page.setContent(htmlContent, { 
+            waitUntil: 'networkidle2', 
+            timeout: 60000 
+        });
 
-        // Tunggu sebentar untuk memastikan tile ter-load sempurna (networkidle0 kadang triger terlalu cepat pada tiles)
-        // Kita juga bisa menunggu selector body[data-ready="true"]
-        await new Promise(r => setTimeout(r, 1500)); 
+        // Tunggu manual sedikit lebih lama (3 detik) untuk memastikan tile ter-render visualnya
+        await new Promise(r => setTimeout(r, 3000)); 
 
         const screenshotBuffer = await page.screenshot({ 
             encoding: 'base64', 

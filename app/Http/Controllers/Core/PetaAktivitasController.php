@@ -9,7 +9,6 @@ use App\Models\LaporanHarian;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\Aktivitas;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -17,291 +16,289 @@ class PetaAktivitasController extends Controller
 {
     /**
      * Mengambil Peta Aktivitas User yang Sedang Login
+     * Scope: Personal (JSON Data untuk Frontend)
      */
     public function getPetaAktivitas(Request $request)
     {
         try {
             $userId = Auth::id();
 
-            $query = LaporanHarian::with(['tupoksi', 'user'])
+            $lkh = LaporanHarian::with(['tupoksi', 'user'])
                 ->where('user_id', $userId)
-                ->whereNot('status', 'draft');
+                ->whereNot('status', 'draft')
+                ->when($request->filled('from_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '>=', $request->from_date);
+                })
+                ->when($request->filled('to_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '<=', $request->to_date);
+                })
+                ->orderBy('tanggal_laporan', 'desc')
+                ->get();
 
-            if ($request->has('from_date') && !empty($request->from_date)) {
-                $query->whereDate('tanggal_laporan', '>=', $request->from_date);
-            }
-
-            if ($request->has('to_date') && !empty($request->to_date)) {
-                $query->whereDate('tanggal_laporan', '<=', $request->to_date);
-            }
-
-            $lkh = $query->orderBy('tanggal_laporan', 'desc')->get();
-
-            $result = $lkh->map(function ($item) {
-                return $this->formatMapData($item);
-            });
+            // Transformasi data menggunakan helper untuk konsistensi
+            $result = $lkh->map(fn($item) => $this->formatMapData($item));
 
             return response()->json([
                 "success" => true,
-                "message" => "Data peta aktivitas berhasil diambil",
-                "data" => $result
+                "message" => "Data peta aktivitas pribadi berhasil diambil",
+                "data"    => $result
             ]);
 
         } catch (\Exception $e) {
+            Log::error("Error getPetaAktivitas: " . $e->getMessage());
             return response()->json([
                 "success" => false,
                 "message" => "Gagal mengambil data peta aktivitas",
-                "error" => $e->getMessage()
+                "error"   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Mengambil Peta Aktivitas Bawahan (Untuk Atasan)
+     * Mengambil Peta Aktivitas Bawahan
+     * Scope: Supervisor (JSON Data untuk Frontend)
      */
     public function getStafAktivitas(Request $request)
     {
         try {
             $userId = Auth::id();
 
-            $query = LaporanHarian::with(['tupoksi', 'user'])
+            $lkh = LaporanHarian::with(['tupoksi', 'user'])
                 ->where('atasan_id', $userId)
-                ->whereNot('status', 'draft');
+                ->whereNot('status', 'draft')
+                ->when($request->filled('from_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '>=', $request->from_date);
+                })
+                ->when($request->filled('to_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '<=', $request->to_date);
+                })
+                ->orderBy('tanggal_laporan', 'desc')
+                ->get();
 
-            if ($request->has('from_date') && !empty($request->from_date)) {
-                $query->whereDate('tanggal_laporan', '>=', $request->from_date);
-            }
-
-            if ($request->has('to_date') && !empty($request->to_date)) {
-                $query->whereDate('tanggal_laporan', '<=', $request->to_date);
-            }
-
-            $lkh = $query->orderBy('tanggal_laporan', 'desc')->get();
-
-            $result = $lkh->map(function ($item) {
-                return $this->formatMapData($item);
-            });
+            $result = $lkh->map(fn($item) => $this->formatMapData($item));
 
             return response()->json([
                 "success" => true,
-                "message" => "Data peta aktivitas berhasil diambil",
-                "data" => $result
+                "message" => "Data peta aktivitas staf berhasil diambil",
+                "data"    => $result
             ]);
 
         } catch (\Exception $e) {
+            Log::error("Error getStafAktivitas: " . $e->getMessage());
             return response()->json([
                 "success" => false,
-                "message" => "Gagal mengambil data peta aktivitas",
-                "error" => $e->getMessage()
+                "message" => "Gagal mengambil data peta aktivitas staf",
+                "error"   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Mengambil Semua Aktivitas (Admin/Global)
+     * Mengambil Semua Aktivitas
+     * Scope: Admin/Global Monitoring (JSON Data untuk Frontend)
      */
     public function getAllAktivitas(Request $request)
     {
         try {
-            $query = LaporanHarian::with(['tupoksi', 'user'])
-                ->whereNot('status', 'draft');
+            $lkh = LaporanHarian::with(['tupoksi', 'user'])
+                ->whereNot('status', 'draft')
+                ->when($request->filled('from_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '>=', $request->from_date);
+                })
+                ->when($request->filled('to_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '<=', $request->to_date);
+                })
+                ->orderBy('tanggal_laporan', 'desc')
+                ->get();
 
-            if ($request->has('from_date') && !empty($request->from_date)) {
-                $query->whereDate('tanggal_laporan', '>=', $request->from_date);
-            }
-
-            if ($request->has('to_date') && !empty($request->to_date)) {
-                $query->whereDate('tanggal_laporan', '<=', $request->to_date);
-            }
-
-            $lkh = $query->orderBy('tanggal_laporan', 'desc')->get();
-
-            $result = $lkh->map(function ($item) {
-                return $this->formatMapData($item);
-            });
+            $result = $lkh->map(fn($item) => $this->formatMapData($item));
 
             return response()->json([
                 "success" => true,
-                "message" => "Data peta aktivitas berhasil diambil",
-                "data" => $result
+                "message" => "Data seluruh peta aktivitas berhasil diambil",
+                "data"    => $result
             ]);
 
         } catch (\Exception $e) {
+            Log::error("Error getAllAktivitas: " . $e->getMessage());
             return response()->json([
                 "success" => false,
-                "message" => "Gagal mengambil data peta aktivitas",
-                "error" => $e->getMessage()
+                "message" => "Gagal mengambil data peta aktivitas global",
+                "error"   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Preview / Export PDF Peta Aktivitas (Dual Mode Support)
+     * Preview / Export PDF Peta Aktivitas (Core Logic Update)
+     * Menggunakan external Node.js service untuk rendering peta statis (Puppeteer).
      */
     public function previewMapPdf(Request $request)
     {
         try {
             $user = Auth::user();
             $mapImageBase64 = null;
+            $rendererUrl = env('MAP_RENDER_URL', 'http://map-renderer-service:3000'); // Default Docker internal URL
 
-            // 1. TANGKAP INPUT MODE DARI USER
-            // 'heatmap' = Peta Sebaran (Gradasi Warna)
-            // 'cluster' = Peta Titik (Marker Grouping)
-            $mode = $request->input('mode', 'heatmap');
+            // ------------------------------------------------------------------
+            // TAHAPAN 1: Menangkap & Validasi Parameter Visualisasi
+            // ------------------------------------------------------------------
+            // Default ke 'marker' jika tidak ada input valid
+            $validModes = ['heatmap', 'clustering', 'marker'];
+            $mode = $request->input('mode');
+            if (!in_array($mode, $validModes)) {
+                $mode = 'marker'; 
+            }
 
-            // 2. Logika Query Data & Filtering
-            $query = LaporanHarian::with(['user.jabatan', 'user.unitKerja', 'tupoksi']);
-                
-            // Filter Unit Kerja (Security Scope)
-            if ($user->unit_kerja_id) {
-                $unitKerjaId = $user->unit_kerja_id;
-                $query->whereHas('user', function ($q) use ($unitKerjaId) {
-                    $q->where('unit_kerja_id', $unitKerjaId);
+            // 2. Query Builder Standard
+            $query = LaporanHarian::with(['user.jabatan', 'user.unitKerja', 'tupoksi'])
+                ->whereNot('status', 'draft')
+                // Filter Unit Kerja Scope (Jika user terikat unit kerja dan bukan superadmin)
+                ->when($user->unit_kerja_id && $user->role !== 'admin', function ($q) use ($user) {
+                    $q->whereHas('user', function ($subQ) use ($user) {
+                        $subQ->where('unit_kerja_id', $user->unit_kerja_id);
+                    });
+                })
+                // Filter Tanggal
+                ->when($request->filled('from_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '>=', $request->from_date);
+                })
+                ->when($request->filled('to_date'), function ($q) use ($request) {
+                    $q->whereDate('tanggal_laporan', '<=', $request->to_date);
                 });
-            }
-            
-            $query->whereNot('status', 'draft');
-            
-            // Filter Tanggal
-            $fromDate = $request->query('from_date');
-            $toDate = $request->query('to_date');
-            
-            if (!empty($fromDate)) {
-                $query->whereDate('tanggal_laporan', '>=', $fromDate);
-            }
-            if (!empty($toDate)) {
-                $query->whereDate('tanggal_laporan', '<=', $toDate);
-            }
 
             $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
-            
-            // 3. Data Mapping (Hanya valid coordinates)
-            $activities = $laporanHarian->map(function ($item) {
-                return $this->formatMapData($item);
-            })->filter(function($item) {
-                return !empty($item['lat']) && !empty($item['lng']);
-            });
-            
-            // 4. Headless Renderer (External Service)
+
+            // 3. Data Processing & Geospatial Filtering
+            // Penting: Hapus data yang tidak memiliki koordinat agar renderer tidak error
+            $activities = $laporanHarian->map(fn($item) => $this->formatMapData($item))
+                ->filter(fn($item) => !empty($item['lat']) && !empty($item['lng']));
+
+            // ------------------------------------------------------------------
+            // TAHAPAN 2: Komunikasi dengan Map Renderer Service
+            // ------------------------------------------------------------------
             if ($activities->isNotEmpty()) {
                 try {
-                    $client = new Client();
-                    // Ambil center dari titik pertama atau default center kabupaten
+                    // Set timeout agak lama karena rendering peta butuh waktu
+                    $client = new Client(['timeout' => 30.0]); 
+                    
+                    // Tentukan titik tengah peta (Fallback ke Mimika jika data kosong/error)
                     $firstActivity = $activities->first();
                     $centerLat = $firstActivity['lat'] ?? -4.5467;
                     $centerLng = $firstActivity['lng'] ?? 136.8833;
 
-                    // URL Service Node.js
-                    $rendererUrl = env('MAP_RENDER_URL', 'http://127.0.0.1:3000') . '/render-map'; 
-
-                    $response = $client->post($rendererUrl, [
-                        'timeout' => 20.0, 
+                    // Kirim request ke Node.js Service
+                    $response = $client->post($rendererUrl . '/render-map', [
                         'json' => [
-                            'activities' => $activities->values()->all(),
+                            'activities' => $activities->values()->all(), // Re-index array
                             'center' => [
-                                'lat' => $centerLat,
-                                'lng' => $centerLng
+                                'lat' => (float) $centerLat,
+                                'lng' => (float) $centerLng
                             ],
                             'zoom' => 13,
-                            'mode' => $mode // <-- INJEKSI PARAMETER MODE KE RENDERER
+                            'mode' => $mode // <--- Parameter Kunci dikirim ke Renderer
                         ]
                     ]);
 
                     $result = json_decode($response->getBody(), true);
                     
                     if (isset($result['success']) && $result['success']) {
+                        // Image dikembalikan dalam bentuk Base64 Data URI
                         $mapImageBase64 = $result['image'];
+                    } else {
+                        Log::warning('Map Renderer returned false success status.');
                     }
+
                 } catch (\Exception $e) {
+                    // Fallback Strategy:
+                    // Jika renderer mati, PDF tetap digenerate tapi tanpa gambar peta
+                    // User tetap dapat list datanya.
                     Log::error('Map Renderer Service Failed: ' . $e->getMessage());
-                    // Fallback: Code akan lanjut tanpa gambar peta (View handle ini)
                 }
             }
-            
-            // 5. TRACEABILITY & INTEGRITY METADATA
+
+            // 5. Traceability & Metadata (Untuk Header PDF)
             $now = Carbon::now('Asia/Jakarta');
             
-            // Generate Transaction ID unik (Hash)
-            $trxId = 'TRX-' . $user->id . '-' . strtoupper(dechex($now->timestamp)) . '-' . strtoupper(Str::random(4));
+            // Generate Transaction ID Unik untuk Audit Trail
+            $trxId = sprintf(
+                'TRX-MAP-%s-%s', 
+                $user->id, 
+                strtoupper(Str::random(6))
+            );
 
-            // Logika Teks Periode (Human Readable)
+            // Logika Teks Periode Laporan
             $scopeText = 'Semua Riwayat Data';
-            if ($fromDate && $toDate) {
-                $scopeText = Carbon::parse($fromDate)->translatedFormat('d F Y') . ' s.d ' . Carbon::parse($toDate)->translatedFormat('d F Y');
-            } elseif ($fromDate) {
-                $scopeText = 'Sejak ' . Carbon::parse($fromDate)->translatedFormat('d F Y');
-            } elseif ($toDate) {
-                $scopeText = 'Sampai dengan ' . Carbon::parse($toDate)->translatedFormat('d F Y');
+            if ($request->filled('from_date') && $request->filled('to_date')) {
+                $scopeText = Carbon::parse($request->from_date)->translatedFormat('d M Y') . ' - ' . Carbon::parse($request->to_date)->translatedFormat('d M Y');
             }
 
             $meta = [
-                // Identity
                 'generated_by'   => $user->name,
                 'user_nip'       => $user->nip ?? '-',
-                'user_jabatan'   => $user->jabatan->nama_jabatan ?? ($user->role == 'kadis' ? 'Kepala Dinas' : 'Staff'),
                 'unit_kerja'     => $user->unitKerja->nama_unit_kerja ?? 'Pemerintah Kabupaten Mimika',
-                
-                // Timestamp & Scope
                 'timestamp'      => $now->format('d F Y, H:i') . ' WIB',
                 'filter_scope'   => $scopeText,
                 'data_count'     => $activities->count(),
-                
-                // Integrity
                 'trx_id'         => $trxId,
-                'security_hash'  => md5($trxId . $activities->count()), 
-                'app_version'    => 'v2.1 (E-Daily Report)',
-                'vis_mode'       => $mode === 'heatmap' ? 'Heatmap' : 'Clustering' // Info tambahan
+                'vis_mode'       => ucfirst($mode) // Info mode untuk ditampilkan di PDF
             ];
 
-            // 6. Generate PDF
+            // 6. Generate PDF View
+            // Kita pass 'mode' ke view juga, jaga-jaga jika view perlu logika kondisional CSS
             $pdf = Pdf::loadView('pdf.peta-aktivitas', [
                 'activities' => $activities,
                 'meta'       => $meta,
-                'image'      => $mapImageBase64, 
-            ])->setPaper('a4', 'portrait');
+                'image'      => $mapImageBase64, // Hasil render dari Puppeteer
+                'mode'       => $mode 
+            ])->setPaper('a4', 'portrait'); // Bisa diubah landscape jika peta lebar
 
-            // 7. Return PDF Stream
-            $safeFilename = 'Laporan_Peta_' . preg_replace('/[^A-Za-z0-9]/', '', $user->username) . '_' . $now->format('YmdHis') . '.pdf';
+            // 7. Stream Download
+            $safeFilename = 'Peta_Aktivitas_' . $mode . '_' . $now->format('Ymd_His') . '.pdf';
 
             return response($pdf->output(), 200)
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'inline; filename="' . $safeFilename . '"');
 
         } catch (\Throwable $e) {
-            // Adaptive Error Handling (JSON for AJAX, HTML for Direct)
+            // Error Handling jika terjadi crash fatal saat PDF generation
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal memproses dokumen: ' . $e->getMessage(),
-                    'trace'   => config('app.debug') ? $e->getTraceAsString() : null
+                    'message' => 'Gagal memproses dokumen PDF: ' . $e->getMessage(),
                 ], 500);
             }
-            throw $e;
+            abort(500, 'Terjadi kesalahan sistem saat memproses laporan peta.');
         }
     }
 
+    /**
+     * Helper: Format Data Transform Object (DTO)
+     * Memastikan tipe data float untuk lat/lng agar aman dikonsumsi JSON
+     */
     private function formatMapData($item)
     {
         return [
             "id"                 => $item->id,
             "kegiatan"           => $item->deskripsi_aktivitas,
-            "deskripsi"          => $item->output_hasil_kerja,
+            "deskripsi"          => $item->output_hasil_kerja, // Ringkasan hasil
             "kategori_aktivitas" => $item->jenis_kegiatan,
-
+            
+            // Format Tanggal Indonesia
             "tanggal"            => Carbon::parse($item->tanggal_laporan)->translatedFormat('d M Y'),
-            "tanggal_raw"        => $item->tanggal_laporan, 
             "waktu"              => substr($item->waktu_mulai, 0, 5) . " - " . substr($item->waktu_selesai, 0, 5),
-
+            
             "status"             => $item->status,
             "user"               => $item->user->name ?? "User",
+            "jabatan"            => $item->user->jabatan->nama_jabatan ?? "-",
 
-            // Koordinat
-            "lat"                => $item->lat,
-            "lng"                => $item->lng,
+            // Koordinat Geospasial (Casting ke float penting untuk Map Library)
+            "lat"                => $item->lat ? (float) $item->lat : null,
+            "lng"                => $item->lng ? (float) $item->lng : null,
 
-            // Lokasi Teks & Mode
+            // Metadata Tambahan
             "lokasi_teks"        => $item->lokasi_teks,
-            "is_luar_lokasi"     => $item->is_luar_lokasi,
+            "is_luar_lokasi"     => (bool) $item->is_luar_lokasi, 
         ];
     }
 }

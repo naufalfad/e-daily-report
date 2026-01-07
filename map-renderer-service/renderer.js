@@ -2,99 +2,140 @@ const express = require('express');
 const puppeteer = require('puppeteer-core');
 const app = express();
 
-// Limit besar untuk handle banyak data koordinat
-app.use(express.json({ limit: '50mb' })); 
+// Konfigurasi limit payload JSON diperbesar untuk mengakomodasi array koordinat yang banyak
+app.use(express.json({ limit: '50mb' }));
 
+/**
+ * Endpoint: /render-map
+ * Method: POST
+ * Description: Menerima data geoJSON dan parameter visualisasi, merender peta via Headless Browser, mengembalikan Base64 Image.
+ */
 app.post('/render-map', async (req, res) => {
+    let browser = null;
     try {
-        // 1. Ambil data & MODE dari Request Laravel
-        // Default mode ke 'heatmap' jika tidak dikirim
+        // 1. Destructuring & Validation
+        // Mengambil parameter 'mode' yang dikirim dari Laravel
         const { activities, center, zoom, mode } = req.body;
+        
+        // Fallback default jika mode tidak terdefinisi
         const renderMode = mode || 'heatmap'; 
-
-        // Validasi input minimal
-        const mapCenter = center || { lat: -4.546, lng: 136.883 }; // Default Timika
+        
+        // Default Center (Kantor Pusat Pemerintahan / Timika) jika null
+        const mapCenter = center || { lat: -4.5467, lng: 136.8833 }; 
         const mapZoom = zoom || 13;
         const dataPoints = activities || [];
 
-        // Launch Browser (Headless)
-        const browser = await puppeteer.launch({
+        // 2. Browser Initialization
+        // Menggunakan executablePath ke Chromium di dalam container Docker
+        browser = await puppeteer.launch({
             executablePath: '/usr/bin/chromium',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage', // Penting untuk performa di Docker
+                '--disable-gpu'
+            ],
+            headless: 'new'
         });
 
         const page = await browser.newPage();
 
-        // Set ukuran viewport (sesuai kebutuhan PDF A4 landscape/portrait)
-        await page.setViewport({ width: 800, height: 600 });
+        // Ukuran Viewport disesuaikan untuk proporsi PDF A4 (Landscape-ish dalam container)
+        await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
 
-        // Template HTML Peta
+        // 3. HTML Template Construction
+        // Kita menginjeksi logika Javascript langsung ke dalam string HTML ini.
+        // Library dimuat via CDN untuk kesederhanaan (pastikan container punya akses internet),
+        // atau bisa diganti path lokal jika asset tersedia di folder nodejs.
         const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset="utf-8">
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+            
             <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
             <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
-            <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
-
-            <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
             <style>
-                body { margin: 0; padding: 0; }
-                #map { width: 800px; height: 600px; }
+                body { margin: 0; padding: 0; background: #fff; }
+                #map { width: 100vw; height: 100vh; }
+                
+                /* Kustomisasi Tampilan Marker Cluster */
+                .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
+                .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
+                .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
+                .marker-cluster-medium div { background-color: rgba(240, 194, 12, 0.6); }
+                .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
+                .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
             </style>
         </head>
         <body>
             <div id="map"></div>
+
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+            <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
             <script>
-                // --- Inisialisasi Peta ---
+                // --- 1. Init Map ---
                 var map = L.map('map', {
-                    zoomControl: false, 
-                    attributionControl: false
+                    zoomControl: false,       // Hilangkan kontrol zoom untuk screenshot bersih
+                    attributionControl: false, // Hilangkan atribusi
+                    fadeAnimation: false,      // Matikan animasi agar render lebih cepat stabil
+                    zoomAnimation: false
                 }).setView([${mapCenter.lat}, ${mapCenter.lng}], ${mapZoom});
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19
                 }).addTo(map);
 
-                // --- Data dari Laravel ---
+                // --- 2. Data Injection ---
                 var rawData = ${JSON.stringify(dataPoints)};
                 var mode = "${renderMode}";
 
-                // --- LOGIKA VISUALISASI (SWITCH MODE) ---
+                // --- 3. Visualization Logic ---
                 if (mode === 'cluster') {
-                    // MODE A: MARKER CLUSTERING
-                    var markers = L.markerClusterGroup();
+                    // === LOGIKA CLUSTERING ===
+                    var markers = L.markerClusterGroup({
+                        chunkedLoading: true // Optimasi untuk data dalam jumlah besar
+                    });
                     
                     rawData.forEach(function(item) {
                         if(item.lat && item.lng) {
-                            markers.addLayer(L.marker([item.lat, item.lng]));
+                            var m = L.marker([item.lat, item.lng]);
+                            // Optional: Tambah popup meski tidak diklik (hanya untuk konteks jika perlu)
+                            // m.bindPopup(item.kegiatan); 
+                            markers.addLayer(m);
                         }
                     });
                     
                     map.addLayer(markers);
                     
-                    // Fit bounds ke marker
+                    // Auto fit bounds agar semua marker terlihat
                     if (rawData.length > 0) {
                         map.fitBounds(markers.getBounds(), { padding: [50, 50] });
                     }
 
-                } else {
-                    // MODE B: HEATMAP (Default)
-                    // Format data untuk heatmap: [lat, lng, intensity]
+                } else if (mode === 'heatmap') {
+                    // === LOGIKA HEATMAP ===
+                    // Format data leaflet-heat: [lat, lng, intensity]
                     var heatPoints = rawData
                         .filter(d => d.lat && d.lng)
-                        .map(d => [d.lat, d.lng, 1.0]); // Intensitas default 1.0
+                        .map(d => [d.lat, d.lng, 0.8]); // Intensitas 0.8
 
                     var heat = L.heatLayer(heatPoints, {
-                        radius: 25,   // Radius sebaran
-                        blur: 15,     // Kehalusan gradasi
-                        maxZoom: 15,  // Zoom maksimal sebelum memudar
+                        radius: 30,
+                        blur: 20,
+                        maxZoom: 12,
                         minOpacity: 0.4,
-                        gradient: {0.4: 'blue', 0.65: 'lime', 1: 'red'} // Biru (Sepi) -> Merah (Padat)
+                        gradient: {
+                            0.2: 'blue',
+                            0.4: 'cyan',
+                            0.6: 'lime',
+                            0.8: 'yellow',
+                            1.0: 'red'
+                        }
                     }).addTo(map);
 
                     // Fit bounds manual untuk heatmap
@@ -102,32 +143,58 @@ app.post('/render-map', async (req, res) => {
                         var bounds = L.latLngBounds(heatPoints.map(p => [p[0], p[1]]));
                         map.fitBounds(bounds, { padding: [50, 50] });
                     }
+
+                } else {
+                    // === DEFAULT MARKER (Fallback) ===
+                    var group = new L.featureGroup();
+                    rawData.forEach(function(item) {
+                        if(item.lat && item.lng) {
+                            var marker = L.marker([item.lat, item.lng]).addTo(map);
+                            group.addLayer(marker);
+                        }
+                    });
+                    if (rawData.length > 0) map.fitBounds(group.getBounds(), { padding: [50, 50] });
                 }
+
+                // Tanda untuk Puppeteer bahwa map sudah siap (opsional, tp good practice)
+                document.body.setAttribute('data-ready', 'true');
             </script>
         </body>
         </html>`;
 
-        // Set Content ke Page
-        await page.setContent(htmlContent);
+        // 4. Render & Screenshot
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
-        // Tunggu render selesai
-        await page.waitForNetworkIdle({ idleTime: 500, timeout: 10000 });
+        // Tunggu sebentar untuk memastikan tile ter-load sempurna (networkidle0 kadang triger terlalu cepat pada tiles)
+        // Kita juga bisa menunggu selector body[data-ready="true"]
+        await new Promise(r => setTimeout(r, 1500)); 
 
-        // Ambil Screenshot
-        const screenshotBuffer = await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 80 });
+        const screenshotBuffer = await page.screenshot({ 
+            encoding: 'base64', 
+            type: 'jpeg', 
+            quality: 85,
+            fullPage: false 
+        });
 
         await browser.close();
 
-        // Response
+        // 5. Send Response
         res.json({
             success: true,
+            mode: renderMode,
             image: "data:image/jpeg;base64," + screenshotBuffer
         });
 
     } catch (error) {
-        console.error("Renderer Error:", error);
+        if (browser) await browser.close();
+        console.error("Map Renderer Error:", error);
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+// Health Check
+app.get('/', (req, res) => {
+    res.send('Map Renderer Service is Running (Ready for Heatmap/Cluster)');
 });
 
 const PORT = 3000;

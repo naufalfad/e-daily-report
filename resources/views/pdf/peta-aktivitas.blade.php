@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Laporan Peta Aktivitas</title>
+    <title>Laporan Peta Aktivitas - {{ $meta['vis_mode'] ?? 'General' }}</title>
     <style>
         /* --- PAGE SETUP --- */
         @page {
@@ -24,7 +24,6 @@
             right: 0px;
             height: 90px;
             border-bottom: 2px solid #333;
-            /* background-color: #fce; Debugging Only */
         }
 
         .header-table {
@@ -86,10 +85,14 @@
             border-radius: 4px;
             margin-bottom: 20px;
             background-color: #fff;
+            text-align: center; /* Center image */
         }
+        
         .map-img {
             width: 100%;
             height: auto;
+            max-height: 500px; /* Batasi tinggi agar tidak memakan halaman berlebih */
+            object-fit: contain;
             display: block;
         }
 
@@ -105,7 +108,7 @@
             border: 1px dashed #ced4da;
         }
 
-        /* Legend */
+        /* Legend & Info Text */
         .legend-bar {
             margin-top: -10px;
             margin-bottom: 20px;
@@ -117,6 +120,13 @@
         .bg-green { background-color: #10b981; }
         .bg-yellow { background-color: #f59e0b; }
         .bg-red { background-color: #ef4444; }
+        
+        .map-note {
+            font-size: 8pt;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
 
         /* Data Table */
         .data-table {
@@ -138,12 +148,14 @@
         }
         .data-table tr:nth-child(even) { background-color: #f8fafc; }
         
+        /* Status Badges */
         .badge {
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 7pt;
             font-weight: bold;
             text-transform: uppercase;
+            display: inline-block;
         }
         .badge-approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
         .badge-waiting { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
@@ -195,49 +207,69 @@
         {{-- Title Section --}}
         <div style="text-align: center; margin-bottom: 20px;">
             <h3 style="margin: 0; text-transform: uppercase; border-bottom: 1px solid #333; display: inline-block; padding-bottom: 2px;">
-                Laporan Sebaran Aktivitas
+                Laporan Peta Sebaran Aktivitas ({{ $meta['vis_mode'] }})
             </h3>
             <div style="margin-top: 5px; font-size: 9pt; color: #555;">
                 Periode: {{ $meta['filter_scope'] ?? 'Semua Data' }}
             </div>
         </div>
 
-        {{-- Metadata Summary (Optional) --}}
+        {{-- Metadata Summary --}}
         <table class="meta-info">
             <tr>
                 <td class="label">Total Data</td>
                 <td>: {{ $meta['data_count'] ?? count($activities) }} Titik Aktivitas</td>
                 <td class="label">Status Data</td>
-                <td>: {{ $meta['security_hash'] ? 'Terverifikasi (Hash)' : 'Standard' }}</td>
+                <td>: {{ isset($meta['security_hash']) ? 'Terverifikasi (Secure)' : 'Standard' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Mode Visual</td>
+                <td>: <strong>{{ strtoupper($meta['vis_mode']) }}</strong></td>
+                <td class="label">Jabatan</td>
+                <td>: {{ $meta['user_jabatan'] ?? '-' }}</td>
             </tr>
         </table>
 
-        {{-- Map Visual --}}
+        {{-- Map Visual (THE CORE VISUALIZATION) --}}
         <div class="map-wrapper">
-            @isset($image)
-                <img src="{{ $image }}" class="map-img">
+            @if(!empty($image))
+                {{-- Gambar disuntikkan dari Controller sebagai Base64 --}}
+                <img src="{{ $image }}" class="map-img" alt="Peta Visualisasi">
+                
+                {{-- Dynamic Legend Note based on Mode --}}
+                <div class="map-note">
+                    @if(isset($mode) && $mode === 'heatmap')
+                        * Area berwarna <b>Merah</b> menunjukkan intensitas aktivitas tinggi, sedangkan <b>Biru</b> aktivitas rendah.
+                    @elseif(isset($mode) && $mode === 'cluster')
+                        * Angka pada lingkaran (cluster) menunjukkan jumlah tumpukan laporan di lokasi yang berdekatan.
+                    @else
+                        * Titik biru menandakan lokasi presisi aktivitas pegawai.
+                    @endif
+                </div>
             @else
                 <div class="map-placeholder">
-                    Visualisasi Peta Tidak Tersedia (Render Service Offline)
+                    Visualisasi Peta Tidak Tersedia (Gagal Merender Gambar)
                 </div>
-            @endisset
+            @endif
         </div>
 
-        {{-- Legend --}}
+        {{-- Legend Status Laporan (Jika Marker Mode atau Hybrid) --}}
         <div class="legend-bar">
+            <strong>Legenda Status:</strong>
             <div class="legend-item"><span class="dot bg-green"></span> Disetujui</div>
             <div class="legend-item"><span class="dot bg-yellow"></span> Menunggu Validasi</div>
             <div class="legend-item"><span class="dot bg-red"></span> Ditolak/Revisi</div>
         </div>
 
         {{-- Data Table --}}
+        <h4 style="margin-bottom: 10px; margin-top: 20px;">Rincian Data Geospasial</h4>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width: 5%;">No</th>
-                    <th style="width: 35%;">Uraian Kegiatan</th>
+                    <th style="width: 5%; text-align: center;">No</th>
+                    <th style="width: 30%;">Uraian Kegiatan</th>
                     <th style="width: 20%;">Waktu & Tanggal</th>
-                    <th style="width: 25%;">Lokasi Tercatat (Geo-Tag)</th>
+                    <th style="width: 30%;">Lokasi Tercatat (Geo-Tag)</th>
                     <th style="width: 15%; text-align: center;">Status</th>
                 </tr>
             </thead>
@@ -253,13 +285,19 @@
                     </td>
                     <td>
                         {{ $a['tanggal'] }}<br>
-                        <span style="color: #666;">{{ $a['waktu'] }}</span>
+                        <span style="color: #666; font-size: 8pt;">{{ $a['waktu'] }}</span>
                     </td>
                     <td>
                         @if(!empty($a['lokasi_teks']))
-                            {{ $a['lokasi_teks'] }}
+                            {{ $a['lokasi_teks'] }}<br>
+                        @endif
+                        
+                        @if(isset($a['lat']) && isset($a['lng']))
+                            <span style="color: #2563eb; font-family: monospace; font-size: 8pt;">
+                                {{ number_format((float)$a['lat'], 6) }}, {{ number_format((float)$a['lng'], 6) }}
+                            </span>
                         @else
-                            <span style="color: #999; font-style: italic;">Koordinat: {{ $a['lat'] }}, {{ $a['lng'] }}</span>
+                            <span style="color: #ef4444; font-style: italic; font-size: 8pt;">(Tanpa Koordinat)</span>
                         @endif
                     </td>
                     <td style="text-align: center;">

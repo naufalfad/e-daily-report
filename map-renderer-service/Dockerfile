@@ -1,11 +1,16 @@
 # map-renderer-service/Dockerfile
 FROM node:20-slim
 
-# Install dependencies sistem untuk Chromium (Wajib untuk Puppeteer di Linux)
-RUN apt-get update && apt-get install -y \
+# Jangan download chromium dari puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Install RUNTIME deps SAJA (no -dev)
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
     chromium \
     libnss3 \
-    libgbm-dev \
+    libgbm1 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
     libcups2 \
@@ -13,29 +18,23 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    libgtk-3-0 \
     libasound2 \
-    libxshmfence-dev \
+    libpangocairo-1.0-0 \
+    libxshmfence1 \
     fonts-liberation \
-    && rm -rf /var/lib/apt/lists/*
-
-# Config Environment untuk Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# Copy dependency definition
+# Copy package files dulu biar layer cache kepake
 COPY package*.json ./
 
-# Install dependency Node.js
-RUN npm install
+# Install production deps ONLY
+RUN npm install --omit=dev
 
-# Copy source code
-COPY renderer.js ./
+# Copy source
+COPY renderer.js .
 
-# Expose port
 EXPOSE 3000
 
-# Start command
-CMD [ "node", "renderer.js" ]
+CMD ["node", "renderer.js"]

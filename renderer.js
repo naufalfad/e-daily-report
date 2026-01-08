@@ -7,61 +7,61 @@ const app = express();
 app.use(express.json({ limit: '100mb' }));
 
 // -----------------------------------------------------------------------------
-// [LOGIC V7] MANUAL PATH RESOLUTION (ANTI GAGAL & ANTI INTERNET)
+// [LOGIC V5] HARDCODED PATH RESOLUTION
+// Kita tembak langsung ke file dist/src nya. Ini cara paling brutal tapi paling aman.
 // -----------------------------------------------------------------------------
 let ASSETS = { css: {}, js: {} };
-const NODE_MODULES = path.join(__dirname, 'node_modules');
-
-function readFileFromModules(...parts) {
-    const fullPath = path.join(NODE_MODULES, ...parts);
-    if (fs.existsSync(fullPath)) {
-        return fs.readFileSync(fullPath, 'utf8');
-    }
-    // Fallback jika struktur folder berbeda (kadang ada folder dist di root)
-    return ''; 
-}
 
 function loadLibraryAssets() {
     try {
-        console.log('[Init] Membaca asset dari:', NODE_MODULES);
+        console.log('[Init] Membaca file library dari node_modules...');
+        
+        // 1. LEAFLET CORE
+        // Tembak langsung file fisiknya
+        const leafletPath = require.resolve('leaflet/dist/leaflet.js');
+        const leafletCssPath = require.resolve('leaflet/dist/leaflet.css');
+        
+        ASSETS.js.leaflet = fs.readFileSync(leafletPath, 'utf8');
+        ASSETS.css.leaflet = fs.readFileSync(leafletCssPath, 'utf8');
 
-        // 1. LEAFLET
-        ASSETS.js.leaflet = readFileFromModules('leaflet', 'dist', 'leaflet.js');
-        ASSETS.css.leaflet = readFileFromModules('leaflet', 'dist', 'leaflet.css');
+        // 2. LEAFLET MARKER CLUSTER (Yang bikin error sebelumnya)
+        // Kita gunakan require.resolve ke path spesifik
+        const clusterJsPath = require.resolve('leaflet.markercluster/dist/leaflet.markercluster.js');
+        const clusterCssPath = require.resolve('leaflet.markercluster/dist/MarkerCluster.css');
+        const clusterDefCssPath = require.resolve('leaflet.markercluster/dist/MarkerCluster.Default.css');
 
-        // 2. LEAFLET MARKER CLUSTER
-        ASSETS.js.markerCluster = readFileFromModules('leaflet.markercluster', 'dist', 'leaflet.markercluster.js');
-        ASSETS.css.cluster = readFileFromModules('leaflet.markercluster', 'dist', 'MarkerCluster.css');
-        //ASSETS.css.clusterDefault = readFileFromModules('leaflet.markercluster', 'dist', 'MarkerCluster.Default.css');
+        ASSETS.js.markerCluster = fs.readFileSync(clusterJsPath, 'utf8');
+        ASSETS.css.cluster = fs.readFileSync(clusterCssPath, 'utf8');
+        ASSETS.css.clusterDefault = fs.readFileSync(clusterDefCssPath, 'utf8');
 
         // 3. LEAFLET HEAT
-        const heatPath1 = path.join(NODE_MODULES, 'leaflet.heat', 'dist', 'leaflet-heat.js');
-        if(fs.existsSync(heatPath1)) {
-             ASSETS.js.heat = fs.readFileSync(heatPath1, 'utf8');
-        } else {
-             // Coba fallback location
-             console.warn('[Init] Leaflet heat standard path missing, checking root...');
-             const heatPath2 = path.join(NODE_MODULES, 'leaflet.heat', 'leaflet-heat.js'); // Kadang ada di root
-             if(fs.existsSync(heatPath2)) ASSETS.js.heat = fs.readFileSync(heatPath2, 'utf8');
+        try {
+            const heatPath = require.resolve('leaflet.heat/dist/leaflet-heat.js');
+            ASSETS.js.heat = fs.readFileSync(heatPath, 'utf8');
+        } catch (e) {
+            console.warn('[Warn] Heatmap lib not found via require.resolve, trying fallback path...');
+            // Fallback manual check
+            if (fs.existsSync('./node_modules/leaflet.heat/dist/leaflet-heat.js')) {
+                 ASSETS.js.heat = fs.readFileSync('./node_modules/leaflet.heat/dist/leaflet-heat.js', 'utf8');
+            } else {
+                 ASSETS.js.heat = 'console.warn("Heatmap lib missing");';
+            }
         }
 
-        if(!ASSETS.js.leaflet || !ASSETS.js.markerCluster) {
-            throw new Error("File Library Utama Leaflet/Cluster Kosong!");
-        }
-
-        console.log('[Init] SUCCESS: Semua library berhasil diload.');
+        console.log('[Init] SUCCESS: Semua library JS & CSS berhasil diload.');
         return true;
 
     } catch (e) {
         console.error('====================================================');
         console.error('[Init] FATAL ERROR: Gagal membaca file library!');
         console.error('Penyebab:', e.message);
+        console.error('Hint: Library belum terinstall di Docker. JALANKAN REBUILD NO-CACHE!');
         console.error('====================================================');
         return false;
     }
 }
 
-// Load assets or die
+// Load assets. Kalau gagal, process exit biar container restart (dan kita tau errornya)
 if (!loadLibraryAssets()) {
     process.exit(1); 
 }
@@ -75,31 +75,27 @@ app.post('/render-map', async (req, res) => {
         if (renderMode === 'clustering') renderMode = 'cluster';
 
         console.log(`[Request] Mode: ${renderMode}, Data: ${activities?.length || 0}`);
-        const mapCenter = center || { lat: -4.5467, lng: 136.8833 };
-        const mapZoom = zoom || 13;
-        const dataPoints = activities || [];
 
         browser = await puppeteer.launch({
-            // [FIX PATH] Langsung arahkan ke chromium yang benar di Debian
-            executablePath: '/usr/bin/chromium', 
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium', 
             args: [
                 '--no-sandbox', 
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
                 '--font-render-hinting=none',
-                '--hide-scrollbars'
+                '--disable-software-rasterizer'
             ],
             headless: 'new',
-            protocolTimeout: 240000 
+            protocolTimeout: 120000 
         });
 
         const page = await browser.newPage();
-        page.setDefaultNavigationTimeout(240000); 
-        page.setDefaultTimeout(240000);
-        await page.setViewport({ width: 1600, height: 1200, deviceScaleFactor: 2 });
+        page.setDefaultNavigationTimeout(120000); 
+        page.setDefaultTimeout(120000);
+        await page.setViewport({ width: 1200, height: 800, deviceScaleFactor: 2 });
 
-        // Forward log browser
+        // Forward log browser ke terminal Docker
         page.on('console', msg => console.log('   [Browser]', msg.text()));
         page.on('pageerror', err => console.error('   [Browser ERR]', err.toString()));
 
@@ -109,12 +105,16 @@ app.post('/render-map', async (req, res) => {
         <head>
             <meta charset="utf-8">
             <style>
+                /* RESET & LEAFLET CSS */
                 html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
                 #map { width: 100vw; height: 100vh; }
                 ${ASSETS.css.leaflet}
-                ${ASSETS.css.cluster}
-                //${ASSETS.css.clusterDefault}
                 
+                /* CLUSTER CSS */
+                ${ASSETS.css.cluster}
+                ${ASSETS.css.clusterDefault}
+
+                /* CUSTOM CLUSTER STYLE (OVERRIDE) */
                 .marker-cluster-small { background-color: rgba(181, 226, 140, 0.6); }
                 .marker-cluster-small div { background-color: rgba(110, 204, 57, 0.6); }
                 .marker-cluster-medium { background-color: rgba(241, 211, 87, 0.6); }
@@ -122,15 +122,17 @@ app.post('/render-map', async (req, res) => {
                 .marker-cluster-large { background-color: rgba(253, 156, 115, 0.6); }
                 .marker-cluster-large div { background-color: rgba(241, 128, 23, 0.6); }
                 .marker-cluster { background-clip: padding-box; border-radius: 20px; }
-                .marker-cluster div { width: 30px; height: 30px; margin-left: 5px; margin-top: 5px; text-align: center; border-radius: 15px; font: 12px Arial, sans-serif; }
+                .marker-cluster div { width: 30px; height: 30px; margin-left: 5px; margin-top: 5px; text-align: center; border-radius: 15px; font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif; }
                 .marker-cluster span { line-height: 30px; }
             </style>
         </head>
         <body>
             <div id="map"></div>
+
             <script>${ASSETS.js.leaflet}</script>
             <script>${ASSETS.js.markerCluster}</script>
             <script>${ASSETS.js.heat}</script>
+
             <script>
                 try {
                     if (typeof L === 'undefined') throw new Error('Leaflet L undefined');
@@ -142,36 +144,43 @@ app.post('/render-map', async (req, res) => {
                         zoomAnimation: false,
                         markerZoomAnimation: false,
                         preferCanvas: true
-                    }).setView([${mapCenter.lat}, ${mapCenter.lng}], ${mapZoom});
+                    }).setView([${center?.lat || -4.5467}, ${center?.lng || 136.8833}], ${zoom || 13});
 
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
-                    var rawData = ${JSON.stringify(dataPoints)};
+                    var rawData = ${JSON.stringify(activities || [])};
                     var mode = "${renderMode}";
 
-                    console.log('Rendering Mode: ' + mode + ' Points: ' + rawData.length);
+                    console.log('Rendering Mode: ' + mode);
 
                     if (mode === 'cluster') {
                         if (typeof L.markerClusterGroup === 'undefined') throw new Error('MarkerCluster undefined');
+                        
                         var markers = L.markerClusterGroup({
                             chunkedLoading: true,
                             animate: false,
-                            spiderfyOnMaxZoom: false
+                            spiderfyOnMaxZoom: false,
+                            showCoverageOnHover: false
                         });
+                        
                         rawData.forEach(p => {
                             if(p.lat && p.lng) markers.addLayer(L.marker([parseFloat(p.lat), parseFloat(p.lng)]));
                         });
+                        
                         map.addLayer(markers);
                         if (rawData.length > 0) map.fitBounds(markers.getBounds(), { padding: [50,50], animate: false });
+
                     } else if (mode === 'heatmap') {
                         if (typeof L.heatLayer === 'undefined') throw new Error('HeatLayer undefined');
+                        
                         var heatData = rawData.filter(p => p.lat && p.lng).map(p => [parseFloat(p.lat), parseFloat(p.lng), 0.7]);
-                        L.heatLayer(heatData, { radius: 30, blur: 20, minOpacity: 0.4 }).addTo(map);
+                        L.heatLayer(heatData, { radius: 25, blur: 15 }).addTo(map);
+                        
                         if (heatData.length > 0) {
-                             var lats = heatData.map(p => p[0]);
-                             var lngs = heatData.map(p => p[1]);
-                             map.fitBounds([[Math.min(...lats), Math.min(...lngs)], [Math.max(...lats), Math.max(...lngs)]], { padding: [50,50], animate: false });
+                             var bounds = L.latLngBounds(heatData.map(p => [p[0], p[1]]));
+                             map.fitBounds(bounds, { padding: [50,50], animate: false });
                         }
+
                     } else {
                         var group = new L.featureGroup();
                         rawData.forEach(p => {
@@ -180,7 +189,9 @@ app.post('/render-map', async (req, res) => {
                         map.addLayer(group);
                         if (rawData.length > 0) map.fitBounds(group.getBounds(), { padding: [50,50], animate: false });
                     }
+
                     document.body.setAttribute('data-ready', 'true');
+
                 } catch (e) {
                     console.error(e);
                     document.body.setAttribute('data-error', e.message);
@@ -189,23 +200,19 @@ app.post('/render-map', async (req, res) => {
         </body>
         </html>`;
 
-        // 1. Load Konten
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 240000 });
-        
-        // 2. Tunggu Script Ready
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 120000 });
+
         try {
             await page.waitForSelector('body[data-ready="true"]', { timeout: 120000 });
-        } catch (e) { 
-             const err = await page.evaluate(() => document.body.getAttribute('data-error'));
-             if (err) console.error('[Page Error]', err);
-             console.warn('[Renderer] Timeout waiting ready signal.'); 
+        } catch (e) {
+            const err = await page.evaluate(() => document.body.getAttribute('data-error'));
+            if (err) throw new Error('Page JS Error: ' + err);
+            console.warn('[Renderer] Timeout waiting ready signal.');
         }
-        
-        // 3. [KUNCI GAMBAR TAJAM] Delay 5 Detik buat Load Tiles
-        console.log('[Renderer] Menunggu pematangan tiles (5s)...');
-        await new Promise(r => setTimeout(r, 5000));
 
-        const screenshotBuffer = await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 90, fullPage: false });
+        await new Promise(r => setTimeout(r, 1000));
+
+        const screenshotBuffer = await page.screenshot({ encoding: 'base64', type: 'jpeg', quality: 80, fullPage: false });
         await browser.close();
         
         res.json({ success: true, mode: renderMode, image: "data:image/jpeg;base64," + screenshotBuffer });
@@ -217,6 +224,6 @@ app.post('/render-map', async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => res.send('Map Renderer V7 OK'));
+app.get('/', (req, res) => res.send('Map Renderer v5 OK'));
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Map Renderer listening on port ${PORT}`));

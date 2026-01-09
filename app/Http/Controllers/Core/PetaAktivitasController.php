@@ -150,7 +150,7 @@ class PetaAktivitasController extends Controller
 
             // 1. TANGKAP INPUT MODE
             // Default ke 'marker' jika tidak ada input valid
-            $validModes = ['heatmap', 'clustering', 'marker'];
+            $validModes = ['heatmap', 'cluster', 'marker'];
             $mode = $request->input('mode');
             if (!in_array($mode, $validModes)) {
                 $mode = 'marker'; 

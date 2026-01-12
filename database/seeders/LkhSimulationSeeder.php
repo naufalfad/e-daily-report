@@ -3,201 +3,133 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\Skp;
 use App\Models\LaporanHarian;
-use Carbon\Carbon;
+use App\Models\LkhBukti;
+use App\Models\SkpTarget;
+use App\Models\Tupoksi;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class LkhSimulationSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run()
     {
-        DB::transaction(function () {
-            // ================================================================
-            // 1. PERSIAPAN DATA USER (Sesuai BapendaSeeder)
-            // ================================================================
-            
-            // Rantai Komando: Staf -> Kasubid -> Kabid
-            $stafUser    = User::where('email', 'staf.pbb.data@bapenda.go.id')->firstOrFail();
-            $kasubidUser = User::where('email', 'kasub.pbb.data@bapenda.go.id')->firstOrFail();
-            $kabidUser   = User::where('email', 'kabid.pbb@bapenda.go.id')->firstOrFail();
+        $faker = Faker::create('id_ID');
+        $this->command->info('Memulai simulasi LKH Realistis (Fixed Schema PGSQL)...');
 
-            // Ambil satu ID Kelurahan valid dari CSV (Contoh: 5315020021 - GOLO KONDENG)
-            // Pastikan MasterDataSeeder sudah dijalankan sebelumnya
-            $kelurahanId = '5315020021'; 
+        // 1. Identifikasi User kecuali Kepala Badan
+        // Mengambil user yang memiliki atasan (karena staf/pejabat struktural harus lapor ke atasan)
+        $users = User::whereNotNull('atasan_id')
+                     ->where('is_active', true)
+                     ->get();
 
-            $this->command->info('Menyiapkan skenario simulasi untuk Bidang PBB...');
+        if ($users->isEmpty()) {
+            $this->command->error('Tidak ada user ditemukan. Pastikan UserSeeder sudah dijalankan!');
+            return;
+        }
 
-            // ================================================================
-            // 2. SKENARIO STAFF (Staf Pendataan PBB)
-            // ================================================================
-            
-            // 2.1. Buat SKP Staf
-            $skpStaf = Skp::create([
-                'user_id'         => $stafUser->id,
-                'nama_skp'        => 'Melakukan Pendataan Objek Pajak PBB di Wilayah Barat',
-                'periode_mulai'   => Carbon::now()->startOfYear()->toDateString(),
-                'periode_selesai' => Carbon::now()->endOfYear()->toDateString(),
-                'rencana_aksi'    => 'Mendatangi wajib pajak door-to-door untuk pemutakhiran data SPPT',
-                'indikator'       => 'Jumlah formulir SPOP yang terisi',
-                'target'          => 500,
-                // 'satuan' dihapus sesuai migrasi terakhir
-            ]);
+        DB::beginTransaction();
 
-            // 2.2. Buat LKH Staf
+        try {
+            foreach ($users as $user) {
+                // Minimal 2 laporan per user sesuai request
+                $jumlahLaporan = rand(2, 3); 
 
-            // LKH 1: DISETUJUI (ACC) oleh Kasubid
-            LaporanHarian::create([
-                'user_id'             => $stafUser->id,
-                'skp_id'              => $skpStaf->id,
-                'tanggal_laporan'     => Carbon::now()->subDays(2)->toDateString(),
-                'waktu_mulai'         => '08:00:00',
-                'waktu_selesai'       => '12:00:00',
-                'deskripsi_aktivitas' => 'Melakukan verifikasi lapangan data PBB di Jl. Mawar No. 1-10.',
-                'output_hasil_kerja'  => '10 Data SPPT terverifikasi valid.',
-                'status'              => 'approved', // Status disetujui
+                for ($i = 0; $i < $jumlahLaporan; $i++) {
+                    // A. Tentukan Isi Kegiatan (Logic Prioritas: SKP Target -> Tupoksi -> Generic)
+                    $aktivitas = $this->getContentForLkh($user, $faker);
+                    
+                    // B. Koordinat Random Area Mimika/Papua Tengah
+                    $lat = -4.546 + ($faker->randomFloat(6, -0.05, 0.05)); 
+                    $long = 136.88 + ($faker->randomFloat(6, -0.05, 0.05));
+
+                    // C. Create LKH dengan penamaan kolom sesuai DB riil Anda
+                    $lkh = LaporanHarian::create([
+                        'user_id'             => $user->id,
+                        'atasan_id'           => $user->atasan_id,
+                        'tanggal_laporan'     => Carbon::now()->subDays(rand(1, 5))->format('Y-m-d'),
+                        'waktu_mulai'         => '08:00:00',
+                        'waktu_selesai'       => '16:00:00',
+                        'deskripsi_aktivitas' => $aktivitas['deskripsi'],
+                        'output_hasil_kerja'  => $aktivitas['output'],
+                        'status'              => 'waiting_review',
+                        'jenis_kegiatan'      => $faker->randomElement(['Tupoksi', 'Rapat', 'Pelayanan Publik']),
+                        'volume'              => rand(1, 5),
+                        'satuan'              => $aktivitas['satuan'],
+                        'skp_rencana_id'      => $aktivitas['skp_id'],
+                        'tupoksi_id'          => $aktivitas['tupoksi_id'],
+                        'mode_lokasi'         => 'geofence',
+                        'location_provider'   => 'gps_device',
+                        'lokasi_teks'         => 'Kabupaten Mimika, Papua Tengah',
+                        'is_luar_lokasi'      => false,
+                        // Gunakan Raw SQL untuk tipe data Geometry di PostgreSQL
+                        'lokasi'              => DB::raw("ST_GeomFromText('POINT($long $lat)', 4326)"),
+                    ]);
+
+                    // D. Create Bukti Dukung (Dummy)
+                    LkhBukti::create([
+                        'laporan_harian_id' => $lkh->id,
+                        'file_path'         => 'dummy/bukti_' . rand(1, 5) . '.jpg',
+                        'nama_file'         => 'dokumentasi_kegiatan.jpg',
+                        'tipe_file'         => 'image/jpeg'
+                    ]);
+                }
                 
-                // Lokasi (Menggunakan Raw Query untuk Spatial Point - MySQL/MariaDB)
-                'lokasi'              => DB::raw("ST_GeomFromText('POINT(120.123456 -3.123456)')"), 
-                'lokasi_manual_text'  => 'Jl. Mawar, RT 01 RW 02',
-                'master_kelurahan_id' => $kelurahanId,
-                'is_luar_lokasi'      => false,
+                $this->command->info("LKH dikirim untuk: {$user->name} -> Validator: User ID {$user->atasan_id}");
+            }
 
-                // Data Validasi
-                'validator_id'        => $kasubidUser->id,
-                'waktu_validasi'      => Carbon::now()->subDays(2)->addHours(5),
-                'komentar_validasi'   => 'Kerja bagus, lanjutkan ke RT sebelah besok.',
-            ]);
+            DB::commit();
+            $this->command->info('Seeder LKH selesai! Dashboard atasan kini terisi data antrean validasi.');
 
-            // LKH 2: DITOLAK oleh Kasubid
-            LaporanHarian::create([
-                'user_id'             => $stafUser->id,
-                'skp_id'              => $skpStaf->id,
-                'tanggal_laporan'     => Carbon::now()->subDays(1)->toDateString(),
-                'waktu_mulai'         => '09:00:00',
-                'waktu_selesai'       => '10:00:00',
-                'deskripsi_aktivitas' => 'Rekapitulasi data harian di kantor.',
-                'output_hasil_kerja'  => 'Laporan sementara excel.',
-                'status'              => 'rejected', // Status ditolak
-                
-                'lokasi'              => DB::raw("ST_GeomFromText('POINT(120.123456 -3.123456)')"),
-                'lokasi_manual_text'  => 'Kantor Bapenda',
-                'master_kelurahan_id' => $kelurahanId,
-                'is_luar_lokasi'      => false,
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->command->error("Error seeding LKH: " . $e->getMessage());
+        }
+    }
 
-                // Data Validasi
-                'validator_id'        => $kasubidUser->id,
-                'waktu_validasi'      => Carbon::now()->subDays(1)->addHours(2),
-                'komentar_validasi'   => 'Deskripsi kurang jelas, lampirkan file excel hasil rekapitulasinya.',
-            ]);
+    /**
+     * Logic cerdas pengambilan konten laporan
+     */
+    private function getContentForLkh($user, $faker)
+    {
+        // 1. Cek SKP Target (Join ke skp_rencana karena tabel ini yang punya user_id)
+        $target = SkpTarget::whereHas('rencana', function($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->inRandomOrder()->first();
 
-            // LKH 3: BARU (Pending/Draft) - Belum diperiksa
-            LaporanHarian::create([
-                'user_id'             => $stafUser->id,
-                'skp_id'              => $skpStaf->id,
-                'tanggal_laporan'     => Carbon::now()->toDateString(),
-                'waktu_mulai'         => '07:30:00',
-                'waktu_selesai'       => '11:30:00',
-                'deskripsi_aktivitas' => 'Rapat koordinasi teknis pendataan PBB bersama tim lapangan.',
-                'output_hasil_kerja'  => 'Notulen rapat dan daftar hadir.',
-                'status'              => 'pending', // Menunggu persetujuan
-                
-                'lokasi'              => DB::raw("ST_GeomFromText('POINT(120.123456 -3.123456)')"),
-                'lokasi_manual_text'  => 'Ruang Rapat Lt. 2',
-                'master_kelurahan_id' => $kelurahanId,
-                'is_luar_lokasi'      => false,
+        if ($target) {
+            return [
+                'deskripsi'  => "Melaksanakan tahapan: " . $target->uraian_tugas,
+                'output'     => "Tersedianya " . rand(1, 3) . " " . $target->satuan,
+                'satuan'     => $target->satuan,
+                'skp_id'     => $target->skp_rencana_id,
+                'tupoksi_id' => null
+            ];
+        }
 
-                // Belum ada validasi
-                'validator_id'        => $kasubidUser->id, // Target validator
-                'waktu_validasi'      => null,
-                'komentar_validasi'   => null,
-            ]);
+        // 2. Cek Tupoksi Bidang
+        if ($user->bidang_id) {
+            $tupoksi = Tupoksi::where('bidang_id', $user->bidang_id)->inRandomOrder()->first();
+            if ($tupoksi) {
+                return [
+                    'deskripsi'  => "Koordinasi pelaksanaan " . $tupoksi->uraian,
+                    'output'     => "1 Laporan Kegiatan",
+                    'satuan'     => "Laporan",
+                    'skp_id'     => null,
+                    'tupoksi_id' => $tupoksi->id
+                ];
+            }
+        }
 
-            // ================================================================
-            // 3. SKENARIO KASUBID (Kasubid Pendataan PBB)
-            // ================================================================
-
-            // 3.1. Buat SKP Kasubid
-            $skpKasubid = Skp::create([
-                'user_id'         => $kasubidUser->id,
-                'nama_skp'        => 'Pengendalian Operasional Pendataan PBB Tingkat Kabupaten',
-                'periode_mulai'   => Carbon::now()->startOfYear()->toDateString(),
-                'periode_selesai' => Carbon::now()->endOfYear()->toDateString(),
-                'rencana_aksi'    => 'Supervisi dan monitoring kinerja staf pendataan di seluruh kecamatan',
-                'indikator'       => 'Persentase peningkatan basis data pajak',
-                'target'          => 100, // persen
-            ]);
-
-            // 3.2. Buat LKH Kasubid
-
-            // LKH 1: DISETUJUI (ACC) oleh Kabid
-            LaporanHarian::create([
-                'user_id'             => $kasubidUser->id,
-                'skp_id'              => $skpKasubid->id,
-                'tanggal_laporan'     => Carbon::now()->subDays(2)->toDateString(),
-                'waktu_mulai'         => '13:00:00',
-                'waktu_selesai'       => '16:00:00',
-                'deskripsi_aktivitas' => 'Melakukan evaluasi kinerja mingguan staf pendataan.',
-                'output_hasil_kerja'  => 'Laporan Evaluasi Kinerja Mingguan.',
-                'status'              => 'approved',
-                
-                'lokasi'              => DB::raw("ST_GeomFromText('POINT(120.123456 -3.123456)')"),
-                'lokasi_manual_text'  => 'Ruang Rapat Bidang PBB',
-                'master_kelurahan_id' => $kelurahanId,
-                'is_luar_lokasi'      => false,
-
-                'validator_id'        => $kabidUser->id,
-                'waktu_validasi'      => Carbon::now()->subDays(2)->addHours(4),
-                'komentar_validasi'   => 'Laporan diterima. Tingkatkan target minggu depan.',
-            ]);
-
-            // LKH 2: DITOLAK oleh Kabid
-            LaporanHarian::create([
-                'user_id'             => $kasubidUser->id,
-                'skp_id'              => $skpKasubid->id,
-                'tanggal_laporan'     => Carbon::now()->subDays(1)->toDateString(),
-                'waktu_mulai'         => '10:00:00',
-                'waktu_selesai'       => '12:00:00',
-                'deskripsi_aktivitas' => 'Koordinasi dengan pihak bank terkait pembayaran.',
-                'output_hasil_kerja'  => 'Draft MoU.',
-                'status'              => 'rejected',
-                
-                'lokasi'              => DB::raw("ST_GeomFromText('POINT(120.123456 -3.123456)')"),
-                'lokasi_manual_text'  => 'Kantor Bank Daerah',
-                'master_kelurahan_id' => $kelurahanId,
-                'is_luar_lokasi'      => true, // Dinas Luar
-
-                'validator_id'        => $kabidUser->id,
-                'waktu_validasi'      => Carbon::now()->subDays(1)->addHours(3),
-                'komentar_validasi'   => 'Mohon lampirkan foto dokumentasi pertemuan.',
-            ]);
-
-            // LKH 3: MENUNGGU (Pending)
-            LaporanHarian::create([
-                'user_id'             => $kasubidUser->id,
-                'skp_id'              => $skpKasubid->id,
-                'tanggal_laporan'     => Carbon::now()->toDateString(),
-                'waktu_mulai'         => '08:00:00',
-                'waktu_selesai'       => '09:00:00',
-                'deskripsi_aktivitas' => 'Briefing pagi bersama seluruh staf bidang PBB.',
-                'output_hasil_kerja'  => 'Arahan kerja harian tersampaikan.',
-                'status'              => 'pending',
-                
-                'lokasi'              => DB::raw("ST_GeomFromText('POINT(120.123456 -3.123456)')"),
-                'lokasi_manual_text'  => 'Halaman Kantor',
-                'master_kelurahan_id' => $kelurahanId,
-                'is_luar_lokasi'      => false,
-
-                'validator_id'        => $kabidUser->id,
-                'waktu_validasi'      => null,
-                'komentar_validasi'   => null,
-            ]);
-        });
-
-        $this->command->info('Data simulasi SKP dan LKH berhasil dibuat untuk Staf PBB dan Kasubid PBB.');
+        // 3. Fallback Generic
+        return [
+            'deskripsi'  => $faker->randomElement(['Rekapitulasi data harian pendapatan', 'Koordinasi internal bidang']),
+            'output'     => "1 Berkas",
+            'satuan'     => "Berkas",
+            'skp_id'     => null,
+            'tupoksi_id' => null
+        ];
     }
 }

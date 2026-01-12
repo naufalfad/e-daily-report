@@ -4,64 +4,88 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; // [PENTING] Import SoftDeletes
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bidang extends Model
 {
-    use HasFactory, SoftDeletes; // [PENTING] Aktifkan fitur Soft Deletes
+    use HasFactory, SoftDeletes;
 
     protected $table = 'bidang';
 
-    // Menggunakan guarded agar fleksibel (mass assignment aman selama di-handle controller)
-    protected $guarded = [];
+    // Kolom yang boleh diisi (Mass Assignment)
+    // Saya tambahkan parent_id dan level agar seeder/controller aman
+    protected $fillable = [
+        'unit_kerja_id', 
+        'nama_bidang', 
+        'parent_id', 
+        'level'
+    ];
 
     // =========================================================================
-    // RELASI HIERARKI (STRUKTUR ORGANISASI)
+    // 1. RELASI HIERARKI (NEW FEATURE - SOTK STRUCTURE)
     // =========================================================================
 
     /**
-     * Relasi ke Bapak (Unit Kerja)
-     * Logic: Setiap Bidang PASTI berada di bawah 1 Unit Kerja.
+     * Relasi ke Atasan (Induk)
+     * Contoh: Sub Bidang Pendataan (Anak) -> Bidang Pajak (Bapak)
      */
+    public function parent()
+    {
+        return $this->belongsTo(Bidang::class, 'parent_id');
+    }
+
+    /**
+     * Relasi ke Bawahan (Anak)
+     * Contoh: Bidang Pajak (Bapak) -> [Sub Bidang Pendataan, Sub Bidang Penetapan...]
+     */
+    public function children()
+    {
+        return $this->hasMany(Bidang::class, 'parent_id');
+    }
+
+    /**
+     * Scope Query: Hanya ambil Bidang Induk (Top Level)
+     * Cara pakai: Bidang::induk()->get();
+     */
+    public function scopeInduk($query)
+    {
+        return $query->whereNull('parent_id')->orWhere('level', 'bidang');
+    }
+
+    /**
+     * Scope Query: Hanya ambil Sub Bidang (Anak)
+     * Cara pakai: Bidang::anak()->get();
+     */
+    public function scopeAnak($query)
+    {
+        return $query->whereNotNull('parent_id')->orWhere('level', 'sub_bidang');
+    }
+
+    // =========================================================================
+    // 2. RELASI EXISTING
+    // =========================================================================
+
     public function unitKerja()
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
 
-    /**
-     * Relasi ke Anak (Tupoksi)
-     * Logic: 1 Bidang memiliki banyak Tupoksi (Tugas Pokok & Fungsi).
-     */
     public function tupoksi()
     {
         return $this->hasMany(Tupoksi::class, 'bidang_id');
     }
 
-    /**
-     * Relasi ke User (Pegawai)
-     * Logic: 1 Bidang menaungi banyak Pegawai Staf.
-     */
     public function users()
     {
         return $this->hasMany(User::class, 'bidang_id');
     }
 
-    // =========================================================================
-    // LOGIC KHUSUS (SKORING & ANALISA)
-    // =========================================================================
-
-    /**
-     * Relasi Bidang ke Kepala Bidang (Kabid) penanggung jawab.
-     * Logika dinamis untuk mencari jabatan Kepala Bidang tanpa hardcoding ID user.
-     * Berguna untuk fitur Skoring Kinerja Bidang.
-     */
     public function kepalaBidang()
     {
-        // Mencari satu user di bidang ini yang jabatannya mengandung kata 'Kepala Bidang'
         return $this->hasOne(User::class, 'bidang_id')
             ->whereHas('jabatan', function ($query) {
-                // Menggunakan LOWER agar pencarian case-insensitive (huruf besar/kecil dianggap sama)
-                $query->whereRaw('LOWER(nama_jabatan) LIKE ?', ['%kepala bidang%']);
+                $query->whereRaw('LOWER(nama_jabatan) LIKE ?', ['%kepala bidang%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kabid%']);
             });
     }
 }

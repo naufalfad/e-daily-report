@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Bidang;
 use App\Models\Role;
+use App\Models\UnitKerja;
+use App\Models\Jabatan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -19,10 +21,10 @@ class UserManagementController extends Controller
      */
     public function index(Request $request)
     {
-        // 1. Deteksi Request AJAX untuk Pagination
+        // 1. Deteksi Request AJAX untuk Pagination (Server-side Datatables)
         if ($request->ajax()) {
             
-            // 2. Eager Loading (Wajib untuk performa dan data JSON)
+            // Eager Loading relasi yang dibutuhkan
             $query = User::with(['unitKerja', 'bidang', 'jabatan', 'roles', 'atasan']);
 
             // 3. Advanced Filtering
@@ -41,107 +43,141 @@ class UserManagementController extends Controller
                 $query->where('unit_kerja_id', $request->input('unit_kerja_id'));
             }
 
-            // Filter Dropdown Bidang (Opsional)
+            // Filter Dropdown Bidang
             if ($request->filled('bidang_id')) {
-                $query->where('bidang_id', $request->input('bidang_id'));
+                $bidangId = $request->input('bidang_id');
+                // Logic Cerdas: Jika user filter "Bidang X" (Induk), 
+                // tampilkan juga pegawai di "Sub Bidang X1", "Sub Bidang X2", dst.
+                $bidang = Bidang::find($bidangId);
+                if ($bidang) {
+                    if ($bidang->parent_id === null) {
+                        // Ini adalah Induk, ambil id dia dan id anak-anaknya
+                        $ids = $bidang->children->pluck('id')->push($bidang->id);
+                        $query->whereIn('bidang_id', $ids);
+                    } else {
+                        // Ini adalah Sub-Bidang, filter spesifik
+                        $query->where('bidang_id', $bidangId);
+                    }
+                }
             }
 
-            // 4. Pagination
-            $perPage = $request->input('per_page', 10);
-            $users = $query->latest()->paginate($perPage);
+            // 4. Pagination & Sorting Standard
+            $totalRecords = User::count();
+            $filteredRecords = $query->count();
             
-            return response()->json($users);
+            $limit = $request->input('length', 10);
+            $start = $request->input('start', 0);
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDir = $request->input('order.0.dir', 'asc');
+            
+            $columns = ['id', 'name', 'nip', 'jabatan_id', 'bidang_id', 'is_active', 'id']; 
+            $orderBy = $columns[$orderColumnIndex] ?? 'created_at';
+
+            $data = $query->orderBy($orderBy, $orderDir)
+                          ->skip($start)
+                          ->take($limit)
+                          ->get();
+
+            return response()->json([
+                'draw' => intval($request->draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
         }
 
-        // Jika request browser biasa, return view kosong (karena data di-load via AJAX)
-        // Kita juga bisa mengirim data statis untuk dropdown filter di sini
-        $unitKerjas = \App\Models\UnitKerja::orderBy('nama_unit', 'asc')->get();
-        return view('admin.manajemen-pegawai', compact('unitKerjas'));
+        // =====================================================================
+        // PHASE 4: UPDATE DATA FETCHING
+        // Mengambil data master untuk dropdown di Modal (View)
+        // =====================================================================
+
+        $unitKerja = UnitKerja::all();
+        
+        // [UPDATED CODE]
+        // Mengambil Bidang yang dikelompokkan: Induk -> Children
+        // Ini memanfaatkan Scope 'induk' dan relasi 'children' yang dibuat di Tahap 3
+        $bidang = Bidang::induk()
+            ->with('children')
+            ->orderBy('nama_bidang', 'asc')
+            ->get();
+            
+        $jabatan = Jabatan::all();
+        $roles = Role::all();
+        
+        // Ambil list pegawai untuk dropdown "Atasan Langsung"
+        // Hanya ambil nama & NIP untuk efisiensi
+        $pegawaiList = User::select('id', 'name', 'nip', 'jabatan_id')->get(); 
+
+        return view('admin.manajemen-pegawai', compact('unitKerja', 'bidang', 'jabatan', 'roles', 'pegawaiList'));
     }
 
     /**
-     * [HR DOMAIN] Create Pegawai Baru
-     * - Input: Data Diri & Struktur Jabatan.
-     * - Logic: Otomatis buat akun dengan Username=NIP & Password=NIP.
+     * Store Pegawai Baru
      */
     public function store(Request $request)
     {
-        // 1. Validasi Data Kepegawaian (HR)
+        // Validasi
         $validator = Validator::make($request->all(), [
             'name'          => 'required|string|max:255',
-            'nip'           => 'required|string|unique:users,nip', // NIP Wajib & Unik
+            'nip'           => 'required|string|unique:users,nip',
+            'email'         => 'nullable|email|unique:users,email',
+            'username'      => 'required|string|unique:users,username',
+            'password'      => 'required|string|min:6',
             'unit_kerja_id' => 'required|exists:unit_kerja,id',
             'bidang_id'     => 'required|exists:bidang,id',
             'jabatan_id'    => 'required|exists:jabatan,id',
-            'atasan_id'     => 'nullable|exists:users,id',
+            'role'          => 'required|exists:roles,name',
+            'atasan_id'     => 'nullable|exists:users,id'
         ]);
 
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        // 2. Validasi Relasi Bidang & Unit Kerja
-        $cekBidang = Bidang::where('id', $request->bidang_id)
-                           ->where('unit_kerja_id', $request->unit_kerja_id)
-                           ->exists();
-
-        if (!$cekBidang) {
+        // Validasi Logic: Pastikan Bidang ada di Unit Kerja yang dipilih
+        $bidang = Bidang::find($request->bidang_id);
+        if ($bidang && $bidang->unit_kerja_id != $request->unit_kerja_id) {
             return response()->json([
-                'errors' => ['bidang_id' => ['Bidang tidak sesuai dengan Unit Kerja yang dipilih.']]
+               'errors' => ['bidang_id' => ['Bidang tidak sesuai dengan Unit Kerja yang dipilih.']]
             ], 422);
         }
 
         try {
             DB::beginTransaction();
 
-            // 3. AUTO-GENERATE CREDENTIALS
-            // Logic: Default Username & Password adalah NIP pegawai tersebut.
-            $defaultUsername = $request->nip;
-            $defaultPassword = Hash::make($request->nip); 
-
-            // 4. Simpan Data Pegawai
+            // Buat User
+            // Note: bidang_id sekarang bisa berisi ID Induk (untuk Kabid) atau ID Anak (untuk Staf)
             $user = User::create([
                 'name'          => $request->name,
                 'nip'           => $request->nip,
-                'username'      => $defaultUsername, 
-                'password'      => $defaultPassword,
-                'email'         => null, 
+                'email'         => $request->email,
+                'username'      => $request->username,
+                'password'      => Hash::make($request->password),
                 'unit_kerja_id' => $request->unit_kerja_id,
-                'bidang_id'     => $request->bidang_id,
+                'bidang_id'     => $request->bidang_id, 
                 'jabatan_id'    => $request->jabatan_id,
                 'atasan_id'     => $request->atasan_id,
-                'is_active'     => true, // Default aktif
+                'is_active'     => true
             ]);
 
-            // 5. Assign Default Role (Staf)
-            $roleStaf = Role::where('nama_role', 'Staf')->first();
-            $roleId = $roleStaf ? $roleStaf->id : 1; 
-
-            $user->roles()->attach($roleId);
+            // Assign Role
+            $role = Role::where('name', $request->role)->first();
+            if ($role) {
+                $user->roles()->attach($role);
+            }
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Pegawai berhasil didaftarkan.',
-                'data'    => $user->load(['roles', 'bidang'])
-            ], 201);
+            return response()->json(['message' => 'Pegawai berhasil ditambahkan']);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal mendaftar', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Gagal menyimpan data', 'error' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Show Detail Pegawai
-     */
-    public function show($id)
-    {
-        $user = User::with(['unitKerja', 'bidang', 'jabatan', 'roles', 'atasan', 'bawahan'])->findOrFail($id);
-        return response()->json($user);
-    }
-
-    /**
-     * [HR DOMAIN] Update Data Pegawai
-     * - Logic: HANYA memperbarui data profil, jabatan, dan struktur.
+     * Update Profil Pegawai
      */
     public function update(Request $request, $id)
     {
@@ -149,23 +185,21 @@ class UserManagementController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name'          => 'required|string|max:255',
-            'nip'           => 'required|string|unique:users,nip,'.$id, 
+            'nip'           => 'required|string|unique:users,nip,'.$id,
             'unit_kerja_id' => 'required|exists:unit_kerja,id',
             'bidang_id'     => 'required|exists:bidang,id',
             'jabatan_id'    => 'required|exists:jabatan,id',
-            'atasan_id'     => 'nullable|exists:users,id',
+            'atasan_id'     => 'nullable|exists:users,id'
         ]);
 
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        // Validasi Bidang vs Unit Kerja
-        $cekBidang = Bidang::where('id', $request->bidang_id)
-                           ->where('unit_kerja_id', $request->unit_kerja_id)
-                           ->exists();
-
-        if (!$cekBidang) {
+        $bidang = Bidang::find($request->bidang_id);
+        if ($bidang && $bidang->unit_kerja_id != $request->unit_kerja_id) {
             return response()->json([
-                'errors' => ['bidang_id' => ['Bidang tidak sesuai dengan Unit Kerja yang dipilih.']]
+               'errors' => ['bidang_id' => ['Bidang tidak sesuai dengan Unit Kerja yang dipilih.']]
             ], 422);
         }
 
@@ -180,6 +214,14 @@ class UserManagementController extends Controller
                 'jabatan_id'    => $request->jabatan_id,
                 'atasan_id'     => $request->atasan_id,
             ]);
+            
+            // Update Role jika ada di request
+            if ($request->has('role')) {
+                $role = Role::where('name', $request->role)->first();
+                if ($role) {
+                     $user->roles()->sync([$role->id]);
+                }
+            }
 
             DB::commit();
 

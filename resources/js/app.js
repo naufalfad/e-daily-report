@@ -12,6 +12,10 @@ import '../js/profile-modal.js'
 // =========================
 import Alpine from 'alpinejs';
 
+// [TAMBAHAN BARU] Import Plugin Collapse
+import collapse from '@alpinejs/collapse';
+Alpine.plugin(collapse); // Daftarkan plugin
+
 import MapInput from './components/map-input.js';
 
 // =========================

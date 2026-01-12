@@ -9,10 +9,6 @@ use Laravel\Sanctum\HasApiTokens;
 use AngelSourceLabs\LaravelSpatial\Eloquent\SpatialTrait;
 use Illuminate\Support\Facades\Storage;
 
-use App\Models\Jabatan;
-use App\Models\Bidang;
-use App\Models\LaporanHarian; // Pastikan Model LaporanHarian ter-import
-
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, SpatialTrait;
@@ -34,22 +30,75 @@ class User extends Authenticatable
 
     protected $appends = ['foto_profil_url'];
 
-    // Eager load agar otomatis ikut saat query user
+    // Eager load standar
     protected $with = ['atasan', 'jabatan', 'bidang'];
 
-    // ---------------------------------------------------------------------
-    // Accessor foto profil
-    // ---------------------------------------------------------------------
+    // =========================================================================
+    // HELPER LOGIC HIERARKI (NEW FEATURE - PHASE 3)
+    // =========================================================================
+
+    /**
+     * Cek apakah user berada di level Sub-Bidang (Anak).
+     * Return: boolean
+     */
+    public function isDiSubBidang()
+    {
+        // Pastikan relasi bidang ada, lalu cek parent_id atau level
+        return $this->bidang && ($this->bidang->parent_id !== null || $this->bidang->level === 'sub_bidang');
+    }
+
+    /**
+     * Ambil Bidang Induk dari user ini.
+     * Jika user di Sub-Bidang -> return Parent-nya.
+     * Jika user di Bidang -> return Bidang itu sendiri.
+     */
+    public function getBidangInduk()
+    {
+        if (!$this->bidang) return null;
+
+        if ($this->isDiSubBidang()) {
+            return $this->bidang->parent;
+        }
+
+        return $this->bidang;
+    }
+
+    /**
+     * Logic cerdas untuk mengambil Tupoksi yang BOLEH dilihat/dikerjakan user.
+     * Skenario: Staf Sub-Bidang bisa melihat tupoksi Sub-Bidang (Utama) + Tupoksi Bidang (Opsional/Tugas Tambahan).
+     */
+    public function getAvailableTupoksiIds()
+    {
+        $ids = [];
+        
+        // 1. Ambil ID bidang user saat ini (Entah itu Induk atau Anak)
+        if ($this->bidang_id) {
+            $ids[] = $this->bidang_id;
+        }
+
+        // 2. Jika dia ada di sub-bidang, ambil juga ID induknya
+        // (Asumsi: Staf kadang mengerjakan tugas umum bidang)
+        if ($this->isDiSubBidang()) {
+            $induk = $this->getBidangInduk();
+            if ($induk) {
+                $ids[] = $induk->id;
+            }
+        }
+
+        return $ids;
+    }
+
+    // =========================================================================
+    // EXISTING LOGIC
+    // =========================================================================
+
     public function getFotoProfilUrlAttribute()
     {
         return $this->foto_profil
             ? Storage::disk('public')->url($this->foto_profil)
-            : asset('assets/man.png'); // FIX: Default avatar path disesuaikan
+            : asset('assets/man.png');
     }
 
-    // ---------------------------------------------------------------------
-    // Hierarki organisasi
-    // ---------------------------------------------------------------------
     public function atasan()
     {
         return $this->belongsTo(User::class, 'atasan_id');
@@ -60,71 +109,21 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'atasan_id');
     }
 
-    public function bawahanRecursif()
-    {
-        return $this->hasMany(User::class, 'atasan_id')
-                    ->with(['jabatan', 'bidang', 'bawahanRecursif']);
-    }
-
-    // ---------------------------------------------------------------------
-    // Relasi role
-    // ---------------------------------------------------------------------
-    public function roles()
-    {
-        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
-    }
-
-    // ---------------------------------------------------------------------
-    // Relasi ke core business
-    // ---------------------------------------------------------------------
-    
-    // laporan yang harus divalidasi oleh user sebagai atasan
-    public function laporanValidasi()
-    {
-        return $this->hasMany(LaporanHarian::class, 'atasan_id');
-    }
-    
-    // [FIXED] Relasi SKP diarahkan ke SkpRencana (Model Baru)
-    public function skp()
-    {
-        return $this->hasMany(SkpRencana::class, 'user_id');
-    }
-
-    /**
-     * Relasi LKH (Laporan Harian) yang dibuat oleh user
-     */
-    public function lkh()
-    {
-        return $this->hasMany(LaporanHarian::class, 'user_id');
-    }
-
-    // ---------------------------------------------------------------------
-    // Unit kerja / jabatan / bidang (TAHAP 1.2: Relasi Dasar Skoring)
-    // ---------------------------------------------------------------------
     public function unitKerja()
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
 
-    /**
-     * Relasi Bidang. Penting untuk mengelompokkan user dalam perhitungan skoring per Bidang.
-     */
     public function bidang()
     {
         return $this->belongsTo(Bidang::class, 'bidang_id');
     }
 
-    /**
-     * Relasi Jabatan. Penting untuk mengidentifikasi Kepala Bidang secara dinamis.
-     */
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 
-    // ---------------------------------------------------------------------
-    // Relasi lain-lain
-    // ---------------------------------------------------------------------
     public function pengumumanDibuat()
     {
         return $this->hasMany(Pengumuman::class, 'user_id_creator');
@@ -148,5 +147,15 @@ class User extends Authenticatable
     public function laporanHarian()
     {
         return $this->hasMany(LaporanHarian::class, 'user_id');
+    }
+
+    public function skpTarget()
+    {
+        return $this->hasMany(SkpTarget::class, 'user_id');
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id');
     }
 }

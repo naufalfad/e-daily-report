@@ -40,7 +40,6 @@
         {{-- Scrollable Content --}}
         <div class="flex-1 overflow-y-auto px-8 py-6">
             <form id="pegawaiForm" @submit.prevent="submitForm">
-                @csrf
                 <template x-if="openEdit">
                     <input type="hidden" name="_method" value="PUT">
                 </template>
@@ -57,21 +56,21 @@
 
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Lengkap</label>
-                            <input type="text" name="name" x-model="form.name" required
+                            <input type="text" x-model="form.name" required
                                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                 placeholder="Contoh: Budi Santoso, S.Kom">
                         </div>
 
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">NIP</label>
-                            <input type="text" name="nip" x-model="form.nip" required
+                            <input type="text" x-model="form.nip" required
                                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none font-mono"
                                 placeholder="19xxxxxxxxxxxxxxxx">
                         </div>
 
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Email (Opsional)</label>
-                            <input type="email" name="email" x-model="form.email"
+                            <input type="email" x-model="form.email"
                                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                 placeholder="email@bapenda.go.id">
                         </div>
@@ -79,13 +78,13 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
-                                <input type="text" name="username" x-model="form.username" required
+                                <input type="text" x-model="form.username" required
                                     class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                     placeholder="Username login">
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
-                                <input type="password" name="password" x-model="form.password" :required="openAdd"
+                                <input type="password" x-model="form.password" :required="openAdd"
                                     class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                     placeholder="Min. 6 karakter">
                                 <p x-show="openEdit" class="text-[10px] text-slate-400 mt-1">*Kosongkan jika tidak diubah</p>
@@ -102,86 +101,96 @@
                             <h3 class="font-bold text-slate-700">Informasi Kepegawaian</h3>
                         </div>
 
+                        {{-- Select Unit Kerja (Dinamis dari Alpine) --}}
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Unit Kerja</label>
-                            <select name="unit_kerja_id" x-model="form.unit_kerja_id" required
+                            <select x-model="form.unit_kerja_id" required
                                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
                                 <option value="">Pilih Unit Kerja</option>
-                                @foreach($unitKerja as $uk)
-                                    <option value="{{ $uk->id }}">{{ $uk->nama_unit_kerja }}</option>
-                                @endforeach
+                                <template x-for="uk in unitKerjaList" :key="uk.id">
+                                    <option :value="uk.id" x-text="uk.nama_unit"></option>
+                                </template>
                             </select>
                         </div>
 
+                        {{-- Select Bidang (Dinamis dependent on Unit Kerja) --}}
                         <div class="form-group">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Bidang / Sub-Bidang</label>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Bidang</label>
                             <div class="relative">
-                                <select name="bidang_id" x-model="form.bidang_id" required @change="fetchAtasanList()"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
-                                    <option value="">Pilih Bidang/Sub-Bidang</option>
-                                    
-                                    @foreach($bidang as $parent)
-                                        {{-- Parent Option (Induk) --}}
-                                        <option value="{{ $parent->id }}" class="font-bold bg-slate-50 text-slate-900">
-                                            {{ $parent->nama_bidang }}
-                                        </option>
-
-                                        {{-- Children Options (Anak) --}}
-                                        @if($parent->children->count() > 0)
-                                            @foreach($parent->children as $child)
-                                                <option value="{{ $child->id }}">
-                                                    &nbsp;&nbsp;&nbsp;↳ {{ $child->nama_bidang }}
-                                                </option>
-                                            @endforeach
-                                        @endif
-                                    @endforeach
-                                    
+                                <select x-model="form.bidang_id" required
+                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white"
+                                    :disabled="!form.unit_kerja_id || bidangList.length === 0">
+                                    <option value="">Pilih Bidang</option>
+                                    <template x-for="bid in bidangList" :key="bid.id">
+                                        <option :value="bid.id" x-text="bid.nama_bidang"></option>
+                                    </template>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-500">
                                     <i class="fas fa-chevron-down text-xs"></i>
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-400 mt-1">
-                                *Pilih <b>Induk</b> untuk Kabid/Kepala. Pilih <b>Sub-Bidang</b> untuk Kasubbid & Staf.
+                            <p class="text-xs text-slate-400 mt-1" x-show="bidangList.length === 0 && form.unit_kerja_id">
+                                *Tidak ada data bidang di unit ini.
                             </p>
                         </div>
 
+                        {{-- Select Jabatan (Dinamis dengan Validasi Hierarki Backend) --}}
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Jabatan</label>
-                            <select name="jabatan_id" x-model="form.jabatan_id" required
+                            <select x-model="form.jabatan_id" required
                                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
                                 <option value="">Pilih Jabatan</option>
-                                @foreach($jabatan as $j)
-                                    <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
-                                @endforeach
+                                <template x-for="j in jabatanList" :key="j.id">
+                                    {{-- 
+                                        Logic Disable: 
+                                        Disable jabatan kepemimpinan (ID 1-4) JIKA sudah ada di occupied_positions bidang tersebut.
+                                        Kecuali jika form.jabatan_id saat ini sama dengan j.id (agar saat edit tidak ter-disable diri sendiri).
+                                    --}}
+                                    <option 
+                                        :value="j.id" 
+                                        x-text="j.nama_jabatan + ((selectedBidangMeta && selectedBidangMeta.occupied_positions.includes(j.id) && [1,2,3,4].includes(j.id)) ? ' (Sudah Terisi)' : '')"
+                                        :disabled="selectedBidangMeta && selectedBidangMeta.occupied_positions.includes(j.id) && [1,2,3,4].includes(j.id) && form.jabatan_id != j.id"
+                                        :class="{'text-gray-400 bg-gray-50': selectedBidangMeta && selectedBidangMeta.occupied_positions.includes(j.id) && [1,2,3,4].includes(j.id) && form.jabatan_id != j.id}">
+                                    </option>
+                                </template>
                             </select>
+                            {{-- Pesan Helper jika user memaksa memilih atau saat reset --}}
+                            <p class="text-xs text-amber-600 mt-1 flex items-center gap-1" 
+                               x-show="selectedBidangMeta && selectedBidangMeta.occupied_positions.includes(parseInt(form.jabatan_id)) && [1,2,3,4].includes(parseInt(form.jabatan_id)) && form.jabatan_id != editId">
+                               <i class="fas fa-exclamation-triangle"></i> Jabatan ini sudah terisi di bidang yang dipilih.
+                            </p>
                         </div>
 
+                        {{-- Select Role --}}
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Role Aplikasi</label>
-                            <select name="role" x-model="form.role" required
+                            <select x-model="form.role" required
                                 class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
                                 <option value="">Pilih Role</option>
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->name }}">{{ ucfirst($role->name) }}</option>
-                                @endforeach
+                                <template x-for="role in roleList" :key="role.id">
+                                    <option :value="role.nama_role" x-text="role.nama_role"></option>
+                                </template>
                             </select>
                         </div>
 
+                        {{-- Select Atasan (Dinamis based on logic) --}}
                         <div class="form-group relative">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Atasan Langsung</label>
-                            <select name="atasan_id" x-model="form.atasan_id"
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
+                            <select x-model="form.atasan_id"
+                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white"
+                                :disabled="isFetchingAtasan">
                                 <option value="">Pilih Atasan (Opsional)</option>
-                                {{-- Loop default untuk init, nanti di-override Alpine jika ada filter --}}
-                                @foreach($pegawaiList as $p)
-                                     <option value="{{ $p->id }}">{{ $p->name }} - {{ $p->nip }}</option>
-                                @endforeach
+                                <template x-for="p in atasanList" :key="p.id">
+                                    <option :value="p.id" x-text="p.display || p.name"></option>
+                                </template>
                             </select>
-                            {{-- Indikator Loading Alpine --}}
-                            <div x-show="isFetchingAtasan" class="absolute right-4 bottom-3" x-cloak>
+                            {{-- Indikator Loading --}}
+                            <div x-show="isFetchingAtasan" class="absolute right-4 bottom-3 flex items-center" x-cloak>
                                 <i class="fas fa-circle-notch fa-spin text-emerald-600"></i>
                             </div>
+                            <p class="text-xs text-slate-400 mt-1" x-show="atasanList.length === 0 && form.unit_kerja_id && !isFetchingAtasan">
+                                *Tidak ditemukan kandidat atasan yang sesuai hierarki.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -194,10 +203,10 @@
                 class="text-sm font-bold text-slate-500 hover:text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200/50 transition-colors">
                 Batal
             </button>
-            <button form="pegawaiForm" type="submit"
-                class="px-6 py-2.5 bg-[#1C7C54] text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-[#166443] hover:shadow-emerald-600/30 transition-all flex items-center gap-2">
-                <i class="fas fa-save"></i>
-                <span x-text="openAdd ? 'Simpan Data' : 'Update Perubahan'"></span>
+            <button form="pegawaiForm" type="submit" :disabled="isLoading"
+                class="px-6 py-2.5 bg-[#1C7C54] text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-[#166443] hover:shadow-emerald-600/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas" :class="isLoading ? 'fa-circle-notch fa-spin' : 'fa-save'"></i>
+                <span x-text="isLoading ? 'Menyimpan...' : (openAdd ? 'Simpan Data' : 'Update Perubahan')"></span>
             </button>
         </div>
     </div>

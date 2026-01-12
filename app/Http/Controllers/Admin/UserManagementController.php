@@ -93,10 +93,9 @@ class UserManagementController extends Controller
 
         $unitKerja = UnitKerja::all();
         
-        // [UPDATED CODE]
         // Mengambil Bidang yang dikelompokkan: Induk -> Children
-        // Ini memanfaatkan Scope 'induk' dan relasi 'children' yang dibuat di Tahap 3
-        $bidang = Bidang::induk()
+        // Pastikan model Bidang memiliki scope 'induk' atau logika query yang sesuai
+        $bidang = Bidang::whereNull('parent_id') // Asumsi scope induk adalah parent_id NULL
             ->with('children')
             ->orderBy('nama_bidang', 'asc')
             ->get();
@@ -105,7 +104,6 @@ class UserManagementController extends Controller
         $roles = Role::all();
         
         // Ambil list pegawai untuk dropdown "Atasan Langsung"
-        // Hanya ambil nama & NIP untuk efisiensi
         $pegawaiList = User::select('id', 'name', 'nip', 'jabatan_id')->get(); 
 
         return view('admin.manajemen-pegawai', compact('unitKerja', 'bidang', 'jabatan', 'roles', 'pegawaiList'));
@@ -126,7 +124,8 @@ class UserManagementController extends Controller
             'unit_kerja_id' => 'required|exists:unit_kerja,id',
             'bidang_id'     => 'required|exists:bidang,id',
             'jabatan_id'    => 'required|exists:jabatan,id',
-            'role'          => 'required|exists:roles,name',
+            // [FIX PHASE 1] Ubah 'name' menjadi 'nama_role' sesuai kolom DB
+            'role'          => 'required|exists:roles,nama_role', 
             'atasan_id'     => 'nullable|exists:users,id'
         ]);
 
@@ -146,7 +145,6 @@ class UserManagementController extends Controller
             DB::beginTransaction();
 
             // Buat User
-            // Note: bidang_id sekarang bisa berisi ID Induk (untuk Kabid) atau ID Anak (untuk Staf)
             $user = User::create([
                 'name'          => $request->name,
                 'nip'           => $request->nip,
@@ -161,9 +159,13 @@ class UserManagementController extends Controller
             ]);
 
             // Assign Role
-            $role = Role::where('name', $request->role)->first();
+            // [FIX PHASE 1] Ubah 'name' menjadi 'nama_role'
+            $role = Role::where('nama_role', $request->role)->first();
             if ($role) {
-                $user->roles()->attach($role);
+                // Menggunakan sync untuk memastikan role terganti (meski create baru, sync aman)
+                // Jika user_roles table tidak punya model, gunakan DB facade atau relasi jika ada
+                // Asumsi relasi roles() exists di User model
+                $user->roles()->sync([$role->id]);
             }
 
             DB::commit();
@@ -217,7 +219,8 @@ class UserManagementController extends Controller
             
             // Update Role jika ada di request
             if ($request->has('role')) {
-                $role = Role::where('name', $request->role)->first();
+                // [FIX PHASE 1] Ubah 'name' menjadi 'nama_role'
+                $role = Role::where('nama_role', $request->role)->first();
                 if ($role) {
                      $user->roles()->sync([$role->id]);
                 }

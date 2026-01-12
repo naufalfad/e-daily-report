@@ -9,10 +9,11 @@ use App\Http\Controllers\Auth\ProfileController;
 
 // ADMIN
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\UserAccountController; // [NEW] Controller Akun
+use App\Http\Controllers\Admin\UserAccountController;
 use App\Http\Controllers\Admin\MasterDataController;
 use App\Http\Controllers\Admin\SystemSettingController;
-// Controller Master Data Spesifik
+
+// ADMIN MASTER SPECIFIC
 use App\Http\Controllers\Admin\Master\UnitKerjaController;
 use App\Http\Controllers\Admin\Master\JabatanController;
 use App\Http\Controllers\Admin\Master\BidangController;
@@ -36,7 +37,6 @@ use App\Http\Controllers\Core\BidangSkoringController;
 use App\Http\Controllers\Core\UserImportController;
 use App\Http\Controllers\Core\SkoringController;
 
-
 /*
 |--------------------------------------------------------------------------
 | API Routes - e-Daily Report Bapenda Mimika
@@ -50,7 +50,6 @@ use App\Http\Controllers\Core\SkoringController;
 */
 Route::post('/login', [AuthController::class, 'login']);
 
-
 /*
 |--------------------------------------------------------------------------
 | 2. PROTECTED ROUTES (Wajib Login / Sanctum)
@@ -58,9 +57,8 @@ Route::post('/login', [AuthController::class, 'login']);
 */
 Route::middleware('auth:sanctum')->group(function () {
     
-    // Monitoring staf
+    // Monitoring staf (Kadis View)
     Route::get('/monitoring/staf', [KadisValidatorController::class, 'monitoringStaf']);
-
 
     /*
     |--------------------------------------------------------------------------
@@ -72,7 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'updateProfile']);
     Route::post('/profile/password', [ProfileController::class, 'updatePassword']);
 
-
     /*
     |--------------------------------------------------------------------------
     | C. DASHBOARD
@@ -80,7 +77,6 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats']);
     Route::get('/dashboard/kadis', [DashboardController::class, 'getStatsKadis']);
-
 
     /*
     |--------------------------------------------------------------------------
@@ -90,54 +86,47 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
 
         // 1. DOMAIN HR: MANAJEMEN PEGAWAI
-        // GET /api/admin/pegawai -> UserManagementController@index (Pagination)
         Route::apiResource('pegawai', UserManagementController::class);
 
-        // 2. DOMAIN IT: AKUN PENGGUNA (BARU & DIPERBARUI)
+        // 2. DOMAIN IT: AKUN PENGGUNA
         Route::prefix('akun')->group(function() {
-            // List Akun (Pagination & Filter)
             Route::get('/', [UserAccountController::class, 'index']); 
-            
-            // Reset Password / Ganti Username
             Route::patch('/{id}/credentials', [UserAccountController::class, 'updateCredentials']); 
-            
-            // Ubah Role / Hak Akses
             Route::patch('/{id}/role', [UserAccountController::class, 'updateRole']); 
-            
-            // Blokir / Aktifkan Akun (Suspend)
             Route::patch('/{id}/status', [UserAccountController::class, 'updateStatus']); 
         });
 
-        // 3. MASTER DATA & SETTINGS
+        // 3. MASTER DATA MANAGEMENT (CRUD Resources)
         Route::prefix('master')->group(function() {
-            
-            // Unit Kerja Resource
             Route::apiResource('unit-kerja', UnitKerjaController::class);
-
-            // Jabatan Resource
             Route::apiResource('jabatan', JabatanController::class);
-
-            // Bidang Resource
             Route::apiResource('bidang', BidangController::class);
 
-            // Tupoksi (Legacy Controller)
+            // Tupoksi (Legacy Controller methods)
             Route::get('tupoksi', [MasterDataController::class, 'indexTupoksi']);
             Route::post('tupoksi', [MasterDataController::class, 'storeTupoksi']);
             Route::put('tupoksi/{id}', [MasterDataController::class, 'updateTupoksi']);
             Route::delete('tupoksi/{id}', [MasterDataController::class, 'destroyTupoksi']);
-
         });
 
         /*
         |----------------------------------------------------------------------
-        | Dropdown Getters
+        | Dropdown Helpers (Data Feed for Frontend Forms)
         |----------------------------------------------------------------------
+        | Endpoint ini melayani kebutuhan dropdown select di UI
         */
         Route::prefix('master-dropdown')->group(function () {
             Route::get('roles', [MasterDataController::class, 'getRoles']);
             Route::get('jabatan', [MasterDataController::class, 'getJabatan']);
             Route::get('unit-kerja', [MasterDataController::class, 'getUnitKerja']);
+            
+            // [FIX] Menambahkan route indexBidang agar dropdown bidang terisi
+            Route::get('bidang', [MasterDataController::class, 'indexBidang']);
+
+            // [FIX] Menambahkan alias route agar sesuai dengan manajemen-pegawai.js
+            Route::get('pegawai/calon-atasan', [MasterDataController::class, 'getCalonAtasan']);
             Route::get('calon-atasan', [MasterDataController::class, 'getCalonAtasan']);
+            
             Route::get('bidang-by-unit-kerja/{unitKerjaId}', [MasterDataController::class, 'getBidangByUnitKerja']);
         });
 
@@ -153,7 +142,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('pegawai/import', [UserImportController::class, 'import']);
     });
 
-
     /*
     |--------------------------------------------------------------------------
     | E. GIS MODULE
@@ -163,7 +151,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/kabupaten', [WilayahController::class, 'kabupaten']);
     Route::get('/kecamatan', [WilayahController::class, 'kecamatan']);
     Route::get('/kelurahan', [WilayahController::class, 'kelurahan']);
-
 
     /*
     |--------------------------------------------------------------------------
@@ -176,27 +163,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // LKH
     Route::prefix('lkh')->group(function () {
-
         Route::get('riwayat', [LkhController::class, 'getRiwayat']);
         Route::get('referensi', [LkhController::class, 'getReferensi']);
-
         Route::get('/', [LkhController::class, 'index']);
         Route::post('/', [LkhController::class, 'store']);
-
-        Route::post('/update/{id}', [LkhController::class, 'update'])
-            ->where('id', '[0-9]+');
-
-        Route::get('/{id}', [LkhController::class, 'show'])
-            ->where('id', '[0-9]+');
-
-        Route::delete('/{id}', [LkhController::class, 'destroy'])
-            ->where('id', '[0-9]+');
-
+        Route::post('/update/{id}', [LkhController::class, 'update'])->where('id', '[0-9]+');
+        Route::get('/{id}', [LkhController::class, 'show'])->where('id', '[0-9]+');
+        Route::delete('/{id}', [LkhController::class, 'destroy'])->where('id', '[0-9]+');
     });
 
     // Validator (Penilai dan Kadis/Kaban)
     Route::prefix('validator')->group(function () {
-        
         // Rute Khusus KADIS/KABAN
         Route::get('kadis/lkh', [KadisValidatorController::class, 'index']);
         Route::post('kadis/lkh/{id}/validate', [KadisValidatorController::class, 'validateLkh']);
@@ -205,7 +182,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('lkh', [ValidatorController::class, 'index']);
         Route::get('lkh/{id}', [ValidatorController::class, 'show']);
         Route::post('lkh/{id}/validate', [ValidatorController::class, 'validateLkh']);
-
     });
 
     // Export
@@ -225,9 +201,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('notifikasi/read-all', [NotifikasiController::class, 'markAllRead']);
 
     // Activity Log
-    Route::get('log-aktivitas', [ActivityLogController::class, 'index'])
-        ->name('api.log.aktivitas');
-
+    Route::get('log-aktivitas', [ActivityLogController::class, 'index'])->name('api.log.aktivitas');
 
     /*
     |--------------------------------------------------------------------------
@@ -235,19 +209,13 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('kadis')->group(function () {
-        
-        // API Skoring Kinerja Per Bidang
         Route::get('/skoring-bidang', [BidangSkoringController::class, 'index']);
-
-        // Pengumuman Kadis
         Route::prefix('pengumuman')->group(function () {
             Route::get('/list', [PengumumanController::class, 'index']);
             Route::post('/store', [PengumumanController::class, 'store']);
             Route::delete('/{id}', [PengumumanController::class, 'destroy']);
         });
-
     });
-
 
     /*
     |--------------------------------------------------------------------------
@@ -256,14 +224,12 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     Route::get('organisasi/tree', [OrganisasiController::class, 'getTree']);
 
-
     /*
     |--------------------------------------------------------------------------
     | I. SKORING KINERJA (BAWAHAN)
     |--------------------------------------------------------------------------
     */
     Route::get('/skoring-kinerja', [SkoringController::class, 'index']);
-
 
     /*
     |--------------------------------------------------------------------------

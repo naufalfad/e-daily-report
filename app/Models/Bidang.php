@@ -12,13 +12,17 @@ class Bidang extends Model
 
     protected $table = 'bidang';
 
+    // Konstanta untuk standarisasi Level
+    // Digunakan di Controller dan View untuk menghindari hardcode string 'bidang'/'sub_bidang'
+    public const LEVEL_BIDANG = 'bidang';
+    public const LEVEL_SUB_BIDANG = 'sub_bidang';
+
     // Kolom yang boleh diisi (Mass Assignment)
-    // Saya tambahkan parent_id dan level agar seeder/controller aman
     protected $fillable = [
         'unit_kerja_id', 
         'nama_bidang', 
-        'parent_id', 
-        'level'
+        'parent_id', // Field baru: Referensi ke ID Induk
+        'level'      // Field baru: Tipe ('bidang' atau 'sub_bidang')
     ];
 
     // =========================================================================
@@ -27,7 +31,7 @@ class Bidang extends Model
 
     /**
      * Relasi ke Atasan (Induk)
-     * Contoh: Sub Bidang Pendataan (Anak) -> Bidang Pajak (Bapak)
+     * Contoh: Sub Bidang Pendataan (Anak) -> milik Bidang Pajak (Bapak)
      */
     public function parent()
     {
@@ -36,7 +40,7 @@ class Bidang extends Model
 
     /**
      * Relasi ke Bawahan (Anak)
-     * Contoh: Bidang Pajak (Bapak) -> [Sub Bidang Pendataan, Sub Bidang Penetapan...]
+     * Contoh: Bidang Pajak (Bapak) -> memiliki [Sub Bidang Pendataan, Sub Bidang Penetapan...]
      */
     public function children()
     {
@@ -44,21 +48,20 @@ class Bidang extends Model
     }
 
     /**
-     * Scope Query: Hanya ambil Bidang Induk (Top Level)
-     * Cara pakai: Bidang::induk()->get();
+     * Scope Query: Hanya ambil Bidang dengan level 'bidang' (Calon Induk)
+     * Cara pakai: Bidang::levelBidang()->get();
      */
-    public function scopeInduk($query)
+    public function scopeLevelBidang($query)
     {
-        return $query->whereNull('parent_id')->orWhere('level', 'bidang');
+        return $query->where('level', self::LEVEL_BIDANG);
     }
 
     /**
-     * Scope Query: Hanya ambil Sub Bidang (Anak)
-     * Cara pakai: Bidang::anak()->get();
+     * Scope Query: Hanya ambil Bidang dengan level 'sub_bidang'
      */
-    public function scopeAnak($query)
+    public function scopeLevelSubBidang($query)
     {
-        return $query->whereNotNull('parent_id')->orWhere('level', 'sub_bidang');
+        return $query->where('level', self::LEVEL_SUB_BIDANG);
     }
 
     // =========================================================================

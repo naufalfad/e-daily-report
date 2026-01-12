@@ -160,7 +160,7 @@ Route::middleware(['auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | ADMIN ROUTES (MODIFIED FOR PAGINATION)
+    | ADMIN ROUTES (MODIFIED FOR PAGINATION & HIERARCHY)
     |--------------------------------------------------------------------------
     */
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -170,18 +170,30 @@ Route::middleware(['auth'])->group(function () {
         // [HR] Manajemen Pegawai
         Route::get('/manajemen-pegawai', [UserManagementController::class, 'index'])->name('manajemen-pegawai');
         
-        // [IT] Akun Pengguna (MODIFIED)
-        // Menggunakan Controller agar bisa inject data Roles ke View
+        // [IT] Akun Pengguna
         Route::get('/akun-pengguna', [UserAccountController::class, 'index'])->name('akun-pengguna');
         
         Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
 
         Route::prefix('master')->name('master.')->group(function () {
-            // Master Data Pagination
+            // 1. Unit Kerja
             Route::get('unit-kerja', [UnitKerjaController::class, 'index'])->name('unit-kerja.index');
+            // TODO: Tambahkan route CRUD Unit Kerja (store, update, destroy) jika diperlukan
+
+            // 2. Bidang (Updated for Hierarchy & CRUD)
+            // Route API internal untuk mengambil data induk bidang (AJAX)
+            Route::get('bidang/get-parents', [BidangController::class, 'getParents'])->name('bidang.get-parents');
+            
+            // Route CRUD Standar
             Route::get('bidang', [BidangController::class, 'index'])->name('bidang.index');
+            Route::post('bidang', [BidangController::class, 'store'])->name('bidang.store');
+            Route::put('bidang/{id}', [BidangController::class, 'update'])->name('bidang.update');
+            Route::delete('bidang/{id}', [BidangController::class, 'destroy'])->name('bidang.destroy');
+
+            // 3. Jabatan
             Route::get('jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
+            // TODO: Tambahkan route CRUD Jabatan (store, update, destroy) jika diperlukan
         });
     });
 

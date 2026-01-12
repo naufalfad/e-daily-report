@@ -9,7 +9,7 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Bidang</h1>
-            <p class="text-sm text-slate-500 mt-1">Kelola data Bidang/Bagian di bawah Unit Kerja.</p>
+            <p class="text-sm text-slate-500 mt-1">Kelola data Bidang dan Sub Bidang (Hierarki SOTK).</p>
         </div>
         
         <button onclick="openModal('add')" 
@@ -53,8 +53,9 @@
                     <tr>
                         <th class="px-6 py-4 border-b border-slate-100 w-[5%] text-center">No</th>
                         <th class="px-6 py-4 border-b border-slate-100">Nama Bidang</th>
-                        <th class="px-6 py-4 border-b border-slate-100">Induk Unit Kerja</th>
-                        <th class="px-6 py-4 border-b border-slate-100 text-center w-[15%]">Personil</th>
+                        <th class="px-6 py-4 border-b border-slate-100">Unit Kerja</th>
+                        <th class="px-6 py-4 border-b border-slate-100">Tingkatan</th> {{-- Kolom Baru --}}
+                        <th class="px-6 py-4 border-b border-slate-100 text-center w-[10%]">Personil</th>
                         <th class="px-6 py-4 border-b border-slate-100 text-center w-[15%]">Aksi</th>
                     </tr>
                 </thead>
@@ -98,23 +99,22 @@
     </div>
 </div>
 
-{{-- MODAL (Structure sama, hanya ID disesuaikan untuk JS) --}}
+{{-- MODAL --}}
 <div id="modalBidang" class="fixed inset-0 z-[9999] hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity opacity-0" id="modalBackdrop"></div>
     <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4">
-            <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:w-full sm:max-w-lg opacity-0 scale-95" id="modalPanel">
+            <div class="relative transform overflow-visible rounded-2xl bg-white text-left shadow-2xl transition-all sm:w-full sm:max-w-lg opacity-0 scale-95" id="modalPanel">
                 
                 <form id="formBidang">
-                    {{-- CSRF Token diambil otomatis oleh Ajax Header di app.js biasanya, tapi input hidden tetap aman --}}
                     <input type="hidden" name="_token" value="{{ csrf_token() }}">
                     <input type="hidden" id="bidang_id" name="id">
                     <input type="hidden" name="_method" id="method" value="POST">
 
-                    <div class="bg-white px-6 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
+                    <div class="bg-white px-6 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 rounded-t-2xl">
                         <div>
                             <h3 class="text-lg font-bold text-slate-800" id="modalTitle">Tambah Bidang</h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Tentukan nama bidang dan unit kerja induknya.</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Tentukan struktur hierarki organisasi.</p>
                         </div>
                         <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 p-2 rounded-lg transition-colors">
                             <i class="fas fa-times"></i>
@@ -122,9 +122,11 @@
                     </div>
 
                     <div class="px-6 py-6 space-y-5">
+                        
+                        {{-- 1. INPUT UNIT KERJA (Parent Tertinggi) --}}
                         <div>
                             <label for="unit_kerja_id" class="block text-sm font-semibold text-slate-700 mb-2">
-                                Unit Kerja Induk <span class="text-red-500">*</span>
+                                Unit Kerja <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
                                 <select name="unit_kerja_id" id="unit_kerja_id" required
@@ -140,17 +142,57 @@
                             </div>
                         </div>
 
+                        {{-- 2. INPUT LEVEL (Menentukan Struktur) --}}
+                        <div>
+                            <label for="level" class="block text-sm font-semibold text-slate-700 mb-2">
+                                Tingkatan Bidang <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select name="level" id="level" required
+                                    class="block w-full rounded-xl border-slate-300 py-3 pl-4 pr-10 text-slate-900 shadow-sm focus:border-[#1C7C54] focus:ring-[#1C7C54] sm:text-sm appearance-none bg-no-repeat bg-[right_1rem_center]">
+                                    <option value="" disabled selected>-- Pilih Tingkatan --</option>
+                                    <option value="bidang">Bidang (Top Level)</option>
+                                    <option value="sub_bidang">Sub Bidang</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5 ml-1">
+                                <i class="fas fa-info-circle mr-1"></i> "Bidang" adalah induk, "Sub Bidang" adalah anak.
+                            </p>
+                        </div>
+
+                        {{-- 3. INPUT INDUK BIDANG (Hidden by default, Show if Sub Bidang) --}}
+                        <div id="parent_container" class="hidden transition-all duration-300 ease-in-out">
+                            <label for="parent_id" class="block text-sm font-semibold text-slate-700 mb-2">
+                                Induk Bidang <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select name="parent_id" id="parent_id"
+                                    class="block w-full rounded-xl border-slate-300 py-3 pl-4 pr-10 text-slate-900 shadow-sm focus:border-[#1C7C54] focus:ring-[#1C7C54] sm:text-sm appearance-none bg-no-repeat bg-[right_1rem_center]">
+                                    <option value="" disabled selected>-- Pilih Bidang Induk --</option>
+                                    {{-- Opsi diisi via JavaScript (AJAX) berdasarkan Unit Kerja --}}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 4. INPUT NAMA --}}
                         <div>
                             <label for="nama_bidang" class="block text-sm font-semibold text-slate-700 mb-2">
-                                Nama Bidang <span class="text-red-500">*</span>
+                                Nama Bidang / Sub Bidang <span class="text-red-500">*</span>
                             </label>
                             <input type="text" name="nama_bidang" id="nama_bidang" required
                                 class="block w-full rounded-xl border-slate-300 py-3 px-4 text-slate-900 shadow-sm focus:border-[#1C7C54] focus:ring-[#1C7C54] sm:text-sm transition-all"
                                 placeholder="Contoh: Bidang Pembukuan & Pelaporan">
                         </div>
+
                     </div>
 
-                    <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-slate-100">
+                    <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-slate-100 rounded-b-2xl">
                         <button type="submit" 
                             class="inline-flex w-full justify-center items-center gap-2 rounded-xl bg-[#1C7C54] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#166443] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="fas fa-save"></i> Simpan
@@ -169,6 +211,6 @@
 @endsection
 
 @push('scripts')
-{{-- Load JS Modular yang akan kita buat di Fase 4 --}}
+{{-- Load JS Modular --}}
 @vite(['resources/js/pages/admin/master/bidang.js'])
 @endpush

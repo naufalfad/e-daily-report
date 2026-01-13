@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('layouts.app', [
+    'role' => 'admin',])
 
 @section('title', 'Master Bidang')
 

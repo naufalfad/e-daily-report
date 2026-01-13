@@ -23,7 +23,9 @@ use App\Http\Controllers\Admin\UserAccountController;
 use App\Http\Controllers\Admin\Master\UnitKerjaController;
 use App\Http\Controllers\Admin\Master\BidangController;
 use App\Http\Controllers\Admin\Master\JabatanController;
+use App\Http\Controllers\Admin\Master\TupoksiController;
 use App\Http\Controllers\GIS\WilayahController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -184,8 +186,6 @@ Route::middleware(['auth'])->group(function () {
             // 2. Bidang (Updated for Hierarchy & CRUD)
             // Route API internal untuk mengambil data induk bidang (AJAX)
             Route::get('bidang/get-parents', [BidangController::class, 'getParents'])->name('bidang.get-parents');
-            
-            // Route CRUD Standar
             Route::get('bidang', [BidangController::class, 'index'])->name('bidang.index');
             Route::post('bidang', [BidangController::class, 'store'])->name('bidang.store');
             Route::put('bidang/{id}', [BidangController::class, 'update'])->name('bidang.update');
@@ -194,6 +194,9 @@ Route::middleware(['auth'])->group(function () {
             // 3. Jabatan
             Route::get('jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
             // TODO: Tambahkan route CRUD Jabatan (store, update, destroy) jika diperlukan
+
+            // 4. Tupoksi
+            Route::resource('tupoksi', TupoksiController::class)->only(['index', 'store', 'update', 'destroy']);
         });
     });
 

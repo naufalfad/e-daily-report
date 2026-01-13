@@ -73,6 +73,7 @@ $menusByRole = [
         
         // [BARU] Master Data (Unit Kerja)
         ['key' => 'master-unit', 'label' => 'Master Unit Kerja', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.unit-kerja.index'],
+        ['key' => 'master-tupoksi', 'label' => 'Master Tupoksi', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.tupoksi.index'],
         
         // [ON-HOLD] Bidang & Jabatan (Nanti dibuka)
         ['key' => 'master-bidang', 'label' => 'Master Bidang', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.bidang.index'],

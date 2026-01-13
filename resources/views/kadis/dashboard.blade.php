@@ -132,7 +132,7 @@
 
 @endsection
 
-{{-- Inject Script Khusus Halaman Kadis --}}
+{{-- Inject Script Khusus Halaman kadis --}}
 @push('scripts')
     @vite('resources/js/pages/kadis/dashboard.js')
 @endpush

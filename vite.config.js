@@ -19,6 +19,7 @@ export default defineConfig({
                 'resources/js/pages/admin/log-aktivitas.js',
                 'resources/js/pages/admin/akun-pengguna.js',
                 'resources/js/pages/admin/setting-sistem.js',
+                'resources/js/pages/admin/master/tupoksi.js',  // [NEW] Registrasi JS Master Tupoksi
                 
                 // [FIX] Registrasi JS Master Data agar dikenali Vite
                 'resources/js/pages/admin/master/unit-kerja.js',

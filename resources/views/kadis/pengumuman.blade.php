@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    {{-- Tips Banner (Kadis Version) --}}
+    {{-- Tips Banner (kadis Version) --}}
     <div class="rounded-[20px] bg-[#1C7C54] text-white flex items-center gap-6 px-6 py-5 mb-6 shadow-lg shadow-emerald-700/20">
         <div class="hidden md:block">
             <img src="{{ asset('assets/tips.svg') }}" alt="Tips Pengumuman" class="w-[150px] h-auto object-contain drop-shadow-md">
@@ -154,7 +154,7 @@
                     placeholder="Contoh: Arahan Percepatan Target Pajak">
             </div>
 
-            {{-- Input Target Bidang (Khusus Kadis) --}}
+            {{-- Input Target Bidang (Khusus kadis) --}}
             <div>
                 <label for="select-target-bidang" class="block text-[13px] font-semibold text-slate-700 mb-1.5">Kirim Ke <span class="text-red-500">*</span></label>
                 <select id="select-target-bidang" name="target_bidang_id" required

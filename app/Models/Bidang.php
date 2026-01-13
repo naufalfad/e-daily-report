@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Bidang extends Model
 {
@@ -12,78 +15,74 @@ class Bidang extends Model
 
     protected $table = 'bidang';
 
-    // Konstanta untuk standarisasi Level
-    // Digunakan di Controller dan View untuk menghindari hardcode string 'bidang'/'sub_bidang'
+    // Konstanta Level
     public const LEVEL_BIDANG = 'bidang';
     public const LEVEL_SUB_BIDANG = 'sub_bidang';
 
-    // Kolom yang boleh diisi (Mass Assignment)
     protected $fillable = [
         'unit_kerja_id', 
         'nama_bidang', 
-        'parent_id', // Field baru: Referensi ke ID Induk
-        'level'      // Field baru: Tipe ('bidang' atau 'sub_bidang')
+        'parent_id', 
+        'level'
     ];
 
     // =========================================================================
-    // 1. RELASI HIERARKI (NEW FEATURE - SOTK STRUCTURE)
+    // 1. RELASI DATA MASTER TUPOKSI (FOKUS TAHAP INI)
     // =========================================================================
 
     /**
-     * Relasi ke Atasan (Induk)
-     * Contoh: Sub Bidang Pendataan (Anak) -> milik Bidang Pajak (Bapak)
+     * Relasi: Satu Bidang memiliki banyak Tupoksi.
+     * Tidak memandang apakah ini Bidang Induk atau Sub-Bidang,
+     * selama ID-nya tercatat di tabel tupoksi, relasi ini akan bekerja.
      */
-    public function parent()
+    public function tupoksi(): HasMany
+    {
+        return $this->hasMany(Tupoksi::class, 'bidang_id');
+    }
+
+    // =========================================================================
+    // 2. RELASI HIERARKI (STRUKTUR ORGANISASI)
+    // =========================================================================
+
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Bidang::class, 'parent_id');
     }
 
-    /**
-     * Relasi ke Bawahan (Anak)
-     * Contoh: Bidang Pajak (Bapak) -> memiliki [Sub Bidang Pendataan, Sub Bidang Penetapan...]
-     */
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(Bidang::class, 'parent_id');
     }
 
-    /**
-     * Scope Query: Hanya ambil Bidang dengan level 'bidang' (Calon Induk)
-     * Cara pakai: Bidang::levelBidang()->get();
-     */
+    // =========================================================================
+    // 3. SCOPES (LOGIKA QUERY)
+    // =========================================================================
+
     public function scopeLevelBidang($query)
     {
         return $query->where('level', self::LEVEL_BIDANG);
     }
 
-    /**
-     * Scope Query: Hanya ambil Bidang dengan level 'sub_bidang'
-     */
     public function scopeLevelSubBidang($query)
     {
         return $query->where('level', self::LEVEL_SUB_BIDANG);
     }
 
     // =========================================================================
-    // 2. RELASI EXISTING
+    // 4. RELASI LAINNYA
     // =========================================================================
 
-    public function unitKerja()
+    public function unitKerja(): BelongsTo
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
 
-    public function tupoksi()
-    {
-        return $this->hasMany(Tupoksi::class, 'bidang_id');
-    }
-
-    public function users()
+    public function users(): HasMany
     {
         return $this->hasMany(User::class, 'bidang_id');
     }
 
-    public function kepalaBidang()
+    public function kepalaBidang(): HasOne
     {
         return $this->hasOne(User::class, 'bidang_id')
             ->whereHas('jabatan', function ($query) {

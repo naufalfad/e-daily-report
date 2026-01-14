@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Jabatan;
-use App\Models\UnitKerja;
 
 class JabatanSeeder extends Seeder
 {
@@ -15,27 +14,45 @@ class JabatanSeeder extends Seeder
      */
     public function run()
     {
-        /* * Analisis Logic:
-         * Urutan insert tidak terlalu berpengaruh karena ini master data flat,
-         * tapi kita urutkan berdasarkan hierarki umum untuk kerapian data ID.
+        /**
+         * Analisis Logic:
+         * - Jabatan adalah master data FLAT (tidak hierarkis)
+         * - Relasi struktural ditangani oleh tabel bidang
+         * - Jabatan dinormalisasi dari teks mentah jabatan pegawai
+         * - firstOrCreate dipakai agar aman di-run berulang
          */
         $jabatans = [
-            'Kepala Badan',           // Eselon II
-            'Sekretaris',             // Eselon III (Sekretariat)
-            'Kepala Bidang',          // Eselon III (Bidang Teknis)
-            'Kepala Sub Bagian',      // Eselon IV (Di bawah Sekretaris)
-            'Kepala Sub Bidang',      // Eselon IV (Di bawah Kabid)
-            'Administrator Sistem',   // Jabatan Fungsional Tertentu (JFT) / Khusus IT
-            'Staf Pelaksana',         // Pelaksana Umum (JFU)
+            // Jabatan Struktural
+            'Kepala Badan',
+            'Kepala Bidang',
+            'Kepala Sub Bagian',
+            'Kepala Sub Bidang',
+
+            // Jabatan Fungsional / Pelaksana
+            'Staf Pelaksana',
+
+            // Jabatan Bendahara
+            'Bendahara Pengeluaran',
+            'Bendahara Penerima',
+            'Pembantu Bendahara Penerima',
+            'Bendahara Barang',
+
+            // Status Kepegawaian Khusus
+            'CPNS',
+            'PPPK',
         ];
 
         foreach ($jabatans as $namaJabatan) {
             Jabatan::firstOrCreate(
-                ['nama_jabatan' => $namaJabatan],
-                ['unit_kerja_id' => 1] 
+                [
+                    'nama_jabatan' => $namaJabatan,
+                ],
+                [
+                    'unit_kerja_id' => 1,
+                ]
             );
         }
 
-        $this->command->info('JabatanSeeder berhasil dijalankan.');
+        $this->command->info('✅ JabatanSeeder BAPENDA berhasil dijalankan.');
     }
 }

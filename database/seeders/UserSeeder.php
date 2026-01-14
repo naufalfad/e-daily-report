@@ -11,173 +11,147 @@ use App\Models\UnitKerja;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Faker\Factory as Faker;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $faker = Faker::create('id_ID');
-        $password = Hash::make('password123'); // Password default
-
-        $this->command->info('Memulai generate hierarchy User Bapenda...');
+        $faker    = Faker::create('id_ID');
+        $password = Hash::make('password123');
 
         DB::beginTransaction();
 
         try {
-            // 1. AMBIL DATA REFERENSI (Pastikan seeder lain sudah jalan)
-            $unitKerja = UnitKerja::first()->id ?? 1;
+            /**
+             * ======================================================
+             * 1. REFERENSI MASTER DATA
+             * ======================================================
+             */
+            $unitKerjaId = UnitKerja::first()->id ?? 1;
 
             // Roles
-            $roleSuperAdmin = Role::where('nama_role', 'superadmin')->first()->id;
-            $roleKaban      = Role::where('nama_role', 'kaban')->first()->id;
-            $rolePenilai    = Role::where('nama_role', 'penilai')->first()->id;
-            $roleStaf       = Role::where('nama_role', 'staf')->first()->id;
+            $roleSuperAdmin = Role::where('nama_role', 'superadmin')->value('id');
+            $roleKaban      = Role::where('nama_role', 'kaban')->value('id');
+            $rolePenilai    = Role::where('nama_role', 'penilai')->value('id');
+            $roleStaf       = Role::where('nama_role', 'staf')->value('id');
 
-            // Jabatans
-            $jabKaban        = Jabatan::where('nama_jabatan', 'Kepala Badan')->first()->id;
-            $jabSekban       = Jabatan::where('nama_jabatan', 'Sekretaris')->first()->id;
-            $jabKabid        = Jabatan::where('nama_jabatan', 'Kepala Bidang')->first()->id;
-            $jabKasubag      = Jabatan::where('nama_jabatan', 'Kepala Sub Bagian')->first()->id;
-            $jabKasubid      = Jabatan::where('nama_jabatan', 'Kepala Sub Bidang')->first()->id;
-            $jabStaf         = Jabatan::where('nama_jabatan', 'Staf Pelaksana')->first()->id;
-            $jabAdmin        = Jabatan::where('nama_jabatan', 'Administrator Sistem')->first()->id;
+            // Jabatans (sesuai JabatanSeeder final)
+            $jabKaban   = Jabatan::where('nama_jabatan', 'Kepala Badan')->value('id');
+            $jabKabid   = Jabatan::where('nama_jabatan', 'Kepala Bidang')->value('id');
+            $jabKasubag = Jabatan::where('nama_jabatan', 'Kepala Sub Bagian')->value('id');
+            $jabKasubid = Jabatan::where('nama_jabatan', 'Kepala Sub Bidang')->value('id');
+            $jabStaf    = Jabatan::where('nama_jabatan', 'Staf Pelaksana')->value('id');
 
-            // ======================================================
-            // 2. CREATE KEPALA BADAN (Top Level)
-            // ======================================================
-            $kaban = User::create([
-                'name'          => 'Kepala Badan',
-                'username'      => 'kaban',
-                'nip'           => '197301032007011031',
-                'email'         => 'kaban@bapenda.go.id',
-                'password'      => $password,
-                'unit_kerja_id' => $unitKerja,
-                'jabatan_id'    => $jabKaban,
-                'atasan_id'     => null, // Tidak punya atasan
-                'is_active'     => true,
-                'alamat'        => 'Jl. Yos Sudarso, Nawaripi, Mimika'
-            ]);
-            // Assign Role: Kaban & Penilai
-            $kaban->roles()->attach([$roleKaban, $rolePenilai]);
-            $this->command->info('User Kaban created.');
-
-            // ======================================================
-            // 3. CREATE ADMINISTRATOR
-            // ======================================================
-            $admin = User::create([
-                'name'          => 'Administrator Sistem',
-                'username'      => 'admin',
-                'nip'           => 'admin_system', // NIP dummy
-                'email'         => 'admin@bapenda.mimika.go.id',
-                'password'      => $password,
-                'unit_kerja_id' => $unitKerja,
-                'jabatan_id'    => $jabAdmin,
-                'atasan_id'     => $kaban->id, // Secara struktur di bawah kaban/sekretariat, tapi role superadmin
-                'is_active'     => true,
-                'alamat'        => 'Ruang Server'
-            ]);
-            // Assign Role: Superadmin
-            $admin->roles()->attach([$roleSuperAdmin]);
-
-
-            // ======================================================
-            // 4. GENERATE STRUKTURAL (Sekretariat, Bidang, Sub-Bidang)
-            // ======================================================
-            
-            // Ambil semua Parent (Level Bidang/Sekretariat)
-            $parentBidangs = Bidang::whereNull('parent_id')->get();
-
-            foreach ($parentBidangs as $parent) {
-                // Tentukan Jabatan untuk Kepala Parent (Sekretaris atau Kabid)
-                $isSekretariat = stripos($parent->nama_bidang, 'Sekretariat') !== false;
-                $jabatanParent = $isSekretariat ? $jabSekban : $jabKabid;
-                
-                // Buat User Kepala Bidang / Sekretaris
-                $kepalaParent = User::create([
-                    'name'          => $isSekretariat ? 'Sekretaris Bapenda' : 'Kabid ' . str_replace('Bidang ', '', $parent->nama_bidang),
-                    'username'      => $isSekretariat ? 'sekban' : 'kabid.' . \Illuminate\Support\Str::slug(str_replace('Bidang ', '', $parent->nama_bidang)),
-                    'nip'           => $faker->unique()->numerify('19##########00##'),
-                    'email'         => $faker->unique()->email,
+            /**
+             * ======================================================
+             * 2. KEPALA BADAN (TOP LEVEL)
+             * ======================================================
+             */
+            $kaban = User::firstOrCreate(
+                ['username' => 'kaban'],
+                [
+                    'name'          => 'Kepala Badan Pendapatan Daerah',
+                    'nip'           => '197401092006041001',
+                    'email'         => 'kaban@bapenda.go.id',
                     'password'      => $password,
-                    'unit_kerja_id' => $unitKerja,
-                    'jabatan_id'    => $jabatanParent,
-                    'bidang_id'     => $parent->id,
-                    'atasan_id'     => $kaban->id, // Atasannya Kaban
+                    'unit_kerja_id' => $unitKerjaId,
+                    'jabatan_id'    => $jabKaban,
+                    'atasan_id'     => null,
                     'is_active'     => true,
-                    'alamat'        => $faker->address
+                ]
+            );
+            $kaban->roles()->sync([$roleKaban, $rolePenilai]);
+
+            /**
+             * ======================================================
+             * 3. SUPERADMIN (NON STRUKTURAL)
+             * ======================================================
+             */
+            $admin = User::firstOrCreate(
+                ['username' => 'superadmin'],
+                [
+                    'name'          => 'Super Administrator',
+                    'nip'           => '000000000000000000',
+                    'email'         => 'admin@bapenda.go.id',
+                    'password'      => $password,
+                    'unit_kerja_id' => $unitKerjaId,
+                    'jabatan_id'    => $jabStaf,
+                    'atasan_id'     => $kaban->id,
+                    'is_active'     => true,
+                ]
+            );
+            $admin->roles()->sync([$roleSuperAdmin]);
+
+            /**
+             * ======================================================
+             * 4. STRUKTUR BIDANG & SUB BIDANG
+             * ======================================================
+             */
+            $bidangInduk = Bidang::whereNull('parent_id')->get();
+
+            foreach ($bidangInduk as $bidang) {
+
+                // Kepala Bidang / Sekretariat
+                $kepalaBidang = User::create([
+                    'name'          => 'Kepala ' . $bidang->nama_bidang,
+                    'username'      => 'kabid.' . Str::slug($bidang->nama_bidang),
+                    'nip'           => $faker->unique()->numerify('19##########'),
+                    'email'         => Str::slug($bidang->nama_bidang) . '@bapenda.go.id',
+                    'password'      => $password,
+                    'unit_kerja_id' => $unitKerjaId,
+                    'jabatan_id'    => $jabKabid,
+                    'bidang_id'     => $bidang->id,
+                    'atasan_id'     => $kaban->id,
+                    'is_active'     => true,
                 ]);
-                $kepalaParent->roles()->attach($rolePenilai);
+                $kepalaBidang->roles()->sync([$rolePenilai]);
 
-                $this->command->info('Created: ' . $kepalaParent->name);
+                // Sub Bidang / Sub Bagian
+                foreach ($bidang->children as $sub) {
 
-                // --- PROSES SUB BIDANG / SUB BAGIAN (Children) ---
-                $childBidangs = Bidang::where('parent_id', $parent->id)->get();
+                    $isSubBagian = Str::contains($sub->nama_bidang, 'Sub Bagian');
+                    $jabatanSub = $isSubBagian ? $jabKasubag : $jabKasubid;
 
-                foreach ($childBidangs as $child) {
-                    // Tentukan Jabatan (Kasubag atau Kasubid)
-                    $isSubBagian = stripos($child->nama_bidang, 'Sub Bagian') !== false;
-                    $jabatanChild = $isSubBagian ? $jabKasubag : $jabKasubid;
-                    $prefixName   = $isSubBagian ? 'Kasubag ' : 'Kasubid ';
-
-                    // 4a. Buat User Kepala Sub Bidang
-                    $kasubid = User::create([
-                        'name'          => $prefixName . \Illuminate\Support\Str::limit(str_replace(['Sub Bidang ', 'Sub Bagian '], '', $child->nama_bidang), 20, ''),
-                        'username'      => 'kasub.' . rand(100, 999), // Random simple username
-                        'nip'           => $faker->unique()->numerify('19##########00##'),
-                        'email'         => $faker->unique()->email,
+                    $kepalaSub = User::create([
+                        'name'          => 'Kepala ' . $sub->nama_bidang,
+                        'username'      => 'kasub.' . Str::random(6),
+                        'nip'           => $faker->unique()->numerify('19##########'),
+                        'email'         => Str::slug($sub->nama_bidang) . '@bapenda.go.id',
                         'password'      => $password,
-                        'unit_kerja_id' => $unitKerja,
-                        'jabatan_id'    => $jabatanChild,
-                        'bidang_id'     => $child->id,
-                        'atasan_id'     => $kepalaParent->id, // Atasannya Kabid/Sekban
+                        'unit_kerja_id' => $unitKerjaId,
+                        'jabatan_id'    => $jabatanSub,
+                        'bidang_id'     => $sub->id,
+                        'atasan_id'     => $kepalaBidang->id,
                         'is_active'     => true,
-                        'alamat'        => $faker->address
                     ]);
-                    $kasubid->roles()->attach($rolePenilai);
+                    $kepalaSub->roles()->sync([$rolePenilai]);
 
-                    // 4b. Buat 2 Staf untuk setiap Sub Bidang
+                    // 2 staf per sub bidang
                     for ($i = 1; $i <= 2; $i++) {
                         $staf = User::create([
                             'name'          => 'Staf ' . $faker->firstName,
-                            'username'      => 'staf.' . $faker->userName,
-                            'nip'           => $faker->unique()->numerify('20##########00##'), // NIP lebih muda
-                            'email'         => $faker->unique()->email,
+                            'username'      => 'staf.' . Str::random(8),
+                            'nip'           => $faker->unique()->numerify('20##########'),
+                            'email'         => $faker->unique()->safeEmail,
                             'password'      => $password,
-                            'unit_kerja_id' => $unitKerja,
+                            'unit_kerja_id' => $unitKerjaId,
                             'jabatan_id'    => $jabStaf,
-                            'bidang_id'     => $child->id,
-                            'atasan_id'     => $kasubid->id, // Atasannya Kasubid
+                            'bidang_id'     => $sub->id,
+                            'atasan_id'     => $kepalaSub->id,
                             'is_active'     => true,
-                            'alamat'        => $faker->address
                         ]);
-                        $staf->roles()->attach($roleStaf);
+                        $staf->roles()->sync([$roleStaf]);
                     }
                 }
             }
 
-            // ======================================================
-            // 5. CREATE JABATAN FUNGSIONAL TERTENTU (JFT)
-            // ======================================================
-            // Contoh: Auditor atau P2UPD yang langsung dibawah Kaban secara fungsional
-            $fungsional = User::create([
-                'name'          => 'Pejabat Fungsional Auditor',
-                'username'      => 'auditor_utama',
-                'nip'           => $faker->unique()->numerify('19##########00##'),
-                'email'         => 'auditor@bapenda.go.id',
-                'password'      => $password,
-                'unit_kerja_id' => $unitKerja,
-                'jabatan_id'    => $jabKabid, // Anggap setara Kabid atau jabatan khusus jika ada
-                'atasan_id'     => $kaban->id, // Langsung ke Kaban
-                'is_active'     => true,
-            ]);
-            $fungsional->roles()->attach($roleStaf); // Atau role khusus jika ada
-
             DB::commit();
-            $this->command->info('User Seeder berhasil dijalankan! Semua hierarki terbentuk.');
+            $this->command->info('✅ UserSeeder berhasil — struktur organisasi dummy terbentuk.');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            $this->command->error('Gagal seeding user: ' . $e->getMessage());
+            $this->command->error('❌ UserSeeder gagal: ' . $e->getMessage());
         }
     }
 }

@@ -13,7 +13,7 @@ class RoleSeeder extends Seeder
         // Disimpan ke kolom 'nama_role'
         $roles = [
             'superadmin',
-            'kaban',
+            'kadis',
             'penilai',
             'staf'
         ];

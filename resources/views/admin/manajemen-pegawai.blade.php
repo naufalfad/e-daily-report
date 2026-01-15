@@ -83,7 +83,7 @@
         {{-- Filter Unit Kerja --}}
         <div class="md:col-span-4 lg:col-span-3">
             {{-- ID filterUnitKerja digunakan oleh JS untuk Event Listener --}}
-            <select id="filterUnitKerja" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 outline-none custom-select cursor-pointer">
+            <select x-model="filterUnitKerja" @change="fetchData()" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 outline-none custom-select cursor-pointer">
                 <option value="">Semua Unit Kerja</option>
                 @foreach($unitKerjas as $unit)
                     {{-- [FIX] Menggunakan nama_unit --}}
@@ -133,10 +133,10 @@
                                             <span class="text-[10px] uppercase font-bold text-slate-400 border border-slate-200 rounded px-1.5 py-0.5 bg-slate-50">NIP</span>
                                             <span class="text-xs font-mono font-medium text-slate-600" x-text="item.nip"></span>
                                         </div>
-                                        <div class="text-[11px] text-slate-400 mt-1 truncate flex items-center gap-1">
-                                            <i class="fas fa-envelope text-[10px]"></i>
-                                            <span x-text="item.email || '-'"></span>
-                                        </div>
+                                        {{-- Tampilkan Pangkat jika ada --}}
+                                        <template x-if="item.pangkat">
+                                            <div class="text-[11px] text-slate-500 mt-1 truncate" x-text="item.pangkat"></div>
+                                        </template>
                                     </div>
                                 </div>
                             </td>
@@ -174,7 +174,7 @@
                                               :class="{
                                                   'bg-purple-50 text-purple-700 border border-purple-100': role.name === 'admin',
                                                   'bg-blue-50 text-blue-700 border border-blue-100': role.name === 'penilai' || role.name === 'kadis',
-                                                  'bg-slate-50 text-slate-600 border border-slate-200': role.name === 'staf'
+                                                  'bg-slate-50 text-slate-600 border border-slate-200': role.name === 'staf' || role.name === 'pegawai'
                                               }"
                                               x-text="role.name">
                                         </span>
@@ -232,16 +232,26 @@
             </div>
         </div>
 
-        {{-- PAGINATION CONTROLS (Managed by JS) --}}
-        <div class="px-6 py-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0" id="pagination-wrapper">
-            <span class="text-xs text-slate-500 font-medium" id="pagination-info">Menyiapkan data...</span>
+        {{-- PAGINATION CONTROLS --}}
+        <div class="px-6 py-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+            <span class="text-xs text-slate-500 font-medium">
+                Menampilkan <span x-text="pagination.from"></span> - <span x-text="pagination.to"></span> dari <span x-text="pagination.total"></span> data
+            </span>
             
             <div class="flex items-center gap-1">
-                <button id="prev-page" class="w-8 h-8 flex items-center justify-center border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-slate-50 active:bg-slate-100">
+                <button @click="fetchData(pagination.current_page - 1)" 
+                        :disabled="!pagination.prev_page_url"
+                        class="w-8 h-8 flex items-center justify-center border border-slate-200 rounded-lg text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-slate-50 active:bg-slate-100">
                     <i class="fas fa-chevron-left text-xs"></i>
                 </button>
-                <div id="pagination-numbers" class="flex items-center gap-1"></div>
-                <button id="next-page" class="w-8 h-8 flex items-center justify-center border border-slate-200 rounded-lg text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-slate-50 active:bg-slate-100">
+                
+                <span class="px-3 text-xs font-medium text-slate-600">
+                    Halaman <span x-text="pagination.current_page"></span>
+                </span>
+
+                <button @click="fetchData(pagination.current_page + 1)" 
+                        :disabled="!pagination.next_page_url"
+                        class="w-8 h-8 flex items-center justify-center border border-slate-200 rounded-lg text-slate-600 hover:text-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-slate-50 active:bg-slate-100">
                     <i class="fas fa-chevron-right text-xs"></i>
                 </button>
             </div>
@@ -256,6 +266,6 @@
 @endsection
 
 @push('scripts')
-    {{-- Memuat script JS yang baru saja diupdate --}}
+    {{-- Memuat script JS --}}
     @vite(['resources/js/pages/admin/manajemen-pegawai.js'])
 @endpush

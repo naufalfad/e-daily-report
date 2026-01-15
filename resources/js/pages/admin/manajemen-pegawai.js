@@ -426,13 +426,14 @@ export function manajemenPegawaiData() {
             }
         },
 
-        // --- IMPORT DATA ---
+        // --- IMPORT DATA (REFACTORED) ---
         toggleUpload(val) {
             this.openUpload = val;
-            if(!val) {
+            if (!val) {
                 this.fileUpload = null;
+                // Reset value input file html jika ada
                 const input = document.getElementById('file_import');
-                if(input) input.value = '';
+                if (input) input.value = '';
             }
         },
 
@@ -442,48 +443,88 @@ export function manajemenPegawaiData() {
 
         async submitImport() {
             if (!this.fileUpload) {
-                Swal.fire("Peringatan", "Pilih file CSV/Excel dulu.", "warning");
+                Swal.fire("Peringatan", "Pilih file CSV/Excel terlebih dahulu.", "warning");
                 return;
             }
 
             this.isImporting = true;
             const formData = new FormData();
-            formData.append('file', this.fileUpload);
+            
+            // [CRITICAL] Key harus 'csv_file' sesuai validasi controller
+            formData.append('csv_file', this.fileUpload);
 
             try {
                 const response = await fetch(IMPORT_URL, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
                         "Authorization": `Bearer ${getToken()}`,
-                        "Accept": "application/json",
                         "X-Requested-With": "XMLHttpRequest"
+                        // Jangan set Content-Type header secara manual untuk FormData!
                     },
                     body: formData
                 });
 
                 const result = await response.json();
 
-                if (!response.ok) {
-                    if (response.status === 422) {
-                        const errors = result.errors ? Object.values(result.errors).flat().join('\n') : result.message;
-                        throw new Error(errors);
-                    }
-                    throw new Error(result.message || "Import gagal");
-                }
-
-                if (result.errors && result.errors.length > 0) {
-                    const errorMsg = Array.isArray(result.errors) ? result.errors.join('<br>') : result.errors;
+                // -----------------------------------------------------------
+                // SKENARIO 1: SUKSES SEMPURNA (HTTP 200)
+                // -----------------------------------------------------------
+                if (response.ok) {
                     Swal.fire({
-                        title: "Import Sebagian",
-                        html: `Berhasil import, namun ada error:<br><div class="text-left text-xs mt-2 p-2 bg-red-50 text-red-600 rounded max-h-40 overflow-y-auto">${errorMsg}</div>`,
-                        icon: "warning"
+                        title: "Import Berhasil",
+                        text: result.message,
+                        icon: "success",
+                        timer: 2000,
+                        showConfirmButton: false
                     });
-                } else {
-                    Swal.fire("Import Berhasil", result.message, "success");
+                    
+                    this.toggleUpload(false);
+                    this.fetchData(1);
+                    return;
                 }
 
-                this.toggleUpload(false);
-                this.fetchData(1);
+                // -----------------------------------------------------------
+                // SKENARIO 2: PARTIAL SUCCESS / WARNING (HTTP 422)
+                // Controller mengirim status 422 + array 'errors' di dalam 'data'
+                // -----------------------------------------------------------
+                if (response.status === 422 && result.data && result.data.errors) {
+                    const errorList = result.data.errors;
+                    
+                    // Format error array menjadi list HTML yang scrollable
+                    let errorHtml = '<div class="text-left text-sm mt-3 p-3 bg-red-50 border border-red-200 rounded-lg max-h-60 overflow-y-auto">';
+                    errorHtml += '<p class="font-bold text-red-700 mb-2">Daftar Baris Gagal:</p>';
+                    errorHtml += '<ul class="list-disc pl-4 text-red-600 space-y-1">';
+                    
+                    errorList.forEach(err => {
+                        errorHtml += `<li>${err}</li>`;
+                    });
+                    
+                    errorHtml += '</ul></div>';
+
+                    Swal.fire({
+                        title: "Import Selesai dengan Catatan",
+                        html: `${result.message} <br/> ${errorHtml}`,
+                        icon: "warning",
+                        width: '600px' // Lebarkan modal agar list terbaca
+                    });
+                    
+                    // Tetap refresh data karena sebagian data mungkin berhasil masuk
+                    this.toggleUpload(false);
+                    this.fetchData(1);
+                    return;
+                }
+
+                // -----------------------------------------------------------
+                // SKENARIO 3: CRITICAL ERROR / VALIDASI FILE (HTTP 500 / 400)
+                // -----------------------------------------------------------
+                let errorMessage = result.message || "Terjadi kesalahan saat upload.";
+                
+                // Jika error validasi Laravel biasa (misal file type wrong)
+                if (response.status === 422 && result.errors) {
+                     errorMessage = Object.values(result.errors).flat().join('\n');
+                }
+
+                throw new Error(errorMessage);
 
             } catch (error) {
                 console.error(error);

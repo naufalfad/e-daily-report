@@ -3,166 +3,195 @@
 namespace App\Imports;
 
 use App\Models\User;
-use App\Models\UnitKerja;
 use App\Models\Jabatan;
 use App\Models\Bidang;
+use App\Models\UnitKerja;
 use App\Models\Role;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Exception;
 
 class UserCsvImport implements ToCollection, WithHeadingRow
 {
+    /**
+     * Menyimpan daftar error baris per baris untuk feedback ke user
+     */
     public $errors = [];
 
     /**
-     * Mapping: Header CSV → Internal Key
+     * In-Memory Cache untuk Master Data
+     * Disimpan dalam array untuk menghindari query berulang (N+1 Problem)
      */
-    private $map = [
-        'nip'              => 'nip',
-        'nama'             => 'name',
-        'nama_role'        => 'nama_role',
-        'jabatan_atasan'   => 'jabatan_atasan',
-        'unit'             => 'nama_unit',
-        'jabatan'          => 'nama_jabatan',
-        'bidang'           => 'nama_bidang',
-    ];
+    private $unitKerjaMap;
+    private $jabatanMap;
+    private $bidangMap;
+    private $roleMap;
 
-    private function col($row, $key)
+    public function __construct()
     {
-        // Cari header CSV yang sesuai internal key
-        $csvKey = array_search($key, $this->map);
+        // =====================================================================
+        // FASE 3: LOADING DATA MASTER KE MEMORY (CACHING)
+        // =====================================================================
+        // Kita load seluruh data master ke RAM sekali saja saat class di-init.
+        // Key array di-lowercase agar pencarian case-insensitive.
+        
+        // 1. Unit Kerja (Mapping: nama_unit -> id)
+        $this->unitKerjaMap = UnitKerja::pluck('id', 'nama_unit')
+            ->mapWithKeys(fn($id, $nama) => [Str::lower(trim($nama)) => $id])
+            ->toArray();
 
-        return $csvKey ? ($row[$csvKey] ?? null) : null;
+        // 2. Jabatan (Mapping: nama_jabatan -> id)
+        $this->jabatanMap = Jabatan::pluck('id', 'nama_jabatan')
+            ->mapWithKeys(fn($id, $nama) => [Str::lower(trim($nama)) => $id])
+            ->toArray();
+
+        // 3. Bidang (Mapping: nama_bidang -> id)
+        $this->bidangMap = Bidang::pluck('id', 'nama_bidang')
+            ->mapWithKeys(fn($id, $nama) => [Str::lower(trim($nama)) => $id])
+            ->toArray();
+
+        // 4. Role (Mapping: nama_role -> id)
+        // Sesuai request: 'kadis', 'penilai', 'staf', 'superadmin'
+        $this->roleMap = Role::pluck('id', 'nama_role') 
+            ->mapWithKeys(fn($id, $nama) => [Str::lower(trim($nama)) => $id])
+            ->toArray();
     }
 
     public function collection(Collection $rows)
     {
         foreach ($rows as $index => $row) {
+            $rowNum = $index + 2; // Baris Excel (Header ada di baris 1)
 
-            // ==========================
-            // 1. Ambil nilai mapping
-            // ==========================
-            $nip         = $this->col($row, 'nip');
-            $name        = $this->col($row, 'name');
-            $roleName    = $this->col($row, 'nama_role');
-            $jabatanAtasan  = $this->col($row, 'jabatan_atasan');
-            $unitNama    = $this->col($row, 'nama_unit');
-            $jabatanNama = $this->col($row, 'nama_jabatan');
-            $bidangNama  = $this->col($row, 'nama_bidang');
+            try {
+                // Skip jika baris kosong total (nama & nip tidak ada)
+                // Cek apakah kolomnya 'name' atau 'nama'
+                $nameVal = $row['name'] ?? $row['nama'] ?? null;
+                $nipVal  = $row['nip'] ?? null;
 
-            // ==========================
-            // 2. VALIDASI DATA MINIMAL
-            // ==========================
-            if (!$nip) {
-                $this->errors[] = "Baris " . ($index + 2) . ": NIP kosong.";
-                continue;
-            }
+                // Skip jika baris kosong total
+                if (empty($nameVal) && empty($nipVal)) continue;
 
-            if (!$name) {
-                $this->errors[] = "Baris " . ($index + 2) . ": NAMA kosong.";
-                continue;
-            }
-
-            if (!$roleName) {
-                $this->errors[] = "Baris " . ($index + 2) . ": ROLE kosong.";
-                continue;
-            }
-
-            // ==========================
-            // 3. CEK ATASAN
-            // ==========================
-            $atasan = null;
-
-            if (!empty($jabatanAtasan)) {
-
-                // 1. Cari jabatan atasan
-                $jabatanAtasanModel = Jabatan::where('nama_jabatan', 'ilike', $jabatanAtasan)->first();
-
-                if (!$jabatanAtasanModel) {
-                    $this->errors[] = "Baris " . ($index + 2) . ": Jabatan atasan '{$jabatanAtasan}' tidak ditemukan.";
+                // Validasi Nama Wajib Ada (agar tidak error Undefined index)
+                if (empty($nameVal)) {
+                    $this->errors[] = "Baris {$rowNum}: Kolom Nama kosong atau Header salah (Gunakan 'name' atau 'nama').";
                     continue;
                 }
 
-                // 2. Cari user yang memiliki jabatan itu
-                $atasan = User::where('jabatan_id', $jabatanAtasanModel->id)->first();
+                // =============================================================
+                // 1. SANITASI & NORMALISASI INPUT
+                // =============================================================
+                
+                // Bersihkan NIP dari spasi, strip, dll. Contoh: "1998 1010" -> "19981010"
+                $cleanNip = preg_replace('/[^0-9]/', '', $row['nip']);
 
-                if (!$atasan) {
-                    $this->errors[] = "Baris " . ($index + 2) . ": Tidak ada user dengan jabatan atasan '{$jabatanAtasan}'.";
+                // Validasi NIP Wajib Ada
+                if (empty($cleanNip)) {
+                    $this->errors[] = "Baris {$rowNum}: NIP Kosong/Tidak Valid.";
                     continue;
                 }
-            }
 
-            // ==========================
-            // 4. AUTO CREATE ROLE
-            // ==========================
-            $role = Role::firstOrCreate(
-                ['nama_role' => $roleName],
-                ['nama_role' => $roleName]
-            );
+                // Normalisasi string lookup (lowercase & trim) agar cocok dengan key di Map
+                $csvUnit    = Str::lower(trim($row['unit_kerja'] ?? ''));
+                $csvJabatan = Str::lower(trim($row['jabatan'] ?? ''));
+                $csvBidang  = Str::lower(trim($row['bidang'] ?? ''));
+                $csvRole    = Str::lower(trim($row['role'] ?? '')); // e.g. "kadis", "penilai"
 
-            // ==========================
-            // 5. AUTO CREATE UNIT KERJA
-            // ==========================
-            $unit = null;
-            if (!empty($unitNama)) {
-                $unit = UnitKerja::firstOrCreate(
-                    ['nama_unit' => $unitNama],
-                    ['nama_unit' => $unitNama]
+                // =============================================================
+                // 2. STRICT LOOKUP (VALIDASI DATA MASTER)
+                // =============================================================
+
+                // A. Validasi Unit Kerja
+                $unitId = $this->unitKerjaMap[$csvUnit] ?? null;
+                // Jika Unit Kerja wajib ada, uncomment baris di bawah:
+                /*
+                if (!$unitId) {
+                    $this->errors[] = "Baris {$rowNum} [{$row['nama']}]: Unit Kerja '{$row['unit_kerja']}' tidak ditemukan.";
+                    continue; 
+                }
+                */
+                // Default ke 1 (Bapenda) jika null/tidak ketemu (Opsional, sesuaikan kebutuhan)
+                if (!$unitId) $unitId = 1; 
+
+                // B. Validasi Jabatan
+                $jabatanId = $this->jabatanMap[$csvJabatan] ?? null;
+                if (!$jabatanId && !empty($csvJabatan)) {
+                    // Log error tapi mungkin tetap lanjut import user tanpa jabatan?
+                    // Disini saya buat strict: Jabatan salah = Skip user.
+                    $this->errors[] = "Baris {$rowNum} [{$nameVal}]: Jabatan '{$row['jabatan']}' tidak ditemukan di sistem.";
+                    continue; 
+                }
+
+                // C. Validasi Bidang
+                // Bidang boleh kosong (misal Kepala Badan tidak punya bidang)
+                $bidangId = null;
+                if (!empty($csvBidang)) {
+                    $bidangId = $this->bidangMap[$csvBidang] ?? null;
+                    if (!$bidangId) {
+                        $this->errors[] = "Baris {$rowNum} [{$nameVal}]: Bidang '{$row['bidang']}' tidak ditemukan di sistem.";
+                        continue;
+                    }
+                }
+
+                // D. Validasi Role
+                $roleId = $this->roleMap[$csvRole] ?? null;
+                
+                // Jika role di CSV kosong atau salah ketik, default ke 'staf' (ID 4 di contoh Anda)
+                // Atau skip jika wajib valid. Di sini saya set default ke null jika tidak ketemu.
+                if (!$roleId && !empty($csvRole)) {
+                     $this->errors[] = "Baris {$rowNum} [{$nameVal}]: Role '{$row['role']}' tidak valid (Gunakan: kadis, penilai, atau staf).";
+                     continue; 
+                }
+
+                // =============================================================
+                // 3. EKSEKUSI DATABASE (UPSERT USER)
+                // =============================================================
+                
+                // Sesuai request: Username & Password diambil dari NIP
+                $generatedUsername = $cleanNip;
+                $generatedPassword = Hash::make($cleanNip);
+
+                $user = User::updateOrCreate(
+                    ['nip' => $cleanNip], // Kunci pencarian (Unique Key)
+                    [
+                        'name'          => $nameVal,
+                        'email'         => null, // Email nullable sesuai migrasi terakhir
+                        'username'      => $generatedUsername, // [REQUEST] Username = NIP
+                        'password'      => $generatedPassword, // [REQUEST] Password = Hash(NIP)
+                        
+                        // Metadata Pegawai
+                        'pangkat'       => $row['pangkat_golongan'] ?? null,
+                        'unit_kerja_id' => $unitId,
+                        'jabatan_id'    => $jabatanId,
+                        'bidang_id'     => $bidangId,
+                        
+                        // Status & System
+                        'is_active'     => true,
+                    ]
                 );
+
+                // =============================================================
+                // 4. ASSIGN ROLE (SYNC)
+                // =============================================================
+                if ($roleId) {
+                    // Sync akan menghapus role lama dan mengganti dengan yang baru dari CSV
+                    $user->roles()->sync([$roleId]);
+                } else {
+                    // Jika di CSV tidak ada role, apakah role lama dihapus atau dibiarkan?
+                    // Default behavior: biarkan role lama jika CSV kosong.
+                    // Jika ingin force set 'staf':
+                    // $stafId = $this->roleMap['staf'] ?? 4;
+                    // $user->roles()->sync([$stafId]);
+                }
+
+            } catch (Exception $e) {
+                // Tangkap error sistem (misal database mati, duplikat key lain, dll)
+                Log::error("Import Error Row {$rowNum}: " . $e->getMessage());
+                $this->errors[] = "Baris {$rowNum}: Gagal simpan ke database ({$e->getMessage()})";
             }
-
-            // ==========================
-            // 6. AUTO CREATE JABATAN
-            // ==========================
-            $jabatan = null;
-            if (!empty($jabatanNama)) {
-                $jabatan = Jabatan::firstOrCreate(
-                    ['nama_jabatan' => $jabatanNama],
-                    ['nama_jabatan' => $jabatanNama]
-                );
-            }
-
-            // ==========================
-            // 7. AUTO CREATE BIDANG
-            // ==========================
-            $bidang = null;
-            if (!empty($bidangNama)) {
-                $bidang = Bidang::firstOrCreate(
-                    ['nama_bidang' => $bidangNama],
-                    ['nama_bidang' => $bidangNama, 'unit_kerja_id' => $unit?->id]
-                );
-            }
-
-            // ==========================
-            // 8. CEK DUPLIKASI USER
-            // ==========================
-            $existing = User::where('nip', $nip)->first();
-            if ($existing) {
-                $this->errors[] = "Baris " . ($index + 2) . ": NIP '{$nip}' sudah terdaftar.";
-                continue;
-            }
-
-            // ==========================
-            // 9. BUAT USER BARU
-            // ==========================
-            $user = User::create([
-                'name'          => $name,
-                'nip'           => $nip,
-                'username'      => $nip,
-                'password'      => Hash::make($nip),
-                'unit_kerja_id' => $unit?->id,
-                'jabatan_id'    => $jabatan?->id,
-                'bidang_id'     => $bidang?->id,
-                'atasan_id'     => $atasan?->id,
-                'is_active'     => true,
-            ]);
-
-            // ==========================
-            // 10. ASSIGN ROLE
-            // ==========================
-            $user->roles()->sync([$role->id]);
         }
     }
 }

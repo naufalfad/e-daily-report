@@ -5,185 +5,218 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Tupoksi;
 use App\Models\Bidang;
-use Illuminate\Support\Facades\Schema; // Tambahkan ini
+use Illuminate\Support\Facades\Schema;
 
 class TupoksiSeeder extends Seeder
 {
     public function run()
     {
-        // 1. Matikan Foreign Key Check (Laravel akan mendeteksi driver PGSQL/MySQL otomatis)
+        // Disable FK
         Schema::disableForeignKeyConstraints();
-
-        // 2. Kosongkan tabel
         Tupoksi::truncate();
-
-        // 3. Nyalakan kembali Foreign Key Check
         Schema::enableForeignKeyConstraints();
 
-        /**
-         * MAPPING TUPOKSI
-         */
         $tupoksiMapping = [
-            // ================= SEKRETARIAT =================
+
+            // ===================== SEKRETARIAT =====================
             'Sekretariat' => [
                 'uraian_tugas' => [
-                    'Mengoordinasikan penyusunan rencana strategis dan rencana kerja dinas.',
-                    'Menyelenggarakan urusan administrasi umum, kepegawaian, dan rumah tangga.',
-                    'Mengoordinasikan pengelolaan keuangan dan aset dinas.',
+                    'Mengoordinasikan pelaksanaan administrasi umum, kepegawaian, keuangan, dan perencanaan Badan Pendapatan Daerah.',
+                    'Mengoordinasikan penyusunan rencana kerja, program, dan kegiatan Badan.',
+                    'Mengoordinasikan pelaksanaan pengelolaan keuangan dan aset Badan.',
+                    'Mengoordinasikan penyusunan laporan kinerja dan laporan administrasi Badan.',
+                    'Melaksanakan tugas lain yang diberikan oleh Kepala Badan sesuai tugas dan fungsi.'
                 ]
             ],
+
             'Sub Bagian Umum dan Kepegawaian' => [
                 'uraian_tugas' => [
-                    'Melaksanakan urusan surat menyurat, kearsipan, dan ekspedisi.',
-                    'Mengelola administrasi kepegawaian, kenaikan pangkat, dan cuti pegawai.',
-                    'Melaksanakan urusan rumah tangga, keamanan, dan kebersihan kantor.',
-                ]
-            ],
-            'Sub Bagian Perencanaan dan Keuangan' => [
-                'uraian_tugas' => [
-                    'Menyusun rencana anggaran pendapatan dan belanja dinas.',
-                    'Melakukan verifikasi dan pembukuan keuangan dinas.',
-                    'Menyusun laporan realisasi anggaran dan laporan keuangan.',
+                    'Melaksanakan urusan surat menyurat, kearsipan, dan tata naskah dinas.',
+                    'Melaksanakan administrasi kepegawaian, mutasi, kenaikan pangkat, dan cuti pegawai.',
+                    'Melaksanakan pengelolaan barang milik daerah dan rumah tangga kantor.',
+                    'Melaksanakan pelayanan administrasi kegiatan kedinasan.',
+                    'Menyusun laporan administrasi umum dan kepegawaian.'
                 ]
             ],
 
-            // ================= BIDANG PENDATAAN =================
-            'Bidang Pendataan dan Pendaftaran' => [
+            'Sub Bagian Keuangan' => [
                 'uraian_tugas' => [
-                    'Merumuskan kebijakan teknis di bidang pendataan dan pendaftaran pajak.',
-                    'Mengoordinasikan kegiatan pendataan objek dan subjek pajak daerah.',
-                    'Melaksanakan pemutakhiran data wajib pajak secara berkala.',
-                ]
-            ],
-            'Sub Bidang Pendataan dan Pendaftaran Pajak Daerah' => [
-                'uraian_tugas' => [
-                    'Melaksanakan pendataan objek pajak hotel, restoran, dan hiburan.',
-                    'Melakukan pendaftaran dan pendataan reklame dan air tanah.',
-                    'Menyiapkan formulir pendaftaran dan pendataan pajak daerah.',
-                ]
-            ],
-            'Sub Bidang Pendataan dan Pendaftaran PBB P2 dan BPHTB' => [
-                'uraian_tugas' => [
-                    'Melaksanakan pendataan objek PBB-P2 (Pajak Bumi dan Bangunan).',
-                    'Melakukan verifikasi data SPOP dan LSPOP.',
-                    'Mengelola basis data BPHTB (Bea Perolehan Hak atas Tanah dan Bangunan).',
-                ]
-            ],
-            'Sub Bidang Pengolahan Data dan Sistem Informasi' => [
-                'uraian_tugas' => [
-                    'Mengelola sistem informasi manajemen pendapatan daerah (SIMPAD).',
-                    'Melakukan pemeliharaan (maintenance) perangkat keras dan lunak.',
-                    'Menyajikan data potensi pajak dalam bentuk statistik dan visualisasi.',
-                    'Mengembangkan inovasi layanan berbasis digital/elektronik.',
+                    'Menyusun rencana anggaran dan dokumen pelaksanaan anggaran Badan.',
+                    'Melaksanakan penatausahaan dan pembukuan keuangan.',
+                    'Melaksanakan pengelolaan bendahara penerimaan dan pengeluaran.',
+                    'Melaksanakan verifikasi administrasi keuangan.',
+                    'Menyusun laporan keuangan Badan.'
                 ]
             ],
 
-            // ================= BIDANG PENETAPAN =================
-            'Bidang Penetapan Pajak Daerah' => [
+            'Sub Bagian Program' => [
                 'uraian_tugas' => [
-                    'Menetapkan besaran pajak daerah terutang berdasarkan peraturan.',
-                    'Menerbitkan Surat Ketetapan Pajak Daerah (SKPD).',
-                    'Mengoordinasikan penyelesaian keberatan dan banding pajak.',
+                    'Menyusun rencana kerja dan program kegiatan Badan.',
+                    'Melaksanakan monitoring dan evaluasi pelaksanaan program.',
+                    'Menghimpun dan mengolah data perencanaan.',
+                    'Menyusun laporan kinerja Badan.',
+                    'Melaksanakan tugas perencanaan lainnya sesuai ketentuan.'
                 ]
             ],
+
+            // ===================== BIDANG PAJAK =====================
+            'Bidang Pajak' => [
+                'uraian_tugas' => [
+                    'Merumuskan kebijakan teknis pengelolaan pajak daerah.',
+                    'Mengoordinasikan pendataan, penetapan, dan pemeriksaan pajak daerah.',
+                    'Melaksanakan pembinaan dan pengawasan pajak daerah.',
+                    'Menyusun laporan pelaksanaan tugas bidang pajak.'
+                ]
+            ],
+
+            'Sub Bidang Pendataan dan Pendaftaran Pajak' => [
+                'uraian_tugas' => [
+                    'Melaksanakan pendataan objek dan subjek pajak daerah.',
+                    'Melaksanakan pendaftaran wajib pajak daerah.',
+                    'Melaksanakan pemutakhiran data pajak daerah.',
+                    'Menyusun laporan hasil pendataan dan pendaftaran pajak.'
+                ]
+            ],
+
             'Sub Bidang Perhitungan dan Penetapan Pajak Daerah' => [
                 'uraian_tugas' => [
-                    'Melakukan perhitungan penetapan pajak hotel, restoran, dan hiburan.',
-                    'Menyiapkan konsep Surat Ketetapan Pajak Daerah (SKPD).',
-                    'Melakukan perhitungan pajak reklame dan pajak lainnya.',
-                ]
-            ],
-            'Sub Bidang Penilaian dan Penetapan PBB P2 dan BPHTB' => [
-                'uraian_tugas' => [
-                    'Melakukan penilaian individual dan massal objek PBB-P2.',
-                    'Menetapkan NJOP (Nilai Jual Objek Pajak) sebagai dasar pengenaan pajak.',
-                    'Memproses penetapan SPPT PBB-P2 tahunan.',
-                ]
-            ],
-            'Sub Bidang Keberatan dan Banding' => [
-                'uraian_tugas' => [
-                    'Memproses permohonan keberatan atas ketetapan pajak.',
-                    'Melakukan kajian teknis terhadap pengajuan banding wajib pajak.',
-                    'Menyiapkan administrasi pengurangan atau keringanan pajak.',
+                    'Melaksanakan perhitungan pajak daerah terutang.',
+                    'Melaksanakan penetapan pajak daerah.',
+                    'Menyusun dokumen penetapan pajak.',
+                    'Menyusun laporan penetapan pajak daerah.'
                 ]
             ],
 
-            // ================= BIDANG PENAGIHAN =================
-            'Bidang Penagihan dan Pengawasan' => [
+            'Sub Bidang Pemeriksaan Pajak, Konsultasi, Keberatan dan Banding' => [
                 'uraian_tugas' => [
-                    'Merumuskan strategi penagihan pajak daerah yang efektif.',
-                    'Melakukan pengawasan dan pengendalian terhadap kepatuhan wajib pajak.',
-                    'Melaksanakan penagihan aktif terhadap tunggakan pajak.',
-                ]
-            ],
-            'Sub Bidang Penagihan dan Restitusi Pajak Daerah' => [
-                'uraian_tugas' => [
-                    'Melaksanakan penagihan pajak daerah secara persuasif maupun teguran.',
-                    'Memproses administrasi restitusi (pengembalian kelebihan bayar) pajak.',
-                    'Menyusun daftar tunggakan pajak daerah.',
-                ]
-            ],
-            'Sub Bidang Penagihan dan Restitusi PBB dan BPHTB' => [
-                'uraian_tugas' => [
-                    'Melaksanakan penagihan tunggakan PBB-P2 ke wilayah kecamatan/kelurahan.',
-                    'Memproses permohonan restitusi PBB-P2 dan BPHTB.',
-                    'Melakukan rekonsiliasi data piutang PBB-P2.',
-                ]
-            ],
-            'Sub Bidang Pemeriksaan dan Pengawasan Pajak' => [
-                'uraian_tugas' => [
-                    'Melakukan pemeriksaan pembukuan wajib pajak (audit).',
-                    'Mengawasi pelaporan omzet wajib pajak self-assessment (Hotel/Restoran).',
-                    'Melakukan operasi sisir (monitoring lapangan) objek pajak.',
+                    'Melaksanakan pemeriksaan kepatuhan wajib pajak.',
+                    'Memberikan pelayanan konsultasi perpajakan daerah.',
+                    'Menangani keberatan dan banding pajak.',
+                    'Menyusun laporan hasil pemeriksaan dan penyelesaian sengketa pajak.'
                 ]
             ],
 
-            // ================= BIDANG PERENCANAAN =================
-            'Bidang Perencanaan dan Pelaporan' => [
+            // ===================== BIDANG PERENCANAAN & PENGEMBANGAN =====================
+            'Bidang Perencanaan dan Pengembangan Pendapatan Daerah' => [
                 'uraian_tugas' => [
-                    'Menyusun rencana target penerimaan pendapatan daerah.',
-                    'Mengevaluasi realisasi penerimaan pajak secara periodik.',
-                    'Menyusun regulasi (Perda/Perbup) terkait pajak daerah.',
+                    'Merumuskan kebijakan perencanaan pendapatan daerah.',
+                    'Menyusun program pengembangan pendapatan daerah.',
+                    'Melaksanakan evaluasi dan inovasi pendapatan daerah.',
+                    'Menyusun laporan perencanaan dan pengembangan pendapatan.'
                 ]
             ],
+
             'Sub Bidang Regulasi Pendapatan Daerah' => [
                 'uraian_tugas' => [
-                    'Menyusun rancangan peraturan daerah tentang pajak dan retribusi.',
-                    'Mengkaji ulang peraturan yang sudah ada untuk penyesuaian tarif.',
-                    'Melakukan sosialisasi regulasi pajak kepada masyarakat.',
+                    'Menyusun rancangan regulasi pendapatan daerah.',
+                    'Mengkaji peraturan pendapatan daerah yang berlaku.',
+                    'Mengoordinasikan penyusunan regulasi dengan perangkat daerah terkait.',
+                    'Menyusun laporan kegiatan regulasi pendapatan daerah.'
                 ]
             ],
+
             'Sub Bidang Retribusi dan Evaluasi Pendapatan Daerah' => [
                 'uraian_tugas' => [
-                    'Melakukan analisis potensi retribusi daerah.',
-                    'Mengevaluasi kinerja penerimaan retribusi dari OPD pemungut.',
-                    'Menyusun laporan evaluasi pendapatan daerah.',
+                    'Melaksanakan analisis potensi retribusi daerah.',
+                    'Melaksanakan monitoring dan evaluasi pendapatan daerah.',
+                    'Mengoordinasikan evaluasi penerimaan retribusi.',
+                    'Menyusun laporan evaluasi pendapatan daerah.'
                 ]
             ],
+
+            'Sub Bidang Pengembangan Sistem Informatika dan Inovasi Pendapatan Daerah' => [
+                'uraian_tugas' => [
+                    'Mengembangkan sistem informasi pendapatan daerah.',
+                    'Melaksanakan inovasi pelayanan pendapatan daerah berbasis teknologi.',
+                    'Mengelola aplikasi dan basis data pendapatan daerah.',
+                    'Menyusun laporan pengembangan sistem dan inovasi.'
+                ]
+            ],
+
+            // ===================== BIDANG PBB DAN BPHTB =====================
+            'Bidang PBB dan BPHTB' => [
+                'uraian_tugas' => [
+                    'Melaksanakan pengelolaan Pajak Bumi dan Bangunan serta BPHTB.',
+                    'Mengoordinasikan pendataan, penetapan, dan penagihan PBB dan BPHTB.',
+                    'Menyusun laporan pelaksanaan pengelolaan PBB dan BPHTB.'
+                ]
+            ],
+
+            'Sub Bidang Pendataan dan Pendaftaran PBB dan BPHTB' => [
+                'uraian_tugas' => [
+                    'Melaksanakan pendataan objek dan subjek PBB dan BPHTB.',
+                    'Melaksanakan pendaftaran PBB dan BPHTB.',
+                    'Melaksanakan pemutakhiran data PBB dan BPHTB.',
+                    'Menyusun laporan pendataan dan pendaftaran.'
+                ]
+            ],
+
+            'Sub Bidang Penilaian dan Penetapan PBB dan BPHTB' => [
+                'uraian_tugas' => [
+                    'Melaksanakan penilaian objek PBB dan BPHTB.',
+                    'Melaksanakan penetapan PBB dan BPHTB.',
+                    'Menyusun dokumen penetapan pajak.',
+                    'Menyusun laporan penilaian dan penetapan.'
+                ]
+            ],
+
+            'Sub Bidang Penagihan Restitusi PBB dan BPHTB' => [
+                'uraian_tugas' => [
+                    'Melaksanakan penagihan PBB dan BPHTB.',
+                    'Melaksanakan pengelolaan restitusi PBB dan BPHTB.',
+                    'Melaksanakan monitoring pembayaran pajak.',
+                    'Menyusun laporan penagihan dan restitusi.'
+                ]
+            ],
+
+            // ===================== BIDANG PEMBUKUAN DAN PELAPORAN =====================
+            'Bidang Pembukuan dan Pelaporan' => [
+                'uraian_tugas' => [
+                    'Mengoordinasikan pembukuan dan pelaporan pendapatan daerah.',
+                    'Mengoordinasikan pemeriksaan dan verifikasi pendapatan.',
+                    'Menyusun laporan pendapatan daerah.'
+                ]
+            ],
+
             'Sub Bidang Pembukuan dan Pelaporan' => [
                 'uraian_tugas' => [
-                    'Melakukan pembukuan penerimaan harian pajak daerah.',
-                    'Menyusun laporan realisasi penerimaan pajak bulanan, triwulanan, dan tahunan.',
-                    'Melakukan rekonsiliasi data penerimaan dengan Kas Daerah.',
+                    'Melaksanakan pembukuan penerimaan pendapatan daerah.',
+                    'Menyusun laporan realisasi pendapatan.',
+                    'Melaksanakan rekonsiliasi data pendapatan.',
+                    'Menyusun laporan pembukuan.'
+                ]
+            ],
+
+            'Sub Bidang Pemeriksaan dan Verifikasi' => [
+                'uraian_tugas' => [
+                    'Melaksanakan pemeriksaan administrasi pendapatan daerah.',
+                    'Melaksanakan verifikasi data pendapatan.',
+                    'Menyusun laporan hasil pemeriksaan dan verifikasi.'
+                ]
+            ],
+
+            'Sub Bidang Penagihan' => [
+                'uraian_tugas' => [
+                    'Melaksanakan penagihan pendapatan daerah.',
+                    'Melaksanakan monitoring piutang pendapatan.',
+                    'Menyusun laporan hasil penagihan.'
                 ]
             ],
         ];
 
-        // LOGIC EKSEKUSI
         foreach ($tupoksiMapping as $namaBidang => $data) {
-            // Cari ID bidang berdasarkan nama (Case Insensitive agar lebih aman)
             $bidang = Bidang::where('nama_bidang', $namaBidang)->first();
 
             if ($bidang) {
-                foreach ($data['uraian_tugas'] as $uraian_tugasTugas) {
+                foreach ($data['uraian_tugas'] as $uraian) {
                     Tupoksi::create([
-                        'bidang_id' => $bidang->id,
-                        'uraian_tugas'    => $uraian_tugasTugas,
+                        'bidang_id'    => $bidang->id,
+                        'uraian_tugas' => $uraian,
                     ]);
                 }
-                $this->command->info("Tupoksi inserted for: " . $namaBidang);
+                $this->command->info("Tupoksi inserted: {$namaBidang}");
             } else {
-                $this->command->error("Bidang not found: " . $namaBidang . " (Pastikan StrukturOrganisasiSeeder sudah dijalankan)");
+                $this->command->error("Bidang tidak ditemukan: {$namaBidang}");
             }
         }
     }

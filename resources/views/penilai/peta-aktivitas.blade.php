@@ -172,7 +172,7 @@
         {{-- Filter Bar --}}
         <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-2">
             
-            {{-- [LOGIKA BARU] View Mode Switcher --}}
+            {{-- View Mode Switcher --}}
             <div class="flex bg-slate-200/50 p-1 rounded-xl mb-5 w-full sm:w-fit">
                 <button type="button"
                     @click="switchMode('staff')"
@@ -189,7 +189,8 @@
             </div>
 
             <div class="flex flex-col md:flex-row items-end gap-5">
-                <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 flex-1">
+                <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
+                    
                     {{-- Input Tgl Dari --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai Tanggal</label>
@@ -213,18 +214,38 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- [NEW] Dropdown Filter Kategori Lokasi --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori Lokasi</label>
+                        <div class="relative">
+                            <select x-model="filter.kategori" class="w-full h-[42px] appearance-none rounded-xl border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 shadow-sm cursor-pointer">
+                                <option value="all">Semua Kategori</option>
+                                <option value="WFO">WFO (Office)</option>
+                                <option value="WFH">WFH (Home)</option>
+                                <option value="WFA">WFA (Anywhere)</option>
+                                <option value="DL">Dinas Luar</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {{-- Submit Button --}}
-                <button type="submit"
-                    class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
-                    :disabled="loading">
-                    <span x-show="!loading">Terapkan Filter</span>
-                    <span x-show="loading" class="flex items-center gap-2" style="display: none;">
-                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Memuat...
-                    </span>
-                </button>
+                <div class="w-full md:w-auto">
+                    <button type="submit"
+                        class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
+                        :disabled="loading">
+                        <span x-show="!loading">Terapkan Filter</span>
+                        <span x-show="loading" class="flex items-center gap-2" style="display: none;">
+                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Memuat...
+                        </span>
+                    </button>
+                </div>
             </div>
         </form>
 
@@ -284,6 +305,10 @@
                     <div class="flex items-center gap-2 mt-1.5">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
                             x-text="selectedActivity?.kategori_aktivitas">
+                        </span>
+                        {{-- NEW: Badge Kategori Lokasi di Header Modal Peta --}}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
+                            x-text="selectedActivity?.kategori_lokasi || 'WFO'">
                         </span>
                     </div>
                 </div>

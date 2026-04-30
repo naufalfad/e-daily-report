@@ -92,7 +92,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (listContainer) {
         if (aktivitas.length === 0) {
             listContainer.innerHTML =
-                '<li class="text-sm text-slate-500">Belum ada aktivitas terbaru.</li>';
+                '<li class="text-sm text-slate-500 text-center py-4">Belum ada aktivitas terbaru.</li>';
         } else {
             aktivitas.forEach(item => {
                 const dateObj = new Date(item.tanggal_laporan);
@@ -121,19 +121,19 @@ document.addEventListener("DOMContentLoaded", async function () {
                 }
 
                 const htmlItem = `
-                <li class="flex items-start gap-3">
-                    <div class="h-8 w-8 rounded-[10px] flex items-center justify-center ${tone}">
+                <li class="flex items-start gap-3 border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                    <div class="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0 ${tone}">
                         <img src="/assets/icon/${iconName}" class="h-5 w-5 opacity-90">
                     </div>
 
-                    <div class="flex-1">
-                        <div class="text-[13px] font-medium leading-snug truncate" style="max-width: 250px;"
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[13px] font-bold text-slate-800 leading-snug truncate" 
                             title="${item.deskripsi_aktivitas}">
                             ${item.deskripsi_aktivitas}
                         </div>
-                        <div class="flex justify-between mt-[2px]">
-                            <span class="text-xs text-slate-500 capitalize">${statusLabel}</span>
-                            <span class="text-xs text-slate-500 whitespace-nowrap">${tanggalFormatted}</span>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-[11px] font-medium text-slate-500 capitalize">${statusLabel}</span>
+                            <span class="text-[10px] text-slate-400 whitespace-nowrap">${tanggalFormatted}</span>
                         </div>
                     </div>
                 </li>
@@ -145,14 +145,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     /* =======================================================
-    * LOGIKA MODAL (BUKA / TUTUP)
-    * =======================================================*/
+     * LOGIKA MODAL (BUKA / TUTUP)
+     * =======================================================*/
     window.openModalDraft = function (e) {
-        if (e) e.preventDefault(); // Mencegah link reload halaman
+        if (e) e.preventDefault();
         const modal = document.getElementById('modal-all-draft');
         if (modal) {
             modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Matikan scroll body utama
+            document.body.style.overflow = 'hidden';
         }
     }
 
@@ -160,11 +160,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         const modal = document.getElementById('modal-all-draft');
         if (modal) {
             modal.classList.add('hidden');
-            document.body.style.overflow = ''; // Hidupkan kembali scroll body
+            document.body.style.overflow = '';
         }
     }
 
-    // Tutup modal dengan tombol ESC keyboard
     document.addEventListener('keydown', function (event) {
         if (event.key === "Escape") {
             closeModalDraft();
@@ -172,28 +171,23 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 
     /* =======================================================
-    * RENDER LIST DRAFT (LOGIKA ANDA)
-    * =======================================================*/
+     * 6. RENDER LIST DRAFT
+     * =======================================================*/
+    const draft = data.draft_limit || [];
+    const draftTerbaru = data.draft_terbaru || [];
 
-    // Asumsi: variable 'data' sudah didapat dari fetch sebelumnya.
-    const draft = data.draft_limit || [];   // Data sedikit (misal 3)
-    const draftTerbaru = data.draft_terbaru || []; // Data banyak (semua)
-
-    // 1. RENDER LIST LUAR (draft-list)
     const draftContainer = document.getElementById("draft-list");
     if (draftContainer) {
         draftContainer.innerHTML = "";
         if (draft.length === 0) {
-            draftContainer.innerHTML = '<li class="text-sm text-slate-500">Belum ada draft.</li>';
+            draftContainer.innerHTML = '<li class="text-sm text-slate-500 text-center py-4">Belum ada draft.</li>';
         } else {
             draft.forEach(item => {
-                // Gunakan fungsi helper untuk generate HTML agar tidak duplikasi kode
                 draftContainer.insertAdjacentHTML('beforeend', generateDraftItemHtml(item));
             });
         }
     }
 
-    // 2. RENDER LIST DALAM MODAL (draft-terbaru)
     const draftTerbaruContainer = document.getElementById("draft-terbaru");
     if (draftTerbaruContainer) {
         draftTerbaruContainer.innerHTML = "";
@@ -206,30 +200,30 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // Helper Function: Supaya HTML item konsisten antara list luar dan dalam modal
     function generateDraftItemHtml(item) {
         const dateObj = new Date(item.updated_at);
         const tanggalFormatted = dateObj.toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'long', year: 'numeric'
+            day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
         return `
-        <li class="rounded-xl bg-[#F1F5F9] px-3 py-2.5 flex items-start justify-between gap-4">
+        <li class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 flex items-center justify-between gap-4 hover:shadow-sm transition-all">
             <div class="flex-1 min-w-0">
-                <div class="font-medium leading-tight text-[15px] truncate" title="${item.deskripsi_aktivitas}">
-                    ${item.deskripsi_aktivitas}
+                <div class="font-bold leading-tight text-[13px] text-slate-800 truncate" title="${item.deskripsi_aktivitas}">
+                    ${item.deskripsi_aktivitas || 'Laporan Tanpa Deskripsi'}
                 </div>
-                <div class="text-xs text-slate-500 mt-[2px] leading-tight">
-                    Disimpan: ${tanggalFormatted}
+                <div class="text-[11px] font-medium text-slate-400 mt-1 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Tersimpan: ${tanggalFormatted}
                 </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <button onclick="window.location.href='/staf/input-lkh/${item.id}'"
-                    class="rounded-[6px] bg-emerald-600 text-white text-[13px] px-3 py-[4px] shadow-sm hover:brightness-95">
+                    class="rounded-lg bg-[#1C7C54] text-white font-bold text-[12px] px-3 py-1.5 shadow-sm hover:bg-[#166443] transition-colors">
                     Lanjutkan
                 </button>
                 <button type="button" onclick="deleteDraft('${item.id}')"
-                    class="rounded-[6px] bg-[#B6241C] text-white text-[13px] px-3 py-[4px] shadow-sm hover:bg-rose-600/80">
+                    class="rounded-lg bg-white border border-rose-200 text-rose-600 font-bold text-[12px] px-3 py-1.5 shadow-sm hover:bg-rose-50 hover:border-rose-300 transition-colors">
                     Hapus
                 </button>
             </div>
@@ -238,23 +232,15 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     /* =======================================================
-     * 7. GRAFIK — FIXED VERSION (ANTI ERROR CANVAS)
+     * 7. GRAFIK KINERJA BULANAN (LINE CHART)
      * =======================================================*/
     const canvas = document.getElementById("kinerjaBulananChart");
-
-    // Pastikan data grafik ada
     const aktivitasAll = data.grafik_aktivitas || [];
 
     if (canvas) {
-        // --- PERBAIKAN UTAMA DI SINI ---
-        // Cek apakah canvas ini sudah punya chart instance dari Chart.js
         const existingChart = Chart.getChart(canvas);
-        if (existingChart) {
-            existingChart.destroy();
-        }
-        // -------------------------------
+        if (existingChart) existingChart.destroy();
 
-        // Proses Data Grafik
         let monthlySkp = Array(12).fill(0);
         let monthlyNonSkp = Array(12).fill(0);
         let monthlyApproved = Array(12).fill(0);
@@ -264,17 +250,12 @@ document.addEventListener("DOMContentLoaded", async function () {
             const dateObj = new Date(item.tanggal_laporan);
             const month = dateObj.getMonth();
 
-            // Hitung SKP dan Non SKP
             if (item.skp_rencana_id !== null && item.skp_rencana_id !== "null" && item.status !== "draft") {
-                // SKP yang valid
                 monthlySkp[month]++;
-            }
-            else if ((item.skp_rencana_id === null || item.skp_rencana_id === "null") && item.status !== "draft") {
-                // Bukan SKP
+            } else if ((item.skp_rencana_id === null || item.skp_rencana_id === "null") && item.status !== "draft") {
                 monthlyNonSkp[month]++;
             }
 
-            // Hitungan status
             if (item.status === "rejected") {
                 monthlyRejected[month]++;
             } else if (item.status === "approved") {
@@ -284,10 +265,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         const ctx = canvas.getContext("2d");
         const gradientTotal = ctx.createLinearGradient(0, 0, 0, 260);
-        gradientTotal.addColorStop(0, "rgba(30, 64, 175, 0.25)");
-        gradientTotal.addColorStop(1, "rgba(30, 64, 175, 0)");
+        gradientTotal.addColorStop(0, "rgba(28, 124, 84, 0.2)"); // Mengikuti tema Emerald
+        gradientTotal.addColorStop(1, "rgba(28, 124, 84, 0)");
 
-        // Buat Chart Baru
         new Chart(ctx, {
             type: "line",
             data: {
@@ -296,36 +276,37 @@ document.addEventListener("DOMContentLoaded", async function () {
                     {
                         label: "Laporan SKP",
                         data: monthlySkp,
-                        borderColor: "#1E40AF",
+                        borderColor: "#1C7C54",
                         backgroundColor: gradientTotal,
-                        pointBackgroundColor: "#1E40AF",
+                        pointBackgroundColor: "#1C7C54",
                         fill: true,
-                        tension: 0.3
+                        tension: 0.4
                     },
                     {
                         label: "Laporan Non SKP",
                         data: monthlyNonSkp,
-                        borderColor: "#f8be00ff",
-                        backgroundColor: gradientTotal,
-                        pointBackgroundColor: "#f8be00ff",
-                        fill: true,
-                        tension: 0.3
+                        borderColor: "#3B82F6", // Blue
+                        pointBackgroundColor: "#3B82F6",
+                        fill: false,
+                        tension: 0.4
                     },
                     {
                         label: "Diterima",
                         data: monthlyApproved,
-                        borderColor: "#128C60",
-                        pointBackgroundColor: "#128C60",
+                        borderColor: "#10B981", // Emerald light
+                        borderDash: [5, 5],
+                        pointBackgroundColor: "#10B981",
                         fill: false,
-                        tension: 0.3
+                        tension: 0.4
                     },
                     {
                         label: "Ditolak",
                         data: monthlyRejected,
-                        borderColor: "#B6241C",
-                        pointBackgroundColor: "#B6241C",
+                        borderColor: "#EF4444", // Rose
+                        borderDash: [5, 5],
+                        pointBackgroundColor: "#EF4444",
                         fill: false,
-                        tension: 0.3
+                        tension: 0.4
                     },
                 ]
             },
@@ -333,24 +314,106 @@ document.addEventListener("DOMContentLoaded", async function () {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: "bottom" }
+                    legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 6 } }
                 },
                 scales: {
-                    y: { beginAtZero: true }
-                }
+                    y: { beginAtZero: true, grid: { borderDash: [2, 4] } },
+                    x: { grid: { display: false } }
+                },
+                interaction: { mode: 'index', intersect: false }
             }
         });
     }
 
     /* =======================================================
-     * 7. DELETE DRAFT GLOBAL
+     * 8. GRAFIK DISTRIBUSI LOKASI (DONUT CHART) - [NEW]
+     * =======================================================*/
+    const canvasLokasi = document.getElementById("lokasiChart");
+    if (canvasLokasi && data.distribusi_lokasi) {
+
+        const existingLokasiChart = Chart.getChart(canvasLokasi);
+        if (existingLokasiChart) existingLokasiChart.destroy();
+
+        const ctxLokasi = canvasLokasi.getContext("2d");
+        const dist = data.distribusi_lokasi;
+
+        // Validasi jika semua data 0 (Bulan ini kosong)
+        const totalLokasi = (dist.WFO || 0) + (dist.WFH || 0) + (dist.WFA || 0) + (dist.DL || 0);
+
+        new Chart(ctxLokasi, {
+            type: "doughnut",
+            data: {
+                labels: ["WFO", "WFH", "WFA", "Dinas Luar"],
+                datasets: [{
+                    // Jika total 0, beri data semu [1] dengan warna abu-abu agar chart tetap tergambar
+                    data: totalLokasi === 0 ? [1] : [dist.WFO || 0, dist.WFH || 0, dist.WFA || 0, dist.DL || 0],
+                    backgroundColor: totalLokasi === 0 ? ["#F1F5F9"] : [
+                        "#1C7C54", // Emerald WFO
+                        "#3B82F6", // Blue WFH
+                        "#6366F1", // Indigo WFA
+                        "#A855F7"  // Purple DL
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%', // Ketebalan donut
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { family: 'Poppins', size: 11 }
+                        }
+                    },
+                    tooltip: {
+                        enabled: totalLokasi !== 0 // Matikan tooltip jika kosong
+                    }
+                }
+            },
+            plugins: [{
+                id: 'textCenter',
+                beforeDraw: function (chart) {
+                    var width = chart.width,
+                        height = chart.height,
+                        ctx = chart.ctx;
+
+                    ctx.restore();
+                    var fontSize = (height / 114).toFixed(2);
+                    ctx.font = "bold " + fontSize + "em Poppins";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "#1e293b";
+
+                    var text = totalLokasi === 0 ? "0" : totalLokasi,
+                        textX = Math.round((width - ctx.measureText(text).width) / 2),
+                        textY = (height / 2) - 10;
+
+                    ctx.fillText(text, textX, textY);
+
+                    ctx.font = "normal " + (fontSize * 0.4) + "em Poppins";
+                    ctx.fillStyle = "#64748b";
+                    var text2 = "Total Laporan",
+                        text2X = Math.round((width - ctx.measureText(text2).width) / 2),
+                        text2Y = (height / 2) + 15;
+
+                    ctx.fillText(text2, text2X, text2Y);
+                    ctx.save();
+                }
+            }]
+        });
+    }
+
+    /* =======================================================
+     * 9. DELETE DRAFT GLOBAL
      * =======================================================*/
     window.deleteDraft = async function (id) {
-
         if (!confirm('Apakah Anda yakin ingin menghapus draft laporan ini?')) return;
-
         const token = localStorage.getItem("auth_token");
-
         try {
             const res = await fetch(`/api/lkh/${id}`, {
                 method: "DELETE",
@@ -359,16 +422,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                     "Accept": "application/json"
                 }
             });
-
             if (!res.ok) {
                 const json = await res.json();
                 alert("Gagal menghapus: " + (json.message || "Error"));
                 return;
             }
-
             alert("Draft berhasil dihapus!");
             window.location.reload();
-
         } catch (err) {
             alert("Terjadi kesalahan koneksi.");
         }

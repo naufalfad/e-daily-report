@@ -32,6 +32,10 @@ class PetaAktivitasController extends Controller
                 ->when($request->filled('to_date'), function ($q) use ($request) {
                     $q->whereDate('tanggal_laporan', '<=', $request->to_date);
                 })
+                // [NEW] Filter Kategori Lokasi
+                ->when($request->filled('kategori_lokasi') && $request->kategori_lokasi !== 'all', function ($q) use ($request) {
+                    $q->where('kategori_lokasi', $request->kategori_lokasi);
+                })
                 ->orderBy('tanggal_laporan', 'desc')
                 ->get();
 
@@ -72,6 +76,10 @@ class PetaAktivitasController extends Controller
                 ->when($request->filled('to_date'), function ($q) use ($request) {
                     $q->whereDate('tanggal_laporan', '<=', $request->to_date);
                 })
+                // [NEW] Filter Kategori Lokasi
+                ->when($request->filled('kategori_lokasi') && $request->kategori_lokasi !== 'all', function ($q) use ($request) {
+                    $q->where('kategori_lokasi', $request->kategori_lokasi);
+                })
                 ->orderBy('tanggal_laporan', 'desc')
                 ->get();
 
@@ -107,6 +115,10 @@ class PetaAktivitasController extends Controller
                 })
                 ->when($request->filled('to_date'), function ($q) use ($request) {
                     $q->whereDate('tanggal_laporan', '<=', $request->to_date);
+                })
+                // [NEW] Filter Kategori Lokasi
+                ->when($request->filled('kategori_lokasi') && $request->kategori_lokasi !== 'all', function ($q) use ($request) {
+                    $q->where('kategori_lokasi', $request->kategori_lokasi);
                 })
                 ->orderBy('tanggal_laporan', 'desc')
                 ->get();
@@ -171,6 +183,10 @@ class PetaAktivitasController extends Controller
                 })
                 ->when($request->filled('to_date'), function ($q) use ($request) {
                     $q->whereDate('tanggal_laporan', '<=', $request->to_date);
+                })
+                // [NEW] Filter Kategori Lokasi untuk Cetak PDF
+                ->when($request->filled('kategori_lokasi') && $request->kategori_lokasi !== 'all', function ($q) use ($request) {
+                    $q->where('kategori_lokasi', $request->kategori_lokasi);
                 });
 
             $laporanHarian = $query->orderBy('tanggal_laporan', 'desc')->get();
@@ -238,11 +254,15 @@ class PetaAktivitasController extends Controller
                 strtoupper(Str::random(6))
             );
 
-            // Logika Teks Periode Laporan
+            // Logika Teks Periode Laporan & Filter Kategori
             $scopeText = 'Semua Riwayat Data';
             if ($request->filled('from_date') && $request->filled('to_date')) {
                 $scopeText = Carbon::parse($request->from_date)->translatedFormat('d M Y') . ' - ' . Carbon::parse($request->to_date)->translatedFormat('d M Y');
             }
+            
+            $kategoriFilterText = ($request->filled('kategori_lokasi') && $request->kategori_lokasi !== 'all') 
+                ? $request->kategori_lokasi 
+                : 'Semua Kategori';
 
             $meta = [
                 'generated_by'   => $user->name,
@@ -250,6 +270,7 @@ class PetaAktivitasController extends Controller
                 'unit_kerja'     => $user->unitKerja->nama_unit_kerja ?? 'Pemerintah Kabupaten Mimika',
                 'timestamp'      => $now->format('d F Y, H:i') . ' WIB',
                 'filter_scope'   => $scopeText,
+                'filter_kategori'=> $kategoriFilterText, // [NEW] Info filter untuk PDF
                 'data_count'     => $activities->count(),
                 'trx_id'         => $trxId,
                 'vis_mode'       => ucfirst($mode), // Info mode untuk ditampilkan di PDF
@@ -314,6 +335,9 @@ class PetaAktivitasController extends Controller
             "status"             => $item->status,
             "user"               => $item->user->name ?? "User",
             "jabatan"            => $item->user->jabatan->nama_jabatan ?? "-",
+
+            // [NEW] Kategori Lokasi untuk Popup Peta
+            "kategori_lokasi"    => $item->kategori_lokasi ?? 'WFO',
 
             // Koordinat Geospasial (Casting ke float penting untuk Map Library)
             "lat"                => $item->lat ? (float) $item->lat : null,

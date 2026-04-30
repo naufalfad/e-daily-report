@@ -15,11 +15,19 @@ class LaporanHarian extends Model
 
     protected $table = 'laporan_harian';
 
+    // --- KONSTANTA KATEGORI LOKASI KERJA ---
+    // Digunakan untuk menghindari magic string di Controller/Service
+    public const KAT_WFO = 'WFO';
+    public const KAT_WFH = 'WFH';
+    public const KAT_WFA = 'WFA';
+    public const KAT_DL  = 'DL';
+
     protected $fillable = [
         'user_id',
         'skp_rencana_id',
         'tupoksi_id',
         'jenis_kegiatan',
+        'kategori_lokasi', // Added: Field Kategori WFO/WFH/WFA/DL
         'tanggal_laporan',
         'waktu_mulai',
         'waktu_selesai',

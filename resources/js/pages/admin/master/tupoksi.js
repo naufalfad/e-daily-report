@@ -1,14 +1,20 @@
-import { showToast } from '../../../global/notification'; 
+import { showToast } from '../../../global/notification';
 import Swal from 'sweetalert2';
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // --- 1. CONFIGURATION ---
     const API_URL = '/admin/master/tupoksi';
+
+    // State Manager
     let currentPage = 1;
     let searchQuery = '';
-    let filterBidang = ''; // Variable baru untuk filter
+    let filterBidang = '';
     let searchTimeout = null;
+    let currentLimit = 10;
+    let currentSort = 'created_at';
+    let currentDir = 'desc';
+    let currentDataLength = 0; // Tracking panjang data aktual untuk logika navigasi pasca-hapus
 
     // --- 2. DOM ELEMENTS ---
     const els = {
@@ -17,11 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
         emptyState: document.getElementById('empty-state'),
         paginationInfo: document.getElementById('pagination-info'),
         paginationLinks: document.getElementById('pagination-links'),
-        
+
         // Filter & Search
         searchInput: document.getElementById('searchInput'),
-        filterBidangSelect: document.getElementById('filterBidang'), // Element Select Filter
-        
+        filterBidangSelect: document.getElementById('filterBidang'),
+
         // Modal & Form
         modal: document.getElementById('modal-tupoksi'),
         modalBackdrop: document.getElementById('modal-backdrop'),
@@ -29,9 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle: document.getElementById('modal-title'),
         form: document.getElementById('form-tupoksi'),
         idInput: document.getElementById('id'),
-        bidangSelect: $('#bidang_id'), 
+        bidangSelect: typeof $ !== 'undefined' ? $('#bidang_id') : null,
         uraianInput: document.getElementById('uraian_tugas'),
-        
+
         // Buttons
         btnCreate: document.getElementById('btn-create'),
         btnSave: document.getElementById('btn-save'),
@@ -41,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 3. INITIALIZATION ---
-    // Init Select2 untuk Modal
-    if (typeof $ !== 'undefined') {
+    // Init Select2 untuk Modal (Defensif)
+    if (els.bidangSelect && els.bidangSelect.length > 0) {
         els.bidangSelect.select2({
             dropdownParent: $(els.modal),
             width: '100%',
@@ -51,28 +57,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Load Data Pertama Kali
-    fetchData();
+    fetchData(1);
 
     // --- 4. EVENT LISTENERS ---
-    
-    // Search Listener
+
+    // Search Listener dengan Debounce (Optimal 500ms)
     if (els.searchInput) {
         els.searchInput.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
             searchQuery = e.target.value;
             searchTimeout = setTimeout(() => {
-                currentPage = 1; 
-                fetchData();
-            }, 500); 
+                fetchData(1); // Kembali ke halaman 1 saat pencarian berubah
+            }, 500);
         });
     }
 
-    // Filter Bidang Listener [BARU]
+    // Filter Bidang Listener
     if (els.filterBidangSelect) {
         els.filterBidangSelect.addEventListener('change', (e) => {
-            filterBidang = e.target.value; // Update state filter
-            currentPage = 1; // Reset ke halaman 1
-            fetchData(); // Reload table
+            filterBidang = e.target.value;
+            fetchData(1);
         });
     }
 
@@ -80,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     els.closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
 
+    // Delegation Event untuk Tombol Aksi di Tabel
     if (els.tableBody) {
         els.tableBody.addEventListener('click', (e) => {
             const target = e.target.closest('button');
@@ -103,34 +108,49 @@ document.addEventListener('DOMContentLoaded', () => {
         els.paginationLinks.addEventListener('click', (e) => {
             e.preventDefault();
             const link = e.target.closest('a');
-            if (link && link.dataset.page) {
-                currentPage = link.dataset.page;
-                fetchData();
+            if (link && link.dataset.page && !link.classList.contains('pointer-events-none')) {
+                fetchData(parseInt(link.dataset.page));
             }
         });
     }
 
     // --- 5. CORE FUNCTIONS ---
 
-    async function fetchData() {
+    async function fetchData(page = currentPage) {
         setLoading(true);
+        currentPage = page;
+
         try {
-            // Bangun URL dengan Search & Filter Params
+            // Penyelarasan Kueri dengan Arsitektur Back-End Baru
             const params = new URLSearchParams({
                 page: currentPage,
-                search: searchQuery,
-                bidang_id: filterBidang // Kirim ID bidang ke server
+                limit: currentLimit,
+                sort: currentSort,
+                dir: currentDir,
+                t: new Date().getTime() // Anti-cache peramban
             });
+
+            if (searchQuery) params.append('search', searchQuery);
+            if (filterBidang) params.append('bidang_id', filterBidang);
 
             const response = await fetch(`${API_URL}?${params.toString()}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                }
             });
 
+            if (response.status === 401) return window.location.href = '/login';
             if (!response.ok) throw new Error('Gagal memuat data');
 
             const result = await response.json();
-            
-            renderTable(result.data, result.from);
+
+            const rows = result.data || [];
+            currentDataLength = rows.length;
+            currentPage = result.current_page || 1;
+
+            renderTable(rows, result.from);
             renderPagination(result);
 
         } catch (error) {
@@ -142,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderTable(data, fromIndex) {
+        if (!els.tableBody) return;
         els.tableBody.innerHTML = '';
 
         if (data.length === 0) {
@@ -152,13 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         data.forEach((item, index) => {
             const rowNumber = (fromIndex || 1) + index;
-            
+
             const isSub = item.bidang && item.bidang.level === 'sub_bidang';
-            const badgeClass = isSub 
-                ? 'bg-sky-100 text-sky-700 ring-sky-600/20' 
+            const badgeClass = isSub
+                ? 'bg-sky-100 text-sky-700 ring-sky-600/20'
                 : 'bg-indigo-100 text-indigo-700 ring-indigo-600/20';
             const badgeLabel = isSub ? 'Sub' : 'Bidang';
             const namaBidang = item.bidang ? item.bidang.nama_bidang : '<span class="text-red-500 italic">Tanpa Bidang</span>';
+
+            // Pengamanan string JSON ke atribut HTML
             const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
 
             const row = `
@@ -198,22 +221,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPagination(meta) {
-        const infoText = `Menampilkan ${meta.from || 0} sampai ${meta.to || 0} dari ${meta.total} data`;
+        if (!els.paginationInfo || !els.paginationLinks) return;
+
+        const infoText = `Menampilkan ${meta.from || 0} sampai ${meta.to || 0} dari ${meta.total || 0} data`;
         els.paginationInfo.textContent = infoText;
-        
-        // Update juga text pagination mobile jika ada
+
         const mobileInfo = document.getElementById('pagination-info-mobile');
-        if(mobileInfo) mobileInfo.textContent = infoText;
+        if (mobileInfo) mobileInfo.textContent = infoText;
 
         els.paginationLinks.innerHTML = '';
-
         if (meta.last_page <= 1) return;
 
         const createBtn = (page, text, isActive = false, isDisabled = false) => {
-            const baseClass = "relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset focus:z-20 focus:outline-offset-0";
-            const activeClass = "z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600";
+            const baseClass = "relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset focus:z-20 focus:outline-offset-0 transition-colors";
+            const activeClass = "z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 shadow-sm";
             const inactiveClass = "text-slate-900 ring-slate-300 hover:bg-slate-50 focus:z-20 focus:outline-offset-0";
-            const disabledClass = "text-slate-300 ring-slate-200 cursor-not-allowed";
+            const disabledClass = "text-slate-300 ring-slate-200 cursor-not-allowed bg-slate-50";
 
             let className = baseClass;
             if (isActive) className += ` ${activeClass}`;
@@ -232,11 +255,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let html = '';
         html += createBtn(meta.current_page - 1, 'Prev', false, meta.current_page === 1);
+
         let start = Math.max(1, meta.current_page - 2);
         let end = Math.min(meta.last_page, meta.current_page + 2);
+
+        // Mempertahankan 5 tombol sliding window
+        if (meta.current_page <= 3) end = Math.min(5, meta.last_page);
+        if (meta.current_page >= meta.last_page - 2) start = Math.max(1, meta.last_page - 4);
+
         for (let i = start; i <= end; i++) {
             html += createBtn(i, i, i === meta.current_page);
         }
+
         html += createBtn(meta.current_page + 1, 'Next', false, meta.current_page === meta.last_page);
         els.paginationLinks.innerHTML = html;
     }
@@ -245,22 +275,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openModal(mode, data = null) {
         clearValidation();
-        els.form.reset();
-        els.modal.classList.remove('hidden');
-        void els.modal.offsetWidth; // trigger reflow
-        els.modalBackdrop.classList.remove('opacity-0');
-        els.modalPanel.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+        if (els.form) els.form.reset();
 
         if (mode === 'create') {
             els.modalTitle.textContent = 'Tambah Tupoksi Baru';
             els.idInput.value = '';
-            if (typeof $ !== 'undefined') els.bidangSelect.val('').trigger('change');
+            if (els.bidangSelect && typeof $ !== 'undefined') els.bidangSelect.val('').trigger('change');
         } else {
             els.modalTitle.textContent = 'Edit Data Tupoksi';
             els.idInput.value = data.id;
             els.uraianInput.value = data.uraian_tugas;
-            if (typeof $ !== 'undefined') els.bidangSelect.val(data.bidang_id).trigger('change');
+            if (els.bidangSelect && typeof $ !== 'undefined') els.bidangSelect.val(data.bidang_id).trigger('change');
         }
+
+        els.modal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            els.modalBackdrop.classList.remove('opacity-0');
+            els.modalPanel.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+        });
     }
 
     function closeModal() {
@@ -291,6 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify(jsonData)
@@ -301,17 +335,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 if (response.status === 422) {
                     showValidationErrors(result.errors);
-                    throw new Error('Cek kembali inputan Anda.');
+                    throw new Error('Validasi gagal. Cek kembali inputan Anda.');
                 }
                 throw new Error(result.message || 'Terjadi kesalahan sistem.');
             }
 
             showToast(result.message, 'success');
             closeModal();
-            fetchData(); 
+            fetchData(currentPage);
 
         } catch (error) {
-            if (error.message !== 'Cek kembali inputan Anda.') {
+            if (!error.message.includes('Validasi gagal')) {
                 Swal.fire('Gagal', error.message, 'error');
             }
         } finally {
@@ -333,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelButtonText: 'Batal',
             customClass: {
                 popup: 'rounded-xl',
-                confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold',
+                confirmButton: 'px-4 py-2 rounded-lg text-sm font-semibold shadow-sm',
                 cancelButton: 'px-4 py-2 rounded-lg text-sm font-semibold'
             }
         }).then((result) => {
@@ -342,21 +376,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .then(async res => {
-                    const json = await res.json();
-                    if (!res.ok) throw new Error(json.message || 'Gagal menghapus data');
-                    return json;
-                })
-                .then(json => {
-                    showToast(json.message, 'success');
-                    fetchData();
-                })
-                .catch(err => {
-                    Swal.fire('Gagal!', err.message, 'error');
-                });
+                    .then(async res => {
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.message || 'Gagal menghapus data');
+                        return json;
+                    })
+                    .then(json => {
+                        showToast(json.message, 'success');
+                        // Kalkulasi smart pagination pasca penghapusan
+                        const newPage = (currentDataLength === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
+                        fetchData(newPage);
+                    })
+                    .catch(err => {
+                        Swal.fire('Gagal!', err.message, 'error');
+                    });
             }
         });
     }
@@ -364,23 +402,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function setLoading(isLoading) {
         if (isLoading) {
             els.loadingState.classList.remove('hidden');
-            els.tableBody.classList.add('opacity-50');
+            if (els.tableBody) els.tableBody.classList.add('opacity-50', 'pointer-events-none');
+            els.emptyState.classList.add('hidden');
         } else {
             els.loadingState.classList.add('hidden');
-            els.tableBody.classList.remove('opacity-50');
+            if (els.tableBody) els.tableBody.classList.remove('opacity-50', 'pointer-events-none');
         }
     }
 
     function clearValidation() {
         document.querySelectorAll('.text-red-600').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('input, textarea, select').forEach(el => el.classList.remove('ring-red-500', 'focus:ring-red-500'));
-        if (typeof $ !== 'undefined') $('.select2-selection').css('border-color', '#cbd5e1'); 
+        if (typeof $ !== 'undefined' && els.bidangSelect) {
+            $('.select2-selection').css('border-color', '#cbd5e1');
+        }
     }
 
     function showValidationErrors(errors) {
         for (const [field, messages] of Object.entries(errors)) {
             const input = document.getElementById(field);
             const errorText = document.getElementById(`error-${field}`);
+
             if (input) {
                 input.classList.add('ring-1', 'ring-red-500', 'focus:ring-red-500');
                 if (field === 'bidang_id' && typeof $ !== 'undefined') {

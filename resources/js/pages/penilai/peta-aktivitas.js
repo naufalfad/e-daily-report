@@ -4,20 +4,21 @@ export function penilaiMapData() {
     return {
 
         map: null,
-        markersLayer: null, 
+        markersLayer: null,
         markerMap: {},      // Dictionary untuk pencarian cepat marker by ID
-        
+
         // [BARU] State untuk Mode Tampilan ('staff' = Bawahan, 'personal' = Peta Saya)
         viewMode: 'staff',
 
         allActivities: [],
         filter: {
             from: '',
-            to: ''
+            to: '',
+            kategori: 'all' // [NEW] State untuk filter kategori lokasi
         },
 
         // State untuk marker lokasi pengguna (GPS)
-        currentLocationMarker: null, 
+        currentLocationMarker: null,
 
         // State Modal Detail
         showModal: false,
@@ -42,7 +43,7 @@ export function penilaiMapData() {
                 // ------------------------------------------------------------------
                 // 2. INISIALISASI PETA
                 // ------------------------------------------------------------------
-                this.map = L.map('map', { 
+                this.map = L.map('map', {
                     zoomControl: false, // Custom placement
                     attributionControl: false
                 }).setView([initialLat, initialLng], initialZoom);
@@ -67,20 +68,20 @@ export function penilaiMapData() {
                     spiderfyDistanceMultiplier: 2, // Jarak antar marker lebih lega
                     showCoverageOnHover: false,
                     maxClusterRadius: 60,
-                    
+
                     // Kustomisasi Icon Cluster (Biru Monokromatik)
-                    iconCreateFunction: function(cluster) {
+                    iconCreateFunction: function (cluster) {
                         var count = cluster.getChildCount();
                         var c = ' marker-cluster-';
-                        
-                        if (count < 10) { c += 'small'; } 
-                        else if (count < 50) { c += 'medium'; } 
+
+                        if (count < 10) { c += 'small'; }
+                        else if (count < 50) { c += 'medium'; }
                         else { c += 'large'; }
-                
-                        return new L.DivIcon({ 
-                            html: '<div><span>' + count + '</span></div>', 
-                            className: 'marker-cluster-custom' + c, 
-                            iconSize: new L.Point(40, 40) 
+
+                        return new L.DivIcon({
+                            html: '<div><span>' + count + '</span></div>',
+                            className: 'marker-cluster-custom' + c,
+                            iconSize: new L.Point(40, 40)
                         });
                     }
                 });
@@ -114,19 +115,31 @@ export function penilaiMapData() {
                     `;
 
                     markers.forEach((marker, index) => {
-                        const data = marker.options.customData; 
-                        
-                        if(data) {
+                        const data = marker.options.customData;
+
+                        if (data) {
                             // Logic Styling Status
                             let statusBg = '#fff7ed'; // Amber Light
                             let statusText = '#c2410c'; // Amber Dark
                             let statusLabel = 'Menunggu';
-                            
-                            if(data.status === 'approved') { 
-                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui'; 
-                            } else if(data.status === 'rejected') { 
-                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak'; 
+
+                            if (data.status === 'approved') {
+                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui';
+                            } else if (data.status === 'rejected') {
+                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak';
                             }
+
+                            // [NEW] Parsing Kategori Lokasi
+                            const katLokasi = data.kategori_lokasi || 'WFO';
+
+                            let buttonHtml = `
+                                <button onclick="window.zoomToActivity(${data.id})" 
+                                    style="flex-shrink: 0; background: white; color: #0ea5e9; border: 1px solid #e0f2fe; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+                                    onmouseover="this.style.background='#0ea5e9'; this.style.color='white'" 
+                                    onmouseout="this.style.background='white'; this.style.color='#0ea5e9'">
+                                    Lihat
+                                </button>
+                            `;
 
                             const borderStyle = index !== markers.length - 1 ? 'border-bottom: 1px solid #f1f5f9;' : '';
 
@@ -139,21 +152,19 @@ export function penilaiMapData() {
                                             <span style="font-weight: 700; font-size: 13px; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
                                                 ${data.user}
                                             </span>
-                                            <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">
-                                                ${statusLabel}
-                                            </span>
+                                            <div style="display:flex; gap: 4px;">
+                                                <span style="background:#f1f5f9; color:#475569; font-size:9px; padding:2px 6px; border-radius:12px; font-weight:700; border:1px solid #e2e8f0;">${katLokasi}</span>
+                                                <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">
+                                                    ${statusLabel}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
                                             ${data.kegiatan.length > 45 ? data.kegiatan.substring(0, 45) + '...' : data.kegiatan}
                                         </div>
                                     </div>
 
-                                    <button onclick="window.zoomToActivity(${data.id})" 
-                                        style="flex-shrink: 0; background: white; color: #0ea5e9; border: 1px solid #e0f2fe; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
-                                        onmouseover="this.style.background='#0ea5e9'; this.style.color='white'" 
-                                        onmouseout="this.style.background='white'; this.style.color='#0ea5e9'">
-                                        Lihat
-                                    </button>
+                                    ${buttonHtml}
                                 </li>
                             `;
                         }
@@ -161,16 +172,16 @@ export function penilaiMapData() {
 
                     content += `</ul></div>`;
 
-                    L.popup({ 
-                        offset: [0, -10], 
+                    L.popup({
+                        offset: [0, -10],
                         closeButton: true,
                         autoPan: true,
                         maxWidth: 400,
-                        className: 'custom-cluster-popup' 
+                        className: 'custom-cluster-popup'
                     })
-                    .setLatLng(a.latlng)
-                    .setContent(content)
-                    .openOn(this.map);
+                        .setLatLng(a.latlng)
+                        .setContent(content)
+                        .openOn(this.map);
                 });
 
                 this.map.addLayer(this.markersLayer);
@@ -178,7 +189,7 @@ export function penilaiMapData() {
                 // 5. LOAD DATA & OBSERVERS
                 this.loadData();
                 this.initDatePickers();
-                
+
                 new ResizeObserver(() => {
                     this.map.invalidateSize();
                 }).observe(document.querySelector('.map-container'));
@@ -187,20 +198,20 @@ export function penilaiMapData() {
                 window.openActivityDetail = (id) => this.openModal(id);
                 window.approveActivity = (id) => this.confirmApprove(id);
                 window.rejectActivity = (id) => this.handleReject(id);
-                
-                // [BARU] Helper Redirect untuk Perbaiki Laporan (Mode Personal Penilai)
+
+                // Helper Redirect untuk Perbaiki Laporan (Mode Personal Penilai)
                 window.editActivity = (id) => {
                     window.location.href = `/penilai/input-laporan/${id}`;
                 };
-                
+
                 // Helper Navigasi Cluster
                 window.zoomToActivity = (id) => this.handleZoomToId(id);
             });
         },
 
-        // [BARU] Fungsi Switch Mode (Logic Tahap 2)
+        // Fungsi Switch Mode 
         switchMode(mode) {
-            if (this.viewMode === mode) return; // Mencegah reload jika mode sama
+            if (this.viewMode === mode) return;
             this.viewMode = mode;
             this.loadData();
         },
@@ -209,7 +220,7 @@ export function penilaiMapData() {
         // FITUR: ZOOM KE ITEM DARI LIST CLUSTER (SPIDERFY)
         // ------------------------------------------------------------------
         handleZoomToId(id) {
-            this.map.closePopup(); 
+            this.map.closePopup();
             const targetMarker = this.markerMap[id];
 
             if (targetMarker) {
@@ -230,7 +241,7 @@ export function penilaiMapData() {
                 return;
             }
 
-            this.loading = true; 
+            this.loading = true;
 
             if (this.currentLocationMarker) {
                 this.map.removeLayer(this.currentLocationMarker);
@@ -238,38 +249,38 @@ export function penilaiMapData() {
             }
 
             this.map.locate({ setView: true, maxZoom: 17, timeout: 10000, enableHighAccuracy: true })
-            .on('locationfound', (e) => {
-                this.loading = false;
-                const latlng = e.latlng;
-                
-                const locationMarker = L.circleMarker(latlng, {
-                    radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1
-                });
+                .on('locationfound', (e) => {
+                    this.loading = false;
+                    const latlng = e.latlng;
 
-                const accuracyCircle = L.circle(latlng, e.accuracy, {
-                    color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false
-                });
+                    const locationMarker = L.circleMarker(latlng, {
+                        radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1
+                    });
 
-                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
-                
-                locationMarker.bindPopup(`
+                    const accuracyCircle = L.circle(latlng, e.accuracy, {
+                        color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false
+                    });
+
+                    this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
+
+                    locationMarker.bindPopup(`
                     <div style="text-align:center; font-family: 'Poppins', sans-serif; padding: 4px;">
                         <b style="color:#1e293b;">Lokasi Anda</b><br>
                         <span style="font-size:11px; color:#64748b;">Akurasi: ${Math.round(e.accuracy)}m</span>
                     </div>
                 `).openPopup();
-                
-                setTimeout(() => {
-                    if (this.currentLocationMarker) {
-                        this.map.removeLayer(this.currentLocationMarker);
-                        this.currentLocationMarker = null;
-                    }
-                }, 10000);
-            })
-            .on('locationerror', (e) => {
-                this.loading = false;
-                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal mendapatkan lokasi GPS.' });
-            });
+
+                    setTimeout(() => {
+                        if (this.currentLocationMarker) {
+                            this.map.removeLayer(this.currentLocationMarker);
+                            this.currentLocationMarker = null;
+                        }
+                    }, 10000);
+                })
+                .on('locationerror', (e) => {
+                    this.loading = false;
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal mendapatkan lokasi GPS.' });
+                });
         },
 
         // ------------------------------------------------------------------
@@ -277,15 +288,21 @@ export function penilaiMapData() {
         // ------------------------------------------------------------------
         loadData() {
             this.loading = true;
-            
-            // [UPDATE] Endpoint Dinamis Berdasarkan viewMode (Logic Tahap 3)
-            let url = (this.viewMode === 'staff') 
-                ? '/api/staf-aktivitas'      // Endpoint Data Bawahan (Existing)
-                : '/api/peta-aktivitas';     // Endpoint Data Pribadi (New)
-            
+
+            // Endpoint Dinamis Berdasarkan viewMode 
+            let url = (this.viewMode === 'staff')
+                ? '/api/staf-aktivitas'      // Endpoint Data Bawahan 
+                : '/api/peta-aktivitas';     // Endpoint Data Pribadi 
+
             const params = [];
             if (this.filter.from) params.push(`from_date=${this.filter.from}`);
             if (this.filter.to) params.push(`to_date=${this.filter.to}`);
+
+            // [NEW] Sisipkan kategori_lokasi ke parameter query URL
+            if (this.filter.kategori && this.filter.kategori !== 'all') {
+                params.push(`kategori_lokasi=${this.filter.kategori}`);
+            }
+
             if (params.length > 0) url += '?' + params.join('&');
 
             fetch(url, {
@@ -294,50 +311,64 @@ export function penilaiMapData() {
                     'Accept': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.allActivities = data.data;
-                    this.loadMarkers(data.data);
-                }
-            })
-            .catch(err => {
-                console.error("Error loading map data:", err);
-            })
-            .finally(() => { this.loading = false; });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.allActivities = data.data;
+                        this.loadMarkers(data.data);
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading map data:", err);
+                })
+                .finally(() => { this.loading = false; });
         },
 
         loadMarkers(data) {
             this.markersLayer.clearLayers();
-            this.markerMap = {}; 
+            this.markerMap = {};
 
             if (data.length === 0) return;
-            
+
             if (this.currentLocationMarker) {
                 this.map.removeLayer(this.currentLocationMarker);
                 this.currentLocationMarker = null;
             }
 
             const latlngs = [];
-            
+
             data.forEach(act => {
                 if (!act.lat || !act.lng) return;
 
                 // Warna Status Marker Individual
-                let color = '#f59e0b'; 
+                let color = '#f59e0b';
                 let statusLabel = 'Menunggu';
-                
+
                 if (act.status === 'approved') {
-                    color = '#10b981'; 
+                    color = '#10b981';
                     statusLabel = 'Disetujui';
                 } else if (act.status === 'rejected') {
-                    color = '#f43f5e'; 
+                    color = '#f43f5e';
                     statusLabel = 'Ditolak';
                 }
+
+                // Tombol Aksi Default selalu "Detail Penuh"
+                let actionButton = `
+                    <button onclick="window.openActivityDetail(${act.id})"
+                        style="background:#0f172a; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:500; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                        Detail Penuh
+                    </button>
+                `;
+
+                // [NEW] Kategori Lokasi di Popup Single Marker
+                const katLokasi = act.kategori_lokasi || 'WFO';
 
                 // Popup Detail Single Marker
                 const popupContent = `
                     <div style="padding: 12px 8px; min-width: 240px; font-family:'Poppins',sans-serif;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px;">
+                            <span style="font-size:10px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1;">Kategori: ${katLokasi}</span>
+                        </div>
                         <div style="font-weight:700; color:#0f172a; font-size:14px; line-height:1.4; margin-bottom:8px;">
                             ${act.kegiatan}
                         </div>
@@ -349,27 +380,24 @@ export function penilaiMapData() {
                             <span style="font-size:11px; font-weight:600; color:${color}; background:${color}15; padding:4px 10px; border-radius:12px; border:1px solid ${color}30;">
                                 ${statusLabel}
                             </span>
-                            <button onclick="window.openActivityDetail(${act.id})"
-                                style="background:#0f172a; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:500; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                                Detail Penuh
-                            </button>
+                            ${actionButton}
                         </div>
                     </div>
                 `;
 
                 const marker = L.circleMarker([act.lat, act.lng], {
-                    radius: 7, 
+                    radius: 7,
                     fillColor: color,
-                    color: '#ffffff', 
+                    color: '#ffffff',
                     weight: 2,
                     fillOpacity: 1,
-                    customData: act 
+                    customData: act
                 })
-                .bindPopup(popupContent);
+                    .bindPopup(popupContent);
 
                 this.markersLayer.addLayer(marker);
                 this.markerMap[act.id] = marker;
-                
+
                 latlngs.push([act.lat, act.lng]);
             });
 
@@ -394,14 +422,13 @@ export function penilaiMapData() {
                 didOpen: () => { Swal.showLoading() }
             });
 
-            const payload = { 
-                status: status, 
-                komentar_validasi: reason || "", 
+            const payload = {
+                status: status,
+                komentar_validasi: reason || "",
                 _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             };
 
             try {
-                // [UPDATE] Endpoint Penilai
                 const response = await fetch(`/penilai/validasi-laporan/${id}`, {
                     method: 'POST',
                     headers: {
@@ -480,13 +507,13 @@ export function penilaiMapData() {
                 this.showModal = true;
             }
         },
-        closeModal() { 
-            this.showModal = false; 
-            setTimeout(() => { this.selectedActivity = null; }, 300); 
+        closeModal() {
+            this.showModal = false;
+            setTimeout(() => { this.selectedActivity = null; }, 300);
         },
-        
+
         applyFilter() { this.loadData(); },
-        
+
         initDatePickers() {
             this.$nextTick(() => {
                 ['tgl_dari', 'tgl_sampai'].forEach(id => {
@@ -495,7 +522,7 @@ export function penilaiMapData() {
                 });
             });
         },
-        
+
         // ---------- EXPORT PETA (PDF) ----------
         exportMap() {
             Swal.fire({
@@ -506,14 +533,16 @@ export function penilaiMapData() {
                 confirmButtonColor: "#0ea5e9",
                 confirmButtonText: "Ya, Download",
                 cancelButtonText: "Batal",
-                showLoaderOnConfirm: true, 
+                showLoaderOnConfirm: true,
                 preConfirm: () => {
                     const fromDate = this.filter.from || '';
                     const toDate = this.filter.to || '';
+                    const kat = this.filter.kategori || 'all'; // [NEW] Filter Kategori
+
                     // Menggunakan endpoint global preview-map-pdf
-                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
+                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}&kategori_lokasi=${kat}`;
                     window.open(url, "_blank");
-                    return true; 
+                    return true;
                 }
             });
         },

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule; // Added: Import Rule untuk validasi Kategori
 use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
 
@@ -74,7 +75,6 @@ class LkhController extends Controller
 
     /**
      * 1. LIST LKH (Utama / Tabel Dashboard Staf)
-     * [REFACTORED] Support Filter Bulan, Tahun, Status, Search
      */
     public function index(Request $request)
     {
@@ -83,12 +83,10 @@ class LkhController extends Controller
         $query = LaporanHarian::with(['tupoksi', 'rencana', 'bukti'])
             ->where('user_id', $userId);
 
-        // 1. Filter Bulan
         $query->when($request->month, function ($q, $month) {
             $q->whereMonth('tanggal_laporan', $month);
         });
 
-        // 2. Filter Tahun
         $query->when($request->year, function ($q, $year) {
             $q->whereYear('tanggal_laporan', $year);
         });
@@ -104,16 +102,11 @@ class LkhController extends Controller
     }
 
     /**
-     * 2. CREATE LKH (REFACTORED ARCHITECTURE)
-     * Menerapkan Action-Domain-Responder Pattern.
-     * Logika Validasi dipindah ke StoreLkhRequest.
-     * Logika Bisnis & Transaksi dipindah ke SubmitLkhAction.
+     * 2. CREATE LKH
      */
     public function store(StoreLkhRequest $request, SubmitLkhAction $action)
     {
         try {
-            // Eksekusi Action Class (Pure Fabrication)
-            // Controller hanya bertugas sebagai 'Traffic Cop'
             $lkh = $action->execute($request, Auth::user());
 
             return response()->json([
@@ -122,7 +115,6 @@ class LkhController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            // Error Handling terpusat untuk menjaga stabilitas API
             return response()->json([
                 'message' => 'Gagal mengirim laporan',
                 'error' => $e->getMessage()
@@ -137,8 +129,6 @@ class LkhController extends Controller
     {
         $user = Auth::user();
 
-        // [SPATIAL QUERY SUPPORT]
-        // Menggunakan ST_Y (Lat) dan ST_X (Lng) untuk mengambil koordinat dari PostGIS geometry
         $lkh = LaporanHarian::with(['tupoksi', 'rencana', 'bukti', 'user.bidang', 'user.jabatan', 'atasan'])
             ->select('*')
             ->selectRaw('ST_Y(lokasi) AS latitude')
@@ -158,7 +148,6 @@ class LkhController extends Controller
 
     /**
      * Mengambil Riwayat LKH (Khusus Halaman Riwayat)
-     * [REFACTORED] Filter Standarisasi: month, year, search
      */
     public function getRiwayat(Request $request)
     {
@@ -181,7 +170,6 @@ class LkhController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        // 1. Standardized Filter (Month & Year)
         $query->when($request->month, function ($q, $month) {
             $q->whereMonth('tanggal_laporan', $month);
         });
@@ -190,12 +178,10 @@ class LkhController extends Controller
             $q->whereYear('tanggal_laporan', $year);
         });
 
-        // 2. Filter Status
         $query->when($request->status && $request->status !== 'all', function ($q, $status) {
             $q->where('status', $status);
         });
 
-        // 3. Search (Deskripsi / Nama jika lihat bawahan)
         $query->when($request->search, function ($q, $search) {
             $like = config('database.default') === 'pgsql' ? 'ilike' : 'like';
             $q->where(function ($sub) use ($search, $like) {
@@ -206,7 +192,6 @@ class LkhController extends Controller
             });
         });
 
-        // 4. Legacy Filter (Range Date)
         if ($request->filled('from_date')) {
             $query->whereDate('tanggal_laporan', '>=', $request->from_date);
         }
@@ -251,7 +236,7 @@ class LkhController extends Controller
     }
 
     /**
-     * 5. UPDATE LKH (Updated with Geocoding Logic)
+     * 5. UPDATE LKH
      */
     public function update(Request $request, $id)
     {
@@ -267,6 +252,14 @@ class LkhController extends Controller
         $validator = Validator::make($request->all(), [
             'tupoksi_id' => 'sometimes|nullable|exists:tupoksi,id',
             'jenis_kegiatan' => 'sometimes|required|in:' . $validAktivitas,
+            
+            // [UPDATE] Validasi Kategori Lokasi disisipkan di sini
+            'kategori_lokasi' => [
+                'sometimes', 
+                'required', 
+                Rule::in([LaporanHarian::KAT_WFO, LaporanHarian::KAT_WFH, LaporanHarian::KAT_WFA, LaporanHarian::KAT_DL])
+            ],
+
             'skp_rencana_id' => 'nullable|exists:skp_rencana,id',
             'tanggal_laporan' => 'sometimes|required|date',
             'waktu_mulai' => 'sometimes|required',
@@ -276,9 +269,6 @@ class LkhController extends Controller
             'volume' => 'sometimes|required|integer|min:1',
             'satuan' => 'sometimes|required|string|max:50',
             'hapus_bukti' => 'array',
-
-            // [UPDATE] Validasi untuk update lokasi
-            // Field 'mode_lokasi' dipertahankan untuk backward compatibility UI
             'mode_lokasi' => 'sometimes|nullable|string', 
             'lokasi_teks' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
@@ -291,17 +281,14 @@ class LkhController extends Controller
         try {
             DB::beginTransaction();
 
-            // Prepare Data Update (Excluding location fields that need processing)
             $updateData = $request->except(['bukti', 'hapus_bukti', 'latitude', 'longitude']);
 
-            // [LOGIKA UPDATE LOKASI SPASIAL]
             if ($request->has('latitude') && $request->has('longitude') && $request->latitude && $request->longitude) {
 
                 $finalLat = (float) $request->latitude;
                 $finalLng = (float) $request->longitude;
                 $isLuarLokasi = true;
 
-                // Re-calculate Geofence if Office Config Exists
                 if (config('services.office.lat')) {
                     $distanceQuery = DB::selectOne("
                         SELECT ST_DistanceSphere(
@@ -315,11 +302,9 @@ class LkhController extends Controller
                     }
                 }
 
-                // Override / Tambahkan data lokasi ke array update
                 $updateData['lokasi'] = DB::raw("ST_SetSRID(ST_MakePoint({$finalLng}, {$finalLat}), 4326)");
                 $updateData['is_luar_lokasi'] = $isLuarLokasi;
                 
-                // Update Metadata Provider (jika ada)
                 if ($request->has('location_provider')) {
                     $updateData['location_provider'] = $request->location_provider;
                 }
@@ -328,10 +313,8 @@ class LkhController extends Controller
                 }
             }
 
-            // Update Data Utama
             $lkh->update($updateData);
 
-            // Hapus Bukti
             if ($request->filled('hapus_bukti')) {
                 $buktiToDelete = LkhBukti::whereIn('id', $request->hapus_bukti)->where('laporan_id', $lkh->id)->get();
                 foreach ($buktiToDelete as $bukti) {
@@ -340,7 +323,6 @@ class LkhController extends Controller
                 }
             }
 
-            // Tambah Bukti Baru
             if ($request->hasFile('bukti')) {
                 $folderDate = date('Y/m');
                 $storagePath = "uploads/lkh/{$folderDate}";
@@ -391,7 +373,6 @@ class LkhController extends Controller
 
     public function exportPdf($id)
     {
-        // 1. Ambil Data
         $lkh = LaporanHarian::with([
             'tupoksi',
             'rencana',
@@ -402,8 +383,6 @@ class LkhController extends Controller
         ->selectRaw('ST_X(lokasi) AS longitude')
         ->findOrFail($id);
 
-        // 2. VALIDASI DATA KOSONG MANUAL
-        // Kita tampung error dalam array
         $missingFields = [];
 
         if (empty($lkh->output_hasil_kerja))
@@ -415,17 +394,14 @@ class LkhController extends Controller
         if (empty($lkh->deskripsi_aktivitas))
             $missingFields[] = 'Uraian Kegiatan';
 
-        // Cek Lokasi (Salah satu harus ada)
         if (empty($lkh->lokasi_teks) && (empty($lkh->latitude) || empty($lkh->longitude))) {
             $missingFields[] = 'Lokasi (GPS/Teks)';
         }
 
-        // Cek SKP (Jika kategori SKP tapi relasi kosong)
         if ($lkh->kategori === 'skp' && empty($lkh->skp_rencana_id)) {
             $missingFields[] = 'Target SKP';
         }
 
-        // Jika ada field yang kosong, kirim JSON Error (422)
         if (count($missingFields) > 0) {
             return response()->json([
                 'status' => 'validation_error',
@@ -434,19 +410,21 @@ class LkhController extends Controller
             ], 422);
         }
 
-        // 3. GENERATE PDF (Jika Lolos Validasi)
         $pdf = Pdf::loadView('pdf.lkh', [
             'pegawai_nama' => $lkh->user->name,
             'pegawai_nip' => $lkh->user->nip,
             'pegawai_unit' => $lkh->user->unitKerja->nama_unit ?? '-',
             'tanggal' => $lkh->tanggal_laporan,
             'jenis_kegiatan' => $lkh->jenis_kegiatan,
+            
+            // [UPDATE] Tampilkan Kategori Lokasi di PDF
+            'kategori_lokasi' => $lkh->kategori_lokasi, 
+            
             'tupoksi' => $lkh->tupoksi->uraian_tugas ?? '-',
             'kategori' => $lkh->skp_rencana_id ? 'SKP' : 'Non-SKP',
             'jam_mulai' => $lkh->waktu_mulai,
             'jam_selesai' => $lkh->waktu_selesai,
 
-            // Prioritas: Teks -> GPS
             'lokasi' => $lkh->lokasi_teks
                 ?? ($lkh->latitude ? "{$lkh->latitude}, {$lkh->longitude}" : '-'),
             'lokasi_teks' => $lkh->lokasi_teks,
@@ -464,13 +442,19 @@ class LkhController extends Controller
 
     public function exportPdfDirect(Request $request)
     {
-        // --- 1. VALIDASI FIELD WAJIB ---
         $validator = Validator::make($request->all(), [
             'tanggal_laporan' => 'required|date',
             'waktu_mulai' => 'required',
             'waktu_selesai' => 'required',
             'jenis_kegiatan' => 'required',
             'tupoksi_id' => 'required',
+            
+            // [UPDATE] Penambahan validasi untuk eksport Direct
+            'kategori_lokasi' => [
+                'required', 
+                Rule::in([LaporanHarian::KAT_WFO, LaporanHarian::KAT_WFH, LaporanHarian::KAT_WFA, LaporanHarian::KAT_DL])
+            ],
+
             'deskripsi_aktivitas' => 'required|string|min:5',
             'output_hasil_kerja' => 'required',
             'volume' => 'required|numeric|min:1',
@@ -489,16 +473,12 @@ class LkhController extends Controller
             ], 422);
         }
 
-        // --- 2. VALIDASI LOGIKA KHUSUS (SKP & LOKASI) ---
         $customErrors = [];
 
-        // A. Validasi SKP
         if ($request->kategori === 'skp' && empty($request->skp_rencana_id)) {
             $customErrors[] = 'Kategori dipilih "SKP", namun Target SKP belum dipilih.';
         }
 
-        // B. Validasi Lokasi: Wajib ada salah satu (GPS atau Teks)
-        // Cek input hidden baru 'latitude' & 'longitude'
         $hasGPS = !empty($request->latitude) && !empty($request->longitude);
         $hasText = !empty($request->lokasi_teks);
 
@@ -514,11 +494,9 @@ class LkhController extends Controller
             ], 422);
         }
 
-        // --- 3. PROSES DATA ---
         $user = auth()->user();
         $tupoksi = Tupoksi::find($request->tupoksi_id);
 
-        // Ambil Data SKP
         $rencana = null;
         $targetQty = null;
         $targetSatuan = null;
@@ -537,12 +515,15 @@ class LkhController extends Controller
             'pegawai_unit' => $user->unitKerja->nama_unit ?? '-',
             'tanggal' => $request->tanggal_laporan,
             'jenis_kegiatan' => $request->jenis_kegiatan,
+            
+            // [UPDATE] Parsing ke cetakan PDF
+            'kategori_lokasi' => $request->kategori_lokasi,
+            
             'tupoksi' => $tupoksi->uraian_tugas ?? '-',
             'kategori' => $request->kategori === 'skp' ? 'SKP' : 'Non-SKP',
             'jam_mulai' => $request->waktu_mulai,
             'jam_selesai' => $request->waktu_selesai,
 
-            // Logika tampilan lokasi dari input baru
             'lokasi' => $request->lokasi_teks
                 ?: ($hasGPS ? "{$request->latitude}, {$request->longitude}" : '-'),
             'lokasi_teks' => $request->lokasi_teks,

@@ -17,17 +17,17 @@ class UserManagementController extends Controller
 {
     /**
      * [HR DOMAIN] List Data Pegawai
-     * Menampilkan data pegawai beserta struktur jabatannya dengan Pagination & Search.
+     * Menampilkan data pegawai beserta struktur jabatannya dengan Server-Side Pagination.
      */
     public function index(Request $request)
     {
-        // 1. Deteksi Request AJAX untuk Pagination (Server-side Datatables)
+        // 1. Deteksi Request AJAX untuk Paginasi
         if ($request->ajax()) {
             
-            // Eager Loading relasi yang dibutuhkan
+            // 2. Eager Loading (Pencegahan N+1 Query Problem)
             $query = User::with(['unitKerja', 'bidang', 'jabatan', 'roles', 'atasan']);
 
-            // 3. Advanced Filtering
+            // 3. Advanced Filtering (Information Expert)
             
             // Filter Pencarian Teks (Nama atau NIP)
             if ($request->filled('search')) {
@@ -61,41 +61,28 @@ class UserManagementController extends Controller
                 }
             }
 
-            // 4. Pagination & Sorting Standard
-            $totalRecords = User::count();
-            $filteredRecords = $query->count();
-            
-            $limit = $request->input('length', 10);
-            $start = $request->input('start', 0);
-            $orderColumnIndex = $request->input('order.0.column');
-            $orderDir = $request->input('order.0.dir', 'asc');
-            
-            $columns = ['id', 'name', 'nip', 'jabatan_id', 'bidang_id', 'is_active', 'id']; 
-            $orderBy = $columns[$orderColumnIndex] ?? 'created_at';
+            // 4. Transformasi Paginator Bawaan Laravel
+            // Menangkap parameter dari Front-End (State Manager)
+            $perPage = $request->input('limit', 10);
+            $sortBy = $request->input('sort', 'created_at');
+            $sortDir = $request->input('dir', 'desc');
 
-            $data = $query->orderBy($orderBy, $orderDir)
-                          ->skip($start)
-                          ->take($limit)
-                          ->get();
+            // Eksekusi Paginasi di level Database Engine
+            $paginator = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
 
-            return response()->json([
-                'draw' => intval($request->draw),
-                'recordsTotal' => $totalRecords,
-                'recordsFiltered' => $filteredRecords,
-                'data' => $data
-            ]);
+            // Laravel secara otomatis mengonversi $paginator menjadi JSON meta-object
+            // (termasuk properti: data, current_page, last_page, total, per_page)
+            return response()->json($paginator);
         }
 
         // =====================================================================
-        // PHASE 4: UPDATE DATA FETCHING
-        // Mengambil data master untuk dropdown di Modal (View)
+        // DATA FETCHING UNTUK MASTER MODAL DI VIEW
         // =====================================================================
 
         $unitKerja = UnitKerja::all();
         
         // Mengambil Bidang yang dikelompokkan: Induk -> Children
-        // Pastikan model Bidang memiliki scope 'induk' atau logika query yang sesuai
-        $bidang = Bidang::whereNull('parent_id') // Asumsi scope induk adalah parent_id NULL
+        $bidang = Bidang::whereNull('parent_id') 
             ->with('children')
             ->orderBy('nama_bidang', 'asc')
             ->get();
@@ -124,7 +111,6 @@ class UserManagementController extends Controller
             'unit_kerja_id' => 'required|exists:unit_kerja,id',
             'bidang_id'     => 'required|exists:bidang,id',
             'jabatan_id'    => 'required|exists:jabatan,id',
-            // [FIX PHASE 1] Ubah 'name' menjadi 'nama_role' sesuai kolom DB
             'role'          => 'required|exists:roles,nama_role', 
             'atasan_id'     => 'nullable|exists:users,id'
         ]);
@@ -159,12 +145,9 @@ class UserManagementController extends Controller
             ]);
 
             // Assign Role
-            // [FIX PHASE 1] Ubah 'name' menjadi 'nama_role'
             $role = Role::where('nama_role', $request->role)->first();
             if ($role) {
-                // Menggunakan sync untuk memastikan role terganti (meski create baru, sync aman)
-                // Jika user_roles table tidak punya model, gunakan DB facade atau relasi jika ada
-                // Asumsi relasi roles() exists di User model
+                // Menggunakan sync menjaga konsistensi state relasi M:N
                 $user->roles()->sync([$role->id]);
             }
 
@@ -217,9 +200,8 @@ class UserManagementController extends Controller
                 'atasan_id'     => $request->atasan_id,
             ]);
             
-            // Update Role jika ada di request
+            // Update Role jika ada permutasi di Request
             if ($request->has('role')) {
-                // [FIX PHASE 1] Ubah 'name' menjadi 'nama_role'
                 $role = Role::where('nama_role', $request->role)->first();
                 if ($role) {
                      $user->roles()->sync([$role->id]);
@@ -244,6 +226,7 @@ class UserManagementController extends Controller
      */
     public function destroy($id)
     {
+        // Proteksi logika: Hindari self-destruction
         if (auth()->id() == $id) {
             return response()->json(['message' => 'Anda tidak bisa menghapus akun sendiri!'], 403);
         }

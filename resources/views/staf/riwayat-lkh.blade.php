@@ -20,8 +20,8 @@
                 </div>
 
                 <button @click="exportPdf()"
-                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:text-[#155FA6] hover:border-[#155FA6] transition-all shadow-sm active:scale-[0.98]">
-                    <svg class="w-5 h-5 text-slate-400 group-hover:text-[#155FA6] transition-colors" fill="none"
+                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54] transition-all shadow-sm active:scale-[0.98]">
+                    <svg class="w-5 h-5 text-slate-400 group-hover:text-[#1C7C54] transition-colors" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -62,11 +62,8 @@
                                 <span x-show="loading" class="flex items-center gap-2" style="display: none;">
                                     <svg class="animate-spin h-4 w-4 text-white/90" xmlns="http://www.w3.org/2000/svg"
                                         fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                        </path>
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     Memuat...
                                 </span>
@@ -78,15 +75,17 @@
 
             {{-- TABLE SECTION --}}
             <div class="flex-1 overflow-x-auto relative">
-                <table class="w-full min-w-[900px] text-sm text-left">
+                <table class="w-full min-w-[1000px] text-sm text-left">
                     <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-y border-slate-200">
                         <tr>
-                            <th class="px-6 py-4 font-bold tracking-wider">Tanggal Laporan</th>
-                            <th class="px-6 py-4 font-bold tracking-wider w-[35%]">Aktivitas</th>
-                            <th class="px-6 py-4 font-bold tracking-wider">Tanggal Validasi</th>
-                            <th class="px-6 py-4 font-bold tracking-wider">Pejabat Penilai</th>
-                            <th class="px-6 py-4 font-bold tracking-wider text-center">Status</th>
-                            <th class="px-6 py-4 font-bold tracking-wider text-right">Opsi</th>
+                            <th class="px-6 py-4 font-bold tracking-wider w-[15%]">Tanggal Laporan</th>
+                            <th class="px-6 py-4 font-bold tracking-wider w-[30%]">Aktivitas</th>
+                            <th class="px-6 py-4 font-bold tracking-wider w-[15%]">Tanggal Validasi</th>
+                            <th class="px-6 py-4 font-bold tracking-wider w-[15%]">Pejabat Penilai</th>
+                            {{-- NEW: Kolom Kategori --}}
+                            <th class="px-6 py-4 font-bold tracking-wider text-center w-[10%]">Kategori</th>
+                            <th class="px-6 py-4 font-bold tracking-wider text-center w-[10%]">Status</th>
+                            <th class="px-6 py-4 font-bold tracking-wider text-right w-[5%]">Opsi</th>
                         </tr>
                     </thead>
 
@@ -95,7 +94,8 @@
                         {{-- STATE: EMPTY --}}
                         <template x-if="items.length === 0 && !loading">
                             <tr>
-                                <td colspan="6" class="px-6 py-20 text-center">
+                                {{-- COLSPAN DIUPDATE MENJADI 7 --}}
+                                <td colspan="7" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                             <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -112,7 +112,8 @@
                         {{-- STATE: LOADING --}}
                         <template x-if="loading">
                             <tr>
-                                <td colspan="6" class="px-6 py-20 text-center">
+                                {{-- COLSPAN DIUPDATE MENJADI 7 --}}
+                                <td colspan="7" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center gap-3">
                                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0E7A4A]"></div>
                                         <span class="text-slate-500 font-medium animate-pulse">Sedang memuat data...</span>
@@ -144,13 +145,18 @@
                                     x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')">
                                 </td>
 
+                                {{-- NEW: Render Kategori Badge --}}
+                                <td class="px-6 py-4 align-top text-center">
+                                    <div class="inline-flex" x-html="kategoriBadgeHtml(item.kategori_lokasi)"></div>
+                                </td>
+
                                 <td class="px-6 py-4 align-top text-center">
                                     <div class="inline-flex" x-html="statusBadgeHtml(item.status)"></div>
                                 </td>
 
                                 <td class="px-6 py-4 align-top text-right">
                                     <button @click="openModal(item)"
-                                        class="inline-flex items-center gap-1.5 text-[#155FA6] hover:text-[#0C4A85] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                                        class="inline-flex items-center gap-1.5 text-[#1C7C54] hover:text-[#166443] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
                                         <span>Detail</span>
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -163,14 +169,12 @@
                 </table>
             </div>
             
-            {{-- [MODIFIKASI] CALL COMPONENT PAGINATION --}}
-            {{-- Menggantikan placeholder div kosong --}}
+            {{-- CALL COMPONENT PAGINATION --}}
             <x-riwayat.pagination />
 
         </div>
 
         {{-- CALL COMPONENTS: MODAL --}}
-        {{-- Kita panggil 3 komponen terpisah untuk membuat file utama tetap bersih --}}
         <x-riwayat.modal-detail />
         <x-riwayat.modal-bukti />
         <x-riwayat.modal-preview />

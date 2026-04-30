@@ -2,8 +2,8 @@ import Swal from "sweetalert2";
 
 export function akunPenggunaData() {
     // [KONFIGURASI]
-    const BASE_URL = "/api/admin/akun"; 
-    
+    const BASE_URL = "/api/admin/akun";
+
     // Helper untuk mengambil token dari localStorage
     const getToken = () => localStorage.getItem("auth_token");
 
@@ -13,17 +13,22 @@ export function akunPenggunaData() {
         isLoading: false,
         search: '',
 
+        // Parameter Kontrol State (Menyelaraskan Kontrak API)
+        limit: 10,
+        sortBy: 'created_at',
+        sortDir: 'desc',
+
         // Data Master (Disupply dari Window Object di Blade untuk Role)
         roleList: window.Laravel?.roles || [],
 
         // Modal States
         openCred: false, // Modal Credential (Username & Password)
         openRole: false, // Modal Role
-        
+
         // Data Holders
         targetId: null,
         targetName: '',
-        
+
         // Form Data Model
         formData: {
             username: '',
@@ -32,7 +37,7 @@ export function akunPenggunaData() {
             role_id: ''
         },
 
-        // Pagination Meta
+        // Pagination Meta (Standar LengthAwarePaginator)
         pagination: {
             current_page: 1,
             last_page: 1,
@@ -46,7 +51,7 @@ export function akunPenggunaData() {
         // --- INIT ---
         async initPage() {
             console.log("🚀 Akun Pengguna: Initializing...");
-            
+
             // Setup Listeners Pagination (Manual DOM karena tombol di luar x-for)
             this.setupPaginationListeners();
 
@@ -57,13 +62,13 @@ export function akunPenggunaData() {
         setupPaginationListeners() {
             const btnPrev = document.getElementById('prev-page');
             const btnNext = document.getElementById('next-page');
-            
-            if (btnPrev) btnPrev.addEventListener('click', () => { 
-                if (this.pagination.prev_page_url) this.fetchData(this.pagination.current_page - 1); 
+
+            if (btnPrev) btnPrev.addEventListener('click', () => {
+                if (this.pagination.prev_page_url) this.fetchData(this.pagination.current_page - 1);
             });
-            
-            if (btnNext) btnNext.addEventListener('click', () => { 
-                if (this.pagination.next_page_url) this.fetchData(this.pagination.current_page + 1); 
+
+            if (btnNext) btnNext.addEventListener('click', () => {
+                if (this.pagination.next_page_url) this.fetchData(this.pagination.current_page + 1);
             });
         },
 
@@ -72,19 +77,22 @@ export function akunPenggunaData() {
             this.isLoading = true;
 
             try {
-                // Build Query Parameters
+                // Build Query Parameters (Sinkronisasi dengan Back-End Pagination Engine)
                 const params = new URLSearchParams({
                     page: page,
-                    search: this.search,
-                    per_page: 10,
+                    limit: this.limit,
+                    sort: this.sortBy,
+                    dir: this.sortDir,
                     t: new Date().getTime() // Anti-cache
                 });
+
+                if (this.search) params.append('search', this.search);
 
                 const response = await fetch(`${BASE_URL}?${params.toString()}`, {
                     headers: {
                         "Authorization": `Bearer ${getToken()}`,
                         "Accept": "application/json",
-                        "X-Requested-With": "XMLHttpRequest" // Wajib agar Controller return JSON
+                        "X-Requested-With": "XMLHttpRequest" // Wajib agar Controller mengembalikan JSON
                     }
                 });
 
@@ -98,9 +106,10 @@ export function akunPenggunaData() {
 
                 const json = await response.json();
 
+                // Pemetaan state ke root Paginator Object
                 this.items = json.data || [];
-                
-                // Update Pagination State & DOM
+
+                // Update Pagination State & Render DOM
                 this.updatePaginationState(json);
 
             } catch (error) {
@@ -113,13 +122,13 @@ export function akunPenggunaData() {
 
         updatePaginationState(json) {
             this.pagination = {
-                current_page: json.current_page,
-                last_page: json.last_page,
+                current_page: json.current_page || 1,
+                last_page: json.last_page || 1,
                 next_page_url: json.next_page_url,
                 prev_page_url: json.prev_page_url,
-                from: json.from,
-                to: json.to,
-                total: json.total
+                from: json.from || 0,
+                to: json.to || 0,
+                total: json.total || 0
             };
             this.renderPaginationDOM();
         },
@@ -131,7 +140,7 @@ export function akunPenggunaData() {
             const btnNext = document.getElementById('next-page');
 
             if (infoEl) {
-                infoEl.textContent = `Menampilkan ${this.pagination.from || 0}-${this.pagination.to || 0} dari ${this.pagination.total || 0} data`;
+                infoEl.textContent = `Menampilkan ${this.pagination.from}-${this.pagination.to} dari ${this.pagination.total} data`;
             }
 
             if (btnPrev) {
@@ -145,7 +154,7 @@ export function akunPenggunaData() {
 
             // Sliding Window Logic
             if (numbersEl) {
-                numbersEl.innerHTML = ''; 
+                numbersEl.innerHTML = '';
                 const current = this.pagination.current_page;
                 const last = this.pagination.last_page;
 
@@ -181,17 +190,17 @@ export function akunPenggunaData() {
         },
 
         // --- 2. SECURITY ACTIONS ---
-        
+
         // A. Update Username & Password
         async submitCredentialUpdate() {
             const url = `${BASE_URL}/${this.targetId}/credentials`;
-            
+
             const payload = {
                 username: this.formData.username,
-                // Hanya kirim password jika diisi
-                ...(this.formData.password && { 
+                // Hanya kirim password jika diisi (Memperkecil footprint payload)
+                ...(this.formData.password && {
                     password: this.formData.password,
-                    password_confirmation: this.formData.password_confirmation 
+                    password_confirmation: this.formData.password_confirmation
                 })
             };
 
@@ -235,7 +244,7 @@ export function akunPenggunaData() {
         // B. Update Role
         async submitRoleUpdate() {
             const url = `${BASE_URL}/${this.targetId}/role`;
-            
+
             try {
                 const response = await fetch(url, {
                     method: 'PATCH',
@@ -265,7 +274,7 @@ export function akunPenggunaData() {
         async toggleStatus(item) {
             const newStatus = !item.is_active;
             const actionText = newStatus ? 'Mengaktifkan' : 'Menonaktifkan (Suspend)';
-            
+
             const confirm = await Swal.fire({
                 title: `${actionText} Akun?`,
                 text: `Anda yakin ingin ${actionText.toLowerCase()} akses login untuk ${item.name}?`,
@@ -292,7 +301,7 @@ export function akunPenggunaData() {
                     if (!response.ok) throw new Error(result.message || "Gagal mengubah status");
 
                     Swal.fire('Berhasil!', `Akun berhasil ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}.`, 'success');
-                    this.fetchData(this.pagination.current_page); // Refresh halaman saat ini
+                    this.fetchData(this.pagination.current_page); // Refresh data pada page yang sama
 
                 } catch (error) {
                     Swal.fire("Error", error.message, "error");
@@ -301,7 +310,7 @@ export function akunPenggunaData() {
         },
 
         // --- HELPER MODALS ---
-        
+
         openModalCred(item) {
             this.targetId = item.id;
             this.targetName = item.name;
@@ -314,7 +323,7 @@ export function akunPenggunaData() {
         openModalRole(item) {
             this.targetId = item.id;
             this.targetName = item.name;
-            // Ambil role_id pertama (jika ada, karena user bisa punya multiple role di spatie, tapi kita ambil [0])
+            // Ambil role_id pertama berdasarkan relasi (roles[0])
             this.formData.role_id = item.roles && item.roles.length > 0 ? item.roles[0].id : '';
             this.toggleRole(true);
         },
@@ -333,6 +342,6 @@ export function akunPenggunaData() {
                 this.targetId = null;
                 this.targetName = '';
             }
-        },
+        }
     };
 }

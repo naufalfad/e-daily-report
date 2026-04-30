@@ -13,15 +13,17 @@ export function manajemenPegawaiData() {
         // --- STATE ---
         items: [],
         isLoading: false,
-        
-        // Filter State
+
+        // Filter & Sorting State
         search: "",
         filterUnitKerja: "",
+        sortBy: "created_at",
+        sortDir: "desc",
 
         fileUpload: null,
         isImporting: false,
 
-        // Pagination Meta
+        // Pagination Meta (Standardized with Laravel LengthAwarePaginator)
         pagination: {
             current_page: 1, last_page: 1, next_page_url: null, prev_page_url: null, from: 0, to: 0, total: 0
         },
@@ -38,9 +40,9 @@ export function manajemenPegawaiData() {
         unitKerjaList: [],
         bidangList: [],
         jabatanList: [],
-        roleList: [], 
-        atasanList: [], 
-        
+        roleList: [],
+        atasanList: [],
+
         // [METADATA] Untuk menyimpan info detail bidang yang dipilih (level, occupied slots)
         selectedBidangMeta: null,
 
@@ -96,46 +98,31 @@ export function manajemenPegawaiData() {
                 }
 
                 // 1. Cari metadata bidang yang dipilih dari list
-                // Pastikan bidangList sudah terisi objek lengkap dari backend
                 const meta = this.bidangList.find(b => b.id == val);
                 this.selectedBidangMeta = meta || null;
 
                 if ((this.openAdd || this.openEdit) && this.selectedBidangMeta) {
                     // 2. Trigger Validasi Jabatan:
-                    // Jika jabatan yang sedang dipilih ternyata sudah penuh di bidang ini, reset.
-                    // Kecuali jika user yang diedit adalah pemegang jabatan itu sendiri (ID jabatan == current user's job)
-                    // Tapi di frontend kita belum punya info detail itu, jadi validasi basic dulu.
-                    
                     const currentJabatanId = parseInt(this.form.jabatan_id);
-                    if (currentJabatanId && this.selectedBidangMeta.occupied_positions.includes(currentJabatanId)) {
-                        // Cek apakah kita sedang mengedit user ini sendiri? 
-                        // (Logic kompleks, simplifikasinya: warning user / reset)
-                        // Untuk UX yang aman, kita biarkan dulu tapi dropdown option nanti didisable.
-                        // User harus ganti manual.
-                        // Atau kita bisa auto-reset:
-                        // this.form.jabatan_id = ""; 
+                    if (currentJabatanId && this.selectedBidangMeta.occupied_positions?.includes(currentJabatanId)) {
+                        // Logic peringatan bentrok jabatan bisa ditangani di sini
                     }
 
                     // 3. Trigger Fetch Atasan baru
                     this.fetchAtasanList();
                 }
             });
-            
+
             // [WATCHER] Jabatan (Auto-Role Logic)
             this.$watch("form.jabatan_id", (val) => {
                 if (val && (this.openAdd || this.openEdit)) {
                     const id = parseInt(val);
-                    
-                    // Skenario 9 & 10: Auto-fill Role
-                    // ID 2=Sekretaris, 3=Kabid, 4=Kasub -> Penilai (Role ID 3 biasanya, tapi kita pakai string 'Penilai' atau ID dari roleList)
-                    // ID 5=Staf -> Staf
-                    
-                    // Kita cari nama role di listRole berdasarkan logika bisnis
-                    // Asumsi di DB: Role 3 = "Penilai", Role 4 = "Staf"
+
+                    // Skenario Auto-fill Role
                     if ([2, 3, 4].includes(id)) {
                         // Cari role Penilai
                         const penilaiRole = this.roleList.find(r => r.nama_role === 'Penilai');
-                        if (penilaiRole) this.form.role = penilaiRole.nama_role; 
+                        if (penilaiRole) this.form.role = penilaiRole.nama_role;
                     } else if (id === 5) {
                         // Cari role Staf
                         const stafRole = this.roleList.find(r => r.nama_role === 'Staf');
@@ -152,12 +139,16 @@ export function manajemenPegawaiData() {
         async fetchData(page = 1) {
             this.isLoading = true;
             try {
+                // Menyelaraskan Parameter dengan Kontrak Controller
                 const params = new URLSearchParams({
                     page: page,
-                    search: this.search,
-                    unit_kerja_id: this.filterUnitKerja, 
-                    per_page: 10
+                    limit: 10,
+                    sort: this.sortBy,
+                    dir: this.sortDir
                 });
+
+                if (this.search) params.append('search', this.search);
+                if (this.filterUnitKerja) params.append('unit_kerja_id', this.filterUnitKerja);
 
                 const response = await fetch(`${BASE_URL}?${params.toString()}`, {
                     headers: {
@@ -174,21 +165,19 @@ export function manajemenPegawaiData() {
 
                 if (!response.ok) throw new Error("Gagal mengambil data pegawai");
 
-                const json = await response.json();
-                
-                const data = json.data?.data ? json.data.data : (json.data || []);
-                const meta = json.data?.data ? json.data : json;
+                const result = await response.json();
 
-                this.items = data;
-                
+                // Pemetaan state ke root Paginator Object
+                this.items = result.data || [];
+
                 this.pagination = {
-                    current_page: meta.current_page,
-                    last_page: meta.last_page,
-                    next_page_url: meta.next_page_url,
-                    prev_page_url: meta.prev_page_url,
-                    from: meta.from,
-                    to: meta.to,
-                    total: meta.total
+                    current_page: result.current_page || 1,
+                    last_page: result.last_page || 1,
+                    next_page_url: result.next_page_url,
+                    prev_page_url: result.prev_page_url,
+                    from: result.from || 0,
+                    to: result.to || 0,
+                    total: result.total || 0
                 };
             } catch (error) {
                 console.error(error);
@@ -202,12 +191,12 @@ export function manajemenPegawaiData() {
         async fetchMasterData() {
             try {
                 const headers = { Authorization: `Bearer ${getToken()}`, Accept: "application/json" };
-                
+
                 // Fetch paralel
                 const [resUnit, resJab, resRole] = await Promise.all([
                     fetch(`${MASTER_URL}/unit-kerja`, { headers }),
                     fetch(`${MASTER_URL}/jabatan`, { headers }),
-                    fetch(`${MASTER_URL}/roles`, { headers }) 
+                    fetch(`${MASTER_URL}/roles`, { headers })
                 ]);
 
                 const unitData = await resUnit.json();
@@ -215,8 +204,7 @@ export function manajemenPegawaiData() {
                 const roleData = await resRole.json();
 
                 this.unitKerjaList = unitData.data || unitData;
-                
-                // Jabatan: Pastikan bersih, logic is_taken nanti dibaca dari selectedBidangMeta
+
                 this.jabatanList = (jabData.data || jabData).map(j => ({
                     id: j.id,
                     nama_jabatan: j.nama_jabatan
@@ -231,23 +219,21 @@ export function manajemenPegawaiData() {
 
         async onUnitKerjaChange(unitId) {
             // Reset bidang list
-            this.bidangList = []; 
+            this.bidangList = [];
             if (!unitId) return;
 
             try {
-                // Endpoint ini sekarang mengembalikan data yang DIPERKAYA (level, parent, occupied)
                 const res = await fetch(`${MASTER_URL}/bidang?unit_kerja_id=${unitId}`, {
                     headers: { Authorization: `Bearer ${getToken()}`, Accept: "application/json" }
                 });
                 const json = await res.json();
-                // Simpan data lengkap ke state
-                this.bidangList = json.data || json; 
+                this.bidangList = json.data || json;
             } catch (e) { console.error("Gagal load bidang", e); }
         },
 
         async fetchAtasanList() {
             const { unit_kerja_id, bidang_id, jabatan_id } = this.form;
-            
+
             // Atasan butuh unit_kerja minimal, dan jabatan user (untuk tahu hierarki)
             if (!unit_kerja_id || !jabatan_id) {
                 this.atasanList = [];
@@ -256,16 +242,16 @@ export function manajemenPegawaiData() {
 
             this.isFetchingAtasan = true;
             try {
-                const params = new URLSearchParams({ 
-                    unit_kerja_id, 
-                    bidang_id: bidang_id || '', // Bisa null untuk Kaban/Sekban
+                const params = new URLSearchParams({
+                    unit_kerja_id,
+                    bidang_id: bidang_id || '',
                     jabatan_id: jabatan_id
                 });
-                
+
                 const res = await fetch(`${MASTER_URL}/pegawai/calon-atasan?${params}`, {
                     headers: { Authorization: `Bearer ${getToken()}`, Accept: "application/json" }
                 });
-                
+
                 const json = await res.json();
                 const candidates = json.data || json;
                 this.atasanList = candidates;
@@ -308,18 +294,18 @@ export function manajemenPegawaiData() {
 
         async openModalEdit(item) {
             this.editId = item.id;
-            
+
             // Populate basic form
             this.form = {
                 name: item.name,
                 nip: item.nip,
                 email: item.email,
                 username: item.username,
-                password: "", 
+                password: "",
                 unit_kerja_id: item.unit_kerja_id,
                 bidang_id: item.bidang_id,
                 jabatan_id: item.jabatan_id,
-                role: item.roles && item.roles.length > 0 ? item.roles[0].nama_role : (item.role || ""), // Pakai nama_role untuk string match
+                role: item.roles && item.roles.length > 0 ? item.roles[0].nama_role : (item.role || ""),
                 atasan_id: item.atasan_id,
                 is_active: item.is_active
             };
@@ -328,20 +314,20 @@ export function manajemenPegawaiData() {
             if (this.form.unit_kerja_id) {
                 // Tunggu load bidang selesai dulu
                 await this.onUnitKerjaChange(this.form.unit_kerja_id);
-                
+
                 // Set metadata bidang terpilih (untuk validasi jabatan)
                 if (this.form.bidang_id) {
                     const meta = this.bidangList.find(b => b.id == this.form.bidang_id);
                     this.selectedBidangMeta = meta || null;
                 }
-                
+
                 // Fetch atasan list
                 await this.fetchAtasanList();
             }
 
             // Restore atasan_id (karena fetchAtasanList mungkin meresetnya)
-            if(item.atasan_id) {
-                 this.form.atasan_id = item.atasan_id;
+            if (item.atasan_id) {
+                this.form.atasan_id = item.atasan_id;
             }
 
             this.openEdit = true;
@@ -351,13 +337,6 @@ export function manajemenPegawaiData() {
             const isEdit = this.openEdit;
             const url = isEdit ? `${BASE_URL}/${this.editId}` : BASE_URL;
             const method = isEdit ? "PUT" : "POST";
-
-            // Validasi nama role sebelum kirim (karena backend butuh 'nama_role')
-            if (this.form.role && !this.roleList.some(r => r.nama_role === this.form.role)) {
-                // Fallback: jika role yang diinput tidak ada di list (misal salah ketik manual), warning
-                 // Swal.fire("Warning", "Role tidak valid", "warning"); 
-                 // Tapi karena dropdown, harusnya aman.
-            }
 
             try {
                 const response = await fetch(url, {
@@ -382,7 +361,7 @@ export function manajemenPegawaiData() {
                 }
 
                 Swal.fire("Berhasil", result.message, "success");
-                
+
                 if (isEdit) this.openEdit = false;
                 else this.openAdd = false;
 
@@ -419,7 +398,13 @@ export function manajemenPegawaiData() {
                     if (!response.ok) throw new Error("Gagal menghapus data");
 
                     Swal.fire("Terhapus!", "Data pegawai berhasil dihapus.", "success");
-                    this.fetchData(this.pagination.current_page);
+
+                    // Verifikasi halaman jika data habis di halaman saat ini
+                    const newPage = (this.items.length === 1 && this.pagination.current_page > 1)
+                        ? this.pagination.current_page - 1
+                        : this.pagination.current_page;
+
+                    this.fetchData(newPage);
                 } catch (error) {
                     Swal.fire("Error", error.message, "error");
                 }
@@ -431,7 +416,6 @@ export function manajemenPegawaiData() {
             this.openUpload = val;
             if (!val) {
                 this.fileUpload = null;
-                // Reset value input file html jika ada
                 const input = document.getElementById('file_import');
                 if (input) input.value = '';
             }
@@ -449,8 +433,7 @@ export function manajemenPegawaiData() {
 
             this.isImporting = true;
             const formData = new FormData();
-            
-            // [CRITICAL] Key harus 'csv_file' sesuai validasi controller
+
             formData.append('csv_file', this.fileUpload);
 
             try {
@@ -459,16 +442,13 @@ export function manajemenPegawaiData() {
                     headers: {
                         "Authorization": `Bearer ${getToken()}`,
                         "X-Requested-With": "XMLHttpRequest"
-                        // Jangan set Content-Type header secara manual untuk FormData!
                     },
                     body: formData
                 });
 
                 const result = await response.json();
 
-                // -----------------------------------------------------------
                 // SKENARIO 1: SUKSES SEMPURNA (HTTP 200)
-                // -----------------------------------------------------------
                 if (response.ok) {
                     Swal.fire({
                         title: "Import Berhasil",
@@ -477,51 +457,43 @@ export function manajemenPegawaiData() {
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    
+
                     this.toggleUpload(false);
                     this.fetchData(1);
                     return;
                 }
 
-                // -----------------------------------------------------------
                 // SKENARIO 2: PARTIAL SUCCESS / WARNING (HTTP 422)
-                // Controller mengirim status 422 + array 'errors' di dalam 'data'
-                // -----------------------------------------------------------
                 if (response.status === 422 && result.data && result.data.errors) {
                     const errorList = result.data.errors;
-                    
-                    // Format error array menjadi list HTML yang scrollable
+
                     let errorHtml = '<div class="text-left text-sm mt-3 p-3 bg-red-50 border border-red-200 rounded-lg max-h-60 overflow-y-auto">';
                     errorHtml += '<p class="font-bold text-red-700 mb-2">Daftar Baris Gagal:</p>';
                     errorHtml += '<ul class="list-disc pl-4 text-red-600 space-y-1">';
-                    
+
                     errorList.forEach(err => {
                         errorHtml += `<li>${err}</li>`;
                     });
-                    
+
                     errorHtml += '</ul></div>';
 
                     Swal.fire({
                         title: "Import Selesai dengan Catatan",
                         html: `${result.message} <br/> ${errorHtml}`,
                         icon: "warning",
-                        width: '600px' // Lebarkan modal agar list terbaca
+                        width: '600px'
                     });
-                    
-                    // Tetap refresh data karena sebagian data mungkin berhasil masuk
+
                     this.toggleUpload(false);
                     this.fetchData(1);
                     return;
                 }
 
-                // -----------------------------------------------------------
-                // SKENARIO 3: CRITICAL ERROR / VALIDASI FILE (HTTP 500 / 400)
-                // -----------------------------------------------------------
+                // SKENARIO 3: CRITICAL ERROR
                 let errorMessage = result.message || "Terjadi kesalahan saat upload.";
-                
-                // Jika error validasi Laravel biasa (misal file type wrong)
+
                 if (response.status === 422 && result.errors) {
-                     errorMessage = Object.values(result.errors).flat().join('\n');
+                    errorMessage = Object.values(result.errors).flat().join('\n');
                 }
 
                 throw new Error(errorMessage);

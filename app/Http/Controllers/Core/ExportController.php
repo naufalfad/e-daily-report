@@ -27,7 +27,8 @@ class ExportController extends Controller
         ]);
 
         // 2. Query Dasar
-        $query = LaporanHarian::with(['user', 'skp'])
+        // [PERBAIKAN] Eager load diganti menjadi 'rencana', bukan 'skp'
+        $query = LaporanHarian::with(['user', 'rencana'])
             ->whereBetween('tanggal_laporan', [$request->start_date, $request->end_date]);
 
         // 3. Filter Hak Akses (Security)
@@ -73,6 +74,9 @@ class ExportController extends Controller
             'startDate' => $request->start_date,
             'endDate' => $request->end_date
         ]);
+
+        // Opsional: Atur orientasi menjadi landscape karena kolom bertambah
+        $pdf->setPaper('a4', 'landscape');
 
         // Download PDF
         return $pdf->download('laporan_kinerja.pdf');

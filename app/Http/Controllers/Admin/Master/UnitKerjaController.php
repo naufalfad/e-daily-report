@@ -9,11 +9,11 @@ use Illuminate\Http\Request;
 class UnitKerjaController extends Controller
 {
     /**
-     * Menampilkan halaman daftar Unit Kerja dengan Pagination & Search.
+     * Menampilkan halaman daftar Unit Kerja dengan Server-Side Pagination & Search.
      */
     public function index(Request $request)
     {
-        // Jika request via AJAX (fetch JS), kirim JSON Paginasi
+        // Jika request via AJAX (API Fetching dari JS), kirim JSON Meta-Object
         if ($request->ajax()) {
             
             // 1. Inisialisasi Query & Eager Loading Count (untuk performa)
@@ -21,24 +21,22 @@ class UnitKerjaController extends Controller
                 ->withCount(['bidang', 'jabatan', 'users']);
 
             // 2. Implementasi Logic Pencarian (Server-side Search)
-            // Ini krusial agar pagination tidak reset atau salah data saat mencari
             if ($request->has('search') && !empty($request->input('search'))) {
                 $search = $request->input('search');
+                // Menggunakan ilike untuk kompatibilitas PostgreSQL (case-insensitive)
                 $query->where('nama_unit', 'ilike', "%{$search}%"); 
-                // Catatan: Gunakan 'ilike' untuk PostgreSQL (case-insensitive), 
-                // atau 'like' untuk MySQL.
             }
 
-            // 3. Sorting & Pagination
-            // Ambil input 'per_page' dari client, default 10 jika tidak ada
-            $perPage = $request->input('per_page', 10);
+            // 3. Sorting & Pagination (Standardisasi Kontrak API)
+            // Menangkap parameter limit, sort, dan dir dari Front-End
+            $perPage = $request->input('limit', 10);
+            $sortBy = $request->input('sort', 'created_at');
+            $sortDir = $request->input('dir', 'desc');
             
-            $data = $query->latest()
-                          ->paginate($perPage);
+            // Eksekusi Paginasi di level Database Engine
+            $paginator = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
 
-            // Laravel paginate() otomatis mengembalikan struktur JSON lengkap:
-            // { current_page, data: [...], first_page_url, ... total, etc }
-            return response()->json($data);
+            return response()->json($paginator);
         }
 
         // Jika request biasa (browser load), tampilkan kerangka HTML
@@ -54,7 +52,7 @@ class UnitKerjaController extends Controller
             'nama_unit' => 'required|string|max:255|unique:unit_kerja,nama_unit',
         ], [
             'nama_unit.required' => 'Nama Unit Kerja wajib diisi.',
-            'nama_unit.unique' => 'Nama Unit Kerja sudah ada.',
+            'nama_unit.unique'   => 'Nama Unit Kerja sudah ada.',
         ]);
 
         UnitKerja::create([
@@ -87,12 +85,13 @@ class UnitKerjaController extends Controller
      */
     public function destroy($id)
     {
+        // Proteksi Logika: Verifikasi relasi sebelum eksekusi penghapusan
         $unit = UnitKerja::withCount(['bidang', 'jabatan', 'users'])->findOrFail($id);
 
-        // [LOGIC STRICT] Cek apakah ada anak?
+        // [LOGIC STRICT] Cek apakah ada anak (Sub-Entitas)?
         if ($unit->bidang_count > 0 || $unit->jabatan_count > 0 || $unit->users_count > 0) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gagal hapus! Unit ini masih memiliki Bidang, Jabatan, atau Pegawai terkait.'
             ], 422);
         }

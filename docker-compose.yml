@@ -25,7 +25,7 @@ services:
       - ./docker/nginx/edaily-dki.conf:/etc/nginx/conf.d/edaily-dki.conf
       - ./docker/nginx/rekas-demo.conf:/etc/nginx/conf.d/rekas-demo.conf
       - ./docker/nginx/arsip-demo.conf:/etc/nginx/conf.d/arsip-demo.conf
-      - ./docker/nginx/geomeet.conf:/etc/nginx/conf.d/geomeet.conf
+      - ./docker/nginx/litera-demo.conf:/etc/nginx/conf.d/litera-demo.conf
       - ./docker/nginx/lintas-demo.conf:/etc/nginx/conf.d/lintas-demo.conf
     depends_on:
       - app

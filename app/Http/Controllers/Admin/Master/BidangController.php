@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 class BidangController extends Controller
 {
     /**
-     * Tampilkan halaman & Data JSON dengan Pagination & Search
+     * Tampilkan halaman & Data JSON dengan Server-Side Pagination & Search
      */
     public function index(Request $request)
     {
@@ -41,14 +41,18 @@ class BidangController extends Controller
                 });
             }
 
-            // 3. Sorting & Pagination
-            $perPage = $request->input('per_page', 10);
-            $data = $query->latest()->paginate($perPage);
+            // 3. Sorting & Pagination (Didelegasikan ke Database Engine)
+            // Menangkap parameter limit, sort, dan dir dari FE (konsisten dengan controller sebelumnya)
+            $perPage = $request->input('limit', 10);
+            $sortBy = $request->input('sort', 'created_at');
+            $sortDir = $request->input('dir', 'desc');
 
-            return response()->json($data);
+            $paginator = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
+
+            return response()->json($paginator);
         }
 
-        // 4. Kirim Data Statis untuk Dropdown Unit Kerja
+        // 4. Kirim Data Statis untuk Dropdown Unit Kerja saat render HTML awal
         $unitKerjas = UnitKerja::orderBy('nama_unit', 'asc')->get();
 
         return view('admin.master.bidang.index', compact('unitKerjas'));

@@ -2,27 +2,44 @@ import { showToast } from '../../../global/notification';
 import Swal from 'sweetalert2';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // === CONFIGURATION ===
+    // ================================================================
+    // 1. CONFIGURATION & SELECTORS
+    // ================================================================
     const API_URL = '/api/admin/master/unit-kerja';
+
+    // Elements Table & UI
     const TABLE_BODY = document.getElementById('table-body');
     const SEARCH_INPUT = document.getElementById('searchInput');
     const LOADING_STATE = document.getElementById('loading-state');
     const EMPTY_STATE = document.getElementById('empty-state');
+
+    // Elements Pagination
     const PAGINATION_INFO = document.getElementById('pagination-info');
     const PAGINATION_NUMBERS = document.getElementById('pagination-numbers');
     const BTN_PREV = document.getElementById('prev-page');
     const BTN_NEXT = document.getElementById('next-page');
 
+    // Elements Form & Modal
+    const FORM_MODAL = document.getElementById('formUnit');
+
+    // State Manager
     let currentPage = 1;
     let searchTimeout = null;
+    let currentLimit = 10;
+    let currentSort = 'created_at';
+    let currentDir = 'desc';
+    let currentDataLength = 0; // Untuk mengkalkulasi navigasi pasca-hapus
 
-    // === 1. INITIALIZATION & LISTENERS ===
+    // ================================================================
+    // 2. INITIALIZATION & EVENT LISTENERS
+    // ================================================================
+
     fetchData(1);
 
     if (SEARCH_INPUT) {
         SEARCH_INPUT.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => fetchData(1), 500); // Debounce
+            searchTimeout = setTimeout(() => fetchData(1), 500); // Debounce optimal 500ms
         });
     }
 
@@ -41,19 +58,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (BTN_PREV) BTN_PREV.addEventListener('click', () => { if (currentPage > 1) fetchData(currentPage - 1); });
     if (BTN_NEXT) BTN_NEXT.addEventListener('click', () => { if (!BTN_NEXT.disabled) fetchData(currentPage + 1); });
 
-    // === 2. CORE FUNCTIONS ===
+    // PENTING: Listener untuk form Add / Edit
+    if (FORM_MODAL) {
+        FORM_MODAL.addEventListener('submit', handleFormSubmit);
+    }
+
+    // ================================================================
+    // 3. CORE FUNCTIONS (CRUD & LOGIC)
+    // ================================================================
 
     async function fetchData(page = 1) {
         try {
             showLoading(true);
-            const search = SEARCH_INPUT ? SEARCH_INPUT.value : '';
-            
+
+            // Standarisasi parameter kontrak API (Sesuai dengan pembaruan Back-End Paginator)
             const params = new URLSearchParams({
                 page: page,
-                search: search,
-                per_page: 10,
-                t: new Date().getTime()
+                limit: currentLimit,
+                sort: currentSort,
+                dir: currentDir,
+                t: new Date().getTime() // Anti-cache peramban agresif
             });
+
+            const search = SEARCH_INPUT ? SEARCH_INPUT.value : '';
+            if (search) params.append('search', search);
 
             const response = await fetch(`${API_URL}?${params.toString()}`, {
                 headers: {
@@ -67,10 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Gagal mengambil data');
 
             const result = await response.json();
-            
-            // Laravel Pagination structure
+
+            // Pemetaan data root
             const rows = result.data || [];
-            currentPage = result.current_page;
+            currentPage = result.current_page || 1;
+            currentDataLength = rows.length;
 
             renderTable(rows, result.from);
             renderPagination(result);
@@ -95,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         data.forEach((item, index) => {
             const rowNum = (fromIndex || 1) + index;
-            
+
             // Render Kolom Khusus Unit Kerja (Struktur & Personil)
             const html = `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
@@ -118,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex justify-center gap-2">
-                            <button onclick='window.openModal("edit", ${JSON.stringify(item)})' 
+                            <button onclick='window.openModal("edit", ${JSON.stringify(item).replace(/'/g, "&#39;")})' 
                                 class="p-2 rounded-lg border border-transparent hover:border-amber-200 hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition-all" title="Edit">
                                 <i class="fas fa-pen-to-square"></i>
                             </button>
@@ -134,14 +163,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalContent = btn.innerHTML;
+
+        // Disable button to prevent double submission
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+        const formData = new FormData(e.target);
+        const id = document.getElementById('unit_id').value;
+        const method = document.getElementById('method').value;
+        let url = API_URL;
+
+        if (method === 'PUT') {
+            url += `/${id}`;
+            formData.append('_method', 'PUT'); // Metode spoofing Laravel untuk Multipart/FormData
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST', // Selalu POST untuk FormData
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 422) {
+                    const errorMsg = Object.values(result.errors).flat().join('\n');
+                    throw new Error(errorMsg);
+                }
+                throw new Error(result.message || 'Terjadi kesalahan internal peladen.');
+            }
+
+            showToast(result.message, 'success');
+            window.closeModal();
+            fetchData(currentPage);
+
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menyimpan',
+                text: error.message,
+                confirmButtonColor: '#ef4444'
+            });
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
+    }
+
     function renderPagination(meta) {
         if (!PAGINATION_INFO || !PAGINATION_NUMBERS) return;
 
-        PAGINATION_INFO.textContent = `Menampilkan ${meta.from || 0}-${meta.to || 0} dari ${meta.total} data`;
+        PAGINATION_INFO.textContent = `Menampilkan ${meta.from || 0}-${meta.to || 0} dari ${meta.total || 0} data`;
 
         BTN_PREV.disabled = !meta.prev_page_url;
         BTN_PREV.classList.toggle('opacity-30', !meta.prev_page_url);
-        
+
         BTN_NEXT.disabled = !meta.next_page_url;
         BTN_NEXT.classList.toggle('opacity-30', !meta.next_page_url);
 
@@ -149,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         PAGINATION_NUMBERS.innerHTML = '';
         const current = meta.current_page;
         const last = meta.last_page;
-        
+
         const createBtn = (p, active) => `
             <button data-page="${p}" class="js-page-link w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${active ? 'bg-[#1C7C54] text-white shadow-sm' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}">
                 ${p}
@@ -161,14 +247,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             PAGINATION_NUMBERS.innerHTML += createBtn(1, 1 === current);
             if (current > 4) PAGINATION_NUMBERS.innerHTML += dots;
-            
+
             let start = Math.max(2, current - 1);
             let end = Math.min(last - 1, current + 1);
             if (current <= 4) end = 5;
             if (current >= last - 3) start = last - 4;
 
             for (let i = start; i <= end; i++) PAGINATION_NUMBERS.innerHTML += createBtn(i, i === current);
-            
+
             if (current < last - 3) PAGINATION_NUMBERS.innerHTML += dots;
             PAGINATION_NUMBERS.innerHTML += createBtn(last, last === current);
         }
@@ -184,13 +270,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === 3. GLOBAL EXPORTS (Untuk akses dari onclick HTML) ===
-    
-    // Modal Logic
-    window.openModal = function(type, data = null) {
+    // ================================================================
+    // 4. GLOBAL EXPORTS (Untuk akses langsung dari onclick DOM HTML)
+    // ================================================================
+
+    window.openModal = function (type, data = null) {
         const form = document.getElementById('formUnit');
-        form.reset();
-        
+        if (form) form.reset();
+
         if (type === 'add') {
             document.getElementById('modalTitle').textContent = 'Tambah Unit Kerja Baru';
             document.getElementById('unit_id').value = '';
@@ -209,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    window.closeModal = function() {
+    window.closeModal = function () {
         document.getElementById('modalBackdrop').classList.add('opacity-0');
         document.getElementById('modalPanel').classList.add('opacity-0', 'scale-95');
         setTimeout(() => {
@@ -217,11 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 200);
     };
 
-    // Delete Logic
-    window.deleteData = function(id) {
+    window.deleteData = function (id) {
         Swal.fire({
             title: 'Hapus Unit ini?',
-            text: "Data tidak bisa dikembalikan. Pastikan unit kosong.",
+            text: "Data tidak bisa dikembalikan. Pastikan tidak ada bidang atau jabatan di dalam unit ini.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -235,18 +321,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
                         'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .then(async res => {
-                    const json = await res.json();
-                    if (!res.ok) throw new Error(json.message);
-                    Swal.fire('Terhapus!', json.message, 'success');
-                    fetchData(currentPage);
-                })
-                .catch(err => {
-                    Swal.fire('Gagal!', err.message, 'error');
-                });
+                    .then(async res => {
+                        const json = await res.json();
+                        if (!res.ok) throw new Error(json.message || 'Gagal menghapus data.');
+
+                        Swal.fire('Terhapus!', json.message, 'success');
+
+                        // Logika Smart Pagination: Mundur satu halaman jika menghapus item terakhir di halaman tersebut
+                        const newPage = (currentDataLength === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
+                        fetchData(newPage);
+                    })
+                    .catch(err => {
+                        Swal.fire('Gagal!', err.message, 'error');
+                    });
             }
         });
     };

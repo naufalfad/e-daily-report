@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 class JabatanController extends Controller
 {
     /**
-     * Tampilkan halaman & Data JSON dengan Pagination
+     * Tampilkan halaman & Data JSON dengan Server-Side Pagination
      */
     public function index(Request $request)
     {
-        // 1. Jika request via AJAX (fetch JS), kirim JSON Paginasi
+        // 1. Jika request via AJAX (API Fetching dari JS), kirim JSON Meta-Object
         if ($request->ajax()) {
             
             // Inisialisasi Query + Eager Load 'unitKerja' + Count 'users'
+            // Eager load mencegah N+1 query problem saat paginasi di-render
             $query = Jabatan::with('unitKerja')
                 ->withCount('users');
 
@@ -34,13 +35,16 @@ class JabatanController extends Controller
                 });
             }
 
-            // 3. Sorting & Pagination
-            $perPage = $request->input('per_page', 10);
+            // 3. Sorting & Pagination (Standardisasi Kontrak API)
+            // Menangkap parameter limit, sort, dan dir dari FE
+            $perPage = $request->input('limit', 10);
+            $sortBy = $request->input('sort', 'created_at');
+            $sortDir = $request->input('dir', 'desc');
             
-            $data = $query->latest()
-                          ->paginate($perPage);
+            // Eksekusi Paginasi di level Database Engine
+            $paginator = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
 
-            return response()->json($data);
+            return response()->json($paginator);
         }
 
         // 4. Jika request browser biasa, kirim Data Dropdown untuk Modal
@@ -96,6 +100,7 @@ class JabatanController extends Controller
      */
     public function destroy($id)
     {
+        // Proteksi logika: Validasi sebelum penghapusan data master
         $jabatan = Jabatan::withCount('users')->findOrFail($id);
 
         // Cek apakah ada pegawai yang sedang menjabat?

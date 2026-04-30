@@ -14,17 +14,17 @@ class UserAccountController extends Controller
 {
     /**
      * [IT DOMAIN] List Akun Pengguna
-     * Menampilkan data akun dengan fitur Pagination, Search, dan Filter Role.
+     * Menampilkan data akun dengan fitur Server-Side Pagination, Search, dan Filter Role.
      */
     public function index(Request $request)
     {
-        // 1. Deteksi Request AJAX (Fetch Data Table)
+        // 1. Deteksi Request AJAX (API Fetching)
         if ($request->ajax()) {
             
-            // Query Optimization: Eager Load Roles & Unit Kerja (Select fields seperlunya)
+            // Eager Load Roles & Unit Kerja (Optimasi Query & Mencegah N+1)
             $query = User::with(['roles', 'unitKerja:id,nama_unit']);
 
-            // Filter Search (Username / Nama / NIP)
+            // Filter Search (Berdasarkan Username, Nama, atau NIP)
             if ($request->filled('search')) {
                 $search = $request->input('search');
                 $query->where(function($q) use ($search) {
@@ -34,28 +34,30 @@ class UserAccountController extends Controller
                 });
             }
 
-            // Filter Role (Dropdown)
+            // Filter Relasi Role (Mengecek ke tabel Many-to-Many)
             if ($request->filled('role_id')) {
                 $query->whereHas('roles', function($q) use ($request) {
                     $q->where('id', $request->input('role_id'));
                 });
             }
 
-            // Filter Status (Optional: Active/Non-active)
+            // Filter Status Boolean (Active/Suspend)
             if ($request->filled('status')) {
                 $isActive = $request->input('status') === 'active';
                 $query->where('is_active', $isActive);
             }
 
-            // Pagination
-            $perPage = $request->input('per_page', 10);
-            $users = $query->latest()->paginate($perPage);
+            // Integrasi Paginator: Mengambil param dari FE dan merender metadata
+            $perPage = $request->input('limit', 10);
+            $sortBy = $request->input('sort', 'created_at');
+            $sortDir = $request->input('dir', 'desc');
 
-            return response()->json($users);
+            $paginator = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
+
+            return response()->json($paginator);
         }
 
-        // 2. Return View (Browser Load)
-        // Supply data Role untuk dropdown di modal dan filter
+        // 2. Mengirim Referensi Data ke Front-End (DOM Initial Load)
         $roles = Role::orderBy('nama_role', 'asc')->get();
         
         return view('admin.akun-pengguna', compact('roles'));
@@ -63,18 +65,14 @@ class UserAccountController extends Controller
 
     /**
      * [IT DOMAIN] Update Credentials (Username & Password)
-     * Digunakan untuk: Reset Password atau Ganti Username.
      * Endpoint: PATCH /api/admin/akun/{id}/credentials
      */
     public function updateCredentials(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        // Validasi Ketat
         $validator = Validator::make($request->all(), [
-            // Username wajib unik, kecuali milik user itu sendiri
             'username' => 'required|string|max:50|alpha_dash|unique:users,username,'.$id,
-            // Password opsional (kalau kosong berarti tidak diubah)
             'password' => 'nullable|string|min:6|confirmed', 
         ]);
 
@@ -85,10 +83,8 @@ class UserAccountController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update Username
             $user->username = $request->username;
 
-            // Update Password (Hanya jika diisi)
             if ($request->filled('password')) {
                 $user->password = Hash::make($request->password);
             }
@@ -110,7 +106,6 @@ class UserAccountController extends Controller
 
     /**
      * [IT DOMAIN] Update Role (Hak Akses)
-     * Digunakan untuk: Promosi akun menjadi Admin/Penilai.
      * Endpoint: PATCH /api/admin/akun/{id}/role
      */
     public function updateRole(Request $request, $id)
@@ -125,14 +120,13 @@ class UserAccountController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Mencegah Admin menghapus akses Admin-nya sendiri (Safety Check)
+        // Proteksi Diri: Mencegah Admin yang login menghilangkan role admin-nya sendiri
         if ($user->id === auth()->id() && $user->hasRole('Admin')) {
-             // Logic tambahan: Admin boleh punya multi-role, tapi jangan sampai kehilangan akses admin.
-             // Untuk kesederhanaan, kita izinkan sync, asalkan role_id yang dikirim valid.
+            // Asumsi method hasRole() tersedia di Trait model User Anda
+             return response()->json(['message' => 'Tindakan Ditolak: Anda tidak dapat mengubah hak akses admin pada akun yang sedang Anda gunakan.'], 403);
         }
 
         try {
-            // Sync Role (Mengganti role lama dengan yang baru)
             $user->roles()->sync([$request->role_id]);
 
             return response()->json([
@@ -154,10 +148,9 @@ class UserAccountController extends Controller
         $user = User::findOrFail($id);
 
         if ($user->id == auth()->id()) {
-            return response()->json(['message' => 'Anda tidak bisa menonaktifkan akun sendiri!'], 403);
+            return response()->json(['message' => 'Tindakan Ditolak: Anda tidak dapat menangguhkan akun Anda sendiri!'], 403);
         }
 
-        // Validasi input status (1 = Active, 0 = Suspend)
         $validator = Validator::make($request->all(), [
             'is_active' => 'required|boolean',
         ]);
@@ -165,15 +158,13 @@ class UserAccountController extends Controller
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
         try {
-            // Kita gunakan forceFill untuk memastikan field diupdate meskipun tidak di $fillable (opsional)
-            // Tapi sebaiknya 'is_active' masuk fillable di Model User.
             $user->is_active = $request->is_active;
             $user->save();
 
             $statusText = $request->is_active ? 'diaktifkan' : 'dinonaktifkan (Suspend)';
 
             return response()->json([
-                'message' => "Akun berhasil {$statusText}."
+                'message' => "Status akun berhasil {$statusText}."
             ]);
 
         } catch (\Exception $e) {

@@ -1,0 +1,62 @@
+geocitra@geocitra:~/e-daily-report$ docker exec -it edaily-nginx curl -v http://202.10.45.157:3001/api/health
+*   Trying 202.10.45.157:3001...
+^Cgeocitra@geocitra:~/e-daily-report$
+# --- BLOK HTTP (Redirect ke HTTPS) ---
+server {
+    listen 80;
+    server_name keuanganku.geocitra.com;
+    server_tokens off;
+
+    # Endpoint untuk perpanjangan SSL Certbot
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Redirect otomatis semua traffic HTTP ke HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# --- BLOK HTTPS ---
+server {
+    listen 443 ssl;
+    server_name keuanganku.geocitra.com;
+    server_tokens off;
+
+    # Konfigurasi SSL (Certbot)
+    ssl_certificate /etc/letsencrypt/live/keuanganku.geocitra.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/keuanganku.geocitra.com/privkey.pem;
+
+    # Optimasi Keamanan SSL
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Sinkronisasi Body Limit (Samakan dengan NestJS 50MB)
+    client_max_body_size 50M;
+
+    # 1. Routing ke Front-End (Next.js - Port 8080)
+    location / {
+        proxy_pass http://202.10.45.157:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 2. Routing ke Back-End (NestJS - Port 3001)
+    # [FIXED] Tanpa Rewrite karena NestJS sudah menggunakan setGlobalPrefix('api')
+    location /api {
+        proxy_pass http://202.10.45.157:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Tambahan untuk handle timeout proses berat
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}

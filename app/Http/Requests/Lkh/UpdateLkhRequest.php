@@ -5,45 +5,28 @@ declare(strict_types=1);
 namespace App\Http\Requests\Lkh;
 
 use App\Enums\LocationProvider;
-use App\Models\LaporanHarian; // Added: Import Model LaporanHarian untuk akses Konstanta
+use App\Models\LaporanHarian; // Added: Import Model LaporanHarian
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\UploadedFile;
 use Closure;
 
-/**
- * Class StoreLkhRequest
- *
- * Bertindak sebagai Gatekeeper Validation Layer.
- * Mengimplementasikan prinsip Defensive Programming untuk mencegah 'Garbage In'.
- * Menangani logika validasi kondisional (Draft vs Submit) dan Custom File Validation.
- */
-class StoreLkhRequest extends FormRequest
+class UpdateLkhRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     * Penerapan: Security Layer (Authorization).
-     */
     public function authorize(): bool
     {
+        // Pastikan LKH yang akan diedit adalah milik user yang sedang login
+        // Logika ini bisa dikuatkan lagi di Controller (menggunakan Policy), 
+        // namun untuk lapisan FormRequest, otentikasi dasar sudah cukup.
         return Auth::check();
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     * Penerapan: Declarative Validation logic.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        // Deteksi apakah user ingin menyimpan Draft atau Submit Final
-        // Jika Draft, validasi dilonggarkan.
         $isSubmit = $this->input('status') !== 'draft';
 
         return [
-            // --- 1. CORE DATA VALIDATION ---
             'tanggal_laporan' => ['required', 'date', 'before_or_equal:today'],
             'waktu_mulai'     => ['required', 'date_format:H:i'],
             'waktu_selesai'   => ['required', 'date_format:H:i', 'after:jam_mulai'],
@@ -61,24 +44,18 @@ class StoreLkhRequest extends FormRequest
                 ])
             ],
 
-            // Relasi (Tupoksi / SKP)
             'tupoksi_id' => ['nullable', 'exists:tupoksi,id'],
             'skp_rencana_id' => ['nullable', 'exists:skp_rencana,id'],
             
-            // Output Kinerja (Wajib jika Submit)
             'output_hasil_kerja' => [$isSubmit ? 'required' : 'nullable', 'string', 'max:255'],
             'satuan'             => [$isSubmit ? 'required' : 'nullable', 'string', 'max:50'],
             'volume'             => [$isSubmit ? 'required' : 'nullable', 'numeric', 'min:0'],
 
-            // --- 2. GEOSPATIAL VALIDATION (STRICT & INTEGRITY CHECK) ---
-            
-            // Validasi Provider: Wajib dan harus salah satu dari Enum
             'location_provider' => [
                 'required', 
                 Rule::enum(LocationProvider::class)
             ],
 
-            // Latitude: Wajib jika Submit ATAU jika provider menyatakan GPS Device
             'latitude' => [
                 Rule::requiredIf(fn() => $isSubmit || $this->input('location_provider') === LocationProvider::GPS_DEVICE->value),
                 'nullable', 
@@ -86,7 +63,6 @@ class StoreLkhRequest extends FormRequest
                 'between:-90,90'
             ],
             
-            // Longitude: Idem
             'longitude' => [
                 Rule::requiredIf(fn() => $isSubmit || $this->input('location_provider') === LocationProvider::GPS_DEVICE->value),
                 'nullable', 
@@ -96,47 +72,35 @@ class StoreLkhRequest extends FormRequest
             
             'location_accuracy' => ['nullable', 'numeric', 'min:0'],
             'lokasi_teks'       => ['nullable', 'string', 'max:500'],
-            
-            // NEW FIELD: Hasil Reverse Geocoding dari Peta Fullscreen
             'address_auto'      => ['nullable', 'string', 'max:500'],
 
-            // --- 3. FILE VALIDATION (ROBUST) ---
-            // Menggunakan Custom Closure untuk menangani edge case MIME Type
-            'bukti' => ['nullable', 'array', 'max:5'], // Max 5 files
+            // Validasi file (Opsional saat update jika pengguna tidak memilih file baru)
+            'bukti' => ['nullable', 'array', 'max:5'], 
             'bukti.*' => [
                 function (string $attribute, mixed $value, Closure $fail) {
                     $this->validateEvidenceFile($attribute, $value, $fail);
                 },
             ],
+            
+            // Array ID file bukti lama yang akan dihapus
+            'delete_bukti' => ['nullable', 'array'],
+            'delete_bukti.*' => ['integer', 'exists:lkh_bukti,id'],
         ];
     }
 
-    /**
-     * Custom Validator Logic untuk File Bukti.
-     * Mengatasi masalah umum di mana browser kadang mengirim PDF sebagai 'application/octet-stream'.
-     *
-     * @param string $attribute
-     * @param mixed $value
-     * @param Closure $fail
-     */
     protected function validateEvidenceFile(string $attribute, mixed $value, Closure $fail): void
     {
-        // Defensive: Pastikan ini adalah object UploadedFile
         if (! $value instanceof UploadedFile) {
             $fail("Atribut {$attribute} harus berupa file yang valid.");
             return;
         }
 
-        // 1. Validasi Ukuran (Max 5MB)
         $maxSizeKb = 5120; 
         if ($value->getSize() > $maxSizeKb * 1024) {
             $fail("Ukuran file {$value->getClientOriginalName()} tidak boleh lebih dari 5MB.");
             return;
         }
 
-        // 2. Validasi Ekstensi (Whitelist Approach)
-        // Kita tidak bergantung 100% pada guessExtension() milik Laravel yang kadang strict pada mime headers.
-        // Kita cek ekstensi asli file user sebagai layer pertama (UX friendly), lalu mime type sebagai backup.
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
         $clientExtension = strtolower($value->getClientOriginalExtension());
 
@@ -145,53 +109,40 @@ class StoreLkhRequest extends FormRequest
             return;
         }
 
-        // 3. Validasi MIME Type (Security Layer)
-        // Mencegah user rename 'virus.exe' menjadi 'image.jpg'
-        // Namun kita izinkan octet-stream JIKA ekstensinya .pdf (kasus browser legacy/mobile tertentu)
         $validMimes = ['image/jpeg', 'image/png', 'application/pdf'];
         $clientMime = $value->getMimeType();
 
         if (! in_array($clientMime, $validMimes)) {
-            // Exception handling untuk PDF yang terdeteksi sebagai binary
             if ($clientExtension === 'pdf' && ($clientMime === 'application/octet-stream' || $clientMime === 'binary/octet-stream')) {
-                return; // Allow logic bypass
+                return;
             }
-            
             $fail("Tipe file {$value->getClientOriginalName()} tidak valid atau rusak.");
         }
     }
 
-    /**
-     * Kustomisasi pesan error agar lebih humanis (User Experience).
-     */
     public function attributes(): array
     {
         return [
             'tupoksi_id' => 'Referensi Tupoksi',
             'skp_rencana_id' => 'Target SKP',
-            'kategori_lokasi' => 'Kategori Lokasi', // Added Attribute Name
+            'kategori_lokasi' => 'Kategori Lokasi',
             'latitude' => 'Koordinat Lintang',
             'longitude' => 'Koordinat Bujur',
             'location_provider' => 'Sumber Lokasi',
             'output_hasil_kerja' => 'Output Kegiatan',
-            'bukti.*' => 'Lampiran Bukti',
+            'bukti.*' => 'Lampiran Bukti Baru',
             'address_auto' => 'Alamat Otomatis',
+            'delete_bukti.*' => 'ID Bukti Hapus',
         ];
     }
 
-    /**
-     * Persiapan data sebelum validasi.
-     * Membersihkan input yang mungkin null string atau format salah.
-     */
     protected function prepareForValidation(): void
     {
         $this->merge([
-            // Pastikan null string dikonversi jadi null beneran
             'location_accuracy' => $this->location_accuracy === 'null' || $this->location_accuracy === '' 
                 ? null 
                 : $this->location_accuracy,
             
-            // Default provider jika kosong (Defensive)
             'location_provider' => $this->location_provider ?? LocationProvider::MANUAL_PIN->value,
         ]);
     }

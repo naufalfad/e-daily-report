@@ -54,7 +54,8 @@ class SubmitLkhAction
 
         try {
             // A. Persiapkan Data Laporan
-            // UPDATED: 'address_auto' sudah ada di request->safe() karena sudah di whitelist di Request Validation
+            // UPDATED: 'kategori_lokasi' dan 'address_auto' otomatis terekstrak secara aman
+            // karena sudah di-whitelist di layer Request Validation (StoreLkhRequest).
             $data = $request->safe()->except(['bukti', 'latitude', 'longitude']);
             
             // Enrich data dengan logic bisnis
@@ -63,16 +64,12 @@ class SubmitLkhAction
             $data['is_luar_lokasi'] = $isLuarLokasi;
             
             // [FIX] Paksa status menjadi 'waiting_review' agar masuk ke list validasi atasan
-            // Kecuali jika user eksplisit minta 'draft' (jika nanti fitur draft diaktifkan di FE)
-            // Tapi sesuai diskusi sebelumnya, tombol kirim = waiting_review.
             if ($request->input('status') !== 'draft') {
                 $data['status'] = 'waiting_review';
             }
             
             // PostGIS Geometry Insertion using Raw SQL
             // ST_MakePoint(lng, lat): Urutan PostGIS adalah Longitude dulu, baru Latitude.
-            // ST_SetSRID(..., 4326): Mengatur koordinat sistem ke WGS 84 (Standar GPS).
-            // Validasi: Pastikan lat/lng bukan 0 jika providernya GPS (walaupun request validation sudah handle)
             if ($latitude != 0 && $longitude != 0) {
                 $data['lokasi'] = DB::raw("ST_SetSRID(ST_MakePoint({$longitude}, {$latitude}), 4326)");
             }
@@ -87,13 +84,10 @@ class SubmitLkhAction
             }
 
             // D. Trigger Notification (Side Effect)
-            // Kondisi ini akan bernilai TRUE jika status = waiting_review
             if ($lkh->status === 'waiting_review' && $lkh->atasan_id) {
-                // Menggunakan try-catch internal agar error notifikasi tidak membatalkan transaksi utama
                 try {
                     $this->notificationService->notifyAtasan($lkh);
                 } catch (Exception $e) {
-                    // Log error notifikasi, tapi biarkan proses submit berlanjut (Non-blocking)
                     Log::error("Gagal kirim notifikasi LKH ID {$lkh->id}: " . $e->getMessage());
                 }
             }
@@ -106,28 +100,20 @@ class SubmitLkhAction
         } catch (Exception $e) {
             // F. Rollback jika ada error fatal
             DB::rollBack();
-            
-            // Log error untuk debugging
             Log::error("Submit LKH Failed: " . $e->getMessage());
-
-            // Re-throw exception agar bisa ditangkap oleh Handler atau Controller untuk return response 500
             throw $e;
         }
     }
 
     /**
      * Menghitung jarak Haversine untuk menentukan apakah koordinat berada di luar radius kantor.
-     * Penerapan prinsip Information Expert (Action ini tahu cara menghitung).
      */
     private function checkIsLuarLokasi(float $latUser, float $lngUser): bool
     {
-        // Defensive: Ambil config dengan nilai default aman jika config hilang
-        // Koordinat Kantor Pemerintahan Mimika (contoh) atau default Jakarta
         $officeLat = (float) config('services.office.latitude', -6.175392);
         $officeLng = (float) config('services.office.longitude', 106.827153);
         $radiusAllowed = (int) config('services.office.radius', 100); // meter
 
-        // Jika koordinat user 0/null (fallback case), anggap luar lokasi
         if ($latUser === 0.0 || $lngUser === 0.0) {
             return true;
         }
@@ -149,21 +135,13 @@ class SubmitLkhAction
 
     /**
      * Menangani loop upload file bukti.
-     * Memisahkan logic file handling agar method execute tidak terlalu gemuk.
-     *
-     * @param array $files Array of UploadedFile
-     * @param LaporanHarian $lkh Parent Model
      */
     private function handleBuktiUpload(array $files, LaporanHarian $lkh): void
     {
         foreach ($files as $file) {
-            // Generate nama file unik & aman
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            
-            // Store file ke disk 'public' folder 'bukti_lkh'
             $path = $file->storeAs('bukti_lkh', $filename, 'public');
 
-            // Insert ke tabel lkh_bukti
             LkhBukti::create([
                 'laporan_id' => $lkh->id,
                 'file_path' => $path,

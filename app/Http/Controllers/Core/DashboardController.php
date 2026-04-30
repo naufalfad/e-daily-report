@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Core;
 
 use App\Http\Controllers\Controller;
 use App\Models\LaporanHarian;
-use App\Models\SkpRencana; // [PERBAIKAN] Ganti Skp jadi SkpRencana
+use App\Models\SkpRencana;
 use App\Models\User;
 use App\Models\Bidang;
 use Illuminate\Http\Request;
@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    /**
+     * Dashboard Staf (Personal Statistik)
+     */
     public function getStats(Request $request)
     {
         $user = Auth::user();
@@ -25,64 +28,47 @@ class DashboardController extends Controller
         // ==========================================
         // 1. SKORING CAPAIAN SKP (Target vs Realisasi)
         // ==========================================
-
-        // [LOGIKA BARU] Hitung total target dari tabel child (skp_target) via parent (skp_rencana)
-        // Kita asumsikan yang dihitung adalah target Kuantitas agar angkanya relevan
         $totalTargetTahunan = SkpRencana::where('user_id', $userId)
-            ->whereYear('periode_awal', $year) // [PERBAIKAN] periode_mulai -> periode_awal
+            ->whereYear('periode_awal', $year) 
             ->withSum(['targets' => function($q) {
                 $q->where('jenis_aspek', 'Kuantitas');
             }], 'target')
             ->get()
             ->sum('targets_sum_target');
 
-        // [LOGIKA BARU] Cek realisasi berdasarkan skp_rencana_id
         $realisasiSkp = LaporanHarian::where('user_id', $userId)
-            ->whereNotNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
+            ->whereNotNull('skp_rencana_id') 
             ->where('status', 'approved')
             ->whereYear('tanggal_laporan', $year)
-            ->sum('volume'); // Asumsi: 1 LKH = 1 Poin Realisasi (atau bisa sum('volume'))
+            ->sum('volume');
 
         $persenCapaian = $totalTargetTahunan > 0
             ? round(($realisasiSkp / $totalTargetTahunan) * 100, 1)
             : 0;
 
         // ==========================================
-        // 2. STATISTIK KUALITAS LKH SKP
+        // 2. STATISTIK KUALITAS LKH SKP & NON-SKP
         // ==========================================
-
         $queryLkhSkp = LaporanHarian::where('user_id', $userId)
-            ->whereNotNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
+            ->whereNotNull('skp_rencana_id')
+            ->whereYear('tanggal_laporan', $year);
+
+        $queryNonSkp = LaporanHarian::where('user_id', $userId)
+            ->whereNull('skp_rencana_id')
             ->whereYear('tanggal_laporan', $year);
 
         if ($request->has('month')) {
             $queryLkhSkp->whereMonth('tanggal_laporan', $month);
+            $queryNonSkp->whereMonth('tanggal_laporan', $month);
         }
 
         $totalLkhSkp = $queryLkhSkp->whereNot('status', 'draft')->count();
         $lkhSkpApproved = (clone $queryLkhSkp)->where('status', 'approved')->count();
         $lkhSkpRejected = (clone $queryLkhSkp)->where('status', 'rejected')->count();
 
-        // $persenSkpDiterima = $totalLkhSkp > 0 ? round(($lkhSkpApproved / $totalLkhSkp) * 100, 1) : 0;
-        // $persenSkpDitolak = $totalLkhSkp > 0 ? round(($lkhSkpRejected / $totalLkhSkp) * 100, 1) : 0;
-
-        // ==========================================
-        // 3. STATISTIK LKH NON-SKP
-        // ==========================================
-
-        $queryNonSkp = LaporanHarian::where('user_id', $userId)
-            ->whereNull('skp_rencana_id') // [PERBAIKAN] skp_id -> skp_rencana_id
-            ->whereYear('tanggal_laporan', $year);
-
-        if ($request->has('month')) {
-            $queryNonSkp->whereMonth('tanggal_laporan', $month);
-        }
-
         $totalNonSkp = $queryNonSkp->whereNot('status', 'draft')->count();
         $nonSkpApproved = (clone $queryNonSkp)->where('status', 'approved')->count();
         $nonSkpRejected = (clone $queryNonSkp)->where('status', 'rejected')->count();
-
-        // $persenNonSkpDiterima = $totalNonSkp > 0 ? round(($nonSkpApproved / $totalNonSkp) * 100, 1) : 0;
 
         $totalLaporan = $totalLkhSkp + $totalNonSkp;
         $totalDiterima = $lkhSkpApproved + $nonSkpApproved;
@@ -91,10 +77,31 @@ class DashboardController extends Controller
         $persenDitolak = $totalLaporan > 0 ? round(($totalDitolak / $totalLaporan) * 100, 1) : 0;
 
         // ==========================================
+        // [BARU] 3. ANALITIK KATEGORI LOKASI (Pie/Donut Chart)
+        // Agregasi di level Database berdasarkan Kategori Lokasi
+        // ==========================================
+        $distribusiLokasiQuery = LaporanHarian::select('kategori_lokasi', DB::raw('count(*) as total'))
+            ->where('user_id', $userId)
+            ->whereNot('status', 'draft')
+            ->whereYear('tanggal_laporan', $year);
+
+        if ($request->has('month')) {
+            $distribusiLokasiQuery->whereMonth('tanggal_laporan', $month);
+        }
+
+        $rawDistribusi = $distribusiLokasiQuery->groupBy('kategori_lokasi')->pluck('total', 'kategori_lokasi')->toArray();
+        
+        // Memastikan format konsisten (WFO, WFH, WFA, DL) selalu ada meski nilainya 0
+        $distribusiLokasi = [
+            'WFO' => $rawDistribusi[LaporanHarian::KAT_WFO] ?? 0,
+            'WFH' => $rawDistribusi[LaporanHarian::KAT_WFH] ?? 0,
+            'WFA' => $rawDistribusi[LaporanHarian::KAT_WFA] ?? 0,
+            'DL'  => $rawDistribusi[LaporanHarian::KAT_DL] ?? 0,
+        ];
+
+        // ==========================================
         // 4. GRAFIK AKTIVITAS & DRAFT
         // ==========================================
-
-        // [PERBAIKAN] Relasi 'skp' diganti 'rencana'
         $recentActivities = LaporanHarian::with('rencana')
             ->where('user_id', $userId)
             ->latest('updated_at')
@@ -142,6 +149,9 @@ class DashboardController extends Controller
                 'persen_ditolak' => $persenDitolak,
                 'total_non_skp' => $totalNonSkp,
             ],
+            // [BARU] Injeksi Data ke Response
+            'distribusi_lokasi' => $distribusiLokasi, 
+            
             'grafik_aktivitas' => $graphActivities,
             'aktivitas_terbaru' => $recentActivities,
             'draft_terbaru' => $recentDrafts,
@@ -149,14 +159,15 @@ class DashboardController extends Controller
         ]);
     }
 
+    /**
+     * Dashboard Pemimpin (Statistik Global Unit Kerja)
+     */
    public function getStatsKadis(Request $request)
     {
         $kadis = Auth::user();
         
-        // Filter Tahun (Default: Tahun Ini)
         $year = $request->input('year', date('Y'));
 
-        // Validasi: Pastikan Kadis punya Unit Kerja
         if (!$kadis->unit_kerja_id) {
             return response()->json([
                 'status' => 'error',
@@ -165,35 +176,22 @@ class DashboardController extends Controller
         }
 
         // =====================================================================
-        // QUERY UTAMA (EAGER LOADING)
-        // Mengambil Bidang -> User -> LaporanHarian (Approved & Tahun Ini)
+        // 1. QUERY GRAFIK KINERJA BULANAN PER BIDANG
         // =====================================================================
-        $dataBidang = \App\Models\Bidang::where('unit_kerja_id', $kadis->unit_kerja_id)
+        $dataBidang = Bidang::where('unit_kerja_id', $kadis->unit_kerja_id)
             ->with(['users.laporanHarian' => function($query) use ($year) {
-                // Filter di level database untuk optimasi memori
                 $query->where('status', 'approved')
                       ->whereYear('tanggal_laporan', $year)
-                      ->select('id', 'user_id', 'tanggal_laporan'); // Ambil kolom perlu saja
+                      ->select('id', 'user_id', 'tanggal_laporan'); 
             }])
             ->get();
 
-        // =====================================================================
-        // DATA PROCESSING (MAPPING KE FORMAT GRAFIK)
-        // Output: Array of Objects per Bidang dengan data bulanan [Jan-Des]
-        // =====================================================================
         $grafikKinerja = $dataBidang->map(function($bidang) {
-            // Inisialisasi array 12 bulan dengan nilai 0
-            // Index 0 = Januari, 11 = Desember
             $monthlyStats = array_fill(0, 12, 0);
 
-            // Loop Pegawai di Bidang tersebut
             foreach ($bidang->users as $pegawai) {
-                // Loop LKH Pegawai yang sudah di-filter (Approved & Tahun ini)
                 foreach ($pegawai->laporanHarian as $lkh) {
-                    // Ambil bulan (1-12) dari tanggal_laporan
-                    // Karena array mulai dari 0, maka dikurang 1
                     $bulanIndex = (int) $lkh->tanggal_laporan->format('n') - 1;
-                    
                     if (isset($monthlyStats[$bulanIndex])) {
                         $monthlyStats[$bulanIndex]++;
                     }
@@ -203,14 +201,33 @@ class DashboardController extends Controller
             return [
                 'id_bidang' => $bidang->id,
                 'nama_bidang' => $bidang->nama_bidang,
-                // Kirim array angka saja [10, 20, 5, ...]
                 'data_bulanan' => array_values($monthlyStats) 
             ];
         });
 
         // =====================================================================
+        // [BARU] 2. QUERY DISTRIBUSI LOKASI GLOBAL (Level Unit Kerja)
+        // Analitik untuk melihat perilaku kerja satu dinas penuh
+        // =====================================================================
+        $distribusiLokasiQuery = DB::table('laporan_harian')
+            ->join('users', 'laporan_harian.user_id', '=', 'users.id')
+            ->select('laporan_harian.kategori_lokasi', DB::raw('count(laporan_harian.id) as total'))
+            ->where('users.unit_kerja_id', $kadis->unit_kerja_id)
+            ->where('laporan_harian.status', '!=', 'draft')
+            ->whereYear('laporan_harian.tanggal_laporan', $year)
+            ->groupBy('laporan_harian.kategori_lokasi')
+            ->pluck('total', 'kategori_lokasi')
+            ->toArray();
+
+        $distribusiLokasiGlobal = [
+            'WFO' => $distribusiLokasiQuery[LaporanHarian::KAT_WFO] ?? 0,
+            'WFH' => $distribusiLokasiQuery[LaporanHarian::KAT_WFH] ?? 0,
+            'WFA' => $distribusiLokasiQuery[LaporanHarian::KAT_WFA] ?? 0,
+            'DL'  => $distribusiLokasiQuery[LaporanHarian::KAT_DL] ?? 0,
+        ];
+
+        // =====================================================================
         // RESPONSE JSON
-        // Bersih, Ringan, dan Siap Konsumsi Frontend
         // =====================================================================
         return response()->json([
             'user_info' => [
@@ -218,11 +235,12 @@ class DashboardController extends Controller
                 'nip' => $kadis->nip,
                 'jabatan' => $kadis->jabatan->nama_jabatan ?? 'Kepala Dinas',
                 'unit_kerja' => $kadis->unitKerja->nama_unit ?? '-',
-                'foto' => $kadis->foto_profil_url, // Menggunakan Accessor di Model User
+                'foto' => $kadis->foto_profil_url, 
                 'alamat' => $kadis->alamat ?? '-',
             ],
             'periode_tahun' => (int) $year,
             'grafik_data' => $grafikKinerja,
+            'distribusi_lokasi_global' => $distribusiLokasiGlobal, // [BARU] Disuntikkan ke response Kadis
         ]);
    }
 }

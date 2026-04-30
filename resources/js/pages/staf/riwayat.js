@@ -51,8 +51,7 @@ export function riwayatDataStaf(role) {
                 if (result.isConfirmed) {
                     let url = `/riwayat/export-pdf?role=${this.role}&mode=mine`;
 
-                    if (this.filter.from)
-                        url += `&from_date=${this.filter.from}`;
+                    if (this.filter.from) url += `&from_date=${this.filter.from}`;
                     if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
                     window.open(url, "_blank");
@@ -81,9 +80,7 @@ export function riwayatDataStaf(role) {
         getLokasi(item) {
             return (
                 item.lokasi_manual_text ||
-                (item.is_luar_lokasi
-                    ? "Luar Kantor (GPS)"
-                    : "Dalam Kantor (GPS)")
+                (item.is_luar_lokasi ? "Luar Kantor (GPS)" : "Dalam Kantor (GPS)")
             );
         },
 
@@ -134,6 +131,16 @@ export function riwayatDataStaf(role) {
 
         statusBadgeHtml(status) {
             return `<span class="${this.statusBadgeClass(status)}">${this.statusText(status)}</span>`;
+        },
+
+        getFileType(url) {
+            if (!url) return "other";
+            const ext = url.split(".").pop().toLowerCase();
+
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
+            if (ext === "pdf") return "pdf";
+            if (["mp4", "mov", "webm"].includes(ext)) return "video";
+            return "other";
         },
 
         // ===============================
@@ -191,7 +198,19 @@ export function riwayatDataStaf(role) {
 
         viewBukti(buktiArray) {
             if (buktiArray && buktiArray.length > 0) {
-                this.daftarBukti = buktiArray;
+                // Ensure format matches expected array structure
+                let arr = Array.isArray(buktiArray) ? buktiArray :
+                    (typeof buktiArray === 'string' ? JSON.parse(buktiArray) : []);
+
+                if (!Array.isArray(arr)) arr = [];
+
+                this.daftarBukti = arr.map((bukti) => {
+                    if (typeof bukti === "string") return { file_url: `/storage/uploads/bukti/${bukti}` };
+                    if (bukti.path) return { file_url: `/storage/${bukti.path}` };
+                    if (bukti.file_url) return bukti;
+                    return null;
+                }).filter(Boolean);
+
                 this.openBukti = true;
             } else {
                 Swal.fire({
@@ -201,6 +220,11 @@ export function riwayatDataStaf(role) {
                     confirmButtonColor: "#1C7C54",
                 });
             }
+        },
+
+        preview(b) {
+            this.selectedBukti = b;
+            this.showPreview = true;
         },
 
         // ===============================
@@ -223,23 +247,8 @@ export function riwayatDataStaf(role) {
                 });
             });
         },
-
-        getFileType(url) {
-            if (!url) return "other";
-            const ext = url.split(".").pop().toLowerCase();
-
-            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
-            if (ext === "pdf") return "pdf";
-            if (["mp4", "mov", "webm"].includes(ext)) return "video";
-            return "other";
-        },
-
-        preview(b) {
-            this.selectedBukti = b;
-            this.showPreview = true;
-        },
     };
 }
 
-// Global Registration
+// Global Registration agar fungsi utama Alpine bisa dipanggil via x-data di Blade
 window.riwayatDataStaf = riwayatDataStaf;

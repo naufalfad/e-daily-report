@@ -4,17 +4,18 @@ export function stafMapData() {
     return {
 
         map: null,
-        markersLayer: null, 
+        markersLayer: null,
         markerMap: {},      // Dictionary untuk pencarian marker by ID
-        
+
         allActivities: [],
         filter: {
             from: '',
-            to: ''
+            to: '',
+            kategori: 'all' // [NEW] State untuk filter kategori lokasi
         },
 
         // State untuk marker lokasi pengguna (GPS)
-        currentLocationMarker: null, 
+        currentLocationMarker: null,
 
         // State Modal Detail
         showModal: false,
@@ -35,8 +36,8 @@ export function stafMapData() {
                 const initialZoom = savedZoom ? parseInt(savedZoom) : 13;
 
                 // 2. INISIALISASI PETA
-                this.map = L.map('map', { 
-                    zoomControl: false, 
+                this.map = L.map('map', {
+                    zoomControl: false,
                     attributionControl: false
                 }).setView([initialLat, initialLng], initialZoom);
 
@@ -56,17 +57,17 @@ export function stafMapData() {
                     spiderfyDistanceMultiplier: 2,
                     showCoverageOnHover: false,
                     maxClusterRadius: 60,
-                    
-                    iconCreateFunction: function(cluster) {
+
+                    iconCreateFunction: function (cluster) {
                         var count = cluster.getChildCount();
                         var c = ' marker-cluster-';
-                        if (count < 10) { c += 'small'; } 
-                        else if (count < 50) { c += 'medium'; } 
+                        if (count < 10) { c += 'small'; }
+                        else if (count < 50) { c += 'medium'; }
                         else { c += 'large'; }
-                        return new L.DivIcon({ 
-                            html: '<div><span>' + count + '</span></div>', 
-                            className: 'marker-cluster-custom' + c, 
-                            iconSize: new L.Point(40, 40) 
+                        return new L.DivIcon({
+                            html: '<div><span>' + count + '</span></div>',
+                            className: 'marker-cluster-custom' + c,
+                            iconSize: new L.Point(40, 40)
                         });
                     }
                 });
@@ -89,12 +90,11 @@ export function stafMapData() {
                     `;
 
                     markers.forEach((marker, index) => {
-                        const data = marker.options.customData; 
-                        if(data) {
+                        const data = marker.options.customData;
+                        if (data) {
                             let statusBg = '#fff7ed'; let statusText = '#c2410c'; let statusLabel = 'Menunggu';
-                            
+
                             // [REVISI]: Tombol selalu "Lihat" (Biru) agar konsisten. 
-                            // User perbaiki via Modal Detail.
                             let buttonHtml = `
                                 <button onclick="window.zoomToActivity(${data.id})" 
                                     style="flex-shrink: 0; background: white; color: #0ea5e9; border: 1px solid #e0f2fe; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
@@ -103,12 +103,15 @@ export function stafMapData() {
                                     Lihat
                                 </button>
                             `;
-                            
-                            if(data.status === 'approved') { 
-                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui'; 
-                            } else if(data.status === 'rejected') { 
-                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak'; 
+
+                            if (data.status === 'approved') {
+                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui';
+                            } else if (data.status === 'rejected') {
+                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak';
                             }
+
+                            // [NEW] Parsing Kategori Lokasi di Cluster Popup
+                            const katLokasi = data.kategori_lokasi || 'WFO';
 
                             const borderStyle = index !== markers.length - 1 ? 'border-bottom: 1px solid #f1f5f9;' : '';
 
@@ -118,7 +121,10 @@ export function stafMapData() {
                                     <div style="flex: 1; padding-right: 12px; min-width: 0;">
                                         <div style="display:flex; justify-content: space-between; align-items:flex-start; margin-bottom: 4px;">
                                             <span style="font-weight: 700; font-size: 13px; color: #334155;">${data.tanggal}</span>
-                                            <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">${statusLabel}</span>
+                                            <div style="display:flex; gap: 4px;">
+                                                <span style="background:#f1f5f9; color:#475569; font-size:9px; padding:2px 6px; border-radius:12px; font-weight:700; border:1px solid #e2e8f0;">${katLokasi}</span>
+                                                <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">${statusLabel}</span>
+                                            </div>
                                         </div>
                                         <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
                                             ${data.kegiatan.length > 45 ? data.kegiatan.substring(0, 45) + '...' : data.kegiatan}
@@ -132,10 +138,10 @@ export function stafMapData() {
 
                     content += `</ul></div>`;
 
-                    L.popup({ 
-                        offset: [0, -10], closeButton: true, autoPan: true, maxWidth: 400, className: 'custom-cluster-popup' 
+                    L.popup({
+                        offset: [0, -10], closeButton: true, autoPan: true, maxWidth: 400, className: 'custom-cluster-popup'
                     })
-                    .setLatLng(a.latlng).setContent(content).openOn(this.map);
+                        .setLatLng(a.latlng).setContent(content).openOn(this.map);
                 });
 
                 this.map.addLayer(this.markersLayer);
@@ -143,7 +149,7 @@ export function stafMapData() {
                 // 5. LOAD DATA
                 this.loadData();
                 this.initDatePickers();
-                
+
                 this.map.on('moveend', () => {
                     const center = this.map.getCenter();
                     sessionStorage.setItem('staf_map_lat', center.lat);
@@ -155,18 +161,18 @@ export function stafMapData() {
 
                 // 6. REGISTER GLOBAL FUNCTIONS
                 window.openActivityDetail = (id) => this.openModal(id);
-                
-                // Helper Redirect (TETAP ADA UNTUK DIPANGGIL DARI MODAL BLADE)
+
+                // Helper Redirect 
                 window.editActivity = (id) => {
-                    window.location.href = `/staf/input-lkh/${id}`; 
+                    window.location.href = `/staf/input-lkh/${id}`;
                 };
-                
+
                 window.zoomToActivity = (id) => this.handleZoomToId(id);
             });
         },
 
         handleZoomToId(id) {
-            this.map.closePopup(); 
+            this.map.closePopup();
             const targetMarker = this.markerMap[id];
             if (targetMarker) {
                 this.markersLayer.zoomToShowLayer(targetMarker, () => { targetMarker.openPopup(); });
@@ -178,62 +184,65 @@ export function stafMapData() {
                 Swal.fire({ icon: 'warning', title: 'Gagal', text: 'Browser tidak mendukung Geolocation.' });
                 return;
             }
-            this.loading = true; 
+            this.loading = true;
             if (this.currentLocationMarker) {
                 this.map.removeLayer(this.currentLocationMarker);
                 this.currentLocationMarker = null;
             }
             this.map.locate({ setView: true, maxZoom: 17, timeout: 10000, enableHighAccuracy: true })
-            .on('locationfound', (e) => {
-                this.loading = false;
-                const latlng = e.latlng;
-                const locationMarker = L.circleMarker(latlng, { radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1 });
-                const accuracyCircle = L.circle(latlng, e.accuracy, { color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false });
-                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
-                locationMarker.bindPopup(`<div style="text-align:center; font-family:'Poppins'; padding:4px;"><b style="color:#1e293b;">Lokasi Anda</b><br><span style="font-size:11px; color:#64748b;">Akurasi: ${Math.round(e.accuracy)}m</span></div>`).openPopup();
-                setTimeout(() => { if (this.currentLocationMarker) { this.map.removeLayer(this.currentLocationMarker); this.currentLocationMarker = null; } }, 10000);
-            })
-            .on('locationerror', (e) => {
-                this.loading = false;
-                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal mendapatkan lokasi GPS.' });
-            });
+                .on('locationfound', (e) => {
+                    this.loading = false;
+                    const latlng = e.latlng;
+                    const locationMarker = L.circleMarker(latlng, { radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1 });
+                    const accuracyCircle = L.circle(latlng, e.accuracy, { color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false });
+                    this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
+                    this.currentLocationMarker.bindPopup(`<div style="text-align:center; font-family:'Poppins'; padding:4px;"><b style="color:#1e293b;">Lokasi Anda</b><br><span style="font-size:11px; color:#64748b;">Akurasi: ${Math.round(e.accuracy)}m</span></div>`).openPopup();
+                    setTimeout(() => { if (this.currentLocationMarker) { this.map.removeLayer(this.currentLocationMarker); this.currentLocationMarker = null; } }, 10000);
+                })
+                .on('locationerror', (e) => {
+                    this.loading = false;
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal mendapatkan lokasi GPS.' });
+                });
         },
 
         loadData() {
             this.loading = true;
-            let url = '/api/peta-aktivitas'; 
+            let url = '/api/peta-aktivitas';
             const params = [];
             if (this.filter.from) params.push(`from_date=${this.filter.from}`);
             if (this.filter.to) params.push(`to_date=${this.filter.to}`);
+
+            // [NEW] Sisipkan kategori_lokasi ke parameter query URL
+            if (this.filter.kategori) params.push(`kategori_lokasi=${this.filter.kategori}`);
+
             if (params.length > 0) url += '?' + params.join('&');
 
             fetch(url, {
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('auth_token'), 'Accept': 'application/json' }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.allActivities = data.data;
-                    this.loadMarkers(data.data);
-                }
-            })
-            .catch(err => console.error("Error loading data:", err))
-            .finally(() => { this.loading = false; });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.allActivities = data.data;
+                        this.loadMarkers(data.data);
+                    }
+                })
+                .catch(err => console.error("Error loading data:", err))
+                .finally(() => { this.loading = false; });
         },
 
         loadMarkers(data) {
             this.markersLayer.clearLayers();
-            this.markerMap = {}; 
+            this.markerMap = {};
             if (data.length === 0) return;
             if (this.currentLocationMarker) { this.map.removeLayer(this.currentLocationMarker); this.currentLocationMarker = null; }
             const latlngs = [];
-            
+
             data.forEach(act => {
                 if (!act.lat || !act.lng) return;
 
                 let color = '#f59e0b'; let statusLabel = 'Menunggu';
-                
-                // [REVISI]: Tombol Aksi Default selalu "Detail" (Biru)
+
                 let actionButton = `
                     <button onclick="window.openActivityDetail(${act.id})"
                         style="background:#0f172a; color:white; border:none; padding:6px 14px; font-size:11px; border-radius:6px; cursor:pointer; font-weight:500; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
@@ -245,12 +254,16 @@ export function stafMapData() {
                     color = '#10b981'; statusLabel = 'Disetujui';
                 } else if (act.status === 'rejected') {
                     color = '#f43f5e'; statusLabel = 'Ditolak';
-                    // Tombol tetap "Detail" (Biru)
-                    // User akan menekan Detail -> Modal Terbuka -> Baru ada tombol "Perbaiki"
                 }
+
+                // [NEW] Kategori Lokasi di Popup Single Marker
+                const katLokasi = act.kategori_lokasi || 'WFO';
 
                 const popupContent = `
                     <div style="padding: 12px 8px; min-width: 240px; font-family:'Poppins',sans-serif;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px;">
+                            <span style="font-size:10px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1;">Kategori: ${katLokasi}</span>
+                        </div>
                         <div style="font-weight:700; color:#0f172a; font-size:14px; line-height:1.4; margin-bottom:8px;">${act.kegiatan}</div>
                         <div style="font-size:12px; color:#64748b; margin-bottom:12px; border-left: 3px solid #cbd5e1; padding-left:10px;">
                             <div style="font-weight:600; color:#334155; margin-bottom:2px;">${act.tanggal}</div>
@@ -264,7 +277,7 @@ export function stafMapData() {
                 `;
 
                 const marker = L.circleMarker([act.lat, act.lng], {
-                    radius: 7, fillColor: color, color: '#ffffff', weight: 2, fillOpacity: 1, customData: act 
+                    radius: 7, fillColor: color, color: '#ffffff', weight: 2, fillOpacity: 1, customData: act
                 }).bindPopup(popupContent);
 
                 this.markersLayer.addLayer(marker);
@@ -295,13 +308,15 @@ export function stafMapData() {
         },
         exportMap() {
             Swal.fire({
-                title: "Export PDF", text: "Download laporan peta aktivitas Anda?", icon: "info", showCancelButton: true, confirmButtonColor: "#0ea5e9", confirmButtonText: "Ya, Download", cancelButtonText: "Batal", showLoaderOnConfirm: true, 
+                title: "Export PDF", text: "Download laporan peta aktivitas Anda?", icon: "info", showCancelButton: true, confirmButtonColor: "#0ea5e9", confirmButtonText: "Ya, Download", cancelButtonText: "Batal", showLoaderOnConfirm: true,
                 preConfirm: () => {
                     const fromDate = this.filter.from || '';
                     const toDate = this.filter.to || '';
-                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}`;
+                    // [NEW] Bawa parameter kategori ke Export PDF
+                    const kat = this.filter.kategori || 'all';
+                    let url = `/preview-map-pdf?from_date=${fromDate}&to_date=${toDate}&kategori_lokasi=${kat}`;
                     window.open(url, "_blank");
-                    return true; 
+                    return true;
                 }
             });
         },

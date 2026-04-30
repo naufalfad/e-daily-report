@@ -1,5 +1,70 @@
 // resources/js/pages/penilai/riwayat.js
 
+import { authFetch } from "../../utils/auth-fetch";
+import { showToast } from "../../global/notification";
+
+// =========================================================
+// GLOBAL HELPERS UNTUK ALPINE.JS & HTML RENDERER
+// =========================================================
+
+// --- 1. Helper Status ---
+window.createStatusBadge = function (status) {
+    const styles = {
+        'waiting_review': 'bg-amber-50 text-amber-600 border border-amber-200',
+        'approved': 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+        'rejected': 'bg-rose-50 text-rose-600 border border-rose-200',
+        'draft': 'bg-slate-50 text-slate-500 border border-slate-200'
+    };
+    const labels = {
+        'waiting_review': 'Menunggu',
+        'approved': 'Disetujui',
+        'rejected': 'Ditolak',
+        'draft': 'Draft'
+    };
+    const cls = styles[status] || styles['draft'];
+    const lbl = labels[status] || status;
+    return `<span class="px-2.5 py-1 text-[10px] uppercase font-bold rounded-full ${cls}">${lbl}</span>`;
+};
+
+window.statusBadgeHtml = function (status) {
+    return window.createStatusBadge(status);
+};
+
+// --- 2. Helper Kategori Lokasi ---
+window.getKategoriText = function (kat) {
+    switch (kat) {
+        case "WFO": return "WFO";
+        case "WFH": return "WFH";
+        case "WFA": return "WFA";
+        case "DL": return "Dinas Luar";
+        default: return kat || "WFO";
+    }
+};
+
+window.createKategoriBadge = function (kat) {
+    const safeKat = kat || 'WFO';
+    let css = '';
+
+    switch (safeKat) {
+        case "WFO": css = "bg-emerald-50 border-emerald-200 text-emerald-700"; break;
+        case "WFH": css = "bg-blue-50 border-blue-200 text-blue-700"; break;
+        case "WFA": css = "bg-indigo-50 border-indigo-200 text-indigo-700"; break;
+        case "DL": css = "bg-purple-50 border-purple-200 text-purple-700"; break;
+        default: css = "bg-slate-50 border-slate-200 text-slate-700"; break;
+    }
+
+    return `<span class="rounded-md border ${css} text-[10px] font-extrabold px-2 py-0.5 tracking-wider">${window.getKategoriText(safeKat)}</span>`;
+};
+
+window.kategoriBadgeHtml = function (kat) {
+    return window.createKategoriBadge(kat);
+};
+
+
+// =========================================================
+// ALPINE COMPONENT CORE
+// =========================================================
+
 export function riwayatDataPenilai(role) {
     const TOKEN = localStorage.getItem("auth_token");
     const BASE_URL = "/api/lkh/riwayat";
@@ -13,17 +78,16 @@ export function riwayatDataPenilai(role) {
         open: false,
         modalData: null,
 
-        // State Modal Bukti (DITAMBAH)
+        // State Modal Bukti
         openBukti: false,
         daftarBukti: [],
-        showPreview: false, // DITAMBAH
-        selectedBukti: null, // DITAMBAH
+        showPreview: false,
+        selectedBukti: null,
 
         // Filter Data
         filter: {
             from: "",
             to: "",
-            // Default "mine". Dropdown di UI akan mengubah ini jadi "subordinates"
             mode: "mine",
         },
 
@@ -31,14 +95,11 @@ export function riwayatDataPenilai(role) {
         // ACTIONS
         // ===============================
 
-        // Edit Laporan (Jika status Draft/Rejected)
         editLaporan(id) {
             if (!id) return;
-            // Arahkan ke halaman input dengan ID laporan (disesuaikan dengan nama file/route)
             window.location.href = `/penilai/input-laporan/${id}`;
         },
 
-        // Export PDF sesuai Filter & Mode saat ini
         exportPdf() {
             Swal.fire({
                 title: "Export PDF?",
@@ -51,11 +112,9 @@ export function riwayatDataPenilai(role) {
                 cancelButtonText: "Batal",
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Gunakan mode dinamis dari filter (mine/subordinates)
                     let url = `/riwayat/export-pdf?role=${this.role}&mode=${this.filter.mode}`;
 
-                    if (this.filter.from)
-                        url += `&from_date=${this.filter.from}`;
+                    if (this.filter.from) url += `&from_date=${this.filter.from}`;
                     if (this.filter.to) url += `&to_date=${this.filter.to}`;
 
                     window.open(url, "_blank");
@@ -81,52 +140,18 @@ export function riwayatDataPenilai(role) {
             }
         },
 
-        statusText(status) {
-            const texts = {
-                approved: "Diterima",
-                rejected: "Ditolak",
-                draft: "Draft",
-                waiting_review: "Menunggu",
-            };
-            return texts[status] || "Menunggu";
-        },
-
-        statusBadgeClass(status) {
-            const classes = {
-                approved:
-                    "rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-medium px-2.5 py-0.5",
-                rejected:
-                    "rounded-full bg-rose-100 text-rose-700 text-[11px] font-medium px-2.5 py-0.5",
-                draft: "rounded-full bg-slate-200 text-slate-600 text-[11px] font-medium px-2.5 py-0.5",
-                waiting_review:
-                    "rounded-full bg-amber-100 text-amber-700 text-[11px] font-medium px-2.5 py-0.5",
-            };
-            // Default ke waiting_review (kuning) jika status tidak dikenali
-            return classes[status] || classes["waiting_review"];
-        },
-
-        statusBadgeHtml(status) {
-            return `<span class="${this.statusBadgeClass(
-                status
-            )}">${this.statusText(status)}</span>`;
-        },
-
         getLokasi(item) {
             return (
                 item.lokasi_manual_text ||
-                (item.is_luar_lokasi
-                    ? "Luar Kantor (GPS)"
-                    : "Dalam Kantor (GPS)")
+                (item.is_luar_lokasi ? "Luar Kantor (GPS)" : "Dalam Kantor (GPS)")
             );
         },
 
-        // DITAMBAH: Helper untuk mendapatkan jenis file
         getFileType(url) {
             if (!url) return "other";
             const ext = url.split(".").pop().toLowerCase();
 
-            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
-                return "image";
+            if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
             if (ext === "pdf") return "pdf";
             if (["mp4", "mov", "webm"].includes(ext)) return "video";
             return "other";
@@ -145,7 +170,6 @@ export function riwayatDataPenilai(role) {
             this.loading = true;
             this.items = [];
 
-            // Build URL dengan parameter role & mode dinamis
             let url = BASE_URL + `?role=${this.role}`;
 
             if (this.role === "penilai") {
@@ -165,23 +189,28 @@ export function riwayatDataPenilai(role) {
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(
-                        `Gagal memuat data. Status: ${response.status
-                        }. Pesan: ${errorData.message || "Unknown Error"}`
-                    );
+                    throw new Error(`Gagal memuat data. Status: ${response.status}. Pesan: ${errorData.message || "Unknown Error"}`);
                 }
 
                 const data = await response.json();
-                this.items = data.data || [];
+
+                // Menghandle format data Pagination dari Laravel
+                if (data.data && Array.isArray(data.data.data)) {
+                    this.items = data.data.data;
+                } else if (data.data && Array.isArray(data.data)) {
+                    this.items = data.data;
+                } else {
+                    this.items = [];
+                }
+
+                console.log("Data Load Success:", this.items);
             } catch (e) {
                 console.error("Gagal memuat data riwayat LKH:", e);
-                // Opsional: Tampilkan notifikasi error kecil
             } finally {
                 this.loading = false;
             }
         },
 
-        // Trigger ulang fetch saat filter berubah
         async filterData() {
             await this.fetchData();
         },
@@ -195,7 +224,6 @@ export function riwayatDataPenilai(role) {
             this.open = true;
 
             try {
-                // Fetch full detail (as per original logic)
                 const res = await fetch(`/api/lkh/${item.id}`, {
                     headers: {
                         Authorization: `Bearer ${TOKEN}`,
@@ -206,13 +234,11 @@ export function riwayatDataPenilai(role) {
                 const data = await res.json();
                 this.modalData = data.data;
 
-                console.log("MODAL DATA FULL =", this.modalData);
             } catch (e) {
                 console.error("Gagal load detail LKH:", e);
             }
         },
 
-        // DITAMBAH: Fungsi untuk membuka modal list bukti
         viewBukti(buktiArray) {
             const bukti = this.normalizeBukti(buktiArray);
 
@@ -229,12 +255,10 @@ export function riwayatDataPenilai(role) {
             }
         },
 
-        // DITAMBAH: Fungsi untuk membuka modal preview
         preview(b) {
             this.selectedBukti = b;
             this.showPreview = true;
         },
-
 
         // ===============================
         // UI COMPONENTS
@@ -248,11 +272,8 @@ export function riwayatDataPenilai(role) {
                 if (!input || !btn) return;
 
                 btn.addEventListener("click", () => {
-                    try {
-                        input.showPicker();
-                    } catch {
-                        input.focus();
-                    }
+                    try { input.showPicker(); }
+                    catch { input.focus(); }
                 });
             });
         },
@@ -260,7 +281,6 @@ export function riwayatDataPenilai(role) {
         normalizeBukti(buktiArray) {
             if (!buktiArray) return [];
 
-            // Jika bukti berupa STRING JSON -> parse dulu
             if (typeof buktiArray === "string") {
                 try {
                     buktiArray = JSON.parse(buktiArray);
@@ -270,33 +290,21 @@ export function riwayatDataPenilai(role) {
                 }
             }
 
-            // Jika hasil parse bukan array -> jadikan array
             if (!Array.isArray(buktiArray)) {
                 return [];
             }
 
-            // Normalisasi setiap item
             return buktiArray
                 .map((bukti) => {
-                    // Jika string (nama file)
                     if (typeof bukti === "string") {
-                        return {
-                            file_url: `/storage/uploads/bukti/${bukti}`,
-                        };
+                        return { file_url: `/storage/uploads/bukti/${bukti}` };
                     }
-
-                    // Jika object { path: ... }
                     if (bukti.path) {
-                        return {
-                            file_url: `/storage/${bukti.path}`,
-                        };
+                        return { file_url: `/storage/${bukti.path}` };
                     }
-
-                    // Jika sudah ada file_url
                     if (bukti.file_url) {
                         return bukti;
                     }
-
                     return null;
                 })
                 .filter(Boolean);
@@ -305,4 +313,4 @@ export function riwayatDataPenilai(role) {
 }
 
 // Global Registration agar bisa dipanggil via x-data di Blade
-window.riwayatDataPenilai = riwayatDataPenilai;
+window.riwayatCore = riwayatDataPenilai;

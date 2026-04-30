@@ -151,7 +151,6 @@
             
             {{-- Action Buttons --}}
             <div class="flex flex-wrap items-center gap-3">
-
                 {{-- GPS Button --}}
                 <button @click="zoomToCurrentLocation()"
                     class="px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2 group"
@@ -159,20 +158,14 @@
                     <svg class="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     Lokasi Saya
                 </button>
-
-                {{-- Export Button --}}
-                <!-- <button @click="exportMap()"
-                    class="px-5 py-2.5 bg-[#1C7C54] text-white rounded-xl text-sm font-medium hover:bg-[#15683f] hover:shadow-lg hover:shadow-emerald-200 transition-all shadow-sm flex items-center gap-2">
-                    <svg class="w-5 h-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Export Laporan
-                </button> -->
             </div>
         </div>
 
         {{-- Filter Bar --}}
         <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-2">
             <div class="flex flex-col md:flex-row items-end gap-5">
-                <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 flex-1">
+                <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
+                    
                     {{-- Input Tgl Dari --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai Tanggal</label>
@@ -196,18 +189,38 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- [NEW] Dropdown Filter Kategori Lokasi --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori Lokasi</label>
+                        <div class="relative">
+                            <select x-model="filter.kategori" class="w-full h-[42px] appearance-none rounded-xl border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 shadow-sm cursor-pointer">
+                                <option value="all">Semua Kategori</option>
+                                <option value="WFO">WFO (Office)</option>
+                                <option value="WFH">WFH (Home)</option>
+                                <option value="WFA">WFA (Anywhere)</option>
+                                <option value="DL">Dinas Luar</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {{-- Submit Button --}}
-                <button type="submit"
-                    class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
-                    :disabled="loading">
-                    <span x-show="!loading">Terapkan Filter</span>
-                    <span x-show="loading" class="flex items-center gap-2" style="display: none;">
-                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Memuat...
-                    </span>
-                </button>
+                <div class="w-full md:w-auto">
+                    <button type="submit"
+                        class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
+                        :disabled="loading">
+                        <span x-show="!loading">Terapkan Filter</span>
+                        <span x-show="loading" class="flex items-center gap-2" style="display: none;">
+                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Memuat...
+                        </span>
+                    </button>
+                </div>
             </div>
         </form>
 
@@ -267,6 +280,10 @@
                     <div class="flex items-center gap-2 mt-1.5">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
                             x-text="selectedActivity?.kategori_aktivitas">
+                        </span>
+                        {{-- NEW: Badge Kategori Lokasi di Header Modal --}}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
+                            x-text="selectedActivity?.kategori_lokasi || 'WFO'">
                         </span>
                     </div>
                 </div>
@@ -353,18 +370,16 @@
             <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 shrink-0">
                 <div class="flex justify-end gap-3">
                     
-                    {{-- [BARU] Tombol Perbaiki (Muncul jika status Ditolak) --}}
                     <template x-if="selectedActivity && selectedActivity.status === 'rejected'">
                         <button @click="window.editActivity(selectedActivity.id)"
-                            class="px-6 py-3 bg-amber-500 text-white font-medium text-sm rounded-xl hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98] flex items-center gap-2">
+                            class="px-6 py-3 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98] flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             Perbaiki Laporan
                         </button>
                     </template>
 
-                    {{-- Tombol Tutup --}}
                     <button @click="closeModal()"
-                        class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-xl hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
+                        class="px-8 py-3 bg-slate-800 text-white font-bold text-sm rounded-xl hover:bg-slate-900 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98]">
                         Tutup Detail
                     </button>
                 </div>

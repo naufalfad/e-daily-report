@@ -20,7 +20,7 @@
     <style>
         /* --- MAP CONTAINER --- */
         .map-container {
-            height: min(70vh, 650px); /* Lebih tinggi agar area pandang luas */
+            height: min(70vh, 650px);
             width: 100%;
             position: relative;
             z-index: 1;
@@ -34,25 +34,22 @@
             z-index: 1 !important;
             border-radius: 1rem;
             font-family: 'Poppins', sans-serif;
-            background: #f8fafc; /* Placeholder color */
+            background: #f8fafc;
         }
 
-        /* --- POPUP LIST STYLING (The "Card" on Map) --- */
-        
-        /* 1. Wrapper Popup: Hilangkan padding default & beri shadow modern */
+        /* --- POPUP LIST STYLING (Humanis UI) --- */
         .custom-cluster-popup .leaflet-popup-content-wrapper {
             background: #ffffff;
-            border-radius: 16px; /* Rounded card */
+            border-radius: 16px;
             box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.1);
             padding: 0;
             overflow: hidden;
             border: 1px solid #e2e8f0;
         }
 
-        /* 2. Content Area: Perlebar width agar tidak sempit */
         .custom-cluster-popup .leaflet-popup-content {
             margin: 0 !important;
-            width: 360px !important; /* [FIX] Lebar 360px agar list lega */
+            width: 360px !important;
             line-height: 1.5;
         }
 
@@ -61,7 +58,6 @@
             box-shadow: 0 5px 10px rgba(0,0,0,0.1);
         }
 
-        /* 3. Tombol Close: Reposisi agar estetik */
         .custom-cluster-popup a.leaflet-popup-close-button {
             top: 14px;
             right: 14px;
@@ -77,7 +73,7 @@
             justify-content: center;
             transition: all 0.2s;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            z-index: 10; /* Pastikan di atas header */
+            z-index: 10;
         }
         
         .custom-cluster-popup a.leaflet-popup-close-button:hover {
@@ -85,8 +81,7 @@
             background: #fee2e2;
         }
 
-        /* --- CLUSTER ICONS (BLUE MONOCHROMATIC THEME) --- */
-        
+        /* --- CLUSTER ICONS (BLUE THEME) --- */
         .marker-cluster-custom {
             background-clip: padding-box;
             border-radius: 50%;
@@ -94,7 +89,7 @@
         }
         
         .marker-cluster-custom:hover {
-            transform: scale(1.1); /* Efek zoom saat hover */
+            transform: scale(1.1);
             z-index: 1000 !important;
         }
 
@@ -112,26 +107,15 @@
             box-shadow: inset 0 1px 2px rgba(255,255,255,0.25);
         }
 
-        /* 1. Small (<10): Biru Langit - Tenang */
+        /* Gradasi Biru */
         .marker-cluster-small { background-color: rgba(56, 189, 248, 0.3); }
-        .marker-cluster-small div { 
-            background-color: #0ea5e9; 
-            box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.4);
-        }
+        .marker-cluster-small div { background-color: #0ea5e9; box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.4); }
 
-        /* 2. Medium (10-50): Biru Samudra - Aktif */
         .marker-cluster-medium { background-color: rgba(37, 99, 235, 0.3); }
-        .marker-cluster-medium div { 
-            background-color: #2563eb;
-            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4);
-        }
+        .marker-cluster-medium div { background-color: #2563eb; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.4); }
 
-        /* 3. Large (>50): Biru Dongker - Padat (Berdenyut) */
         .marker-cluster-large { background-color: rgba(30, 64, 175, 0.3); }
-        .marker-cluster-large div { 
-            background-color: #1e40af;
-            animation: pulse-blue 2s infinite;
-        }
+        .marker-cluster-large div { background-color: #1e40af; animation: pulse-blue 2s infinite; }
 
         @keyframes pulse-blue {
             0% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.7); }
@@ -158,7 +142,6 @@
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    {{-- JS file akan di-handle di tahap selanjutnya --}}
     @vite(['resources/js/pages/kadis/peta-aktivitas.js']) 
 @endpush
 
@@ -175,13 +158,12 @@
                 <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Peta Aktivitas Pegawai</h2>
                 <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Pantau sebaran kinerja secara real-time
+                    Pantau sebaran kinerja seluruh instansi secara real-time
                 </p>
             </div>
             
             {{-- Action Buttons --}}
             <div class="flex flex-wrap items-center gap-3">
-
                 {{-- GPS Button --}}
                 <button @click="zoomToCurrentLocation()"
                     class="px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2 group"
@@ -190,7 +172,7 @@
                     Lokasi Saya
                 </button>
 
-                {{-- Export Button (UPDATED to Trigger JS) --}}
+                {{-- Export Button --}}
                 <button @click="exportMap()"
                     class="px-5 py-2.5 bg-[#1C7C54] text-white rounded-xl text-sm font-medium hover:bg-[#15683f] hover:shadow-lg hover:shadow-emerald-200 transition-all shadow-sm flex items-center gap-2">
                     <svg class="w-5 h-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -202,7 +184,8 @@
         {{-- Filter Bar --}}
         <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-2">
             <div class="flex flex-col md:flex-row items-end gap-5">
-                <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-5 flex-1">
+                <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
+                    
                     {{-- Input Tgl Dari --}}
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai Tanggal</label>
@@ -226,40 +209,58 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- [NEW] Dropdown Filter Kategori Lokasi --}}
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori Lokasi</label>
+                        <div class="relative">
+                            <select x-model="filter.kategori" class="w-full h-[42px] appearance-none rounded-xl border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 shadow-sm cursor-pointer">
+                                <option value="all">Semua Kategori</option>
+                                <option value="WFO">WFO (Office)</option>
+                                <option value="WFH">WFH (Home)</option>
+                                <option value="WFA">WFA (Anywhere)</option>
+                                <option value="DL">Dinas Luar</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {{-- Submit Button --}}
-                <button type="submit"
-                    class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
-                    :disabled="loading">
-                    <span x-show="!loading">Terapkan Filter</span>
-                    <span x-show="loading" class="flex items-center gap-2" style="display: none;">
-                        <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Memuat...
-                    </span>
-                </button>
+                <div class="w-full md:w-auto">
+                    <button type="submit"
+                        class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
+                        :disabled="loading">
+                        <span x-show="!loading">Terapkan Filter</span>
+                        <span x-show="loading" class="flex items-center gap-2" style="display: none;">
+                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Memuat...
+                        </span>
+                    </button>
+                </div>
             </div>
         </form>
 
-        {{-- LEGEND (LEBIH HUMANIS) --}}
+        {{-- LEGEND --}}
         <div class="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs font-medium text-slate-600 border-t border-slate-100 pt-4">
             <span class="text-slate-400 uppercase font-bold text-[10px] tracking-widest">Keterangan:</span>
             
-            {{-- Status Items --}}
-            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help" title="Laporan telah diverifikasi dan disetujui">
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help">
                 <span class="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-100"></span> Disetujui
             </div>
-            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help" title="Menunggu tindakan validator">
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help">
                 <span class="w-3 h-3 rounded-full bg-amber-500 ring-2 ring-amber-100"></span> Menunggu
             </div>
-            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help" title="Laporan dikembalikan atau ditolak">
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help">
                 <span class="w-3 h-3 rounded-full bg-rose-500 ring-2 ring-rose-100"></span> Ditolak
             </div>
             
             <div class="hidden sm:block w-px h-4 bg-slate-300 mx-2"></div>
 
-            {{-- Cluster Legend --}}
-            <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100 text-blue-700 font-semibold cursor-help" title="Menandakan jumlah pegawai yang berada di lokasi berdekatan">
+            <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100 text-blue-700 font-semibold cursor-help">
                 <span class="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500 text-[10px] text-white font-bold ring-2 ring-blue-200">N</span>
                 <span>Area Padat (Cluster)</span>
             </div>
@@ -273,7 +274,7 @@
         </div>
     </div>
 
-    {{-- MODAL DETAIL AKTIVITAS (IMPROVED UI & UX) --}}
+    {{-- [NEW FIX] MODAL DETAIL AKTIVITAS (Ditambahkan agar aksi popup peta berfungsi) --}}
     <div x-show="showModal" 
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -293,10 +294,14 @@
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white flex justify-between items-start shrink-0">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-xl tracking-tight">Detail Laporan</h3>
+                    <h3 class="font-bold text-slate-800 text-xl tracking-tight">Detail Aktivitas</h3>
                     <div class="flex items-center gap-2 mt-1.5">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
                             x-text="selectedActivity?.kategori_aktivitas">
+                        </span>
+                        {{-- Badge Kategori Lokasi di Header Modal --}}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
+                            x-text="selectedActivity?.kategori_lokasi || 'WFO'">
                         </span>
                     </div>
                 </div>
@@ -369,7 +374,7 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Lokasi Tercatat</p>
-                                        <p class="text-sm text-slate-700 font-medium break-words leading-snug" x-text="selectedActivity.lokasi_teks || 'Hanya Koordinat GPS'"></p>
+                                        <p class="text-sm text-slate-700 font-medium break-words leading-snug" x-text="selectedActivity.lokasi_teks || 'Koordinat GPS'"></p>
                                     </div>
                                 </div>
                             </div>
@@ -381,36 +386,17 @@
 
             {{-- FOOTER ACTIONS --}}
             <div class="px-6 py-5 border-t border-slate-100 bg-slate-50 shrink-0">
-                <template x-if="selectedActivity && selectedActivity.status === 'waiting_review'">
-                    <div class="grid grid-cols-2 gap-4">
-                        <button @click="confirmApprove(selectedActivity.id)" 
-                            class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:shadow-emerald-200 hover:shadow-lg transform active:scale-[0.98] flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            Setujui Laporan
-                        </button>
-
-                        <button @click="handleReject(selectedActivity.id)" 
-                            class="w-full py-3 bg-white border border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-200 font-bold rounded-xl text-sm transition-all shadow-sm hover:shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            Tolak
-                        </button>
-                    </div>
-                </template>
-
-                <template x-if="selectedActivity && selectedActivity.status !== 'waiting_review'">
-                    <div class="flex justify-end">
-                        <button @click="closeModal()"
-                            class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-xl hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
-                            Tutup Detail
-                        </button>
-                    </div>
-                </template>
+                <div class="flex justify-end">
+                    <button @click="closeModal()"
+                        class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-xl hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
+                        Tutup Detail
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- MODAL LOADING EXPORT (NEW COMPONENT) --}}
-    {{-- Ini adalah modal khusus untuk visualisasi proses export yang berat --}}
     <div x-show="isExporting"
         style="display: none;"
         class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm transition-all"
@@ -435,8 +421,8 @@
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     
-                    {{-- Success Icon (Animated Bounce) --}}
-                    <div x-show="exportStatus === 'success'" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center animate-bounce-small shadow-sm border border-emerald-200">
+                    {{-- Success Icon --}}
+                    <div x-show="exportStatus === 'success'" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center shadow-sm border border-emerald-200">
                         <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </div>
 
@@ -467,7 +453,7 @@
                 </button>
             </div>
             
-            {{-- Loading State (Non-interactive) --}}
+            {{-- Loading State --}}
             <div x-show="exportStatus !== 'success' && exportStatus !== 'error'">
                <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div class="h-full bg-emerald-500 animate-pulse rounded-full" style="width: 60%"></div>

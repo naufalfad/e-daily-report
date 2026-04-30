@@ -123,6 +123,10 @@
 
                             <th class="px-6 py-4 font-bold tracking-wider">Tanggal Validasi</th>
                             <th class="px-6 py-4 font-bold tracking-wider">Penilai</th>
+                            
+                            {{-- NEW: Kolom Kategori --}}
+                            <th class="px-6 py-4 font-bold tracking-wider text-center">Kategori</th>
+                            
                             <th class="px-6 py-4 font-bold tracking-wider text-center">Status</th>
                             <th class="px-6 py-4 font-bold tracking-wider text-right">Opsi</th>
                         </tr>
@@ -133,7 +137,8 @@
                         {{-- STATE: EMPTY (PESAN DINAMIS) --}}
                         <template x-if="items.length === 0 && !loading">
                             <tr>
-                                <td :colspan="filter.mode === 'subordinates' ? 7 : 6" class="px-6 py-20 text-center">
+                                {{-- PERBAIKAN: Colspan disesuaikan (+1 karena ada kolom Kategori) --}}
+                                <td :colspan="filter.mode === 'subordinates' ? 8 : 7" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                                             <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -159,7 +164,8 @@
                         {{-- STATE: LOADING --}}
                         <template x-if="loading">
                             <tr>
-                                <td :colspan="filter.mode === 'subordinates' ? 7 : 6" class="px-6 py-20 text-center">
+                                {{-- PERBAIKAN: Colspan disesuaikan (+1) --}}
+                                <td :colspan="filter.mode === 'subordinates' ? 8 : 7" class="px-6 py-20 text-center">
                                     <div class="flex flex-col items-center justify-center gap-3">
                                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0E7A4A]"></div>
                                         <span class="text-slate-500 font-medium animate-pulse">Sedang memuat data...</span>
@@ -204,6 +210,11 @@
                                     x-text="item.atasan ? item.atasan.name : (item.validator ? item.validator.name : '-')">
                                 </td>
 
+                                {{-- NEW: Render Kategori Badge --}}
+                                <td class="px-6 py-4 align-top text-center">
+                                    <div class="inline-flex" x-html="kategoriBadgeHtml(item.kategori_lokasi)"></div>
+                                </td>
+
                                 <td class="px-6 py-4 align-top text-center">
                                     <div class="inline-flex" x-html="statusBadgeHtml(item.status)"></div>
                                 </td>
@@ -230,7 +241,7 @@
         </div>
 
         {{-- CALL COMPONENTS: MODAL --}}
-        {{-- Kita panggil 3 komponen terpisah untuk membuat file utama tetap bersih --}}
+        {{-- Kita panggil komponen terpisah (komponen riwayat LKH yang sudah kita update sebelumnya dengan DOM Kategori) --}}
         <x-riwayat.modal-detail />
         <x-riwayat.modal-bukti />
         <x-riwayat.modal-preview />

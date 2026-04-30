@@ -1,66 +1,55 @@
 // resources/js/pages/kadis/peta-aktivitas.js
 
-// [FIX] Import Axios agar dikenali di scope module ini
-import axios from 'axios'; 
+import axios from 'axios';
 
 export function kadisMapData() {
     return {
 
         map: null,
-        markersLayer: null, 
-        markerMap: {},      // Dictionary untuk pencarian cepat marker by ID
-        
+        markersLayer: null,
+        markerMap: {},
+
         allActivities: [],
         filter: {
             from: '',
-            to: ''
+            to: '',
+            kategori: 'all' // [NEW] Default state untuk filter Kategori Lokasi
         },
 
-        // State untuk marker lokasi pengguna (GPS)
-        currentLocationMarker: null, 
+        currentLocationMarker: null,
 
         // State Modal Detail Aktivitas
         showModal: false,
         selectedActivity: null,
 
-        // State Loading Data Utama
         loading: false,
 
-        // ------------------------------------------------------------------
-        // [NEW] EXPORT PDF STATE MANAGEMENT
-        // ------------------------------------------------------------------
-        isExporting: false,      // Mengontrol visibilitas modal loading export
-        exportStatus: 'idle',    // 'idle' | 'loading' | 'success' | 'error'
-        exportMessage: '',       // Pesan dinamis (misal: "Merender peta...")
-        exportTitle: '',         // Judul modal
-        exportBlobUrl: null,     // URL Blob PDF hasil generate
+        // EXPORT PDF STATE MANAGEMENT
+        isExporting: false,
+        exportStatus: 'idle',
+        exportMessage: '',
+        exportTitle: '',
+        exportBlobUrl: null,
 
         initMap() {
             this.$nextTick(() => {
-                // ------------------------------------------------------------------
-                // 1. RESTORE POSISI TERAKHIR (UX: Agar user tidak kehilangan konteks)
-                // ------------------------------------------------------------------
+                // 1. RESTORE POSISI TERAKHIR 
                 const savedLat = sessionStorage.getItem('kadis_map_lat');
                 const savedLng = sessionStorage.getItem('kadis_map_lng');
                 const savedZoom = sessionStorage.getItem('kadis_map_zoom');
 
-                // Default ke koordinat tengah (contoh: Mimika) jika belum ada history
                 const initialLat = savedLat ? parseFloat(savedLat) : -4.5467;
                 const initialLng = savedLng ? parseFloat(savedLng) : 136.8833;
                 const initialZoom = savedZoom ? parseInt(savedZoom) : 13;
 
-                // ------------------------------------------------------------------
                 // 2. INISIALISASI PETA
-                // ------------------------------------------------------------------
-                this.map = L.map('map', { 
-                    zoomControl: false, // Kita pindahkan zoom control ke posisi custom
+                this.map = L.map('map', {
+                    zoomControl: false,
                     attributionControl: false
                 }).setView([initialLat, initialLng], initialZoom);
 
-                // Zoom Control di kanan bawah agar tidak menutupi card filter
                 L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
-                // Layer Maps
                 const googleRoadmap = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { maxZoom: 20 });
                 const googleSatelite = L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", { maxZoom: 22 });
 
@@ -68,44 +57,35 @@ export function kadisMapData() {
                 L.control.layers(baseLayers, null, { position: 'bottomright' }).addTo(this.map);
                 googleRoadmap.addTo(this.map);
 
-                // ------------------------------------------------------------------
-                // 3. KONFIGURASI MARKER CLUSTER (DENGAN TEMA BIRU & LEBIH LEGA)
-                // ------------------------------------------------------------------
+                // 3. KONFIGURASI MARKER CLUSTER 
                 this.markersLayer = L.markerClusterGroup({
-                    zoomToBoundsOnClick: false, // PENTING: Matikan zoom klik default agar List Popup muncul
-                    
-                    // [OPTIMASI SPIDERFY] Membuat sebaran marker lebih luas agar tidak numpuk
+                    zoomToBoundsOnClick: false,
                     spiderfyOnMaxZoom: true,
-                    spiderfyDistanceMultiplier: 2, // Jarak antar marker saat menyebar (default 1)
-                    
-                    showCoverageOnHover: false, // Hilangkan area biru saat hover agar lebih bersih
-                    maxClusterRadius: 60,       // Radius grouping sedikit diperbesar
-                    
-                    // Kustomisasi Icon Cluster (Sesuai CSS di Blade)
-                    iconCreateFunction: function(cluster) {
+                    spiderfyDistanceMultiplier: 2,
+                    showCoverageOnHover: false,
+                    maxClusterRadius: 60,
+
+                    iconCreateFunction: function (cluster) {
                         var count = cluster.getChildCount();
                         var c = ' marker-cluster-';
-                        
-                        if (count < 10) { c += 'small'; } 
-                        else if (count < 50) { c += 'medium'; } 
+
+                        if (count < 10) { c += 'small'; }
+                        else if (count < 50) { c += 'medium'; }
                         else { c += 'large'; }
-                
-                        return new L.DivIcon({ 
-                            html: '<div><span>' + count + '</span></div>', 
-                            className: 'marker-cluster-custom' + c, 
-                            iconSize: new L.Point(40, 40) 
+
+                        return new L.DivIcon({
+                            html: '<div><span>' + count + '</span></div>',
+                            className: 'marker-cluster-custom' + c,
+                            iconSize: new L.Point(40, 40)
                         });
                     }
                 });
 
-                // ------------------------------------------------------------------
-                // 4. EVENT LISTENER: KLIK CLUSTER -> MUNCULKAN LIST POPUP (LEBAR & HUMANIS)
-                // ------------------------------------------------------------------
+                // 4. EVENT LISTENER: KLIK CLUSTER
                 this.markersLayer.on('clusterclick', (a) => {
                     const markers = a.layer.getAllChildMarkers();
                     const count = markers.length;
 
-                    // [UPDATE] Tampilan Card Lebih Lebar (360px) & Header Humanis
                     let content = `
                         <div style="font-family: 'Poppins', sans-serif; width: 360px; overflow: hidden;">
                             
@@ -115,7 +95,7 @@ export function kadisMapData() {
                                         Lokasi Padat
                                     </h4>
                                     <span style="font-size: 11px; color: #64748b; font-weight: 500;">
-                                        Terdapat <b>${count}</b> pegawai di titik ini
+                                        Terdapat <b>${count}</b> laporan di titik ini
                                     </span>
                                 </div>
                                 <span style="background:#eff6ff; color:#3b82f6; font-size:10px; padding:4px 10px; border-radius:20px; font-weight:700; border: 1px solid #dbeafe;">
@@ -127,21 +107,31 @@ export function kadisMapData() {
                     `;
 
                     markers.forEach((marker, index) => {
-                        const data = marker.options.customData; 
-                        
-                        if(data) {
-                            // Logic Styling Status (Badge Style)
-                            let statusBg = '#fff7ed'; // Default Amber Light
-                            let statusText = '#c2410c'; // Default Amber Dark
+                        const data = marker.options.customData;
+
+                        if (data) {
+                            let statusBg = '#fff7ed';
+                            let statusText = '#c2410c';
                             let statusLabel = 'Menunggu';
-                            
-                            if(data.status === 'approved') { 
-                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui'; 
-                            } else if(data.status === 'rejected') { 
-                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak'; 
+
+                            if (data.status === 'approved') {
+                                statusBg = '#ecfdf5'; statusText = '#047857'; statusLabel = 'Disetujui';
+                            } else if (data.status === 'rejected') {
+                                statusBg = '#fef2f2'; statusText = '#b91c1c'; statusLabel = 'Ditolak';
                             }
 
-                            // Border bottom kecuali item terakhir
+                            // [NEW] Label Kategori Lokasi di Cluster Popup
+                            const katLokasi = data.kategori_lokasi || 'WFO';
+
+                            let buttonHtml = `
+                                <button onclick="window.openActivityDetail(${data.id})" 
+                                    style="flex-shrink: 0; background: white; color: #0ea5e9; border: 1px solid #e0f2fe; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
+                                    onmouseover="this.style.background='#0ea5e9'; this.style.color='white'" 
+                                    onmouseout="this.style.background='white'; this.style.color='#0ea5e9'">
+                                    Lihat
+                                </button>
+                            `;
+
                             const borderStyle = index !== markers.length - 1 ? 'border-bottom: 1px solid #f1f5f9;' : '';
 
                             content += `
@@ -154,9 +144,12 @@ export function kadisMapData() {
                                                 ${data.user}
                                             </span>
                                             
-                                            <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">
-                                                ${statusLabel}
-                                            </span>
+                                            <div style="display:flex; gap: 4px;">
+                                                <span style="background:#f1f5f9; color:#475569; font-size:9px; padding:2px 6px; border-radius:12px; font-weight:700; border:1px solid #e2e8f0;">${katLokasi}</span>
+                                                <span style="background:${statusBg}; color:${statusText}; font-size:9px; padding:2px 8px; border-radius:12px; font-weight:600; letter-spacing: 0.5px; text-transform: uppercase;">
+                                                    ${statusLabel}
+                                                </span>
+                                            </div>
                                         </div>
                                         
                                         <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
@@ -164,12 +157,7 @@ export function kadisMapData() {
                                         </div>
                                     </div>
 
-                                    <button onclick="window.zoomToActivity(${data.id})" 
-                                        style="flex-shrink: 0; background: white; color: #0ea5e9; border: 1px solid #e0f2fe; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);"
-                                        onmouseover="this.style.background='#0ea5e9'; this.style.color='white'" 
-                                        onmouseout="this.style.background='white'; this.style.color='#0ea5e9'">
-                                        Lihat
-                                    </button>
+                                    ${buttonHtml}
                                 </li>
                             `;
                         }
@@ -177,17 +165,16 @@ export function kadisMapData() {
 
                     content += `</ul></div>`;
 
-                    // Tampilkan Popup Leaflet
-                    L.popup({ 
-                        offset: [0, -10], 
+                    L.popup({
+                        offset: [0, -10],
                         closeButton: true,
                         autoPan: true,
-                        maxWidth: 400, // Izinkan lebar maksimal lebih besar
-                        className: 'custom-cluster-popup' 
+                        maxWidth: 400,
+                        className: 'custom-cluster-popup'
                     })
-                    .setLatLng(a.latlng)
-                    .setContent(content)
-                    .openOn(this.map);
+                        .setLatLng(a.latlng)
+                        .setContent(content)
+                        .openOn(this.map);
                 });
 
                 this.map.addLayer(this.markersLayer);
@@ -195,35 +182,30 @@ export function kadisMapData() {
                 // 5. SETUP LAINNYA
                 this.loadData();
                 this.initDatePickers();
-                
+
+                this.map.on('moveend', () => {
+                    const center = this.map.getCenter();
+                    sessionStorage.setItem('kadis_map_lat', center.lat);
+                    sessionStorage.setItem('kadis_map_lng', center.lng);
+                    sessionStorage.setItem('kadis_map_zoom', this.map.getZoom());
+                });
+
                 new ResizeObserver(() => {
                     this.map.invalidateSize();
                 }).observe(document.querySelector('.map-container'));
 
                 // 6. REGISTER FUNGSI GLOBAL
                 window.openActivityDetail = (id) => this.openModal(id);
-                window.approveActivity = (id) => this.confirmApprove(id);
-                window.rejectActivity = (id) => this.handleReject(id);
-                
-                // Helper function kritis untuk navigasi dari List Cluster -> Marker
                 window.zoomToActivity = (id) => this.handleZoomToId(id);
             });
         },
 
-        // ------------------------------------------------------------------
-        // FITUR: ZOOM KE ITEM DARI LIST CLUSTER (SPIDERFY LOGIC)
-        // ------------------------------------------------------------------
         handleZoomToId(id) {
-            // 1. Tutup popup list cluster agar tidak menghalangi
-            this.map.closePopup(); 
-
-            // 2. Cari marker berdasarkan ID
+            this.map.closePopup();
             const targetMarker = this.markerMap[id];
 
             if (targetMarker) {
-                // 3. Zoom & Spiderfy otomatis
                 this.markersLayer.zoomToShowLayer(targetMarker, () => {
-                    // 4. Buka popup detail marker
                     targetMarker.openPopup();
                 });
             } else {
@@ -231,131 +213,123 @@ export function kadisMapData() {
             }
         },
 
-        // ------------------------------------------------------------------
-        // FITUR: GEOLOCATION / GPS SAYA
-        // ------------------------------------------------------------------
         zoomToCurrentLocation() {
             if (!navigator.geolocation) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Browser Tidak Mendukung',
-                    text: 'Fitur Geolocation tidak didukung oleh browser Anda.'
-                });
+                Swal.fire({ icon: 'warning', title: 'Browser Tidak Mendukung', text: 'Fitur Geolocation tidak didukung oleh browser Anda.' });
                 return;
             }
 
-            this.loading = true; 
+            this.loading = true;
 
             if (this.currentLocationMarker) {
                 this.map.removeLayer(this.currentLocationMarker);
                 this.currentLocationMarker = null;
             }
 
-            this.map.locate({
-                setView: true, 
-                maxZoom: 17, 
-                timeout: 10000, 
-                enableHighAccuracy: true 
-            })
-            .on('locationfound', (e) => {
-                this.loading = false;
-                const latlng = e.latlng;
-                
-                // Visualisasi Marker GPS yang lebih modern
-                const locationMarker = L.circleMarker(latlng, {
-                    radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1
-                });
+            this.map.locate({ setView: true, maxZoom: 17, timeout: 10000, enableHighAccuracy: true })
+                .on('locationfound', (e) => {
+                    this.loading = false;
+                    const latlng = e.latlng;
 
-                const accuracyCircle = L.circle(latlng, e.accuracy, {
-                    color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false
-                });
+                    const locationMarker = L.circleMarker(latlng, { radius: 8, color: 'white', weight: 3, fillColor: '#3b82f6', fillOpacity: 1 });
+                    const accuracyCircle = L.circle(latlng, e.accuracy, { color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1, interactive: false });
 
-                this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
-                
-                locationMarker.bindPopup(`
+                    this.currentLocationMarker = L.layerGroup([locationMarker, accuracyCircle]).addTo(this.map);
+
+                    locationMarker.bindPopup(`
                     <div style="text-align:center; font-family: 'Poppins', sans-serif; padding: 4px;">
                         <b style="color:#1e293b;">Lokasi Anda</b><br>
                         <span style="font-size:11px; color:#64748b;">Akurasi: ${Math.round(e.accuracy)}m</span>
                     </div>
                 `).openPopup();
-                
-                setTimeout(() => {
-                    if (this.currentLocationMarker) {
-                        this.map.removeLayer(this.currentLocationMarker);
-                        this.currentLocationMarker = null;
-                    }
-                }, 10000);
-            })
-            .on('locationerror', (e) => {
-                this.loading = false;
-                Swal.fire({ icon: 'error', title: 'Gagal Akses GPS', text: 'Pastikan GPS aktif.' });
-            });
+
+                    setTimeout(() => {
+                        if (this.currentLocationMarker) {
+                            this.map.removeLayer(this.currentLocationMarker);
+                            this.currentLocationMarker = null;
+                        }
+                    }, 10000);
+                })
+                .on('locationerror', (e) => {
+                    this.loading = false;
+                    Swal.fire({ icon: 'error', title: 'Gagal Akses GPS', text: 'Pastikan GPS aktif.' });
+                });
         },
 
         // ------------------------------------------------------------------
-        // LOGIC DATA: FETCH & CREATE MARKERS
+        // LOGIC DATA: FETCH & CREATE MARKERS (KADIS GLOBAL API)
         // ------------------------------------------------------------------
         loadData() {
             this.loading = true;
-            
-            let url = '/api/all-aktivitas'; 
+
+            let url = '/api/all-aktivitas';
             const params = [];
+
             if (this.filter.from) params.push(`from_date=${this.filter.from}`);
             if (this.filter.to) params.push(`to_date=${this.filter.to}`);
+
+            // [NEW] Injeksi Kategori Lokasi ke Parameter URL
+            if (this.filter.kategori && this.filter.kategori !== 'all') {
+                params.push(`kategori_lokasi=${this.filter.kategori}`);
+            }
+
             if (params.length > 0) url += '?' + params.join('&');
 
-            // [NOTE] Disini kita pakai fetch native, jadi tidak kena error axios
             fetch(url, {
                 headers: {
                     'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
                     'Accept': 'application/json'
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    this.allActivities = data.data;
-                    this.loadMarkers(data.data);
-                }
-            })
-            .catch(err => {
-                console.error("Error loading map data:", err);
-                Swal.fire({icon: 'error', title: 'Kesalahan', text: 'Gagal memuat data peta.'});
-            })
-            .finally(() => { this.loading = false; });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        this.allActivities = data.data;
+                        this.loadMarkers(data.data);
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading map data:", err);
+                    Swal.fire({ icon: 'error', title: 'Kesalahan', text: 'Gagal memuat data peta.' });
+                })
+                .finally(() => { this.loading = false; });
         },
 
         loadMarkers(data) {
             this.markersLayer.clearLayers();
-            this.markerMap = {}; 
+            this.markerMap = {};
 
             if (data.length === 0) return;
-            
+
             if (this.currentLocationMarker) {
                 this.map.removeLayer(this.currentLocationMarker);
                 this.currentLocationMarker = null;
             }
 
             const latlngs = [];
-            
+
             data.forEach(act => {
                 if (!act.lat || !act.lng) return;
 
-                // Warna & Status Marker Individual
-                let color = '#f59e0b'; // Amber
+                let color = '#f59e0b';
                 let statusLabel = 'Menunggu';
-                
+
                 if (act.status === 'approved') {
-                    color = '#10b981'; // Emerald
+                    color = '#10b981';
                     statusLabel = 'Disetujui';
                 } else if (act.status === 'rejected') {
-                    color = '#f43f5e'; // Rose
+                    color = '#f43f5e';
                     statusLabel = 'Ditolak';
                 }
 
-                // Popup Detail Marker (Single Item)
+                // [NEW] Kategori Lokasi di Popup Single Marker
+                const katLokasi = act.kategori_lokasi || 'WFO';
+
                 const popupContent = `
                     <div style="padding: 12px 8px; min-width: 240px; font-family:'Poppins',sans-serif;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4px;">
+                            <span style="font-size:10px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #cbd5e1;">Kategori: ${katLokasi}</span>
+                        </div>
                         <div style="font-weight:700; color:#0f172a; font-size:14px; line-height:1.4; margin-bottom:8px;">
                             ${act.kegiatan}
                         </div>
@@ -378,122 +352,27 @@ export function kadisMapData() {
                     </div>
                 `;
 
-                // Buat Marker
                 const marker = L.circleMarker([act.lat, act.lng], {
-                    radius: 7, 
+                    radius: 7,
                     fillColor: color,
-                    color: '#ffffff', 
+                    color: '#ffffff',
                     weight: 2,
                     fillOpacity: 1,
-                    customData: act 
+                    customData: act
                 })
-                .bindPopup(popupContent);
+                    .bindPopup(popupContent);
 
                 this.markersLayer.addLayer(marker);
                 this.markerMap[act.id] = marker;
-                
+
                 latlngs.push([act.lat, act.lng]);
             });
 
-            // Fit Bounds Smart
             if (latlngs.length > 0) {
                 if (!sessionStorage.getItem('kadis_map_lat')) {
                     this.map.fitBounds(latlngs, { padding: [50, 50], maxZoom: 15 });
                 }
             }
-        },
-
-        // ------------------------------------------------------------------
-        // ACTION HANDLERS
-        // ------------------------------------------------------------------
-        async sendValidation(id, status, reason) {
-            const center = this.map.getCenter();
-            sessionStorage.setItem('kadis_map_lat', center.lat);
-            sessionStorage.setItem('kadis_map_lng', center.lng);
-            sessionStorage.setItem('kadis_map_zoom', this.map.getZoom());
-
-            Swal.fire({
-                title: 'Menyimpan...', text: 'Mohon tunggu sebentar', allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading() }
-            });
-
-            const payload = { 
-                status: status, 
-                komentar_validasi: reason || "", 
-                _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            };
-
-            try {
-                // [FIX] Validasi juga pakai fetch, aman dari axios error
-                const response = await fetch(`/kadis/validasi-laporan/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('auth_token'),
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.message || 'Gagal validasi.');
-
-                await Swal.fire({
-                    icon: 'success', title: 'Berhasil!',
-                    text: status === 'approved' ? 'Laporan disetujui.' : 'Laporan ditolak.',
-                    timer: 1500, showConfirmButton: false
-                });
-
-                window.location.reload();
-
-            } catch (error) {
-                console.error("Validation Error:", error);
-                Swal.fire({ icon: 'error', title: 'Gagal', text: error.message || 'Terjadi kesalahan sistem.' });
-            }
-        },
-
-        confirmApprove(id) {
-            this.closeModal();
-            Swal.fire({
-                title: 'Setujui Laporan?',
-                text: 'Pastikan data laporan sudah sesuai.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Setujui',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.sendValidation(id, 'approved', '');
-                } else {
-                    this.openModal(id);
-                }
-            });
-        },
-
-        handleReject(id) {
-            this.closeModal();
-            Swal.fire({
-                title: 'Tolak Laporan',
-                input: 'textarea',
-                inputLabel: 'Alasan Penolakan',
-                inputPlaceholder: 'Contoh: Lokasi tidak sesuai...',
-                showCancelButton: true,
-                confirmButtonColor: '#f43f5e',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Kirim Penolakan',
-                cancelButtonText: 'Batal',
-                inputValidator: (value) => { if (!value) return 'Wajib menyertakan alasan!' }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.sendValidation(id, 'rejected', result.value);
-                } else {
-                    this.openModal(id);
-                }
-            });
         },
 
         openModal(id) {
@@ -503,13 +382,13 @@ export function kadisMapData() {
                 this.showModal = true;
             }
         },
-        closeModal() { 
-            this.showModal = false; 
-            setTimeout(() => { this.selectedActivity = null; }, 300); 
+        closeModal() {
+            this.showModal = false;
+            setTimeout(() => { this.selectedActivity = null; }, 300);
         },
-        
+
         applyFilter() { this.loadData(); },
-        
+
         initDatePickers() {
             this.$nextTick(() => {
                 ['tgl_dari', 'tgl_sampai'].forEach(id => {
@@ -518,12 +397,11 @@ export function kadisMapData() {
                 });
             });
         },
-        
+
         // ------------------------------------------------------------------
-        // [UPDATED] EXPORT MAP: HEATMAP VS CLUSTER
+        // EXPORT MAP PDF: MENGIRIMKAN FILTER KATEGORI
         // ------------------------------------------------------------------
         async exportMap() {
-            // 1. Tanyakan Mode Visualisasi (User Preference)
             const result = await Swal.fire({
                 title: 'Pilih Visualisasi Peta',
                 text: 'Bagaimana data akan ditampilkan dalam laporan?',
@@ -533,39 +411,35 @@ export function kadisMapData() {
                     'heatmap': 'Peta Sebaran (Heatmap) - Intensitas',
                     'cluster': 'Peta Titik (Clustering) - Detail Lokasi'
                 },
-                inputValue: 'heatmap', // Default Value
+                inputValue: 'heatmap',
                 showCancelButton: true,
                 confirmButtonColor: '#1C7C54',
                 confirmButtonText: 'Lanjutkan Export',
                 cancelButtonText: 'Batal'
             });
 
-            // Jika batal, berhenti
             if (!result.isConfirmed) return;
 
-            // Ambil mode terpilih ('heatmap' atau 'cluster')
             const selectedMode = result.value;
-
             const fromDate = this.filter.from || '';
             const toDate = this.filter.to || '';
+            const kat = this.filter.kategori || 'all'; // [NEW] Ambil filter kategori
 
-            // 2. Reset State & Show Modal Loading
             this.isExporting = true;
             this.exportStatus = 'loading';
             this.exportTitle = 'Export Data Laporan';
             this.exportMessage = 'Menghubungkan ke server peta...';
             this.exportBlobUrl = null;
 
-            // 3. Simulasi Progress Text (Sesuai Mode)
             let visualText = selectedMode === 'heatmap' ? 'Heatmap Intensitas' : 'Titik Clustering';
             let progressSteps = [
                 'Mengambil data aktivitas...',
-                `Merender visualisasi: ${visualText}...`, 
+                `Merender visualisasi: ${visualText}...`,
                 'Menyusun dokumen PDF...',
                 'Finishing...'
             ];
             let stepIndex = 0;
-            
+
             const progressInterval = setInterval(() => {
                 if (this.exportStatus === 'loading' && stepIndex < progressSteps.length) {
                     this.exportMessage = progressSteps[stepIndex];
@@ -573,54 +447,54 @@ export function kadisMapData() {
                 }
             }, 2500);
 
-            // 4. Request ke Backend via Axios Blob
-            // [NOTE] Kirim 'mode' sebagai parameter tambahan
+            // [FIX] Axios Get mengirim parameter mode & kategori_lokasi
             axios.get(`/preview-map-pdf`, {
                 params: {
                     from_date: fromDate,
                     to_date: toDate,
-                    mode: selectedMode // <-- INJEKSI PARAMETER BARU
+                    mode: selectedMode,
+                    kategori_lokasi: kat
                 },
-                responseType: 'blob', 
-                timeout: 60000 
+                responseType: 'blob',
+                timeout: 60000
             })
-            .then(response => {
-                clearInterval(progressInterval); 
-                
-                this.exportStatus = 'success';
-                this.exportTitle = 'Siap Diunduh!';
-                this.exportMessage = 'Dokumen PDF berhasil dibuat. Klik tombol di bawah untuk menutup.';
+                .then(response => {
+                    clearInterval(progressInterval);
 
-                const url = window.URL.createObjectURL(new Blob([response.data]));
-                this.exportBlobUrl = url;
+                    this.exportStatus = 'success';
+                    this.exportTitle = 'Siap Diunduh!';
+                    this.exportMessage = 'Dokumen PDF berhasil dibuat. Klik tombol di bawah untuk menutup.';
 
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', `Peta_Aktivitas_${selectedMode}_${new Date().getTime()}.pdf`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-            })
-            .catch(error => {
-                clearInterval(progressInterval);
-                this.exportStatus = 'error';
-                this.exportTitle = 'Gagal Export';
-                
-                if (error.response && error.response.data instanceof Blob) {
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        try {
-                            const errorJson = JSON.parse(reader.result);
-                            this.exportMessage = errorJson.message || 'Terjadi kesalahan pada server renderer.';
-                        } catch (e) {
-                            this.exportMessage = 'Terjadi kesalahan jaringan atau server timeout.';
-                        }
-                    };
-                    reader.readAsText(error.response.data);
-                } else {
-                    this.exportMessage = error.message || 'Service peta tidak merespon.';
-                }
-            });
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    this.exportBlobUrl = url;
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `Peta_Aktivitas_${selectedMode}_${new Date().getTime()}.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                })
+                .catch(error => {
+                    clearInterval(progressInterval);
+                    this.exportStatus = 'error';
+                    this.exportTitle = 'Gagal Export';
+
+                    if (error.response && error.response.data instanceof Blob) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            try {
+                                const errorJson = JSON.parse(reader.result);
+                                this.exportMessage = errorJson.message || 'Terjadi kesalahan pada server renderer.';
+                            } catch (e) {
+                                this.exportMessage = 'Terjadi kesalahan jaringan atau server timeout.';
+                            }
+                        };
+                        reader.readAsText(error.response.data);
+                    } else {
+                        this.exportMessage = error.message || 'Service peta tidak merespon.';
+                    }
+                });
         },
     }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\ProfileController;
+use App\Http\Controllers\LandingController; // Tambahkan namespace ini
 
 // Core Controllers
 use App\Http\Controllers\Core\ActivityLogController;
@@ -26,6 +27,13 @@ use App\Http\Controllers\Admin\Master\JabatanController;
 use App\Http\Controllers\Admin\Master\TupoksiController;
 use App\Http\Controllers\GIS\WilayahController;
 
+/*
+|--------------------------------------------------------------------------
+| LANDING PAGE ROUTE (Global Access)
+|--------------------------------------------------------------------------
+*/
+// [UPDATE] Mengarahkan root ke LandingController
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 /*
 |--------------------------------------------------------------------------
@@ -33,13 +41,12 @@ use App\Http\Controllers\GIS\WilayahController;
 |--------------------------------------------------------------------------
 */
 Route::view('/login', 'auth.login')->name('login');
-Route::get('/', fn() => redirect()->route('login'));
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', function () {
     Auth::logout();
     session()->invalidate();
     session()->regenerateToken();
-    return redirect()->route('login');
+    return redirect()->route('landing'); // [UPDATE] Redirect ke landing setelah logout, bukan login
 })->name('logout');
 
 /*
@@ -127,7 +134,6 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-
     /*
     |--------------------------------------------------------------------------
     | KADIS ROUTES
@@ -158,7 +164,6 @@ Route::middleware(['auth'])->group(function () {
             })->name('index');
         });
     });
-
 
     /*
     |--------------------------------------------------------------------------

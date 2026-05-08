@@ -23,9 +23,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-    body {
-        font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif
-    }
+        body {
+            font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif
+        }
     </style>
 </head>
 
@@ -34,24 +34,24 @@
 
         {{-- BAGIAN KIRI (GAMBAR & FITUR) --}}
         <section class="relative hidden lg:block overflow-hidden">
-            <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
+            <img src="{{ asset('img/kantor.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
                 alt="Latar Mimika" />
             <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]">
             </div>
 
             <div class="relative z-10 h-full pb-[12px] lg:pb-[15px]">
                 <div class="flex justify-center pt-10">
-                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Kabupaten Mimika"
-                        class="h-[150px] w-[224px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+                    <img src="{{ asset('img/simkin.png') }}" alt="Kabupaten Mimika"
+                        class="h-[180px] w-[180px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
                 </div>
 
                 <div class="mx-auto mt-4 max-w-2xl px-10 text-center text-white">
                     <p class="text-[30px] font-normal">Selamat Datang di</p>
                     <h1 class="mt-1 text-[40px] font-semibold tracking-tight">
-                        Aplikasi E-Daily Report
+                        Aplikasi SIMKIN
                     </h1>
                     <p class="mt-3 text-[20px] font-normal">
-                        Badan Pendapatan Daerah <br /> Kabupaten Mimika
+                        Sistem Informasi Penilaian <br /> Kinerja Individu
                     </p>
                 </div>
 
@@ -104,6 +104,18 @@
             <div class="w-full max-w-md">
                 <h2 class="text-3xl font-semibold text-[#1C7C54]">Login Aplikasi</h2>
                 <p class="mt-2 text-slate-500">Silahkan masuk menggunakan akun anda</p>
+
+                {{-- Tombol Kembali ke Landing Page --}}
+                <a href="{{ url('/') }}"
+                    class="group mb-8 inline-flex w-fit items-center gap-2 rounded-lg pr-3 py-1 text-[14px] font-medium text-slate-500 transition-all hover:text-[#1C7C54] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 transition-transform group-hover:-translate-x-1"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5" />
+                        <path d="M12 19l-7-7 7-7" />
+                    </svg>
+                    Kembali ke Beranda
+                </a>
 
                 {{-- [PERBAIKAN 2] ID Form disesuaikan menjadi 'login-form' --}}
                 <form id="login-form" class="mt-8 space-y-5">
@@ -172,21 +184,21 @@
 
     {{-- Script untuk Toggle Password (Opsional jika tidak ada di login.js) --}}
     <script>
-    document.getElementById('togglePassword').addEventListener('click', function() {
-        const passwordInput = document.getElementById('password');
-        const eyeOpen = document.getElementById('eyeOpen');
-        const eyeClosed = document.getElementById('eyeClosed');
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const eyeOpen = document.getElementById('eyeOpen');
+            const eyeClosed = document.getElementById('eyeClosed');
 
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            eyeOpen.classList.add('hidden');
-            eyeClosed.classList.remove('hidden');
-        } else {
-            passwordInput.type = 'password';
-            eyeOpen.classList.remove('hidden');
-            eyeClosed.classList.add('hidden');
-        }
-    });
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeOpen.classList.add('hidden');
+                eyeClosed.classList.remove('hidden');
+            } else {
+                passwordInput.type = 'password';
+                eyeOpen.classList.remove('hidden');
+                eyeClosed.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 

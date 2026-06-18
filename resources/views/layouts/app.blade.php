@@ -24,8 +24,8 @@
     </script>
 
     {{-- Favicon --}}
-    <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
 
     {{-- 1. jQuery (Wajib ada paling atas agar $ dikenali) --}}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>

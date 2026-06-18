@@ -7,7 +7,8 @@
     <title>E-Daily Report | Bapenda Kab. Mimika</title>
 
     {{-- Assets --}}
-    <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('img/logo-kab-mimika.png') }}" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -72,7 +73,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('assets/icon/logo-aplikasi.png') }}" alt="Logo" class="h-10 w-auto">
+                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-10 w-auto">
                     <div>
                         <span class="text-xl font-bold text-[#1C7C54] tracking-tight block">E-Daily Report</span>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Kabupaten Mimika</span>
@@ -314,7 +315,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-24">
                 <div class="col-span-1 lg:col-span-1">
-                    <img src="{{ asset('assets/icon/logo-aplikasi.png') }}" alt="Logo" class="h-12 w-auto mb-6">
+                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-12 w-auto mb-6">
                     <p class="text-sm text-slate-500 leading-relaxed font-medium">Sistem Informasi Laporan Kinerja Harian Terintegrasi (E-Daily Report) Badan Pendapatan Daerah Kabupaten Mimika.</p>
                 </div>
 

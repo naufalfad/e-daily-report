@@ -15,8 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="icon" type="image/png" href="{{ asset('assets/icon/logo-aplikasi.png') }}">
-    <link rel="shortcut icon" href="{{ asset('assets/icon/logo-aplikasi.png') }}" type="image/png">
+    <link rel="icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('img/logo-kab-mimika.png') }}" type="image/png">
 
 
     {{-- Vite & Tailwind --}}
@@ -34,24 +34,24 @@
 
         {{-- BAGIAN KIRI (GAMBAR & FITUR) --}}
         <section class="relative hidden lg:block overflow-hidden">
-            <img src="{{ asset('img/kantor.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
+            <img src="{{ asset('img/bapenda-gpt.jpg') }}" class="absolute inset-0 h-full w-full object-cover"
                 alt="Latar Mimika" />
             <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(13,92,62,0.0)_0%,rgba(24,140,96,0.0)_100%)]">
             </div>
 
             <div class="relative z-10 h-full pb-[12px] lg:pb-[15px]">
                 <div class="flex justify-center pt-10">
-                    <img src="{{ asset('img/simkin.png') }}" alt="Kabupaten Mimika"
-                        class="h-[180px] w-[180px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Kabupaten Mimika"
+                        class="h-[180px] w-auto object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
                 </div>
 
                 <div class="mx-auto mt-4 max-w-2xl px-10 text-center text-white">
                     <p class="text-[30px] font-normal">Selamat Datang di</p>
                     <h1 class="mt-1 text-[40px] font-semibold tracking-tight">
-                        Aplikasi SIMKIN
+                        E-Daily Report
                     </h1>
                     <p class="mt-3 text-[20px] font-normal">
-                        Sistem Informasi Penilaian <br /> Kinerja Individu
+                        Sistem Informasi Laporan <br /> Kinerja Harian Terintegrasi
                     </p>
                 </div>
 

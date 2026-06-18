@@ -79,7 +79,7 @@ $menusByRole = [
         ['key' => 'master-bidang', 'label' => 'Master Bidang', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.bidang.index'],
         ['key' => 'master-jabatan', 'label' => 'Master Jabatan', 'icon' => 'manajemen-pegawai', 'route' => 'admin.master.jabatan.index'],
         
-        ['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'setting', 'route' => 'admin.pengaturan-sistem'],
+        // ['key' => 'pengaturan', 'label' => 'Pengaturan Sistem', 'icon' => 'setting', 'route' => 'admin.pengaturan-sistem'],
         ['key' => 'log', 'label' => 'Log Aktivitas', 'icon' => 'clock', 'route' => 'admin.log-aktivitas'],
     ],
 ];

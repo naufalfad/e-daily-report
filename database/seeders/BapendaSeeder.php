@@ -39,6 +39,9 @@ class BapendaSeeder extends Seeder
         $this->createSubBidang($sekretariat, 'Sub Bagian Umum dan Kepegawaian');
         $this->createSubBidang($sekretariat, 'Sub Bagian Perencanaan dan Keuangan');
         $this->createSubBidang($sekretariat, 'Sub Bagian Program');
+        $this->createSubBidang($sekretariat, 'Sub Bagian Kepegawaian');
+        $this->createSubBidang($sekretariat, 'Sub Bagian Keuangan');
+        $this->createSubBidang($sekretariat, 'Sub Bagian Umum');
 
         /**
          * ======================================================
@@ -49,15 +52,11 @@ class BapendaSeeder extends Seeder
 
         $this->createSubBidang($bidangPajak, 'Sub Bidang Pendataan dan Pendaftaran Pajak');
         $this->createSubBidang($bidangPajak, 'Sub Bidang Perhitungan dan Penetapan Pajak Daerah');
-        $this->createSubBidang(
-            $bidangPajak,
-            'Sub Bidang Pemeriksaan, Konsultasi, Keberatan dan Banding'
-        );
+        $this->createSubBidang($bidangPajak, 'Sub Bidang Pemeriksaan, Konsultasi, Keberatan dan Banding');
 
         /**
          * ======================================================
          * 3. BIDANG PERENCANAAN DAN PENGEMBANGAN PENDAPATAN DAERAH
-         * (Sesuai Perbup No. 3 Tahun 2023 Pasal 19)
          * ======================================================
          */
         $bidangRenbang = $this->createBidang(
@@ -67,10 +66,8 @@ class BapendaSeeder extends Seeder
 
         $this->createSubBidang($bidangRenbang, 'Sub Bidang Regulasi Pendapatan Daerah');
         $this->createSubBidang($bidangRenbang, 'Sub Bidang Retribusi dan Evaluasi Pendapatan Daerah');
-        $this->createSubBidang(
-            $bidangRenbang,
-            'Sub Bidang Pengembangan Sistem Informatika dan Inovasi Pendapatan Daerah'
-        );
+        $this->createSubBidang($bidangRenbang, 'Sub Bidang Pengembangan Sistem Informatika dan Inovasi Pendapatan Daerah');
+        $this->createSubBidang($bidangRenbang, 'Sub Bidang Dana Perimbangan');
 
         /**
          * ======================================================

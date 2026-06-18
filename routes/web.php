@@ -180,7 +180,7 @@ Route::middleware(['auth'])->group(function () {
         // [IT] Akun Pengguna
         Route::get('/akun-pengguna', [UserAccountController::class, 'index'])->name('akun-pengguna');
         
-        Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
+        // Route::view('/pengaturan-sistem', 'admin.pengaturan-sistem')->name('pengaturan-sistem');
         Route::view('/log-aktivitas', 'admin.log-aktivitas')->name('log-aktivitas');
 
         Route::prefix('master')->name('master.')->group(function () {

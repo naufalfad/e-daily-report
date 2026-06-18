@@ -18,6 +18,11 @@ return new class extends Migration
 
 public function down()
 {
+    // Isi nilai default untuk email yang NULL agar tidak error saat rollback (Not Null Violation)
+    \Illuminate\Support\Facades\DB::table('users')->whereNull('email')->update([
+        'email' => \Illuminate\Support\Facades\DB::raw("username || '@example.com'")
+    ]);
+
     Schema::table('users', function ($table) {
         $table->string('email')->nullable(false)->change();
     });

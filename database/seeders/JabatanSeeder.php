@@ -18,18 +18,24 @@ class JabatanSeeder extends Seeder
          * Analisis Logic:
          * - Jabatan adalah master data FLAT (tidak hierarkis)
          * - Relasi struktural ditangani oleh tabel bidang
-         * - Jabatan dinormalisasi dari teks mentah jabatan pegawai
-         * - firstOrCreate dipakai agar aman di-run berulang
          */
         $jabatans = [
-            // Jabatan Struktural
+            // Jabatan Struktural Utama
             'Kepala Badan',
+            'Sekretaris',
+            
+            // Jabatan Struktural Bidang/Bagian
             'Kepala Bidang',
+            'Plt. Kepala Bidang',
             'Kepala Sub Bagian',
+            'Plt. Kepala Sub Bagian',
             'Kepala Sub Bidang',
+            'Plt. Kepala Sub Bidang',
 
             // Jabatan Fungsional / Pelaksana
+            'Pelaksana',
             'Staf Pelaksana',
+            'Pranata Komputer Ahli Pertama',
 
             // Jabatan Bendahara
             'Bendahara Pengeluaran',
@@ -37,7 +43,7 @@ class JabatanSeeder extends Seeder
             'Pembantu Bendahara Penerima',
             'Bendahara Barang',
 
-            // Status Kepegawaian Khusus
+            // Status Kepegawaian Khusus (Opsional jika masih dipakai)
             'CPNS',
             'PPPK',
         ];

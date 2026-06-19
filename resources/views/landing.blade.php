@@ -321,7 +321,7 @@
             </div>
 
             <div class="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-2">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">&copy; {{ date('Y') }} Bapenda Kabupaten Mimika. All Rights Reserved.</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest"> {{ date('Y') }} Bapenda Kabupaten Mimika.</p>
                 <div class="flex items-center gap-6 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                     <span>Privacy Policy</span>
                     <span>Security Audit</span>

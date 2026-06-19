@@ -9,7 +9,8 @@
     {{-- Assets --}}
     <link rel="icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
     <link rel="shortcut icon" href="{{ asset('img/logo-kab-mimika.png') }}" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -69,13 +70,17 @@
                     <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-9 w-auto">
                     <div class="h-6 w-px bg-slate-200"></div>
                     <div class="flex flex-col text-left">
-                        <span class="text-base font-bold text-slate-900 tracking-tight leading-none">E-Daily <span class="text-[#1C7C54]">Report</span></span>
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Kabupaten Mimika</span>
+                        <span class="text-base font-bold text-slate-900 tracking-tight leading-none">E-Daily <span
+                                class="text-[#1C7C54]">Report</span></span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Kabupaten
+                            Mimika</span>
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-8 text-[11px] font-black uppercase tracking-widest text-slate-500">
-                    <a href="{{ $targetUrl ?? '#' }}" class="px-6 py-2 bg-[#1C7C54] text-white rounded-none shadow-md shadow-emerald-700/10 hover:bg-[#156343] transition-all transform active:scale-95">
+                <div
+                    class="flex items-center space-x-8 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    <a href="{{ $targetUrl ?? '#' }}"
+                        class="px-6 py-2 bg-[#1C7C54] text-white rounded-none shadow-md shadow-emerald-700/10 hover:bg-[#156343] transition-all transform active:scale-95">
                         {{ $buttonText ?? 'Login' }}
                     </a>
                 </div>
@@ -87,11 +92,8 @@
     <section class="relative min-h-[85vh] flex items-center bg-slate-950 text-white overflow-hidden py-16 px-4 lg:px-6">
         {{-- Layer Latar Belakang Gambar --}}
         <div class="absolute inset-0 z-0">
-            <img 
-                src="{{ asset('img/bapenda-gpt.jpg') }}" 
-                alt="Bapenda Mimika" 
-                class="w-full h-full object-cover object-center filter saturate-75 opacity-90"
-            >
+            <img src="{{ asset('img/bapenda-gpt.jpg') }}" alt="Bapenda Mimika"
+                class="w-full h-full object-cover object-center filter saturate-75 opacity-90">
         </div>
         {{-- Lapisan Gradien Taktis --}}
         <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/60 to-slate-950/10 z-10"></div>
@@ -99,18 +101,29 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mt-8 md:mt-0">
             <div class="grid lg:grid-cols-[1.2fr_1fr] gap-16 items-center">
                 <div class="text-left space-y-5">
-                    <span class="uppercase tracking-[0.25em] text-[8px] font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 w-max block">
-                        Official Government Platform
+                    <span
+                        class="uppercase tracking-[0.25em] text-[8px] font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 w-max block">
+                        Platform Resmi Bapenda Kabupaten Mimika
                     </span>
-                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none uppercase">
+                    <h1
+                        class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none uppercase">
                         Validasi Kinerja Berbasis <span class="text-emerald-400">Lokasi Aktual.</span>
                     </h1>
-                    <p class="text-xs md:text-sm text-slate-300 font-semibold leading-relaxed max-w-xl">
-                        Sistem pelaporan harian (LKH) terintegrasi untuk meningkatkan akuntabilitas, transparansi data, dan efisiensi birokrasi di lingkungan Bapenda Kabupaten Mimika.
-                    </p>
+                    <div class="space-y-3 max-w-xl">
+                        <p class="text-sm text-slate-300 font-medium leading-relaxed">
+                            Sistem pelaporan harian (LKH) terintegrasi untuk meningkatkan akuntabilitas,
+                            transparansi data, dan efisiensi birokrasi di lingkungan Bapenda Kabupaten Mimika.
+                        </p>
+                        <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-widest leading-relaxed border-l-2 border-emerald-600/50 pl-3">
+                            Sesuai Peraturan Bupati Mimika No. 3 Tahun 2023 tentang Kedudukan, Susunan Organisasi, Tugas &amp; Fungsi
+                            serta Tata Kerja Badan Pendapatan Daerah Tipe A
+                        </p>
+                    </div>
                     <div class="pt-2">
-                        <a href="#fitur" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 font-bold text-[11px] uppercase tracking-widest transition-colors shadow-none group">
-                            Eksplorasi Fitur <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                        <a href="#fitur"
+                            class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 font-bold text-[11px] uppercase tracking-widest transition-colors shadow-none group">
+                            Eksplorasi Fitur <i
+                                class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </div>
                 </div>
@@ -124,38 +137,59 @@
             <div class="grid lg:grid-cols-2 gap-16 items-start">
                 <div class="text-left space-y-6">
                     <div class="border-b-4 border-[#1C7C54] pb-4">
-                        <h2 class="text-3xl font-semibold text-slate-900 tracking-tight uppercase leading-none">Teknologi Kualitas <br><span class="text-[#1C7C54]">Birokrasi.</span></h2>
+                        <h2 class="text-3xl font-semibold text-slate-900 tracking-tight uppercase leading-none">
+                            Teknologi Kualitas <br><span class="text-[#1C7C54]">Birokrasi.</span></h2>
                     </div>
-                    <p class="text-slate-500 text-sm font-medium leading-relaxed">Setiap baris kode dioptimasi untuk menghasilkan data kinerja yang akurat, transparan, dan tidak dapat dimanipulasi.</p>
+                    <p class="text-slate-500 text-sm font-medium leading-relaxed">Setiap baris kode dioptimasi untuk
+                        menghasilkan data kinerja yang akurat, transparan, dan tidak dapat dimanipulasi.</p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         {{-- Fitur Items --}}
-                        <button @click="activeTab = 1" :class="activeTab === 1 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
-                            <i class="fas fa-map-pin mb-3 block text-sm" :class="activeTab === 1 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                        <button @click="activeTab = 1"
+                            :class="activeTab === 1 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'"
+                            class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-map-pin mb-3 block text-sm"
+                                :class="activeTab === 1 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Anti-Fake GPS</h5>
-                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Verifikasi lokasi real-time dengan akurasi tinggi.</p>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Verifikasi lokasi
+                                real-time dengan akurasi tinggi.</p>
                         </button>
-                        <button @click="activeTab = 2" :class="activeTab === 2 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
-                            <i class="fas fa-file-invoice mb-3 block text-sm" :class="activeTab === 2 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                        <button @click="activeTab = 2"
+                            :class="activeTab === 2 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'"
+                            class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-file-invoice mb-3 block text-sm"
+                                :class="activeTab === 2 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Lampiran Bukti</h5>
-                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Wajib sertakan dokumen/foto hasil kerja.</p>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Wajib sertakan
+                                dokumen/foto hasil kerja.</p>
                         </button>
-                        <button @click="activeTab = 3" :class="activeTab === 3 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
-                            <i class="fas fa-chart-simple mb-3 block text-sm" :class="activeTab === 3 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                        <button @click="activeTab = 3"
+                            :class="activeTab === 3 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'"
+                            class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-chart-simple mb-3 block text-sm"
+                                :class="activeTab === 3 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Auto-Skoring</h5>
-                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Kalkulasi poin SKP otomatis secara instan.</p>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Kalkulasi poin SKP
+                                otomatis secara instan.</p>
                         </button>
-                        <button @click="activeTab = 4" :class="activeTab === 4 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
-                            <i class="fas fa-bell mb-3 block text-sm" :class="activeTab === 4 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                        <button @click="activeTab = 4"
+                            :class="activeTab === 4 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'"
+                            class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-bell mb-3 block text-sm"
+                                :class="activeTab === 4 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Notifikasi Push</h5>
-                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Info validasi & pengumuman langsung di HP.</p>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Info validasi &
+                                pengumuman langsung di HP.</p>
                         </button>
                     </div>
                 </div>
 
                 {{-- Preview Panel --}}
-                <div class="relative bg-slate-900 rounded-none overflow-hidden shadow-2xl min-h-[500px] border border-white/5">
-                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-15"></div>
+                <div
+                    class="relative bg-slate-900 rounded-none overflow-hidden shadow-2xl min-h-[500px] border border-white/5">
+                    <div
+                        class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-15">
+                    </div>
 
                     {{-- Gambar 1: Pemantauan Lokasi / GPS --}}
                     <div x-show="activeTab === 1" x-cloak
@@ -166,9 +200,14 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Pemantauan Lokasi GPS">
-                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Pemantauan Lokasi Presisi</h4>
-                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Sistem mengunci koordinat geografis setiap laporan, memastikan setiap aktivitas terekam sesuai lokasi penugasan tanpa celah manipulasi.</p>
+                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                            class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8"
+                            alt="Pemantauan Lokasi GPS">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Pemantauan Lokasi Presisi
+                        </h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Sistem mengunci koordinat
+                            geografis setiap laporan, memastikan setiap aktivitas terekam sesuai lokasi penugasan tanpa
+                            celah manipulasi.</p>
                     </div>
 
                     {{-- Gambar 2: Lampiran Bukti / Verifikasi --}}
@@ -180,9 +219,14 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Pemantauan Laporan Keuangan">
-                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Verifikasi Lampiran Berkas</h4>
-                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Memastikan seluruh data verifikasi berupa berkas isian teknis atau scan dokumen diunggah dalam format PDF/JPG yang sah.</p>
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                            class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8"
+                            alt="Pemantauan Laporan Keuangan">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Verifikasi Lampiran
+                            Berkas</h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Memastikan seluruh data
+                            verifikasi berupa berkas isian teknis atau scan dokumen diunggah dalam format PDF/JPG yang
+                            sah.</p>
                     </div>
 
                     <!-- {-- Gambar 3: Auto-Skoring --}} -->
@@ -194,9 +238,14 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Kalkulasi Dashboard">
-                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Auto-Skoring Real-Time</h4>
-                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Kalkulasi poin SKP dinonaktifkan dari kerumitan rekapitulasi manual. Sistem secara otomatis menyusun akumulasi skor secara objektif.</p>
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                            class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8"
+                            alt="Kalkulasi Dashboard">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Auto-Skoring Real-Time
+                        </h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Kalkulasi poin SKP
+                            dinonaktifkan dari kerumitan rekapitulasi manual. Sistem secara otomatis menyusun akumulasi
+                            skor secara objektif.</p>
                     </div>
 
                     <!-- {-- Gambar 4: Notifikasi Push --}} -->
@@ -208,9 +257,14 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Notifikasi Mobile">
-                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Notifikasi Sistem Instan</h4>
-                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Pesan verifikasi, instruksi revisi, dan pengumuman kedinasan akan langsung terkirim secara instan ke perangkat handphone pengguna.</p>
+                        <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                            class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8"
+                            alt="Notifikasi Mobile">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Notifikasi Sistem Instan
+                        </h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Pesan verifikasi, instruksi
+                            revisi, dan pengumuman kedinasan akan langsung terkirim secara instan ke perangkat handphone
+                            pengguna.</p>
                     </div>
                 </div>
             </div>
@@ -221,11 +275,14 @@
     <section id="peta" class="py-16 bg-[#EFF0F5]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-10 text-left">
-                <h2 class="text-3xl font-semibold text-slate-900 tracking-tight uppercase leading-none">Pantau Aktivitas Tim Anda</h2>
-                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2 leading-none">Visualisasi sebaran pegawai di wilayah kerja secara real-time.</p>
+                <h2 class="text-3xl font-semibold text-slate-900 tracking-tight uppercase leading-none">Pantau Aktivitas
+                    Tim Anda</h2>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2 leading-none">Visualisasi
+                    sebaran pegawai di wilayah kerja secara real-time.</p>
             </div>
 
-            <div class="bg-white rounded-none shadow-2xl border border-slate-200 overflow-hidden flex flex-col lg:grid lg:grid-cols-[1fr_360px] h-[700px] lg:h-[650px]">
+            <div
+                class="bg-white rounded-none shadow-2xl border border-slate-200 overflow-hidden flex flex-col lg:grid lg:grid-cols-[1fr_360px] h-[700px] lg:h-[650px]">
                 {{-- Map Container --}}
                 <div id="simulation-map" class="h-1/2 lg:h-full w-full"></div>
 
@@ -239,7 +296,8 @@
                         {{-- Diisi via JS --}}
                     </div>
                     <div class="p-4 bg-slate-50 border-t border-slate-200 text-center">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Simulation Mode Enabled</p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Simulation Mode Enabled
+                        </p>
                     </div>
                 </div>
             </div>
@@ -252,30 +310,39 @@
             <h2 class="text-3xl md:text-4xl font-semibold mb-12 tracking-tight uppercase">Siklus Pelaporan Modern</h2>
 
             <div class="grid md:grid-cols-3 gap-12">
-                <div class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
+                <div
+                    class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
                     <div class="space-y-3.5">
                         <span class="text-3xl font-black text-emerald-400 tracking-tighter block leading-none">01</span>
                         <div class="space-y-1.5">
-                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Pencatatan Mandiri</h4>
-                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Pegawai menginput aktivitas, durasi, dan volume pekerjaan langsung melalui perangkat mobile.</p>
+                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Pencatatan
+                                Mandiri</h4>
+                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Pegawai menginput
+                                aktivitas, durasi, dan volume pekerjaan langsung melalui perangkat mobile.</p>
                         </div>
                     </div>
                 </div>
-                <div class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
+                <div
+                    class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
                     <div class="space-y-3.5">
                         <span class="text-3xl font-black text-emerald-400 tracking-tighter block leading-none">02</span>
                         <div class="space-y-1.5">
-                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Verifikasi Instan</h4>
-                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Atasan menerima notifikasi real-time untuk melakukan pemeriksaan dan validasi laporan.</p>
+                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Verifikasi
+                                Instan</h4>
+                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Atasan menerima
+                                notifikasi real-time untuk melakukan pemeriksaan dan validasi laporan.</p>
                         </div>
                     </div>
                 </div>
-                <div class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
+                <div
+                    class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
                     <div class="space-y-3.5">
                         <span class="text-3xl font-black text-emerald-400 tracking-tighter block leading-none">03</span>
                         <div class="space-y-1.5">
-                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Rekapitulasi Kinerja</h4>
-                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Data yang tervalidasi otomatis tersusun menjadi laporan capaian bulanan dan tahunan instansi.</p>
+                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Rekapitulasi
+                                Kinerja</h4>
+                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Data yang tervalidasi
+                                otomatis tersusun menjadi laporan capaian bulanan dan tahunan instansi.</p>
                         </div>
                     </div>
                 </div>
@@ -289,7 +356,8 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12 text-left">
                 <div class="col-span-1 lg:col-span-1">
                     <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-11 w-auto mb-6">
-                    <p class="text-slate-500 text-xs font-semibold leading-relaxed">Sistem Informasi Laporan Kinerja Harian Terintegrasi (E-Daily Report) Badan Pendapatan Daerah Kabupaten Mimika.</p>
+                    <p class="text-slate-500 text-xs font-semibold leading-relaxed">Sistem Informasi Laporan Kinerja
+                        Harian Terintegrasi (E-Daily Report) Badan Pendapatan Daerah Kabupaten Mimika.</p>
                 </div>
 
                 <div>
@@ -305,23 +373,32 @@
                 <div>
                     <h5 class="text-emerald-600 font-bold text-[10px] uppercase tracking-widest mb-6">Kontak Resmi</h5>
                     <ul class="space-y-4 text-slate-500 font-bold text-[11px] tracking-wider">
-                        <li class="flex gap-2"><i class="fas fa-location-dot mt-0.5 text-slate-400"></i> Jl. Cenderawasih No. 1, Timika, Papua Tengah</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-envelope text-slate-400"></i> support@bapenda.mimika.go.id</li>
+                        <li class="flex gap-2"><i class="fas fa-location-dot mt-0.5 text-slate-400"></i> Jl.
+                            Cenderawasih No. 1, Timika, Papua Tengah</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-envelope text-slate-400"></i>
+                            support@bapenda.mimika.go.id</li>
                     </ul>
                 </div>
 
                 <div>
                     <h5 class="text-emerald-600 font-bold text-[10px] uppercase tracking-widest mb-6">Media Sosial</h5>
                     <div class="flex gap-2">
-                        <a href="#" class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-facebook-f text-sm"></i></a>
-                        <a href="#" class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-instagram text-sm"></i></a>
-                        <a href="#" class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-youtube text-sm"></i></a>
+                        <a href="#"
+                            class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i
+                                class="fab fa-facebook-f text-sm"></i></a>
+                        <a href="#"
+                            class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i
+                                class="fab fa-instagram text-sm"></i></a>
+                        <a href="#"
+                            class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i
+                                class="fab fa-youtube text-sm"></i></a>
                     </div>
                 </div>
             </div>
 
             <div class="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-2">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest"> {{ date('Y') }} Bapenda Kabupaten Mimika.</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest"> {{ date('Y') }} Bapenda
+                    Kabupaten Mimika.</p>
                 <div class="flex items-center gap-6 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                     <span>Privacy Policy</span>
                     <span>Security Audit</span>
@@ -333,7 +410,7 @@
 
     {{-- SCRIPTS --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             // Leaflet Map Initialization
             const mimikaCenter = [-4.5467, 136.8833];
             const map = L.map('simulation-map', {
@@ -350,45 +427,45 @@
             }).addTo(map);
 
             const dummyMarkers = [{
-                    id: 1,
-                    lat: -4.5450,
-                    lng: 136.8850,
-                    n: 'Andi Pratama',
-                    r: 'Staf Pajak',
-                    c: '#10b981',
-                    a: 'Audit Objek Pajak Restoran',
-                    st: 'WFO'
-                },
-                {
-                    id: 2,
-                    lat: -4.5500,
-                    lng: 136.8800,
-                    n: 'Siti Aisyah',
-                    r: 'Analis Keuangan',
-                    c: '#3b82f6',
-                    a: 'Rekapitulasi SP2D Bulanan',
-                    st: 'WFH'
-                },
-                {
-                    id: 3,
-                    lat: -4.5400,
-                    lng: 136.8900,
-                    n: 'Budi Sudarsono',
-                    r: 'Juru Sita',
-                    c: '#a855f7',
-                    a: 'Penyampaian Surat Teguran',
-                    st: 'Dinas Luar'
-                },
-                {
-                    id: 4,
-                    lat: -4.5480,
-                    lng: 136.8750,
-                    n: 'Rahmat Hidayat',
-                    r: 'Pelayanan',
-                    c: '#10b981',
-                    a: 'Pengecekan Berkas Sertifikat',
-                    st: 'WFO'
-                }
+                id: 1,
+                lat: -4.5450,
+                lng: 136.8850,
+                n: 'Andi Pratama',
+                r: 'Staf Pajak',
+                c: '#10b981',
+                a: 'Audit Objek Pajak Restoran',
+                st: 'WFO'
+            },
+            {
+                id: 2,
+                lat: -4.5500,
+                lng: 136.8800,
+                n: 'Siti Aisyah',
+                r: 'Analis Keuangan',
+                c: '#3b82f6',
+                a: 'Rekapitulasi SP2D Bulanan',
+                st: 'WFH'
+            },
+            {
+                id: 3,
+                lat: -4.5400,
+                lng: 136.8900,
+                n: 'Budi Sudarsono',
+                r: 'Juru Sita',
+                c: '#a855f7',
+                a: 'Penyampaian Surat Teguran',
+                st: 'Dinas Luar'
+            },
+            {
+                id: 4,
+                lat: -4.5480,
+                lng: 136.8750,
+                n: 'Rahmat Hidayat',
+                r: 'Pelayanan',
+                c: '#10b981',
+                a: 'Pengecekan Berkas Sertifikat',
+                st: 'WFO'
+            }
             ];
 
             const listEl = document.getElementById('activity-list');

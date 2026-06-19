@@ -16,7 +16,7 @@ export function manajemenPegawaiData() {
 
         // Filter & Sorting State
         search: "",
-        filterUnitKerja: "",
+        filterBidang: "",
         sortBy: "created_at",
         sortDir: "desc",
         limit: 10,
@@ -149,14 +149,15 @@ export function manajemenPegawaiData() {
                 });
 
                 if (this.search) params.append('search', this.search);
-                if (this.filterUnitKerja) params.append('unit_kerja_id', this.filterUnitKerja);
+                if (this.filterBidang) params.append('bidang_id', this.filterBidang);
 
                 const response = await fetch(`${BASE_URL}?${params.toString()}`, {
+                    credentials: 'include',
                     headers: {
-                        Authorization: `Bearer ${getToken()}`,
-                        Accept: "application/json",
+                        "Authorization": `Bearer ${getToken()}`,
+                        "Accept": "application/json",
                         "X-Requested-With": "XMLHttpRequest"
-                    },
+                    }
                 });
 
                 if (response.status === 401) {

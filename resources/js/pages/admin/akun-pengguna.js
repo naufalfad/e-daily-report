@@ -17,6 +17,7 @@ export function akunPenggunaData() {
         limit: 10,
         sortBy: 'created_at',
         sortDir: 'desc',
+        filterRole: '',
 
         // Data Master (Disupply dari Window Object di Blade untuk Role)
         roleList: window.Laravel?.roles || [],
@@ -87,8 +88,10 @@ export function akunPenggunaData() {
                 });
 
                 if (this.search) params.append('search', this.search);
+                if (this.filterRole) params.append('role_id', this.filterRole);
 
                 const response = await fetch(`${BASE_URL}?${params.toString()}`, {
+                    credentials: 'include',
                     headers: {
                         "Authorization": `Bearer ${getToken()}`,
                         "Accept": "application/json",

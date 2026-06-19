@@ -9,7 +9,7 @@
     {{-- Assets --}}
     <link rel="icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
     <link rel="shortcut icon" href="{{ asset('img/logo-kab-mimika.png') }}" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -29,7 +29,7 @@
             background-color: #F8FAFC;
         }
 
-        /* FIX: Z-Index Navbar harus lebih tinggi dari elemen Leaflet manapun */
+        /* Glassmorphism Navbar Taktis */
         .glass-nav {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -43,48 +43,39 @@
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #CBD5E1;
-            border-radius: 10px;
+            border-radius: 0px;
         }
 
-        /* Map Layout Fix */
+        /* Map Canvas */
         #simulation-map {
-            border-radius: 1rem 0 0 1rem;
             z-index: 1;
-        }
-
-        @media (max-width: 1024px) {
-            #simulation-map {
-                border-radius: 1rem 1rem 0 0;
-            }
         }
 
         .feature-card-active {
             border-color: #1C7C54;
-            background-color: #F0FDF4;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            background-color: rgba(28, 124, 84, 0.04);
+            box-shadow: none;
         }
     </style>
 </head>
 
-<body class="text-slate-800 antialiased overflow-x-hidden">
+<body class="text-slate-800 antialiased overflow-x-hidden selection:bg-[#1C7C54] selection:text-white">
 
     {{-- 1. NAVBAR --}}
     <nav class="fixed top-0 w-full glass-nav transition-all duration-300 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center gap-1.5">
-                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-10 w-auto">
-                    <div>
-                        <span class="text-xl font-medium text-[#1C7C54] tracking-tight block">E-Daily Report</span>
-                        <span class="text-[10px] font-medium text-slate-400 tracking-normal block">Kabupaten Mimika</span>
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-9 w-auto">
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <div class="flex flex-col text-left">
+                        <span class="text-base font-bold text-slate-900 tracking-tight leading-none">E-Daily <span class="text-[#1C7C54]">Report</span></span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Kabupaten Mimika</span>
                     </div>
                 </div>
 
-                <div class="hidden md:flex items-center space-x-10">
-                    <a href="#fitur" class="text-sm font-medium text-slate-600 hover:text-[#1C7C54] transition-colors">Fitur</a>
-                    <a href="#peta" class="text-sm font-medium text-slate-600 hover:text-[#1C7C54] transition-colors">Monitoring</a>
-                    <a href="#alur" class="text-sm font-medium text-slate-600 hover:text-[#1C7C54] transition-colors">Cara Kerja</a>
-                    <a href="{{ $targetUrl ?? '#' }}" class="px-7 py-3 bg-[#1C7C54] text-white text-sm font-medium rounded-none shadow-lg shadow-emerald-700/20 hover:bg-[#156343] transition-all transform active:scale-95">
+                <div class="hidden md:flex items-center space-x-8 text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    <a href="{{ $targetUrl ?? '#' }}" class="px-6 py-2 bg-[#1C7C54] text-white rounded-none shadow-md shadow-emerald-700/10 hover:bg-[#156343] transition-all transform active:scale-95">
                         {{ $buttonText ?? 'Login' }}
                     </a>
                 </div>
@@ -93,55 +84,66 @@
     </nav>
 
     {{-- 2. HERO SECTION --}}
-    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-40 bg-gradient-to-br from-white via-slate-50 to-[#EFF0F5]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <section class="relative min-h-[85vh] flex items-center bg-slate-950 text-white overflow-hidden py-16 px-4 lg:px-6">
+        {{-- Layer Latar Belakang Gambar --}}
+        <div class="absolute inset-0 z-0">
+            <img 
+                src="{{ asset('img/bg-mimika.jpg') }}" 
+                alt="Mimika Landscape" 
+                class="w-full h-full object-cover object-center filter saturate-75 opacity-90"
+            >
+        </div>
+        {{-- Lapisan Gradien Taktis --}}
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/30 z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mt-8 md:mt-0">
             <div class="grid lg:grid-cols-[1.2fr_1fr] gap-16 items-center">
-                <div class="text-center lg:text-left">
-                    <div class="inline-block px-4 py-1.5 mb-6 text-[11px] font-medium tracking-widest text-emerald-700 uppercase bg-emerald-100 rounded-full border border-emerald-200">
+                <div class="text-left space-y-5">
+                    <span class="uppercase tracking-[0.25em] text-[8px] font-black text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 w-max block">
                         Official Government Platform
-                    </div>
-                    <h1 class="text-4xl sm:text-6xl font-semibold text-slate-900 tracking-tight leading-[1.1] mb-8">
-                        Validasi Kinerja Berbasis <span class="text-[#1C7C54]">Lokasi Aktual.</span>
+                    </span>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none uppercase">
+                        Validasi Kinerja Berbasis <span class="text-emerald-400">Lokasi Aktual.</span>
                     </h1>
-                    <p class="text-lg text-slate-500 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
-                        Sistem pelaporan harian (LKH) terintegrasi untuk meningkatkan akuntabilitas dan efisiensi birokrasi di lingkungan Bapenda Kabupaten Mimika.
+                    <p class="text-xs md:text-sm text-slate-300 font-semibold leading-relaxed max-w-xl">
+                        Sistem pelaporan harian (LKH) terintegrasi untuk meningkatkan akuntabilitas, transparansi data, dan efisiensi birokrasi di lingkungan Bapenda Kabupaten Mimika.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-2 justify-center lg:justify-start">
-                        <a href="#fitur" class="px-10 py-4 bg-slate-900 text-white font-medium rounded-none shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5 group">
+                    <div class="pt-2">
+                        <a href="#fitur" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 font-bold text-[11px] uppercase tracking-widest transition-colors shadow-none group">
                             Eksplorasi Fitur <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </div>
                 </div>
 
-                {{-- Mockup UI Dashboard --}}
+                {{-- Mockup UI Dashboard (Siku Kaku, High-Density) --}}
                 <div class="relative">
                     <div class="absolute -inset-4 bg-emerald-500/10 rounded-none blur-3xl"></div>
-                    <div class="relative bg-white rounded-none shadow-2xl border border-slate-200 overflow-hidden">
-                        <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                            <span class="text-xs font-medium text-slate-500 tracking-normal">Pusat Validasi Atasan</span>
+                    <div class="relative bg-white border border-slate-200 shadow-2xl overflow-hidden text-slate-800 rounded-none">
+                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex justify-between items-center select-none">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Pusat Validasi Atasan</span>
                             <div class="flex gap-1.5">
-                                <div class="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
-                                <div class="w-2.5 h-2.5 rounded-full bg-slate-200"></div>
+                                <div class="w-2 h-2 rounded-full bg-slate-200"></div>
+                                <div class="w-2 h-2 rounded-full bg-slate-200"></div>
                             </div>
                         </div>
-                        <div class="p-6 space-y-4">
+                        <div class="p-4 flex flex-col divide-y divide-slate-100">
                             @php $mockData = [
-                            ['n' => 'Andi Pratama', 't' => '08:15 WIT', 's' => 'Waiting'],
-                            ['n' => 'Siti Aisyah', 't' => '09:30 WIT', 's' => 'Waiting'],
-                            ['n' => 'Budi Sudarsono', 't' => '10:05 WIT', 's' => 'Waiting']
+                                ['n' => 'Andi Pratama', 't' => '08:15 WIT', 's' => 'Waiting'],
+                                ['n' => 'Siti Aisyah', 't' => '09:30 WIT', 's' => 'Waiting'],
+                                ['n' => 'Budi Sudarsono', 't' => '10:05 WIT', 's' => 'Waiting']
                             ]; @endphp
                             @foreach($mockData as $data)
-                            <div class="p-4 bg-slate-50 rounded-none border border-slate-100 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 text-[#1C7C54] font-medium text-xs">{{ substr($data['n'], 0, 1) }}</div>
-                                    <div>
-                                        <p class="text-sm font-medium text-slate-800">{{ $data['n'] }}</p>
-                                        <p class="text-[10px] text-slate-400 font-medium uppercase">{{ $data['t'] }}</p>
+                            <div class="py-3 first:pt-0 last:pb-0 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center font-black text-[11px]">{{ substr($data['n'], 0, 1) }}</div>
+                                    <div class="text-left leading-none">
+                                        <p class="text-xs font-bold text-slate-800 leading-none">{{ $data['n'] }}</p>
+                                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 leading-none">{{ $data['t'] }}</p>
                                     </div>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button class="w-8 h-8 rounded-none bg-emerald-500 text-white text-xs"><i class="fas fa-check"></i></button>
-                                    <button class="w-8 h-8 rounded-none bg-slate-200 text-slate-400 text-xs"><i class="fas fa-eye"></i></button>
+                                <div class="flex gap-1.5 shrink-0 pl-2">
+                                    <button class="w-8 h-8 bg-transparent text-emerald-600 hover:text-emerald-700 transition-all"><i class="fas fa-check"></i></button>
+                                    <button class="w-8 h-8 bg-transparent text-slate-400 hover:text-slate-600 transition-all"><i class="fas fa-eye"></i></button>
                                 </div>
                             </div>
                             @endforeach
@@ -153,40 +155,43 @@
     </section>
 
     {{-- 3. BENTO FITUR INTERAKTIF --}}
-    <section id="fitur" class="py-32 bg-white" x-data="{ activeTab: 1 }">
+    <section id="fitur" class="py-16 bg-white" x-data="{ activeTab: 1 }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid lg:grid-cols-2 gap-16 items-start">
-                <div>
-                    <h2 class="text-4xl font-semibold text-slate-900 mb-6 tracking-tight">Teknologi Untuk <br><span class="text-[#1C7C54]">Kualitas Birokrasi.</span></h2>
-                    <p class="text-slate-500 font-medium mb-12">Setiap baris kode dioptimasi untuk menghasilkan data kinerja yang akurat, transparan, dan tidak dapat dimanipulasi.</p>
+                <div class="text-left space-y-6">
+                    <div class="border-b-4 border-[#1C7C54] pb-4">
+                        <h2 class="text-3xl font-semibold text-slate-900 tracking-tight uppercase leading-none">Teknologi Kualitas <br><span class="text-[#1C7C54]">Birokrasi.</span></h2>
+                    </div>
+                    <p class="text-slate-500 text-sm font-medium leading-relaxed">Setiap baris kode dioptimasi untuk menghasilkan data kinerja yang akurat, transparan, dan tidak dapat dimanipulasi.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                         {{-- Fitur Items --}}
-                        <button @click="activeTab = 1" :class="activeTab === 1 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-map-pin mb-3 block" :class="activeTab === 1 ? 'text-emerald-600' : 'text-slate-400'"></i>
-                            <h5 class="font-medium text-sm text-slate-800">Anti-Fake GPS</h5>
-                            <p class="text-[11px] text-slate-500 mt-1">Verifikasi lokasi real-time dengan akurasi tinggi.</p>
+                        <button @click="activeTab = 1" :class="activeTab === 1 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-map-pin mb-3 block text-sm" :class="activeTab === 1 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Anti-Fake GPS</h5>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Verifikasi lokasi real-time dengan akurasi tinggi.</p>
                         </button>
-                        <button @click="activeTab = 2" :class="activeTab === 2 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-file-invoice mb-3 block" :class="activeTab === 2 ? 'text-emerald-600' : 'text-slate-400'"></i>
-                            <h5 class="font-medium text-sm text-slate-800">Lampiran Bukti</h5>
-                            <p class="text-[11px] text-slate-500 mt-1">Wajib sertakan dokumen/foto hasil kerja.</p>
+                        <button @click="activeTab = 2" :class="activeTab === 2 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-file-invoice mb-3 block text-sm" :class="activeTab === 2 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Lampiran Bukti</h5>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Wajib sertakan dokumen/foto hasil kerja.</p>
                         </button>
-                        <button @click="activeTab = 3" :class="activeTab === 3 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-chart-simple mb-3 block" :class="activeTab === 3 ? 'text-emerald-600' : 'text-slate-400'"></i>
-                            <h5 class="font-medium text-sm text-slate-800">Auto-Skoring</h5>
-                            <p class="text-[11px] text-slate-500 mt-1">Kalkulasi poin SKP otomatis secara instan.</p>
+                        <button @click="activeTab = 3" :class="activeTab === 3 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-chart-simple mb-3 block text-sm" :class="activeTab === 3 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Auto-Skoring</h5>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Kalkulasi poin SKP otomatis secara instan.</p>
                         </button>
-                        <button @click="activeTab = 4" :class="activeTab === 4 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-bell mb-3 block" :class="activeTab === 4 ? 'text-emerald-600' : 'text-slate-400'"></i>
-                            <h5 class="font-medium text-sm text-slate-800">Notifikasi Push</h5>
-                            <p class="text-[11px] text-slate-500 mt-1">Info validasi & pengumuman langsung di HP.</p>
+                        <button @click="activeTab = 4" :class="activeTab === 4 ? 'feature-card-active' : 'border-slate-200 bg-slate-50/50'" class="p-5 rounded-none border text-left transition-all outline-none">
+                            <i class="fas fa-bell mb-3 block text-sm" :class="activeTab === 4 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <h5 class="font-bold text-xs uppercase tracking-widest text-slate-800">Notifikasi Push</h5>
+                            <p class="text-[10px] text-slate-500 font-medium leading-normal mt-1.5">Info validasi & pengumuman langsung di HP.</p>
                         </button>
                     </div>
                 </div>
 
-                <div class="relative bg-slate-900 rounded-none overflow-hidden shadow-2xl min-h-[500px]">
-                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                {{-- Preview Panel --}}
+                <div class="relative bg-slate-900 rounded-none overflow-hidden shadow-2xl min-h-[500px] border border-white/5">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-15"></div>
 
                     {{-- Gambar 1: Pemantauan Lokasi / GPS --}}
                     <div x-show="activeTab === 1" x-cloak
@@ -197,11 +202,9 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <div class="bg-white/10 p-4 rounded-none backdrop-blur-md mb-8 inline-block w-3/4 max-w-sm">
-                            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-full h-48 object-cover shadow-2xl" alt="Pemantauan Lokasi GPS">
-                        </div>
-                        <h4 class="text-2xl font-medium text-white mb-4">Pemantauan Lokasi Presisi</h4>
-                        <p class="text-slate-400 text-sm leading-relaxed px-4">Sistem mengunci koordinat geografis setiap laporan, memastikan setiap aktivitas terekam sesuai lokasi penugasan tanpa celah manipulasi.</p>
+                        <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Pemantauan Lokasi GPS">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Pemantauan Lokasi Presisi</h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Sistem mengunci koordinat geografis setiap laporan, memastikan setiap aktivitas terekam sesuai lokasi penugasan tanpa celah manipulasi.</p>
                     </div>
 
                     {{-- Gambar 2: Lampiran Bukti / Verifikasi --}}
@@ -213,14 +216,12 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <div class="bg-white/10 p-4 rounded-none backdrop-blur-md mb-8 inline-block w-3/4 max-w-sm">
-                            <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-full h-48 object-cover shadow-2xl" alt="Verifikasi Dokumen">
-                        </div>
-                        <h4 class="text-2xl font-medium text-white mb-4">Verifikasi Berbasis Data</h4>
-                        <p class="text-slate-400 text-sm leading-relaxed px-4">Mendukung unggah dokumen PDF dan foto dalam satu alur kerja, memudahkan atasan melakukan verifikasi kualitas pekerjaan secara visual.</p>
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Pemantauan Laporan Keuangan">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Verifikasi Lampiran Berkas</h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Memastikan seluruh data verifikasi berupa berkas isian teknis atau scan dokumen diunggah dalam format PDF/JPG yang sah.</p>
                     </div>
 
-                    {{-- Gambar 3: Auto-Skoring / Kalkulasi --}}
+                    <!-- {-- Gambar 3: Auto-Skoring --}} -->
                     <div x-show="activeTab === 3" x-cloak
                         x-transition:enter="transition ease-out duration-500 delay-100"
                         x-transition:enter-start="opacity-0 translate-y-8 scale-95"
@@ -229,14 +230,12 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <div class="bg-white/10 p-4 rounded-none backdrop-blur-md mb-8 inline-block w-3/4 max-w-sm">
-                            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-full h-48 object-cover shadow-2xl" alt="Dashboard Kalkulasi">
-                        </div>
-                        <h4 class="text-2xl font-medium text-white mb-4">Kalkulasi Performa Dinamis</h4>
-                        <p class="text-slate-400 text-sm leading-relaxed px-4">Mengelola bobot dan skor SKP (Sasaran Kinerja Pegawai) secara otomatis tanpa proses rekapitulasi manual yang memakan waktu.</p>
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Kalkulasi Dashboard">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Auto-Skoring Real-Time</h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Kalkulasi poin SKP dinonaktifkan dari kerumitan rekapitulasi manual. Sistem secara otomatis menyusun akumulasi skor secara objektif.</p>
                     </div>
 
-                    {{-- Gambar 4: Notifikasi Push / Smartphone --}}
+                    <!-- {-- Gambar 4: Notifikasi Push --}} -->
                     <div x-show="activeTab === 4" x-cloak
                         x-transition:enter="transition ease-out duration-500 delay-100"
                         x-transition:enter-start="opacity-0 translate-y-8 scale-95"
@@ -245,11 +244,9 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 -translate-y-8 scale-95"
                         class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                        <div class="bg-white/10 p-4 rounded-none backdrop-blur-md mb-8 inline-block w-3/4 max-w-sm">
-                            <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-full h-48 object-cover shadow-2xl" alt="Notifikasi Mobile">
-                        </div>
-                        <h4 class="text-2xl font-medium text-white mb-4">Sistem Notifikasi Real-Time</h4>
-                        <p class="text-slate-400 text-sm leading-relaxed px-4">Peringatan instan masuk ke perangkat pengguna untuk status persetujuan, instruksi revisi, dan pengumuman birokrasi penting.</p>
+                        <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" class="rounded-none w-3/4 max-w-sm h-48 object-cover shadow-2xl mb-8" alt="Notifikasi Mobile">
+                        <h4 class="text-xl font-bold uppercase tracking-wider text-white mb-2">Notifikasi Sistem Instan</h4>
+                        <p class="text-slate-400 text-xs font-medium leading-relaxed px-4">Pesan verifikasi, instruksi revisi, dan pengumuman kedinasan akan langsung terkirim secara instan ke perangkat handphone pengguna.</p>
                     </div>
                 </div>
             </div>
@@ -257,28 +254,28 @@
     </section>
 
     {{-- 4. SIMULASI PETA INTERAKTIF --}}
-    <section id="peta" class="py-24 bg-[#EFF0F5]">
+    <section id="peta" class="py-16 bg-[#EFF0F5]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-12">
-                <h2 class="text-3xl font-semibold text-slate-900 tracking-tight">Pantau Aktivitas Tim Anda</h2>
-                <p class="text-slate-500 font-medium mt-2">Visualisasi sebaran pegawai di wilayah kerja secara real-time.</p>
+            <div class="mb-10 text-left">
+                <h2 class="text-3xl font-semibold text-slate-900 tracking-tight uppercase leading-none">Pantau Aktivitas Tim Anda</h2>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2 leading-none">Visualisasi sebaran pegawai di wilayah kerja secara real-time.</p>
             </div>
 
-            <div class="bg-white rounded-none shadow-2xl border border-slate-200 overflow-hidden flex flex-col lg:grid lg:grid-cols-[1fr_400px] h-[700px] lg:h-[650px]">
+            <div class="bg-white rounded-none shadow-2xl border border-slate-200 overflow-hidden flex flex-col lg:grid lg:grid-cols-[1fr_360px] h-[700px] lg:h-[650px]">
                 {{-- Map Container --}}
                 <div id="simulation-map" class="h-1/2 lg:h-full w-full"></div>
 
                 {{-- Activity Feed Sidebar --}}
-                <div class="h-1/2 lg:h-full bg-white border-l border-slate-100 flex flex-col overflow-hidden">
-                    <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
-                        <h4 class="font-medium text-slate-800 tracking-tight">Live Activity Feed</h4>
+                <div class="h-1/2 lg:h-full bg-white border-l border-slate-200 flex flex-col overflow-hidden text-left">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-slate-800">Live Activity Feed</h4>
                         <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" id="activity-list">
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar" id="activity-list">
                         {{-- Diisi via JS --}}
                     </div>
-                    <div class="p-5 bg-slate-50 border-t border-slate-100 text-center">
-                        <p class="text-[10px] text-slate-400 font-medium uppercase tracking-[0.2em]">Simulation Mode Enabled</p>
+                    <div class="p-4 bg-slate-50 border-t border-slate-200 text-center">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Simulation Mode Enabled</p>
                     </div>
                 </div>
             </div>
@@ -286,42 +283,54 @@
     </section>
 
     {{-- 5. ALUR KERJA (SYSTEM FLOW) --}}
-    <section id="alur" class="py-32 bg-slate-900 text-white">
+    <section id="alur" class="py-16 bg-slate-900 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl md:text-4xl font-semibold mb-20 tracking-tight">Siklus Pelaporan Modern</h2>
+            <h2 class="text-3xl md:text-4xl font-semibold mb-12 tracking-tight uppercase">Siklus Pelaporan Modern</h2>
 
             <div class="grid md:grid-cols-3 gap-12">
-                <div class="flex flex-col items-center">
-                    <div class="w-20 h-20 bg-emerald-500 rounded-none flex items-center justify-center text-3xl mb-8 rotate-3 shadow-lg shadow-emerald-500/20"><i class="fas fa-pen-nib"></i></div>
-                    <h4 class="text-xl font-medium mb-4">Pencatatan Mandiri</h4>
-                    <p class="text-slate-400 text-sm leading-relaxed">Pegawai menginput aktivitas, durasi, dan volume pekerjaan langsung melalui perangkat mobile.</p>
+                <div class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
+                    <div class="space-y-3.5">
+                        <span class="text-3xl font-black text-emerald-400 tracking-tighter block leading-none">01</span>
+                        <div class="space-y-1.5">
+                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Pencatatan Mandiri</h4>
+                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Pegawai menginput aktivitas, durasi, dan volume pekerjaan langsung melalui perangkat mobile.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-col items-center">
-                    <div class="w-20 h-20 bg-blue-500 rounded-none flex items-center justify-center text-3xl mb-8 -rotate-3 shadow-lg shadow-blue-500/20"><i class="fas fa-user-check"></i></div>
-                    <h4 class="text-xl font-medium mb-4">Verifikasi Instan</h4>
-                    <p class="text-slate-400 text-sm leading-relaxed">Atasan menerima notifikasi real-time untuk melakukan pemeriksaan dan validasi laporan.</p>
+                <div class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
+                    <div class="space-y-3.5">
+                        <span class="text-3xl font-black text-emerald-400 tracking-tighter block leading-none">02</span>
+                        <div class="space-y-1.5">
+                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Verifikasi Instan</h4>
+                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Atasan menerima notifikasi real-time untuk melakukan pemeriksaan dan validasi laporan.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-col items-center">
-                    <div class="w-20 h-20 bg-amber-500 rounded-none flex items-center justify-center text-3xl mb-8 rotate-6 shadow-lg shadow-amber-500/20"><i class="fas fa-file-contract"></i></div>
-                    <h4 class="text-xl font-medium mb-4">Rekapitulasi Kinerja</h4>
-                    <p class="text-slate-400 text-sm leading-relaxed">Data yang tervalidasi otomatis tersusun menjadi laporan capaian bulanan dan tahunan instansi.</p>
+                <div class="border-t-2 border-white/10 pt-6 text-left flex flex-col justify-between h-full transition-colors group">
+                    <div class="space-y-3.5">
+                        <span class="text-3xl font-black text-emerald-400 tracking-tighter block leading-none">03</span>
+                        <div class="space-y-1.5">
+                            <h4 class="font-black text-white text-xs uppercase tracking-wider leading-none">Rekapitulasi Kinerja</h4>
+                            <p class="text-slate-400 text-[11px] font-semibold leading-relaxed">Data yang tervalidasi otomatis tersusun menjadi laporan capaian bulanan dan tahunan instansi.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     {{-- 6. FOOTER --}}
-    <footer class="bg-white pt-24 pb-12 border-t border-slate-100">
+    <footer class="bg-white pt-16 pb-8 border-t border-slate-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-24">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12 text-left">
                 <div class="col-span-1 lg:col-span-1">
-                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-12 w-auto mb-6">
-                    <p class="text-sm text-slate-500 leading-relaxed font-medium">Sistem Informasi Laporan Kinerja Harian Terintegrasi (E-Daily Report) Badan Pendapatan Daerah Kabupaten Mimika.</p>
+                    <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-11 w-auto mb-6">
+                    <p class="text-slate-500 text-xs font-semibold leading-relaxed">Sistem Informasi Laporan Kinerja Harian Terintegrasi (E-Daily Report) Badan Pendapatan Daerah Kabupaten Mimika.</p>
                 </div>
 
                 <div>
-                    <h5 class="text-slate-900 font-medium mb-8 uppercase text-xs tracking-widest">Akses Cepat</h5>
-                    <ul class="space-y-4 text-sm font-semibold text-slate-500">
+                    <h5 class="text-emerald-600 font-bold text-[10px] uppercase tracking-widest mb-6">Akses Cepat</h5>
+                    <ul class="space-y-3 text-slate-500 font-bold text-[11px] tracking-wider">
                         <li><a href="#fitur" class="hover:text-[#1C7C54] transition-colors">Eksplorasi Fitur</a></li>
                         <li><a href="#peta" class="hover:text-[#1C7C54] transition-colors">Peta Aktivitas</a></li>
                         <li><a href="#alur" class="hover:text-[#1C7C54] transition-colors">Alur Pelaporan</a></li>
@@ -330,26 +339,26 @@
                 </div>
 
                 <div>
-                    <h5 class="text-slate-900 font-medium mb-8 uppercase text-xs tracking-widest">Kontak Resmi</h5>
-                    <ul class="space-y-5 text-sm font-medium text-slate-500">
-                        <li class="flex gap-1.5"><i class="fas fa-location-dot mt-1 text-emerald-600"></i> Jl. Cenderawasih No. 1, Timika, Papua Tengah</li>
-                        <li class="flex items-center gap-1.5"><i class="fas fa-envelope text-emerald-600"></i> support@bapenda.mimika.go.id</li>
+                    <h5 class="text-emerald-600 font-bold text-[10px] uppercase tracking-widest mb-6">Kontak Resmi</h5>
+                    <ul class="space-y-4 text-slate-500 font-bold text-[11px] tracking-wider">
+                        <li class="flex gap-2"><i class="fas fa-location-dot mt-0.5 text-slate-400"></i> Jl. Cenderawasih No. 1, Timika, Papua Tengah</li>
+                        <li class="flex items-center gap-2"><i class="fas fa-envelope text-slate-400"></i> support@bapenda.mimika.go.id</li>
                     </ul>
                 </div>
 
                 <div>
-                    <h5 class="text-slate-900 font-medium mb-8 uppercase text-xs tracking-widest">Media Sosial</h5>
+                    <h5 class="text-emerald-600 font-bold text-[10px] uppercase tracking-widest mb-6">Media Sosial</h5>
                     <div class="flex gap-2">
-                        <a href="#" class="w-10 h-10 rounded-none bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-facebook-f text-sm"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-none bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-instagram text-sm"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-none bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-youtube text-sm"></i></a>
+                        <a href="#" class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-facebook-f text-sm"></i></a>
+                        <a href="#" class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-instagram text-sm"></i></a>
+                        <a href="#" class="w-9 h-9 rounded-none bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-youtube text-sm"></i></a>
                     </div>
                 </div>
             </div>
 
-            <div class="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-2">
-                <p class="text-[11px] font-medium text-slate-400 tracking-normal">&copy; {{ date('Y') }} Bapenda Kabupaten Mimika. All Rights Reserved.</p>
-                <div class="flex items-center gap-6 text-[10px] font-medium text-slate-400 tracking-normal">
+            <div class="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-2">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">&copy; {{ date('Y') }} Bapenda Kabupaten Mimika. All Rights Reserved.</p>
+                <div class="flex items-center gap-6 text-[9px] font-black text-slate-450 uppercase tracking-widest">
                     <span>Privacy Policy</span>
                     <span>Security Audit</span>
                     <span>Terms of Service</span>
@@ -440,7 +449,7 @@
 
                 // Create Sidebar Item
                 const card = document.createElement('div');
-                card.className = "group p-4 bg-white border border-slate-100 rounded-none hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-50 cursor-pointer transition-all duration-300";
+                card.className = "group p-4 bg-transparent border-b border-slate-100 last:border-b-0 hover:bg-slate-50 cursor-pointer transition-colors duration-300";
                 card.innerHTML = `
                     <div class="flex items-center gap-2">
                         <div class="w-1.5 h-12 rounded-full shrink-0" style="background:${data.c}"></div>
@@ -449,7 +458,7 @@
                                 <p class="text-[10px] font-semibold text-slate-400 tracking-normal">${data.r}</p>
                                 <span class="text-[9px] font-medium px-1.5 py-0.5 rounded bg-slate-50 text-slate-400 uppercase">${data.st}</span>
                             </div>
-                            <p class="text-sm font-medium text-slate-800 truncate mt-0.5 group-hover:text-emerald-700 transition-colors">${data.n}</p>
+                            <p class="text-sm font-medium text-slate-800 truncate mt-0.5 group-hover:text-[#1C7C54] transition-colors">${data.n}</p>
                             <p class="text-[11px] text-slate-500 truncate">${data.a}</p>
                         </div>
                     </div>

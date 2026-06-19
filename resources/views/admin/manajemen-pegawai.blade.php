@@ -7,8 +7,8 @@
 ])
 
 {{-- Inject Model untuk Dropdown Filter Server-Side --}}
-@inject('unitKerjaModel', 'App\Models\UnitKerja')
-@php($unitKerjas = $unitKerjaModel->orderBy('nama_unit', 'asc')->get())
+@inject('bidangModel', 'App\Models\Bidang')
+@php($bidangs = $bidangModel->orderBy('nama_bidang', 'asc')->get())
 
 @section('content')
 <style>
@@ -92,12 +92,12 @@
                 class="w-full pl-11 pr-4 py-2.5 rounded-none border-2 border-slate-100 bg-slate-50 text-sm font-medium text-slate-800 placeholder-slate-400 hover:bg-white focus:bg-white focus:border-[#1C7C54] focus:ring-0 transition-all outline-none">
         </div>
 
-        {{-- Filter Unit Kerja --}}
+        {{-- Filter Bidang --}}
         <div class="md:col-span-4 relative">
-            <select x-model="filterUnitKerja" @change="fetchData(1)" class="w-full rounded-none border-2 border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white focus:bg-white focus:border-[#1C7C54] focus:ring-0 custom-select transition-all outline-none text-ellipsis overflow-hidden whitespace-nowrap">
-                <option value="">-- Semua Unit Kerja --</option>
-                @foreach($unitKerjas as $unit)
-                    <option value="{{ $unit->id }}">{{ $unit->nama_unit }}</option>
+            <select x-model="filterBidang" @change="fetchData(1)" class="w-full rounded-none border-2 border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-white focus:bg-white focus:border-[#1C7C54] focus:ring-0 custom-select transition-all outline-none text-ellipsis overflow-hidden whitespace-nowrap">
+                <option value="">-- Semua Bidang --</option>
+                @foreach($bidangs as $b)
+                    <option value="{{ $b->id }}">{{ $b->nama_bidang }}</option>
                 @endforeach
             </select>
         </div>

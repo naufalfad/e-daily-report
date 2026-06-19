@@ -1,0 +1,60 @@
+Tanggal, 20 Januari 2023
+
+                                            BAGAN STRUKTUR ORGANISASI
+                                 BADAN PENDAPATAN DAERAH KABUPATEN MIMIKA, TIPE A
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+                                                     ┌──────────────────────┐
+                                                     │        KEPALA        │
+                                                     └──────────┬───────────┘
+                                                                │                           ┌──────────────────────┐
+                                                                ├───────────────────────────┤     Sekretariat      │
+                                                                │                           └──────────┬───────────┘
+                                                                │                                      │
+                                     ┌──────────────────────┐   │             ┌────────────────────────┼────────────────────────┐
+                                     │   Kelompok Jabatan   │   │             │                        │                        │
+                                     │      Fungsional      ├───┤   ┌─────────┴──────────┐   ┌─────────┴──────────┐   ┌─────────┴──────────┐
+                                     │  ┌─┬─┬─┬─┬─┬─┬─┬─┐   │   │   │  Sub Bagian Umum   │   │ Sub Bagian Keuangan│   │ Sub Bagian Program │
+                                     │  ├─┼─┼─┼─┼─┼─┼─┼─┤   │   │   │  dan Kepegawaian   │   │                    │   │                    │
+                                     │  └─┴─┴─┴─┴─┴─┴─┴─┘   │   │   └────────────────────┘   └────────────────────┘   └────────────────────┘
+                                     └──────────────────────┘   │
+              ┌──────────────────────────────────┬──────────────┼──────────────┬──────────────────────────────────┐
+              │                                  │              │              │                                  │
+    ┌─────────┴──────────┐             ┌─────────┴──────────┐   │    ┌─────────┴──────────┐             ┌─────────┴──────────┐
+    │       Bidang       │             │       Bidang       │   │    │ Bidang Perencanaan │             │       Bidang       │
+    │   PBB dan BPHTB    │             │       Pajak        │   │    │  dan Pengembangan  │             │   Pembukuan dan    │
+    │                    │             │                    │   │    │ Pendapatan Daerah  │             │     Pelaporan      │
+    └─────────┬──────────┘             └─────────┬──────────┘   │    └─────────┬──────────┘             └─────────┬──────────┘
+              │                                  │              │              │                                  │
+    ┌─────────┴──────────┐             ┌─────────┴──────────┐   │    ┌─────────┴──────────┐             ┌─────────┴──────────┐
+    │Sub Bidang Pendataan│             │Sub Bidang Pendataan│   │    │Sub Bidang Regulasi │             │     Sub Bidang     │
+    │dan Pendaftaran PBB │             │  dan Pendaftaran   │   │    │ Pendapatan Daerah  │             │   Pembukuan dan    │
+    │     dan BPHTB      │             │       Pajak        │   │    │                    │             │     Pelaporan      │
+    └─────────┬──────────┘             └─────────┬──────────┘   │    └─────────┬──────────┘             └─────────┬──────────┘
+              │                                  │              │              │                                  │
+    ┌─────────┴──────────┐             ┌─────────┴──────────┐   │    ┌─────────┴──────────┐             ┌─────────┴──────────┐
+    │Sub Bidang Penilaian│             │     Sub Bidang     │   │    │Sub Bidang Retribusi│             │     Sub Bidang     │
+    │ dan Penetapan PBB  │             │  Perhitungan dan   │   │    │    dan Evaluasi    │             │  Pemeriksaan dan   │
+    │     dan BPHTB      │             │  Penetapan Pajak   │   │    │ Pendapatan Daerah  │             │     Verifikasi     │
+    │                    │             │       Daerah       │   │    │                    │             │                    │
+    └─────────┬──────────┘             └─────────┬──────────┘   │    └─────────┬──────────┘             └─────────┬──────────┘
+              │                                  │              │              │                                  │
+    ┌─────────┴──────────┐             ┌─────────┴──────────┐   │    ┌─────────┴──────────┐             ┌─────────┴──────────┐
+    │     Sub Bidang     │             │     Sub Bidang     │   │    │     Sub Bidang     │             │     Sub Bidang     │
+    │Penagihan Restitusi │             │ Pemeriksaan Pajak, │   │    │Pengembangan Sistem │             │   Penagihan dan    │
+    │   PBB dan BPHTB    │             │Konsultasi Keberatan│   │    │  Informatika dan   │             │  Restitusi Pajak   │
+    │                    │             │    dan Banding     │   │    │ Inovasi Pendapatan │             │       Daerah       │
+    └────────────────────┘             └────────────────────┘   │    │       Daerah       │             └────────────────────┘
+                                                                │    └────────────────────┘
+                                                             ┌──┴──┐
+                                                             │ UPT │
+                                                             └─────┘
+
+Salinan sesuai dengan aslinya
+KEPALA BAGIAN HUKUM                                                                                            Plt BUPATI MIMIKA,
+                                                                                                                       ttd
+[Tanda Tangan & Stempel]                                                                                         JOHANNES RETTOB
+
+MUH. JAMBIA WADAN SAO, SH
+PEMBINA
+NIP. 19710523 200701 1 011

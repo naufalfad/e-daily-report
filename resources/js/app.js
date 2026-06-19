@@ -216,15 +216,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const iconMap = {
         success: {
             bg: "bg-[#0E7A4A]/10",
-            icon: "/assets/icon/notif-success.svg"
+            icon: "fas fa-check-circle text-[#0E7A4A]"
         },
         warning: {
             bg: "bg-[#FACC15]/10",
-            icon: "/assets/icon/notif-warning.svg"
+            icon: "fas fa-exclamation-triangle text-[#FACC15]"
         },
         danger: {
             bg: "bg-[#DC2626]/10",
-            icon: "/assets/icon/notif-danger.svg"
+            icon: "fas fa-times-circle text-[#DC2626]"
         }
     };
 
@@ -237,16 +237,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const icon = iconMap[n.type] ?? iconMap["warning"];
 
         const html = `
-            <div class="flex items-start gap-1.5 p-2 rounded-lg hover:bg-slate-50 transition">
+            <div class="flex items-start gap-1.5 p-2 rounded-none hover:bg-slate-50 transition">
 
-                <div class="w-10 h-10 rounded-full ${icon.bg} flex items-center justify-center">
-                    <img src="${icon.icon}" class="w-5 h-5">
+                <div class="w-10 h-10 rounded-full ${icon.bg} flex items-center justify-center shrink-0">
+                    <i class="${icon.icon} text-lg"></i>
                 </div>
 
-                <div class="flex-1">
-                    <div class="text-[13px] font-semibold text-slate-800">${n.title}</div>
-                    <p class="text-[12px] text-slate-500">${n.message}</p>
-                    <span class="text-[11px] text-slate-400">${n.date}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-[13px] font-semibold text-slate-800 truncate">${n.title}</div>
+                    <p class="text-[12px] text-slate-500 line-clamp-2">${n.message}</p>
+                    <span class="text-[11px] text-slate-400 mt-0.5 block">${n.date}</span>
                 </div>
             </div>
         `;

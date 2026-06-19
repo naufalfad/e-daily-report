@@ -15,7 +15,7 @@
 
             {{-- FORM FILTER BARU (Month, Year, Search) --}}
             <form @submit.prevent="applyFilter()" class="bg-slate-50 p-4 rounded-none border border-slate-200">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
                     
                     {{-- 1. SEARCH INPUT --}}
                     <div class="md:col-span-4">
@@ -94,7 +94,7 @@
                     <div class="absolute -left-[31px] sm:-left-[39px] top-1.5 h-4 w-4 rounded-full border-[3px] border-white shadow-sm transition bg-[#1C7C54] group-hover:scale-110 z-10"></div>
 
                     {{-- CONTENT WRAPPER --}}
-                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
+                    <div class="flex flex-col sm:flex-row gap-1.5 sm:gap-6">
 
                         {{-- WAKTU (Left Column) --}}
                         <div class="sm:w-32 flex-shrink-0 pt-1">
@@ -146,7 +146,7 @@
             {{-- LOAD MORE BUTTON --}}
             <div x-show="!isLoading && pagination.current_page < pagination.last_page" class="text-center pt-4 pb-8" style="display: none;">
                 <button @click="loadMore()" 
-                    class="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:border-[#1C7C54] hover:text-[#1C7C54] transition shadow-sm">
+                    class="group inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:border-[#1C7C54] hover:text-[#1C7C54] transition shadow-sm">
                     <span>Muat Lebih Banyak</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:translate-y-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />

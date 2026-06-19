@@ -31,7 +31,7 @@
         </div>
 
         {{-- Grid Daftar File --}}
-        <div class="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+        <div class="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
             <template x-for="(bukti, index) in daftarBukti" :key="index">
                 <div class="group relative bg-slate-50 border border-slate-200 rounded-none overflow-hidden hover:border-[#155FA6] hover:shadow-md transition-all cursor-pointer"
                     @click="preview(bukti)">

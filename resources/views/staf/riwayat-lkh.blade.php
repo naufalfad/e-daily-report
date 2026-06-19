@@ -13,14 +13,14 @@
         <div class="bg-white rounded-none shadow-sm border border-slate-200 flex flex-col min-h-[85vh] overflow-hidden">
 
             {{-- HEADER + TOOLBAR --}}
-            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
                     <h2 class="text-xl font-medium text-slate-800 tracking-tight">Riwayat Laporan</h2>
                     <p class="text-sm text-slate-500 mt-1">Arsip kinerja dan aktivitas harian Anda</p>
                 </div>
 
                 <button @click="exportPdf()"
-                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-none text-sm font-semibold hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54] transition-all shadow-sm active:scale-[0.98]">
+                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-4 py-2 rounded-none text-sm font-semibold hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54] transition-all shadow-sm active:scale-[0.98]">
                     <svg class="w-5 h-5 text-slate-400 group-hover:text-[#1C7C54] transition-colors" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -36,7 +36,7 @@
                     <div class="flex flex-col md:flex-row gap-5 items-end">
 
                         {{-- 1. FILTER TANGGAL --}}
-                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Dari Tanggal</label>
                                 <div class="relative">
@@ -124,7 +124,7 @@
                             <tr>
                                 {{-- COLSPAN DIUPDATE MENJADI 7 --}}
                                 <td colspan="7" class="px-6 py-20 text-center">
-                                    <div class="flex flex-col items-center justify-center gap-3">
+                                    <div class="flex flex-col items-center justify-center gap-1.5">
                                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0E7A4A]"></div>
                                         <span class="text-slate-500 font-medium animate-pulse">Sedang memuat data...</span>
                                     </div>

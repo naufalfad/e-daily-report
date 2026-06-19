@@ -33,7 +33,7 @@
                             Kerja</h3>
 
                         {{-- Periode --}}
-                        <div class="grid md:grid-cols-2 gap-4">
+                        <div class="grid md:grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-xs font-medium text-[#5B687A] mb-[10px]">Periode Mulai</label>
                                 <div class="relative w-full">
@@ -92,7 +92,7 @@
                         <div class="space-y-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
                             <template x-for="(item, index) in formData.targets" :key="index">
                                 <div
-                                    class="grid grid-cols-12 gap-3 bg-white p-3 rounded-none border border-slate-200 shadow-sm relative group hover:border-[#1C7C54]/40 transition-colors">
+                                    class="grid grid-cols-12 gap-1.5 bg-white p-3 rounded-none border border-slate-200 shadow-sm relative group hover:border-[#1C7C54]/40 transition-colors">
 
                                     {{-- Jenis Aspek --}}
                                     <div class="col-span-3 md:col-span-2">
@@ -145,7 +145,7 @@
                     </div>
 
                     {{-- Actions --}}
-                    <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
+                    <div class="flex flex-wrap items-center justify-end gap-1.5 pt-2">
                         <button type="button" @click="resetForm"
                             class="rounded-none bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                             Reset
@@ -398,7 +398,7 @@
                 <template x-if="editData">
                     <form @submit.prevent="submitEdit" class="space-y-6">
                         <div class="space-y-4">
-                            <div class="grid md:grid-cols-2 gap-4">
+                            <div class="grid md:grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 mb-1">Periode Awal</label>
                                     <div class="relative w-full">
@@ -474,7 +474,7 @@
                             </div>
                         </div>
 
-                        <div class="pt-4 flex justify-end gap-3">
+                        <div class="pt-4 flex justify-end gap-1.5">
                             <button type="button" @click="openEdit = false"
                                 class="px-4 py-2 rounded-none border border-slate-300 text-slate-600 text-sm font-medium">Batal</button>
                             <button type="submit"

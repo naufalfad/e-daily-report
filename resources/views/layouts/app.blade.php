@@ -180,7 +180,7 @@
                 <header class="sticky top-0 z-30 bg-[#EFF0F5] mb-2 sm:mb-4 shrink-0 transition-all">
                     <div class="py-1">
 
-                        <div class="flex items-center justify-between gap-3 sm:gap-4">
+                        <div class="flex items-center justify-between gap-1.5 sm:gap-2">
                             {{-- Burger (mobile) --}}
                             <button id="sb-toggle"
                                 class="lg:hidden inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-white shadow-sm ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
@@ -191,9 +191,7 @@
 
                             {{-- SEARCH --}}
                             <div class="relative flex-1 max-w-[500px] hidden sm:block">
-                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-none bg-white border border-slate-200 px-10 py-2.5
-                                    text-sm shadow-sm placeholder:text-slate-400 transition-all
-                                    focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" />
+                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-none bg-white border border-slate-200 px-10 py-2.5 text-sm shadow-sm placeholder:text-slate-400 transition-all focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" />
                                 <div id="search-dropdown"
                                     class="absolute left-0 right-0 mt-2 bg-white rounded-none shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
                                 </div>
@@ -220,11 +218,7 @@
                                         <img src="{{ asset('assets/icon/notification.svg') }}" class="h-5 w-5" />
 
                                         {{-- BADGE --}}
-                                        <span id="notif-badge" class="absolute -top-1.5 -right-1.5
-                                                                        w-4 h-4 min-w-[16px] px-[4px]
-                                                                        bg-[#B6241C] text-white text-[10px] font-semibold 
-                                                                        rounded-full flex items-center justify-center shadow-md
-                                                                        border-2 border-white box-content">
+                                        <span id="notif-badge" class="absolute -top-1.5 -right-1.5 w-4 h-4 min-w-[16px] px-[4px] bg-[#B6241C] text-white text-[10px] font-semibold rounded-full flex items-center justify-center shadow-md border-2 border-white box-content">
                                         </span>
                                     </div>
 

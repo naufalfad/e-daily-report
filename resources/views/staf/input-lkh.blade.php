@@ -48,7 +48,7 @@
 </style>
 
 {{-- GRID UTAMA --}}
-<section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:auto-rows-min">
+<section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-2 lg:auto-rows-min">
 
     {{-- KIRI ATAS: FORM INPUT LKH --}}
     <div class="rounded-none bg-white ring-1 ring-slate-200 p-5">
@@ -63,7 +63,7 @@
             <div class="space-y-4">
 
                 {{-- Row 1: Tanggal + Jenis Kegiatan --}}
-                <div class="grid md:grid-cols-2 gap-4">
+                <div class="grid md:grid-cols-2 gap-2">
                     {{-- Tanggal --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
@@ -231,7 +231,7 @@
                             }
                         }">
                     {{-- Row 4: Output & Kategori --}}
-                    <div class="grid md:grid-cols-[2fr_1fr] gap-4">
+                    <div class="grid md:grid-cols-[2fr_1fr] gap-2">
                         <div>
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Output</label>
                             <input type="text" name="output_hasil_kerja"
@@ -286,7 +286,7 @@
                     </div>
 
                     {{-- Row 6: Satuan & Volume --}}
-                    <div class="grid md:grid-cols-2 gap-4 mt-4">
+                    <div class="grid md:grid-cols-2 gap-2 mt-4">
                         <div class="relative">
                             <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Satuan</label>
                             <input type="hidden" name="satuan" x-model="satuanValue">
@@ -324,7 +324,7 @@
                 </div>
 
                 {{-- Row 7: Waktu --}}
-                <div class="grid md:grid-cols-2 gap-4 mt-4">
+                <div class="grid md:grid-cols-2 gap-2 mt-4">
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
                         <div class="relative">
@@ -362,7 +362,7 @@
                 </div>
 
                 {{-- Row 8: Bukti & Lokasi Modern --}}
-                <div class="grid md:grid-cols-2 gap-4 mt-4">
+                <div class="grid md:grid-cols-2 gap-2 mt-4">
                     {{-- Kolom Kiri: Unggah Bukti --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Unggah Bukti</label>
@@ -387,7 +387,7 @@
                     </div>
 
                     {{-- Kolom Kanan: Kategori Lokasi & Map --}}
-                    <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-2">
                         
                         {{-- [NEW] Row 8.1: Kategori Lokasi --}}
                         <div x-data="{
@@ -466,7 +466,7 @@
                 </div>
 
                 {{-- Action Buttons --}}
-                <div class="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <div class="flex flex-wrap items-center justify-end gap-1.5 pt-4 border-t border-slate-100">
                     <button type="button" onclick="exportPDF(this)"
                         class="btn-action rounded-none bg-[#6B7280] px-4 py-2 text-sm text-white hover:bg-[#555] disabled:opacity-50 disabled:cursor-not-allowed">
                         Export PDF
@@ -588,7 +588,7 @@
             </template>
             <template x-for="item in draftsLimit" :key="item.id">
                 <div
-                    class="bg-[#F8F9FA] rounded-none p-4 flex items-center justify-between gap-3 border border-slate-100">
+                    class="bg-[#F8F9FA] rounded-none p-4 flex items-center justify-between gap-1.5 border border-slate-100">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-[12px] font-medium text-slate-900 truncate" x-text="item.deskripsi"></h4>
                         <p class="text-[10px] text-slate-500 mt-1" x-text="item.waktu_simpan"></p>
@@ -617,7 +617,7 @@
                 <div class="overflow-y-auto p-6 space-y-3">
                     <template x-for="item in draftsAll" :key="item.id">
                         <div
-                            class="bg-[#F8F9FA] rounded-none p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-100">
+                            class="bg-[#F8F9FA] rounded-none p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 border border-slate-100">
                             <div>
                                 <h4 class="text-[12px] font-medium" x-text="item.deskripsi"></h4>
                                 <p class="text-[10px] text-slate-500" x-text="item.waktu_simpan"></p>
@@ -676,11 +676,11 @@
         </div>
 
         {{-- 4. Floating Controls Area (Bottom) --}}
-        <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full flex flex-col gap-3">
+        <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full flex flex-col gap-1.5">
             
             {{-- 5. Main Info Card (BIGGER & CLEANER) --}}
             <div class="bg-white rounded-none shadow-2xl p-5 ring-1 ring-black/5 animate-slide-up">
-                <div class="flex items-start gap-4 mb-4">
+                <div class="flex items-start gap-2 mb-4">
                     {{-- Icon Lokasi Besar --}}
                     <div class="mt-1 shrink-0 bg-red-50 p-2.5 rounded-full border border-red-100">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-[#DC2626]">
@@ -803,7 +803,7 @@ function updateNewFileUI() {
             `<div class="h-10 w-10 shrink-0 rounded bg-white flex items-center justify-center border border-blue-100 text-[9px] font-medium text-blue-500 uppercase">${file.name.split('.').pop()}</div>`;
 
         div.innerHTML = `
-            <div class="flex items-center gap-3 overflow-hidden w-full">
+            <div class="flex items-center gap-1.5 overflow-hidden w-full">
                 <div id="thumb-new-${index}" class="shrink-0">
                     ${thumbnailHtml}
                 </div>
@@ -865,7 +865,7 @@ function renderExistingFiles(files) {
         div.id = `file-wrapper-${file.id}`;
 
         div.innerHTML = `
-            <div class="flex items-center gap-3 overflow-hidden">
+            <div class="flex items-center gap-1.5 overflow-hidden">
                 <div class="h-10 w-10 shrink-0 rounded bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100">
                     ${isImage 
                         ? `<img src="${fileUrl}" class="h-full w-full object-cover">` 
@@ -987,7 +987,7 @@ function renderAktivitas(list) {
         const text = item.status === "approved" ? "Disetujui" : item.status.includes("reject") ? "Ditolak" :
             "Menunggu";
         el.insertAdjacentHTML("beforeend", `
-            <li class="flex items-start gap-3">
+            <li class="flex items-start gap-1.5">
                 <div class="h-8 w-8 rounded-none flex items-center justify-center ${color}">
                     <img src="${icon}" class="h-5 w-5 opacity-90">
                 </div>

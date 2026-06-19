@@ -63,7 +63,7 @@
                     </div>
 
                     {{-- 2. Statistik Grid --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                         <div class="bg-white border border-slate-200 p-3 rounded-none hover:border-blue-300 transition-colors group">
                             <label class="text-[10px] text-slate-400 block mb-1 group-hover:text-blue-500">Output</label>
                             <p class="font-medium text-slate-700 text-sm truncate" x-text="modalData.output_hasil_kerja"></p>
@@ -90,7 +90,7 @@
                     </div>
 
                     {{-- 3. Lokasi & Bukti --}}
-                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-slate-50 px-4 py-3 rounded-none border border-slate-200 border-dashed">
+                    <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between bg-slate-50 px-4 py-3 rounded-none border border-slate-200 border-dashed">
                         <div>
                             <label class="text-[10px] font-medium text-slate-400 tracking-normal">Lokasi Pengerjaan</label>
                             <div class="flex items-center gap-1.5 mt-1">
@@ -108,7 +108,7 @@
 
                     {{-- 4. Validator Info --}}
                     <div class="border-t border-slate-100 pt-4">
-                        <div class="flex items-center gap-3 mb-3">
+                        <div class="flex items-center gap-1.5 mb-3">
                             <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
                                 <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
@@ -131,7 +131,7 @@
         </div>
 
         {{-- Footer Action --}}
-        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+        <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-1.5">
             
             {{-- 
                 Tombol Edit (Kondisional) 
@@ -141,7 +141,7 @@
             --}}
             <template x-if="(modalData?.status === 'rejected' || modalData?.status === 'draft') && (!filter.mode || filter.mode === 'mine')">
                 <button @click="editLaporan(modalData.id)"
-                    class="px-5 py-2.5 rounded-none text-sm font-medium text-white shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2"
+                    class="px-4 py-2 rounded-none text-sm font-medium text-white shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 transition-all flex items-center gap-2"
                     :class="modalData.status === 'draft' ? 'bg-slate-600 hover:bg-slate-700' : 'bg-[#0E7A4A] hover:bg-[#0b633b]'">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     <span x-text="modalData.status === 'draft' ? 'Lanjutkan Edit' : 'Perbaiki Laporan'"></span>
@@ -149,7 +149,7 @@
             </template>
 
             <button @click="open = false"
-                class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-none text-sm font-medium hover:bg-slate-50 transition-all shadow-sm">
+                class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-none text-sm font-medium hover:bg-slate-50 transition-all shadow-sm">
                 Tutup
             </button>
         </div>

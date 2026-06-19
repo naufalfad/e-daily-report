@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 }
 
                 const htmlItem = `
-                <li class="flex items-start gap-3 border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                <li class="flex items-start gap-1.5 border-b border-slate-50 pb-3 last:border-0 last:pb-0">
                     <div class="h-8 w-8 rounded-[10px] flex items-center justify-center shrink-0 ${tone}">
                         <img src="/assets/icon/${iconName}" class="h-5 w-5 opacity-90">
                     </div>
@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         });
 
         return `
-        <li class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 flex items-center justify-between gap-4 hover:shadow-sm transition-all">
+        <li class="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 flex items-center justify-between gap-2 hover:shadow-sm transition-all">
             <div class="flex-1 min-w-0">
                 <div class="font-bold leading-tight text-[13px] text-slate-800 truncate" title="${item.deskripsi_aktivitas}">
                     ${item.deskripsi_aktivitas || 'Laporan Tanpa Deskripsi'}

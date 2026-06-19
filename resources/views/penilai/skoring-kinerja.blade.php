@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     {{-- HEADER DASHBOARD --}}
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-2">
         <div>
             <h1 class="text-3xl font-medium text-gray-800">Skoring Kinerja Pegawai</h1>
             <p class="text-gray-500 mt-1">Monitor dan evaluasi performa pegawai di Unit Kerja Anda.</p>
@@ -40,11 +40,11 @@
     <div class="bg-white rounded-none shadow-sm overflow-hidden min-h-[400px] flex flex-col">
         
         {{-- TOOLBAR: Filter & Search --}}
-        <div class="px-6 py-4 border-b border-gray-100 flex flex-col lg:flex-row justify-between lg:items-center gap-4 bg-gray-50">
+        <div class="px-6 py-4 border-b border-gray-100 flex flex-col lg:flex-row justify-between lg:items-center gap-2 bg-gray-50">
             <h3 class="text-lg font-semibold text-gray-800">Detail Kinerja Pegawai</h3>
             
             {{-- Filter Group --}}
-            <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex flex-col sm:flex-row gap-1.5">
                 {{-- Filter Bulan --}}
                 <select id="filter-month" 
                     class="border border-gray-300 rounded-none px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer bg-white">
@@ -120,11 +120,11 @@
         </div>
 
         {{-- [NEW] PAGINATION WRAPPER --}}
-        <div class="px-6 py-4 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4"
+        <div class="px-6 py-4 bg-white border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2"
             id="pagination-wrapper">
             
             {{-- Info Halaman & Limit --}}
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <select id="filter-limit" class="border border-gray-300 rounded-none px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 outline-none cursor-pointer bg-white">
                     <option value="10">10 Baris</option>
                     <option value="25">25 Baris</option>

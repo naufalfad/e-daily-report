@@ -65,10 +65,10 @@
                 {{-- PANEL 1: PENGATURAN UMUM --}}
                 <div x-show="activeTab === 'sistem'" x-transition.opacity.duration.300ms class="space-y-8 max-w-2xl">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {{-- Mode Pemeliharaan --}}
                         <div class="p-5 rounded-none border-2 border-slate-100 hover:border-[#1C7C54]/30 transition-colors bg-white flex items-center justify-between group shadow-sm hover:shadow-md">
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
                                 <div class="p-3 rounded-full bg-slate-50 group-hover:bg-[#1C7C54]/10 transition-colors">
                                     <img src="{{ asset('assets/icon/maintenance-mode.svg') }}" class="w-6 h-6 opacity-70 group-hover:opacity-100">
                                 </div>
@@ -85,7 +85,7 @@
                         </div>
                         {{-- Backup Data --}}
                         <div class="p-5 rounded-none border-2 border-slate-100 hover:border-[#1C7C54]/30 transition-colors bg-white flex items-center justify-between group shadow-sm hover:shadow-md">
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
                                 <div class="p-3 rounded-full bg-slate-50 group-hover:bg-[#1C7C54]/10 transition-colors">
                                     <img src="{{ asset('assets/icon/backup-data.svg') }}" class="w-6 h-6 opacity-70 group-hover:opacity-100">
                                 </div>
@@ -116,13 +116,13 @@
                         </div>
 
                         {{-- Actions --}}
-                        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <div class="flex justify-end gap-1.5 pt-4 border-t border-slate-100">
                             {{-- [PERBAIKAN] Tombol Reset hanya me-refresh data dari DB --}}
-                            <button @click.prevent="fetchSettings()" class="px-6 py-3 rounded-none border-2 border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">Reset</button>
+                            <button @click.prevent="fetchSettings()" class="px-4 py-2 rounded-none border-2 border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition">Reset</button>
                             {{-- [PERBAIKAN] Tombol Simpan (Memanggil fungsi dari JS Component) --}}
                             <button @click.prevent="submitGeneralSettings()" :disabled="isLoading" 
                                 :class="{'opacity-70 cursor-not-allowed': isLoading}" 
-                                class="px-8 py-3 rounded-none bg-[#128C60] text-white text-sm font-medium hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5">
+                                class="px-4 py-2 rounded-none bg-[#128C60] text-white text-sm font-medium hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5">
                                 <span x-text="isLoading ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
                             </button>
                         </div>
@@ -134,7 +134,7 @@
                     
                     <div class="grid grid-cols-1 gap-5">
                         <div class="p-5 rounded-none border-2 border-slate-100 flex items-center justify-between bg-white shadow-sm">
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
                                 <img src="{{ asset('assets/icon/timeout.svg') }}" class="w-10 h-10">
                                 <div>
                                     <div class="text-[15px] font-medium text-slate-800">Session Timeout</div>
@@ -150,7 +150,7 @@
                         </div>
 
                         <div class="p-5 rounded-none border-2 border-slate-100 flex items-center justify-between bg-white shadow-sm">
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2">
                                 <img src="{{ asset('assets/icon/batas-login.svg') }}" class="w-10 h-10">
                                 <div>
                                     <div class="text-[15px] font-medium text-slate-800">Limit Percobaan Login</div>
@@ -167,7 +167,7 @@
                     </div>
 
                     <div class="flex justify-end pt-4">
-                         <button class="px-8 py-3 rounded-none bg-[#128C60] text-white text-sm font-medium hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition">Simpan Keamanan</button>
+                         <button class="px-4 py-2 rounded-none bg-[#128C60] text-white text-sm font-medium hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition">Simpan Keamanan</button>
                     </div>
                 </div>
             </div>

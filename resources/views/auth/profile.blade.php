@@ -22,7 +22,7 @@
 
     @if ($errors->any())
     <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-none relative shadow-sm">
-        <strong class="font-medium flex items-center"><i class="fas fa-times-circle mr-2"></i> Terjadi Kesalahan:</strong>
+        <strong class="font-medium flex items-center"><i class="fas fa-times-circle mr-1.5"></i> Terjadi Kesalahan:</strong>
         <ul class="list-disc list-inside mt-1 ml-6 text-sm">
             @foreach ($errors->all() as $error)
             <li>{{ $error }}</li>
@@ -65,7 +65,7 @@
                                 class="block text-xs font-medium text-gray-400 tracking-normal mb-1">Jabatan</label>
                             <div
                                 class="text-gray-800 font-medium bg-gray-50 px-3 py-2 rounded-none border border-gray-100 flex items-center">
-                                <i class="fas fa-briefcase text-gray-300 mr-2"></i>
+                                <i class="fas fa-briefcase text-gray-300 mr-1.5"></i>
                                 {{ $user->jabatan->nama_jabatan ?? '-' }}
                             </div>
                         </div>
@@ -74,7 +74,7 @@
                             <label class="block text-xs font-medium text-gray-400 tracking-normal mb-1">Bidang</label>
                             <div
                                 class="text-gray-800 text-sm bg-gray-50 px-3 py-2 rounded-none border border-gray-100 flex items-center">
-                                <i class="fas fa-building text-gray-300 mr-2"></i>
+                                <i class="fas fa-building text-gray-300 mr-1.5"></i>
                                 {{ $user->bidang->nama_bidang ?? '-' }}
                             </div>
                         </div>
@@ -86,7 +86,7 @@
 
                             <label
                                 class="flex items-center text-xs font-medium text-blue-600 tracking-normal mb-2 relative z-10">
-                                <i class="fas fa-user-check mr-2"></i> Atasan Langsung
+                                <i class="fas fa-user-check mr-1.5"></i> Atasan Langsung
                             </label>
                             <div class="text-gray-800 font-medium text-sm relative z-10">{{ $user->atasan->name }}</div>
                             <small
@@ -110,11 +110,11 @@
                 <div class="flex border-b border-gray-200" id="tabs-nav">
                     <button onclick="switchTab('biodata')" id="tab-btn-biodata"
                         class="flex-1 py-4 text-center font-medium text-sm transition-all {{ $activeTab == 'biodata' ? 'border-b-2 border-[#1C7C54] text-[#1C7C54] bg-green-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
-                        <i class="fas fa-id-card mr-2"></i> Biodata Diri
+                        <i class="fas fa-id-card mr-1.5"></i> Biodata Diri
                     </button>
                     <button onclick="switchTab('account')" id="tab-btn-account"
                         class="flex-1 py-4 text-center font-medium text-sm transition-all {{ $activeTab == 'account' ? 'border-b-2 border-[#1C7C54] text-[#1C7C54] bg-green-50/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50' }}">
-                        <i class="fas fa-user-lock mr-2"></i> Akun & Keamanan
+                        <i class="fas fa-user-lock mr-1.5"></i> Akun & Keamanan
                         @if($hasAccountErrors)
                         <span
                             class="ml-2 bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium animate-pulse">!</span>
@@ -135,8 +135,7 @@
                                     <label for="foto_profil"
                                         class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-none cursor-pointer bg-gray-50 hover:bg-gray-100 transition group">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <i
-                                                class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2 group-hover:text-[#1C7C54] transition"></i>
+                                            <i class="fas fa-cloud-upload-alt text-gray-400 mb-2 group-hover:text-[#1C7C54] transition"></i>
                                             <p class="text-sm text-gray-500 group-hover:text-gray-700"><span
                                                     class="font-semibold">Klik untuk upload</span></p>
                                             <p class="text-xs text-gray-400 mt-1">JPG, PNG, WEBP (Max 2MB)</p>
@@ -160,7 +159,7 @@
                                     <div class="relative">
                                         <div
                                             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i class="fab fa-whatsapp text-green-500 text-lg"></i>
+                                            <i class="fab fa-whatsapp text-green-500"></i>
                                         </div>
                                         <input type="tel" name="no_telp" value="{{ old('no_telp', $user->no_telp) }}"
                                             class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
@@ -200,7 +199,7 @@
                             <div class="text-right">
                                 <button type="submit"
                                     class="bg-[#1C7C54] hover:bg-[#156343] text-white font-medium py-3 px-8 rounded-none shadow-lg shadow-green-900/10 transition-all transform hover:-translate-y-1 flex items-center justify-center ml-auto">
-                                    <i class="fas fa-save mr-2"></i> Simpan Biodata
+                                    <i class="fas fa-save mr-1.5"></i> Simpan Biodata
                                 </button>
                             </div>
                         </form>
@@ -250,7 +249,7 @@
                             </div>
 
                             <h6 class="text-red-600 font-medium mb-4 flex items-center">
-                                <i class="fas fa-key mr-2"></i> Ganti Password (Opsional)
+                                <i class="fas fa-key mr-1.5"></i> Ganti Password (Opsional)
                             </h6>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -301,7 +300,7 @@
                             <div class="text-right">
                                 <button type="button" id="btn-trigger-modal"
                                     class="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-8 rounded-none shadow-lg shadow-red-900/10 transition-all transform hover:-translate-y-1 flex items-center justify-center ml-auto">
-                                    <i class="fas fa-save mr-2"></i> Simpan Perubahan Akun
+                                    <i class="fas fa-save mr-1.5"></i> Simpan Perubahan Akun
                                 </button>
                             </div>
                         </form>
@@ -323,7 +322,7 @@
                 <div class="sm:flex sm:items-start">
                     <div
                         class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <i class="fas fa-key text-red-600 text-lg"></i>
+                        <i class="fas fa-key text-red-600"></i>
                     </div>
                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                         <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">Konfirmasi Perubahan

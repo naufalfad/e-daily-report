@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                 </td>
                 <td class="px-6 py-4 align-top">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
                         <div class="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold shadow-sm shrink-0">
                             ${userInitial}
                         </div>

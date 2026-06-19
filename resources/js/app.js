@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const icon = iconMap[n.type] ?? iconMap["warning"];
 
         const html = `
-            <div class="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 transition">
+            <div class="flex items-start gap-1.5 p-2 rounded-lg hover:bg-slate-50 transition">
 
                 <div class="w-10 h-10 rounded-full ${icon.bg} flex items-center justify-center">
                     <img src="${icon.icon}" class="w-5 h-5">

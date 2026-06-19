@@ -33,7 +33,7 @@
                 <p class="text-slate-500 text-sm mt-1">Lengkapi informasi data diri dan jabatan pegawai</p>
             </div>
             <button type="button" @click="openAdd ? toggleAdd(false) : toggleEdit(false)" class="text-slate-400 hover:text-rose-500 transition-colors p-2 hover:bg-rose-50 rounded-none">
-                <i class="fas fa-times text-xl"></i>
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
@@ -47,7 +47,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {{-- Left Column: Personal Info --}}
                     <div class="space-y-5">
-                        <div class="flex items-center gap-3 mb-6 pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-1.5 mb-6 pb-2 border-b border-slate-100">
                             <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                                 <i class="fas fa-user text-sm"></i>
                             </div>
@@ -75,7 +75,7 @@
                                 placeholder="email@bapenda.go.id">
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
                                 <input type="text" x-model="form.username" required
@@ -94,7 +94,7 @@
 
                     {{-- Right Column: Employment Info --}}
                     <div class="space-y-5">
-                        <div class="flex items-center gap-3 mb-6 pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-1.5 mb-6 pb-2 border-b border-slate-100">
                             <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                                 <i class="fas fa-briefcase text-sm"></i>
                             </div>

@@ -6,11 +6,11 @@
 --}}
 
 <div x-show="pagination.total > 0" 
-     class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 z-20 transition-all"
+     class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 z-20 transition-all"
      style="display: none;">
 
     {{-- BAGIAN KIRI: INFO DATA & LIMIT --}}
-    <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+    <div class="flex flex-col sm:flex-row items-center gap-1.5 w-full sm:w-auto">
         <select x-model="pagination.limit" @change="fetchData(1)" class="w-full sm:w-auto min-w-[110px] rounded-none border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-white focus:bg-white focus:border-[#1C7C54] focus:ring-0 transition-all outline-none shadow-sm cursor-pointer">
             <option value="10">10 Baris</option>
             <option value="25">25 Baris</option>

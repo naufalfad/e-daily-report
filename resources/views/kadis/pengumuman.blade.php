@@ -10,7 +10,7 @@
     class="rounded-none bg-white ring-1 ring-slate-200 px-6 py-6 flex flex-col h-auto relative">
 
     {{-- Header Section --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-6">
         <div>
             <h2 class="text-[20px] font-medium text-slate-800">Pengumuman & Instruksi</h2>
             <p class="text-sm text-slate-500 mt-1">Kelola dan distribusikan informasi ke seluruh unit kerja</p>
@@ -18,7 +18,7 @@
         
         {{-- Action Button --}}
         <button id="btn-open-pengumuman" type="button"
-            class="inline-flex items-center gap-2 rounded-none bg-[#0E7A4A] text-white text-[13px] font-medium px-5 py-2.5 shadow-sm hover:bg-[#0b633c] hover:shadow-md transition-all active:scale-95">
+            class="inline-flex items-center gap-2 rounded-none bg-[#0E7A4A] text-white text-[13px] font-medium px-4 py-2 shadow-sm hover:bg-[#0b633c] hover:shadow-md transition-all active:scale-95">
             <span class="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-sm leading-none font-medium">+</span>
             <span>Buat Instruksi Baru</span>
         </button>
@@ -26,7 +26,7 @@
 
     {{-- [NEW] Filter Bar Section --}}
     <div class="mb-6 p-4 rounded-none bg-slate-50 border border-slate-100">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
             {{-- Search Keyword --}}
             <div class="md:col-span-5">
                 <label for="filter-search" class="block text-[11px] font-semibold text-slate-500 mb-1.5 tracking-normal">Cari Instruksi</label>
@@ -202,9 +202,9 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4 border-t border-slate-50 mt-2">
+            <div class="flex justify-end gap-1.5 pt-4 border-t border-slate-50 mt-2">
                 <button id="btn-cancel-pengumuman" type="button"
-                    class="rounded-none bg-white border border-slate-200 px-5 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    class="rounded-none bg-white border border-slate-200 px-4 py-2 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
                     Batal
                 </button>
                 <button id="btn-submit-pengumuman" type="submit"

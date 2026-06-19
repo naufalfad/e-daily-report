@@ -12,7 +12,7 @@ $title = 'Validasi Laporan';
     <div class="bg-white rounded-none p-5 ring-1 ring-slate-200 shadow-sm">
         <h2 class="text-[18px] font-semibold text-slate-800 mb-4">Filter Validasi</h2>
 
-        <form id="filter-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
+        <form id="filter-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 items-end">
 
             {{-- Search --}}
             <div class="sm:col-span-2 lg:col-span-3">
@@ -111,10 +111,10 @@ $title = 'Validasi Laporan';
         </div>
 
         {{-- PAGINATION WRAPPER --}}
-        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4"
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2"
             id="pagination-wrapper">
             
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <select id="filter-limit" class="appearance-none pl-3 pr-8 py-1.5 text-sm font-medium border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all bg-white text-slate-600 shadow-sm cursor-pointer">
                     <option value="10">10 Baris</option>
                     <option value="25">25 Baris</option>
@@ -164,7 +164,7 @@ $title = 'Validasi Laporan';
 
             <button
                 class="js-close-detail h-8 w-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                <i class="fas fa-times text-lg"></i>
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
@@ -205,7 +205,7 @@ $title = 'Validasi Laporan';
             </div>
 
             {{-- Grid Metrik --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div class="p-3 rounded-none border border-slate-100 text-center bg-slate-50/50">
                     <div class="text-xs text-slate-400 mb-1">Output</div>
                     <div id="detail-output" class="font-semibold text-slate-700">-</div>
@@ -228,7 +228,7 @@ $title = 'Validasi Laporan';
             </div>
 
             {{-- Lokasi + Bukti --}}
-            <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex flex-col md:flex-row gap-2">
                 <div class="flex-1">
                     <div class="text-xs font-semibold text-slate-500 mb-1">Titik Lokasi Aktual</div>
                     <div id="detail-lokasi"
@@ -254,15 +254,15 @@ $title = 'Validasi Laporan';
         </div>
 
         {{-- Footer Actions --}}
-        <div id="validation-actions" class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
+        <div id="validation-actions" class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-1.5">
 
             <button
-                class="js-open-reject px-5 py-2.5 rounded-none border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-medium transition-colors">
+                class="js-open-reject px-4 py-2 rounded-none border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-medium transition-colors">
                 <i class="fas fa-times-circle mr-1"></i> Tolak
             </button>
 
             <button
-                class="js-open-approve px-5 py-2.5 rounded-none bg-[#1C7C54] text-white hover:bg-[#156343] text-sm font-medium shadow transition-colors">
+                class="js-open-approve px-4 py-2 rounded-none bg-[#1C7C54] text-white hover:bg-[#156343] text-sm font-medium shadow transition-colors">
                 <i class="fas fa-check-circle mr-1"></i> Setujui
             </button>
         </div>
@@ -293,7 +293,7 @@ $title = 'Validasi Laporan';
         </div>
 
         <div id="bukti-list-container"
-            class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+            class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
             {{-- Isi akan di-inject oleh JS --}}
         </div>
 
@@ -339,7 +339,7 @@ $title = 'Validasi Laporan';
             class="w-full rounded-none border-slate-200 bg-slate-50 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] mb-4 transition-colors"
             placeholder="Catatan apresiasi opsional..."></textarea>
 
-        <div class="flex gap-3">
+        <div class="flex gap-1.5">
             <button type="button"
                 class="js-close-approve flex-1 py-2.5 rounded-none border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors font-medium">
                 Batal
@@ -371,7 +371,7 @@ $title = 'Validasi Laporan';
 
         <p id="reject-error" class="hidden text-xs text-rose-600 mb-3 mt-1 font-medium"><i class="fas fa-info-circle"></i> Alasan wajib diisi.</p>
 
-        <div class="flex gap-3 mt-4">
+        <div class="flex gap-1.5 mt-4">
             <button type="button"
                 class="js-close-reject flex-1 py-2.5 rounded-none border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
                 Batal

@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td colspan="7" class="p-12 text-center text-slate-400 bg-slate-50/50">
                         <div class="flex flex-col items-center">
                             <div class="w-16 h-16 bg-white border border-slate-200 rounded-full flex items-center justify-center mb-3 shadow-sm">
-                                <i class="fas fa-inbox text-2xl text-slate-300"></i>
+                                <i class="fas fa-inbox text-slate-300"></i>
                             </div>
                             <span class="text-sm font-semibold text-slate-600">Tidak ada laporan ditemukan</span>
                             <span class="text-xs mt-1">Sesuaikan filter pencarian untuk melihat data lain.</span>
@@ -488,9 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             switch (type) {
                 case 'image': thumbnailHtml = `<img src="${bukti.file_url}" class="w-full h-24 object-cover rounded-xl shadow-sm" />`; break;
-                case 'pdf': thumbnailHtml = `<div class="w-full h-24 rounded-xl bg-red-50 flex items-center justify-center text-red-500 border border-red-100"><i class="fas fa-file-pdf text-3xl"></i></div>`; break;
-                case 'video': thumbnailHtml = `<div class="w-full h-24 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100"><i class="fas fa-video text-3xl"></i></div>`; break;
-                default: thumbnailHtml = `<div class="w-full h-24 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200"><i class="fas fa-file text-3xl"></i></div>`; break;
+                case 'pdf': thumbnailHtml = `<div class="w-full h-24 rounded-xl bg-red-50 flex items-center justify-center text-red-500 border border-red-100"><i class="fas fa-file-pdf"></i></div>`; break;
+                case 'video': thumbnailHtml = `<div class="w-full h-24 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100"><i class="fas fa-video"></i></div>`; break;
+                default: thumbnailHtml = `<div class="w-full h-24 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 border border-slate-200"><i class="fas fa-file"></i></div>`; break;
             }
 
             const item = document.createElement('div');

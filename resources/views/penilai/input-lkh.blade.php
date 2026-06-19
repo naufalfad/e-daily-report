@@ -4,12 +4,12 @@
 @section('content')
 
 {{-- GRID UTAMA DENGAN 2 KOLOM EKSPLISIT (KIRI & KANAN) --}}
-<section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 lg:gap-5 items-start">
+<section class="grid grid-cols-1 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-2 lg:gap-5 items-start">
 
     {{-- ========================================================== --}}
     {{-- KOLOM KIRI (FORM UTAMA & DRAFT) --}}
     {{-- ========================================================== --}}
-    <div class="flex flex-col gap-4 lg:gap-5">
+    <div class="flex flex-col gap-2 lg:gap-5">
         
         {{-- KIRI ATAS: FORM INPUT LKH --}}
         <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 shadow-sm">
@@ -24,7 +24,7 @@
                 <div class="space-y-5">
 
                     {{-- Row 1: Tanggal + Jenis Kegiatan --}}
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid md:grid-cols-2 gap-2">
                         {{-- Tanggal --}}
                         <div>
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Tanggal</label>
@@ -190,7 +190,7 @@
                             }">
                         
                         {{-- Row 4: Output & Kategori --}}
-                        <div class="grid md:grid-cols-[2fr_1fr] gap-4 bg-slate-50/50 p-4 rounded-none border border-slate-100">
+                        <div class="grid md:grid-cols-[2fr_1fr] gap-2 bg-slate-50/50 p-4 rounded-none border border-slate-100">
                             <div>
                                 <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Output / Hasil</label>
                                 <input type="text" name="output_hasil_kerja"
@@ -242,7 +242,7 @@
                         </div>
 
                         {{-- Row 6: Satuan & Volume --}}
-                        <div class="grid md:grid-cols-2 gap-4 mt-4">
+                        <div class="grid md:grid-cols-2 gap-2 mt-4">
                             <div class="relative">
                                 <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Satuan</label>
                                 <input type="hidden" name="satuan" x-model="satuanValue">
@@ -279,7 +279,7 @@
                     </div>
 
                     {{-- Row 7: Waktu --}}
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid md:grid-cols-2 gap-2">
                         <div>
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Jam Mulai</label>
                             <div class="relative">
@@ -315,7 +315,7 @@
                     </div>
 
                     {{-- Row 8: Bukti & Lokasi Modern --}}
-                    <div class="grid md:grid-cols-2 gap-4">
+                    <div class="grid md:grid-cols-2 gap-2">
                         
                         {{-- Unggah Bukti --}}
                         <div class="bg-slate-50/50 p-4 rounded-none border border-slate-100">
@@ -379,14 +379,14 @@
                     </div>
 
                     {{-- Action Buttons --}}
-                    <div class="flex flex-wrap items-center justify-end gap-3 pt-4 mt-2 border-t border-slate-100">
+                    <div class="flex flex-wrap items-center justify-end gap-1.5 pt-4 mt-2 border-t border-slate-100">
                         <button type="button" onclick="exportPDF(this)"
-                            class="btn-action rounded-none bg-slate-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="btn-action rounded-none bg-slate-600 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             Export PDF
                         </button>
 
                         <button type="button" onclick="submitForm('draft', this)"
-                            class="btn-action rounded-none bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="btn-action rounded-none bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             Simpan Draft
                         </button>
 
@@ -448,7 +448,7 @@
                     <p class="text-sm text-slate-400 italic text-center py-4">Belum ada draft tersimpan.</p>
                 </template>
                 <template x-for="item in draftsLimit" :key="item.id">
-                    <div class="bg-slate-50 rounded-none p-4 flex items-center justify-between gap-3 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                    <div class="bg-slate-50 rounded-none p-4 flex items-center justify-between gap-1.5 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                         <div class="flex-1 min-w-0">
                             <h4 class="text-sm font-medium text-slate-800 truncate" x-text="item.deskripsi"></h4>
                             <p class="text-xs font-medium text-slate-500 mt-1"><i class="far fa-clock mr-1"></i> <span x-text="item.waktu_simpan"></span></p>
@@ -473,12 +473,12 @@
                 <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openDraftModal = false"></div>
                 <div class="relative z-10 w-full max-w-2xl bg-white rounded-none shadow-2xl flex flex-col max-h-[85vh] ring-1 ring-slate-900/5">
                     <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
-                        <h2 class="text-lg font-medium text-slate-800"><i class="fas fa-archive text-amber-500 mr-2"></i> Semua Draft Tersimpan</h2>
+                        <h2 class="text-lg font-medium text-slate-800"><i class="fas fa-archive text-amber-500 mr-1.5"></i> Semua Draft Tersimpan</h2>
                         <button @click="openDraftModal = false" class="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-rose-50 transition-colors">&times;</button>
                     </div>
                     <div class="overflow-y-auto p-6 space-y-3 bg-white custom-scrollbar">
                         <template x-for="item in draftsAll" :key="item.id">
-                            <div class="bg-slate-50 rounded-none p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                            <div class="bg-slate-50 rounded-none p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                 <div>
                                     <h4 class="text-sm font-medium text-slate-800" x-text="item.deskripsi"></h4>
                                     <p class="text-xs font-medium text-slate-500 mt-1"><i class="far fa-clock mr-1"></i> <span x-text="item.waktu_simpan"></span></p>
@@ -505,7 +505,7 @@
     {{-- ========================================================== --}}
     {{-- KOLOM KANAN (PANDUAN & STATUS) --}}
     {{-- ========================================================== --}}
-    <div class="flex flex-col gap-4 lg:gap-5">
+    <div class="flex flex-col gap-2 lg:gap-5">
         
         {{-- KANAN ATAS: PANDUAN SINGKAT --}}
         <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 flex flex-col shadow-sm">
@@ -595,7 +595,7 @@
     {{-- Floating Controls --}}
     <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full">
         <div class="bg-white rounded-none shadow-2xl p-5 ring-1 ring-slate-900/5 animate-slide-up">
-            <div class="flex items-start gap-4 mb-4">
+            <div class="flex items-start gap-2 mb-4">
                 <div class="mt-1 shrink-0 bg-rose-50 p-3 rounded-full border border-rose-100">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-rose-600">
                         <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
@@ -705,7 +705,7 @@ function updateNewFileUI() {
         let thumbnailHtml = `<div class="h-10 w-10 shrink-0 rounded-none bg-white flex items-center justify-center border border-blue-100 text-[9px] font-medium text-blue-500 uppercase shadow-sm">${file.name.split('.').pop()}</div>`;
 
         div.innerHTML = `
-            <div class="flex items-center gap-3 overflow-hidden w-full">
+            <div class="flex items-center gap-1.5 overflow-hidden w-full">
                 <div id="thumb-new-${index}" class="shrink-0">${thumbnailHtml}</div>
                 <div class="min-w-0 flex-1">
                     <p class="text-[12px] font-medium text-slate-800 truncate">${file.name}</p>
@@ -753,7 +753,7 @@ function renderExistingFiles(files) {
         div.id = `file-wrapper-${file.id}`;
 
         div.innerHTML = `
-            <div class="flex items-center gap-3 overflow-hidden">
+            <div class="flex items-center gap-1.5 overflow-hidden">
                 <div class="h-10 w-10 shrink-0 rounded-none bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm">
                     ${isImage ? `<img src="${fileUrl}" class="h-full w-full object-cover">` : `<span class="text-[9px] font-medium text-slate-500 uppercase">${ext}</span>`}
                 </div>
@@ -857,7 +857,7 @@ function renderAktivitas(list) {
         }
 
         el.insertAdjacentHTML("beforeend", `
-            <li class="flex items-start gap-3 bg-white p-3 rounded-none border border-slate-100 shadow-sm">
+            <li class="flex items-start gap-1.5 bg-white p-3 rounded-none border border-slate-100 shadow-sm">
                 <div class="h-8 w-8 rounded-none flex items-center justify-center border shrink-0 ${tone}">
                     ${iconHtml}
                 </div>
@@ -976,7 +976,7 @@ function toggleLoading(isLoading, activeBtn = null) {
     });
 
     if (isLoading && activeBtn) {
-        activeBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...`;
+        activeBtn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-1.5"></i> Memproses...`;
     }
 }
 

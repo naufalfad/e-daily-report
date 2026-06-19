@@ -60,14 +60,14 @@
 <div class="w-full px-4 sm:px-6 py-6">
     
     {{-- HEADER --}}
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 sm:mb-8 gap-4">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 sm:mb-8 gap-2">
         <div>
             <h1 class="text-2xl font-medium text-slate-800 tracking-tight">Manajemen Tupoksi</h1>
             <p class="text-sm font-medium text-slate-500 mt-1">Kelola data Tugas Pokok dan Fungsi berdasarkan pembagian Bidang.</p>
         </div>
         
         <button id="btn-create" 
-            class="group bg-[#1C7C54] hover:bg-[#166443] text-white px-5 py-2.5 rounded-none shadow-lg shadow-emerald-700/20 transition-all duration-200 flex items-center gap-2 text-sm font-medium transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#1C7C54] focus:ring-offset-2">
+            class="group bg-[#1C7C54] hover:bg-[#166443] text-white px-4 py-2 rounded-none shadow-lg shadow-emerald-700/20 transition-all duration-200 flex items-center gap-2 text-sm font-medium transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#1C7C54] focus:ring-offset-2">
             <div class="bg-white/20 p-1 rounded-none group-hover:rotate-90 transition-transform">
                 <i class="fas fa-plus fa-xs"></i>
             </div>
@@ -79,9 +79,9 @@
     <div class="bg-white rounded-none shadow-sm ring-1 ring-slate-200/60 overflow-hidden flex flex-col min-h-[500px]">
         
         {{-- Toolbar: Filters & Search --}}
-        <div class="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="p-5 sm:p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
             
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5">
                 <div class="bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 w-10 h-10 rounded-none flex items-center justify-center shadow-sm border border-indigo-100/50">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
@@ -91,7 +91,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+            <div class="flex flex-col sm:flex-row items-center gap-1.5 w-full lg:w-auto">
                 {{-- Selector Limit Paginasi --}}
                 <div class="w-full sm:w-24">
                     <select id="limitSelect" class="block w-full pl-3 pr-8 py-2.5 border-2 border-slate-200 rounded-none leading-5 bg-white text-sm font-semibold text-slate-700 focus:outline-none focus:ring-0 focus:border-[#1C7C54] cursor-pointer transition-colors shadow-sm">
@@ -148,7 +148,7 @@
 
             {{-- Loading State --}}
             <div id="loading-state" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 transition-opacity duration-300">
-                <div class="p-4 bg-white shadow-lg rounded-none flex items-center gap-3 border border-slate-100">
+                <div class="p-4 bg-white shadow-lg rounded-none flex items-center gap-1.5 border border-slate-100">
                     <svg class="animate-spin h-6 w-6 text-[#1C7C54]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -160,7 +160,7 @@
             {{-- Empty State --}}
             <div id="empty-state" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center z-10 bg-slate-50/50">
                 <div class="w-20 h-20 mb-4 bg-white rounded-full shadow-sm flex items-center justify-center border border-slate-100">
-                    <i class="fas fa-clipboard-list text-3xl text-slate-300"></i>
+                    <i class="fas fa-clipboard-list text-slate-300"></i>
                 </div>
                 <h3 class="text-slate-700 font-medium text-base mb-1">Tidak ada tupoksi ditemukan</h3>
                 <p class="text-slate-500 text-sm">Sesuaikan filter atau kata kunci pencarian Anda.</p>
@@ -168,7 +168,7 @@
         </div>
 
         {{-- PAGINATION CONTROLS --}}
-        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 z-20">
             <span class="text-xs text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-none border border-slate-200 hidden sm:block" id="pagination-info">Kalkulasi indeks...</span>
             <div class="text-xs text-slate-500 font-medium sm:hidden block w-full text-center" id="pagination-info-mobile">Memuat...</div>
             
@@ -191,7 +191,7 @@
                     <input type="hidden" name="id" id="id">
 
                     <div class="bg-white px-6 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 rounded-t-2xl">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1.5">
                             <div class="w-8 h-8 rounded-none bg-emerald-100 text-[#1C7C54] flex items-center justify-center">
                                 <i class="fas fa-clipboard-check text-sm"></i>
                             </div>
@@ -242,13 +242,13 @@
 
                     </div>
 
-                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3 border-t border-slate-100 rounded-b-2xl">
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-1.5 border-t border-slate-100 rounded-b-2xl">
                         <button type="submit" id="btn-save" 
                             class="inline-flex w-full justify-center items-center gap-2 rounded-none bg-[#1C7C54] px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-emerald-600/20 hover:bg-[#166443] focus:outline-none focus:ring-2 focus:ring-[#1C7C54] focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto">
                             <i class="fas fa-check-circle" id="btn-save-icon"></i>
                             <span id="btn-save-text">Simpan Data</span>
                             <span id="btn-save-loading" class="hidden flex items-center gap-2">
-                                <i class="fas fa-circle-notch fa-spin"></i> Memproses...
+                                 Memproses...
                             </span>
                         </button>
                         <button type="button" class="close-modal inline-flex w-full justify-center rounded-none bg-white px-6 py-2.5 text-sm font-medium text-slate-600 shadow-sm border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:w-auto transition-all">

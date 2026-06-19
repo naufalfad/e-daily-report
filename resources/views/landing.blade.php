@@ -72,7 +72,7 @@
     <nav class="fixed top-0 w-full glass-nav transition-all duration-300 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5">
                     <img src="{{ asset('img/logo-kab-mimika.png') }}" alt="Logo" class="h-10 w-auto">
                     <div>
                         <span class="text-xl font-medium text-[#1C7C54] tracking-tight block">E-Daily Report</span>
@@ -106,8 +106,8 @@
                     <p class="text-lg text-slate-500 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
                         Sistem pelaporan harian (LKH) terintegrasi untuk meningkatkan akuntabilitas dan efisiensi birokrasi di lingkungan Bapenda Kabupaten Mimika.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="#fitur" class="px-10 py-4 bg-slate-900 text-white font-medium rounded-none shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 group">
+                    <div class="flex flex-col sm:flex-row gap-2 justify-center lg:justify-start">
+                        <a href="#fitur" class="px-10 py-4 bg-slate-900 text-white font-medium rounded-none shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5 group">
                             Eksplorasi Fitur <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                         </a>
                     </div>
@@ -132,7 +132,7 @@
                             ]; @endphp
                             @foreach($mockData as $data)
                             <div class="p-4 bg-slate-50 rounded-none border border-slate-100 flex items-center justify-between">
-                                <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
                                     <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 text-[#1C7C54] font-medium text-xs">{{ substr($data['n'], 0, 1) }}</div>
                                     <div>
                                         <p class="text-sm font-medium text-slate-800">{{ $data['n'] }}</p>
@@ -160,25 +160,25 @@
                     <h2 class="text-4xl font-semibold text-slate-900 mb-6 tracking-tight">Teknologi Untuk <br><span class="text-[#1C7C54]">Kualitas Birokrasi.</span></h2>
                     <p class="text-slate-500 font-medium mb-12">Setiap baris kode dioptimasi untuk menghasilkan data kinerja yang akurat, transparan, dan tidak dapat dimanipulasi.</p>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {{-- Fitur Items --}}
                         <button @click="activeTab = 1" :class="activeTab === 1 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-map-pin text-xl mb-3 block" :class="activeTab === 1 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <i class="fas fa-map-pin mb-3 block" :class="activeTab === 1 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-medium text-sm text-slate-800">Anti-Fake GPS</h5>
                             <p class="text-[11px] text-slate-500 mt-1">Verifikasi lokasi real-time dengan akurasi tinggi.</p>
                         </button>
                         <button @click="activeTab = 2" :class="activeTab === 2 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-file-invoice text-xl mb-3 block" :class="activeTab === 2 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <i class="fas fa-file-invoice mb-3 block" :class="activeTab === 2 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-medium text-sm text-slate-800">Lampiran Bukti</h5>
                             <p class="text-[11px] text-slate-500 mt-1">Wajib sertakan dokumen/foto hasil kerja.</p>
                         </button>
                         <button @click="activeTab = 3" :class="activeTab === 3 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-chart-simple text-xl mb-3 block" :class="activeTab === 3 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <i class="fas fa-chart-simple mb-3 block" :class="activeTab === 3 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-medium text-sm text-slate-800">Auto-Skoring</h5>
                             <p class="text-[11px] text-slate-500 mt-1">Kalkulasi poin SKP otomatis secara instan.</p>
                         </button>
                         <button @click="activeTab = 4" :class="activeTab === 4 ? 'feature-card-active' : 'border-slate-100 bg-slate-50'" class="p-5 rounded-none border text-left transition-all group">
-                            <i class="fas fa-bell text-xl mb-3 block" :class="activeTab === 4 ? 'text-emerald-600' : 'text-slate-400'"></i>
+                            <i class="fas fa-bell mb-3 block" :class="activeTab === 4 ? 'text-emerald-600' : 'text-slate-400'"></i>
                             <h5 class="font-medium text-sm text-slate-800">Notifikasi Push</h5>
                             <p class="text-[11px] text-slate-500 mt-1">Info validasi & pengumuman langsung di HP.</p>
                         </button>
@@ -332,14 +332,14 @@
                 <div>
                     <h5 class="text-slate-900 font-medium mb-8 uppercase text-xs tracking-widest">Kontak Resmi</h5>
                     <ul class="space-y-5 text-sm font-medium text-slate-500">
-                        <li class="flex gap-3"><i class="fas fa-location-dot mt-1 text-emerald-600"></i> Jl. Cenderawasih No. 1, Timika, Papua Tengah</li>
-                        <li class="flex items-center gap-3"><i class="fas fa-envelope text-emerald-600"></i> support@bapenda.mimika.go.id</li>
+                        <li class="flex gap-1.5"><i class="fas fa-location-dot mt-1 text-emerald-600"></i> Jl. Cenderawasih No. 1, Timika, Papua Tengah</li>
+                        <li class="flex items-center gap-1.5"><i class="fas fa-envelope text-emerald-600"></i> support@bapenda.mimika.go.id</li>
                     </ul>
                 </div>
 
                 <div>
                     <h5 class="text-slate-900 font-medium mb-8 uppercase text-xs tracking-widest">Media Sosial</h5>
-                    <div class="flex gap-4">
+                    <div class="flex gap-2">
                         <a href="#" class="w-10 h-10 rounded-none bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-facebook-f text-sm"></i></a>
                         <a href="#" class="w-10 h-10 rounded-none bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-instagram text-sm"></i></a>
                         <a href="#" class="w-10 h-10 rounded-none bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-[#1C7C54] hover:text-white transition-all"><i class="fab fa-youtube text-sm"></i></a>
@@ -347,7 +347,7 @@
                 </div>
             </div>
 
-            <div class="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="pt-10 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-2">
                 <p class="text-[11px] font-medium text-slate-400 tracking-normal">&copy; {{ date('Y') }} Bapenda Kabupaten Mimika. All Rights Reserved.</p>
                 <div class="flex items-center gap-6 text-[10px] font-medium text-slate-400 tracking-normal">
                     <span>Privacy Policy</span>
@@ -442,7 +442,7 @@
                 const card = document.createElement('div');
                 card.className = "group p-4 bg-white border border-slate-100 rounded-none hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-50 cursor-pointer transition-all duration-300";
                 card.innerHTML = `
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
                         <div class="w-1.5 h-12 rounded-full shrink-0" style="background:${data.c}"></div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start">

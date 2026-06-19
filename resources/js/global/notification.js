@@ -27,7 +27,7 @@ export function showToast(message, type = 'info') {
 
     const colorClass = bgColors[type] || bgColors.info;
 
-    toast.className = `${colorClass} text-white px-4 py-3 rounded shadow-lg flex items-center gap-3 min-w-[300px] transform transition-all duration-300 translate-x-full opacity-0`;
+    toast.className = `${colorClass} text-white px-4 py-3 rounded shadow-lg flex items-center gap-1.5 min-w-[300px] transform transition-all duration-300 translate-x-full opacity-0`;
 
     toast.innerHTML = `
         <span class="flex-1 text-sm font-medium">${message}</span>
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const html = `
                 <a href="${n.redirect_url ?? '#'}"
-                    class="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+                    class="flex items-start gap-1.5 p-3 rounded-lg hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
                     
                     <div class="mt-1">
                         <div class="w-2 h-2 rounded-full ${n.read_at ? 'bg-slate-300' : 'bg-blue-500'}"></div>

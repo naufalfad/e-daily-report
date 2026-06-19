@@ -60,7 +60,7 @@
 
             {{-- Button Add --}}
             <button @click="toggleAdd(true)"
-                class="flex items-center gap-2 px-5 py-2.5 bg-[#1C7C54] text-white text-sm font-medium rounded-none shadow-md shadow-emerald-700/20 hover:bg-[#166443] transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#1C7C54] focus:ring-offset-2">
+                class="flex items-center gap-2 px-4 py-2 bg-[#1C7C54] text-white text-sm font-medium rounded-none shadow-md shadow-emerald-700/20 hover:bg-[#166443] transition-all transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#1C7C54] focus:ring-offset-2">
                 <div class="bg-white/20 p-0.5 rounded-none">
                     <i class="fas fa-plus fa-sm"></i>
                 </div>
@@ -70,7 +70,7 @@
     </div>
 
     {{-- FILTER BAR --}}
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-5 shrink-0 bg-white p-3 rounded-none border border-slate-200 shadow-sm">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-1.5 mb-5 shrink-0 bg-white p-3 rounded-none border border-slate-200 shadow-sm">
         
         {{-- Limit Selector (Baru ditambahkan untuk konsistensi) --}}
         <div class="md:col-span-2">
@@ -125,7 +125,7 @@
                             
                             {{-- Kolom 1: Identitas --}}
                             <td class="px-6 py-4 align-top">
-                                <div class="flex items-start gap-4">
+                                <div class="flex items-start gap-2">
                                     {{-- Avatar --}}
                                     <div class="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shrink-0 shadow-sm">
                                         <template x-if="item.foto_profil_url">
@@ -174,11 +174,7 @@
                                 <div class="flex flex-wrap justify-center gap-1">
                                     <template x-for="role in item.roles" :key="role.id">
                                         <span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-semibold tracking-normal shadow-sm"
-                                              :class="{
-                                                  'bg-purple-50 text-purple-700 border border-purple-200': role.name === 'admin',
-                                                  'bg-blue-50 text-blue-700 border border-blue-200': role.name === 'penilai' || role.name === 'kadis',
-                                                  'bg-slate-50 text-slate-600 border border-slate-200': role.name === 'staf' || role.name === 'pegawai'
-                                              }"
+                                              :class="{ 'bg-purple-50 text-purple-700 border border-purple-200': role.name === 'admin', 'bg-blue-50 text-blue-700 border border-blue-200': role.name === 'penilai' || role.name === 'kadis', 'bg-slate-50 text-slate-600 border border-slate-200': role.name === 'staf' || role.name === 'pegawai' }"
                                               x-text="role.name">
                                         </span>
                                     </template>
@@ -217,7 +213,7 @@
                         <td colspan="5" class="py-16 text-center bg-slate-50/50">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-20 h-20 mb-4 bg-white rounded-full shadow-sm flex items-center justify-center border border-slate-100">
-                                    <i class="fas fa-users-slash text-3xl text-slate-300"></i>
+                                    <i class="fas fa-users-slash text-slate-300"></i>
                                 </div>
                                 <h3 class="text-slate-700 font-medium text-base mb-1">Entitas tidak ditemukan</h3>
                                 <p class="text-slate-500 text-sm">Sesuaikan filter pencarian atau registrasi pegawai baru.</p>
@@ -229,7 +225,7 @@
 
             {{-- Loading State --}}
             <div x-show="isLoading" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 transition-opacity duration-300">
-                <div class="p-4 bg-white shadow-lg rounded-none flex items-center gap-3 border border-slate-100">
+                <div class="p-4 bg-white shadow-lg rounded-none flex items-center gap-1.5 border border-slate-100">
                     <svg class="animate-spin h-6 w-6 text-[#1C7C54]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -240,7 +236,7 @@
         </div>
 
         {{-- PAGINATION CONTROLS (Direfaktor sesuai standarisasi Emerald) --}}
-        <div x-show="pagination.total > 0" x-cloak class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 z-20 transition-all">
+        <div x-show="pagination.total > 0" x-cloak class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 z-20 transition-all">
             
             {{-- Bagian Kiri: Info Data --}}
             <div class="text-xs text-slate-500 font-medium bg-slate-50 px-3 py-2 rounded-none border border-slate-200 w-full sm:w-auto text-center sm:text-left shadow-sm">

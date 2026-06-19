@@ -6,7 +6,7 @@
 {{-- ==========================================
      BARIS 1: BANNER SAMBUTAN & PROFIL 
      ========================================== --}}
-<section class="grid gap-4 lg:gap-5 lg:grid-cols-[1fr_380px]">
+<section class="grid gap-2 lg:gap-5 lg:grid-cols-[1fr_380px]">
     {{-- CARD BANNER DASHBOARD (FULL) --}}
     <div class="relative w-full h-[250px] rounded-none overflow-hidden shadow-lg shadow-emerald-900/20 bg-[#1C7C54]">
 
@@ -78,7 +78,7 @@
     {{-- CARD PROFIL SAYA --}}
     <aside class="rounded-none bg-white ring-1 ring-slate-200 shadow-sm overflow-hidden mt-0 flex flex-col justify-center">
         <div class="px-6 py-6">
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
                 <div class="flex-shrink-0">
                     <div class="h-20 w-20 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center border-4 border-white shadow-md">
                          <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : asset('assets/man.png') }}" 
@@ -127,7 +127,7 @@
 {{-- ==========================================
      BARIS 2: STATISTIK RINGKAS
      ========================================== --}}
-<section class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-4 lg:mt-5">
+<section class="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-2 mt-4 lg:mt-5">
     {{-- Card 1: Total Laporan SKP --}}
     <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-start justify-between">
@@ -180,7 +180,7 @@
 {{-- ==========================================
      BARIS 3: GRAFIK (KINERJA & LOKASI)
      ========================================== --}}
-<section class="mt-4 lg:mt-5 grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">
+<section class="mt-4 lg:mt-5 grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2">
     
     {{-- GRAFIK KINERJA (KIRI) --}}
     <div class="rounded-none bg-white ring-1 ring-slate-200 p-6 flex flex-col shadow-sm">
@@ -217,7 +217,7 @@
 {{-- ==========================================
      BARIS 4: LIST DATA (AKTIVITAS & DRAFT)
      ========================================== --}}
-<section class="mt-4 lg:mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+<section class="mt-4 lg:mt-5 grid grid-cols-1 lg:grid-cols-2 gap-2">
 
     {{-- AKTIVITAS TERKINI (KIRI) --}}
     <div class="rounded-none bg-white ring-1 ring-slate-200 p-6 flex flex-col shadow-sm">

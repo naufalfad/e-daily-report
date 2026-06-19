@@ -150,7 +150,7 @@
             </div>
             
             {{-- Action Buttons --}}
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-wrap items-center gap-1.5">
 
                 {{-- GPS Button --}}
                 <button @click="zoomToCurrentLocation()"
@@ -162,7 +162,7 @@
 
                 {{-- Export Button --}}
                 <button @click="exportMap()"
-                    class="px-5 py-2.5 bg-[#1C7C54] text-white rounded-none text-sm font-medium hover:bg-[#15683f] hover:shadow-lg hover:shadow-emerald-200 transition-all shadow-sm flex items-center gap-2">
+                    class="px-4 py-2 bg-[#1C7C54] text-white rounded-none text-sm font-medium hover:bg-[#15683f] hover:shadow-lg hover:shadow-emerald-200 transition-all shadow-sm flex items-center gap-2">
                     <svg class="w-5 h-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     Export Laporan
                 </button>
@@ -334,7 +334,7 @@
                         
                         {{-- User Info Card --}}
                         <div class="flex items-center justify-between bg-slate-50 p-4 rounded-none border border-slate-100 shadow-sm">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1.5">
                                 <div class="h-11 w-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xl shadow-sm shrink-0">👤</div>
                                 <div>
                                     <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Pegawai</p>
@@ -345,11 +345,7 @@
                             {{-- Status Badge --}}
                             <div class="text-right shrink-0">
                                 <span class="px-3 py-1.5 text-xs rounded-none font-medium border shadow-sm inline-block tracking-wide" 
-                                    :class="{
-                                        'bg-emerald-50 text-emerald-700 border-emerald-200': selectedActivity.status === 'approved',
-                                        'bg-rose-50 text-rose-700 border-rose-200': selectedActivity.status === 'rejected',
-                                        'bg-amber-50 text-amber-700 border-amber-200': selectedActivity.status === 'waiting_review'
-                                    }"
+                                    :class="{ 'bg-emerald-50 text-emerald-700 border-emerald-200': selectedActivity.status === 'approved', 'bg-rose-50 text-rose-700 border-rose-200': selectedActivity.status === 'rejected', 'bg-amber-50 text-amber-700 border-amber-200': selectedActivity.status === 'waiting_review' }"
                                     x-text="selectedActivity.status === 'approved' ? 'DISETUJUI' : (selectedActivity.status === 'rejected' ? 'DITOLAK' : 'MENUNGGU')">
                                 </span>
                             </div>
@@ -361,7 +357,7 @@
                             
                             <div class="space-y-5">
                                 {{-- Waktu --}}
-                                <div class="flex gap-4 items-start group">
+                                <div class="flex gap-2 items-start group">
                                     <div class="mt-0.5 w-10 h-10 rounded-none bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-100 transition-colors">
                                         <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     </div>
@@ -374,7 +370,7 @@
                                 </div>
 
                                 {{-- Deskripsi --}}
-                                <div class="flex gap-4 items-start group">
+                                <div class="flex gap-2 items-start group">
                                     <div class="mt-0.5 w-10 h-10 rounded-none bg-purple-50 flex items-center justify-center shrink-0 border border-purple-100 group-hover:bg-purple-100 transition-colors">
                                         <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                     </div>
@@ -385,7 +381,7 @@
                                 </div>
 
                                 {{-- Lokasi --}}
-                                <div class="flex gap-4 items-start group">
+                                <div class="flex gap-2 items-start group">
                                     <div class="mt-0.5 w-10 h-10 rounded-none bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100 group-hover:bg-orange-100 transition-colors">
                                         <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                     </div>
@@ -406,7 +402,7 @@
                 
                 {{-- [LOGIKA BARU] MODE VALIDASI: Hanya muncul jika status Waiting Review DAN Mode = Staff --}}
                 <template x-if="selectedActivity && selectedActivity.status === 'waiting_review' && viewMode === 'staff'">
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2">
                         <button @click="confirmApprove(selectedActivity.id)" 
                             class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-none text-sm transition-all shadow-sm hover:shadow-emerald-200 hover:shadow-lg transform active:scale-[0.98] flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -423,13 +419,13 @@
 
                 {{-- [LOGIKA BARU] MODE PERBAIKAN: Hanya jika status rejected DAN mode personal --}}
                 <template x-if="selectedActivity && selectedActivity.status === 'rejected' && viewMode === 'personal'">
-                    <div class="flex justify-end gap-3">
+                    <div class="flex justify-end gap-1.5">
                         <button @click="window.editActivity(selectedActivity.id)"
-                            class="px-6 py-3 bg-amber-500 text-white font-medium text-sm rounded-none hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98] flex items-center gap-2">
+                            class="px-4 py-2 bg-amber-500 text-white font-medium text-sm rounded-none hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98] flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             Perbaiki Laporan
                         </button>
-                        <button @click="closeModal()" class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-none hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
+                        <button @click="closeModal()" class="px-4 py-2 bg-slate-800 text-white font-medium text-sm rounded-none hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
                             Tutup Detail
                         </button>
                     </div>
@@ -439,7 +435,7 @@
                 <template x-if="selectedActivity && !(selectedActivity.status === 'waiting_review' && viewMode === 'staff') && !(selectedActivity.status === 'rejected' && viewMode === 'personal')">
                     <div class="flex justify-end">
                         <button @click="closeModal()"
-                            class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-none hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
+                            class="px-4 py-2 bg-slate-800 text-white font-medium text-sm rounded-none hover:bg-slate-900 transition-all shadow-lg hover:shadow-xl transform active:scale-[0.98]">
                             Tutup Detail
                         </button>
                     </div>

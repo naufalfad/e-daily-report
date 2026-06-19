@@ -30,7 +30,7 @@ $rows = [
         </div>
 
         {{-- Filter Group --}}
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5">
 
             {{-- 1. Filter Status --}}
             <div class="relative">
@@ -131,7 +131,7 @@ $rows = [
                             </span>
                         </td>
                         <td class="px-6 py-4 align-top">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-1.5">
                                 <div
                                     class="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-medium shrink-0">
                                     {{ substr($row['pegawai'], 0, 1) }}
@@ -162,10 +162,10 @@ $rows = [
         </div>
 
         {{-- PAGINATION WRAPPER --}}
-        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4"
+        <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2"
             id="pagination-wrapper">
             
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex items-center gap-1.5 w-full sm:w-auto">
                 <select id="filter-limit" class="appearance-none pl-3 pr-8 py-1.5 text-sm font-medium border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all bg-white text-slate-600 shadow-sm cursor-pointer">
                     <option value="10">10 Baris</option>
                     <option value="25">25 Baris</option>
@@ -221,7 +221,7 @@ $rows = [
                 <div class="px-6 py-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                     
                     {{-- Row: Tanggal, Status, Kategori Lokasi --}}
-                    <div class="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-none border border-slate-100">
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-4 rounded-none border border-slate-100">
                         <div>
                             <label class="block text-[11px] font-semibold tracking-normal text-slate-400 mb-1">Tanggal</label>
                             <div id="detail-tanggal" class="text-sm font-medium text-slate-800">-</div>
@@ -239,7 +239,7 @@ $rows = [
                     {{-- Row: Identitas Pegawai --}}
                     <div>
                         <label class="block text-[11px] font-semibold tracking-normal text-slate-400 mb-1">Identitas Pegawai</label>
-                        <div class="flex items-center gap-3 mt-1">
+                        <div class="flex items-center gap-1.5 mt-1">
                             <div class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-sm font-medium border border-slate-200">
                                 <i class="fas fa-user"></i>
                             </div>
@@ -265,7 +265,7 @@ $rows = [
                     </div>
 
                     {{-- Row: Metrik Kinerja --}}
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <div class="p-3 rounded-none border border-slate-100 bg-slate-50/50">
                             <label class="block text-[10px] font-medium text-slate-400 tracking-normal mb-1">Output</label>
                             <div id="detail-output" class="text-sm font-medium text-slate-700">-</div>
@@ -288,7 +288,7 @@ $rows = [
                     </div>
 
                     {{-- Row: Lokasi & Bukti --}}
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-4">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-2 gap-2">
                         <div class="flex-1">
                             <label class="block text-[11px] font-semibold tracking-normal text-slate-400 mb-1">Titik Lokasi Aktual</label>
                             <div id="detail-lokasi" class="text-sm text-slate-700 font-medium flex items-center gap-1.5">
@@ -312,7 +312,7 @@ $rows = [
 
                     {{-- Row: Catatan Revisi --}}
                     <div id="detail-catatan-wrapper" class="hidden mt-4 bg-amber-50 border border-amber-200 rounded-none p-4">
-                        <div class="flex gap-3">
+                        <div class="flex gap-1.5">
                             <div class="shrink-0 text-amber-500">
                                 <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -334,13 +334,13 @@ $rows = [
                         </svg>
                         Laporan ini telah selesai divalidasi.
                     </div>
-                    <div id="validation-actions" class="flex items-center gap-3 w-full justify-end">
+                    <div id="validation-actions" class="flex items-center gap-1.5 w-full justify-end">
                         <button type="button"
-                            class="js-open-reject px-5 py-2.5 bg-white text-rose-600 text-sm font-medium rounded-none border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition-all focus:ring-2 focus:ring-rose-500/20">
+                            class="js-open-reject px-4 py-2 bg-white text-rose-600 text-sm font-medium rounded-none border border-slate-200 hover:bg-rose-50 hover:border-rose-200 transition-all focus:ring-2 focus:ring-rose-500/20">
                             Tolak Revisi
                         </button>
                         <button type="button"
-                            class="js-open-approve px-5 py-2.5 bg-[#1C7C54] text-white text-sm font-medium rounded-none shadow-md shadow-emerald-700/20 hover:bg-[#166443] transition-all focus:ring-2 focus:ring-[#1C7C54]/30 flex items-center gap-2">
+                            class="js-open-approve px-4 py-2 bg-[#1C7C54] text-white text-sm font-medium rounded-none shadow-md shadow-emerald-700/20 hover:bg-[#166443] transition-all focus:ring-2 focus:ring-[#1C7C54]/30 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
@@ -372,7 +372,7 @@ $rows = [
             </button>
         </div>
 
-        <div id="bukti-list-container" class="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+        <div id="bukti-list-container" class="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
             {{-- Isi akan di-inject oleh JS --}}
         </div>
 
@@ -415,7 +415,7 @@ $rows = [
                     placeholder="Tuliskan catatan apresiasi atau pesan..."></textarea>
             </div>
         </div>
-        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
+        <div class="bg-slate-50 px-6 py-4 flex gap-1.5 justify-end border-t border-slate-100">
             <button type="button"
                 class="js-close-approve w-full inline-flex justify-center rounded-none border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="button" id="btn-submit-approve"
@@ -451,7 +451,7 @@ $rows = [
                 </p>
             </div>
         </div>
-        <div class="bg-slate-50 px-6 py-4 flex gap-3 justify-end border-t border-slate-100">
+        <div class="bg-slate-50 px-6 py-4 flex gap-1.5 justify-end border-t border-slate-100">
             <button type="button"
                 class="js-close-reject w-full inline-flex justify-center rounded-none border-2 border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">Batal</button>
             <button type="button" id="btn-submit-reject"

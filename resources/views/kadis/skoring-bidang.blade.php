@@ -12,7 +12,7 @@
 
         {{-- Button Export PDF --}}
         <button id="export-pdf"
-            class="mt-4 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-none shadow transition-all flex items-center gap-2 font-medium text-sm disabled:opacity-50"
+            class="mt-4 md:mt-0 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-none shadow transition-all flex items-center gap-2 font-medium text-sm disabled:opacity-50"
             title="Export Laporan Kinerja Bidang">
             <i class="fas fa-file-export"></i> Export Laporan
         </button>

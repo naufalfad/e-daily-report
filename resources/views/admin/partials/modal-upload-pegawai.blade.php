@@ -17,7 +17,7 @@
         <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
             <h2 class="text-lg font-medium text-slate-800">Import Data Pegawai</h2>
             <button @click="toggleUpload(false)" class="text-slate-400 hover:text-slate-600 transition">
-                <i class="fas fa-times text-xl"></i>
+                <i class="fas fa-times"></i>
             </button>
         </div>
 
@@ -56,15 +56,7 @@
                             <input type="file" id="file_import" 
                                 @change="handleFileUpload" 
                                 accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                                class="block w-full text-sm text-slate-500
-                                        file:mr-4 file:py-2.5 file:px-4
-                                        file:rounded-none file:border-0
-                                        file:text-sm file:font-semibold
-                                        file:bg-emerald-50 file:text-emerald-700
-                                        hover:file:bg-emerald-100
-                                        border border-slate-200 rounded-none cursor-pointer
-                                        focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500
-                                        transition-all">
+                                class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-200 rounded-none cursor-pointer focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all">
                         </div>
                         <p class="text-[11px] text-slate-400 mt-2">
                             Format yang didukung: .xlsx, .xls, .csv (Maks. 10MB). 
@@ -73,9 +65,9 @@
                     </div>
 
                     {{-- Footer / Action Buttons --}}
-                    <div class="flex items-center justify-end gap-3 pt-2">
+                    <div class="flex items-center justify-end gap-1.5 pt-2">
                         <button type="button" @click="toggleUpload(false)" 
-                            class="px-5 py-2.5 rounded-none text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all">
+                            class="px-4 py-2 rounded-none text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all">
                             Batal
                         </button>
                         <button type="submit" 

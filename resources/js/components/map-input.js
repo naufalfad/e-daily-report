@@ -203,7 +203,7 @@ export default class MapInput {
 
                         <div>
                             <div id="stack-toggle-wilayah" class="group cursor-pointer p-3 hover:bg-blue-50/50 transition-colors flex items-center justify-between select-none">
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1.5">
                                     <div class="bg-blue-100 text-blue-600 p-1.5 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                                     </div>
@@ -240,14 +240,14 @@ export default class MapInput {
                             </div>
                         </div>
 
-                        <div id="stack-btn-gps" class="group cursor-pointer p-3 hover:bg-blue-50/50 transition-colors flex items-center gap-3 select-none">
+                        <div id="stack-btn-gps" class="group cursor-pointer p-3 hover:bg-blue-50/50 transition-colors flex items-center gap-1.5 select-none">
                             <div class="bg-red-100 text-red-600 p-1.5 rounded-lg group-hover:bg-red-500 group-hover:text-white transition-colors duration-300" id="icon-container-gps">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             </div>
                             <span class="text-sm font-medium text-slate-700 group-hover:text-red-600 transition-colors">Lokasi Saya (GPS)</span>
                         </div>
 
-                        <div id="stack-btn-layer" class="group cursor-pointer p-3 hover:bg-blue-50/50 transition-colors flex items-center gap-3 select-none">
+                        <div id="stack-btn-layer" class="group cursor-pointer p-3 hover:bg-blue-50/50 transition-colors flex items-center gap-1.5 select-none">
                             <div class="bg-green-100 text-green-600 p-1.5 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7"></path></svg>
                             </div>

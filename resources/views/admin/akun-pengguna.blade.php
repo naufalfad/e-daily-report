@@ -37,7 +37,7 @@
         <section class="flex-1 flex flex-col rounded-none bg-white border border-slate-200 overflow-hidden shadow-sm">
             
             {{-- Header & Toolbar --}}
-            <div class="px-6 py-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white relative z-20">
+            <div class="px-6 py-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-2 bg-white relative z-20">
                 <div>
                     <h1 class="text-xl font-medium text-slate-800 tracking-tight">Manajemen Akses & Kredensial</h1>
                     <p class="text-sm text-slate-500 mt-1">Kontrol keamanan, reset password, dan hak akses pengguna sistem.</p>
@@ -100,7 +100,7 @@
                                 
                                 {{-- Kolom 1: Identitas --}}
                                 <td class="py-4 px-6 align-middle">
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-1.5">
                                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 flex items-center justify-center font-black text-sm shrink-0 shadow-sm border border-blue-200">
                                             <span x-text="item.name.charAt(0).toUpperCase()"></span>
                                         </div>
@@ -124,11 +124,7 @@
                                 {{-- Kolom 3: Role --}}
                                 <td class="py-4 px-6 align-middle text-center">
                                     <div class="flex justify-center">
-                                        <span :class="{
-                                            'bg-purple-50 text-purple-700 ring-purple-200': item.roles[0]?.nama_role === 'Admin',
-                                            'bg-blue-50 text-blue-700 ring-blue-200': item.roles[0]?.nama_role === 'Kadis' || item.roles[0]?.nama_role === 'Penilai',
-                                            'bg-slate-50 text-slate-600 ring-slate-200': item.roles[0]?.nama_role === 'Staf'
-                                        }"
+                                        <span :class="{ 'bg-purple-50 text-purple-700 ring-purple-200': item.roles[0]?.nama_role === 'Admin', 'bg-blue-50 text-blue-700 ring-blue-200': item.roles[0]?.nama_role === 'Kadis' || item.roles[0]?.nama_role === 'Penilai', 'bg-slate-50 text-slate-600 ring-slate-200': item.roles[0]?.nama_role === 'Staf' }"
                                         class="px-2.5 py-1 rounded-none text-[11px] font-medium ring-1 ring-inset tracking-normal shadow-sm"
                                         x-text="item.roles[0]?.nama_role || 'No Role'">
                                         </span>
@@ -180,7 +176,7 @@
                             <td colspan="5" class="py-16 text-center bg-slate-50/50">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="w-16 h-16 mb-4 bg-slate-100 rounded-full flex items-center justify-center text-slate-300">
-                                        <i class="fas fa-user-shield text-2xl"></i>
+                                        <i class="fas fa-user-shield"></i>
                                     </div>
                                     <p class="text-slate-600 font-medium text-base">Tidak ada akun yang ditemukan.</p>
                                     <p class="text-slate-400 text-sm mt-1">Coba gunakan kata kunci pencarian lain.</p>
@@ -192,7 +188,7 @@
             </div>
 
             {{-- Pagination Controls (Dihibridasi untuk kompatibilitas script existing) --}}
-            <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 z-20">
+            <div class="px-6 py-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 z-20">
                 <span class="text-xs font-medium text-slate-500 bg-slate-50 px-3 py-1.5 rounded-none border border-slate-100" id="pagination-info">Menunggu data...</span>
                 <div class="flex gap-1.5">
                     <button id="prev-page" class="px-3.5 py-1.5 rounded-none border border-slate-200 bg-white text-slate-600 text-xs font-medium hover:bg-slate-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm flex items-center gap-1">
@@ -219,7 +215,7 @@
                  class="bg-white rounded-none shadow-2xl w-full max-w-md border border-slate-100 relative z-10 overflow-hidden">
                 
                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
                             <i class="fas fa-key"></i>
                         </div>
@@ -232,7 +228,7 @@
 
                 <div class="px-6 py-6">
                     <form @submit.prevent="submitCredentialUpdate()" class="space-y-5">
-                        <div class="p-3 bg-blue-50 rounded-none border border-blue-100 flex gap-3 items-center">
+                        <div class="p-3 bg-blue-50 rounded-none border border-blue-100 flex gap-1.5 items-center">
                             <div class="w-10 h-10 rounded-full bg-white text-blue-600 flex items-center justify-center font-medium text-sm shadow-sm shrink-0">
                                 <span x-text="targetName.charAt(0).toUpperCase()"></span>
                             </div>
@@ -263,9 +259,9 @@
                             <input type="password" id="cred_password_confirmation" x-model="formData.password_confirmation" class="form-input-tegas border-amber-200 focus:border-amber-500 focus:ring-amber-500/20 placeholder-slate-300" placeholder="Ketik ulang password baru">
                         </div>
 
-                        <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
-                            <button type="button" @click="toggleCred(false)" class="px-5 py-2.5 rounded-none border-2 border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-all">Batal</button>
-                            <button type="submit" class="px-5 py-2.5 rounded-none bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 shadow-lg shadow-blue-600/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center gap-2">
+                        <div class="pt-4 flex justify-end gap-1.5 border-t border-slate-100">
+                            <button type="button" @click="toggleCred(false)" class="px-4 py-2 rounded-none border-2 border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-all">Batal</button>
+                            <button type="submit" class="px-4 py-2 rounded-none bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 shadow-lg shadow-blue-600/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all flex items-center gap-2">
                                 <i class="fas fa-save"></i> Simpan Perubahan
                             </button>
                         </div>
@@ -312,9 +308,9 @@
                             </div>
                         </div>
 
-                        <div class="pt-2 flex justify-center gap-3">
-                            <button type="button" @click="toggleRole(false)" class="px-5 py-2.5 rounded-none border-2 border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 hover:border-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-200">Batal</button>
-                            <button type="submit" class="px-5 py-2.5 rounded-none bg-amber-500 text-white font-medium text-sm hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 flex items-center gap-2">
+                        <div class="pt-2 flex justify-center gap-1.5">
+                            <button type="button" @click="toggleRole(false)" class="px-4 py-2 rounded-none border-2 border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-50 hover:border-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-slate-200">Batal</button>
+                            <button type="submit" class="px-4 py-2 rounded-none bg-amber-500 text-white font-medium text-sm hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 flex items-center gap-2">
                                 <i class="fas fa-check-circle"></i> Tetapkan Role
                             </button>
                         </div>

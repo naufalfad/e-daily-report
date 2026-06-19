@@ -88,13 +88,13 @@
         {{-- Layer Latar Belakang Gambar --}}
         <div class="absolute inset-0 z-0">
             <img 
-                src="{{ asset('img/bg-mimika.jpg') }}" 
-                alt="Mimika Landscape" 
+                src="{{ asset('img/bapenda-gpt.jpg') }}" 
+                alt="Bapenda Mimika" 
                 class="w-full h-full object-cover object-center filter saturate-75 opacity-90"
             >
         </div>
         {{-- Lapisan Gradien Taktis --}}
-        <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/30 z-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/60 to-slate-950/10 z-10"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full mt-8 md:mt-0">
             <div class="grid lg:grid-cols-[1.2fr_1fr] gap-16 items-center">
@@ -112,42 +112,6 @@
                         <a href="#fitur" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 font-bold text-[11px] uppercase tracking-widest transition-colors shadow-none group">
                             Eksplorasi Fitur <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                         </a>
-                    </div>
-                </div>
-
-                {{-- Mockup UI Dashboard (Siku Kaku, High-Density) --}}
-                <div class="relative">
-                    <div class="absolute -inset-4 bg-emerald-500/10 rounded-none blur-3xl"></div>
-                    <div class="relative bg-white border border-slate-200 shadow-2xl overflow-hidden text-slate-800 rounded-none">
-                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex justify-between items-center select-none">
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Pusat Validasi Atasan</span>
-                            <div class="flex gap-1.5">
-                                <div class="w-2 h-2 rounded-full bg-slate-200"></div>
-                                <div class="w-2 h-2 rounded-full bg-slate-200"></div>
-                            </div>
-                        </div>
-                        <div class="p-4 flex flex-col divide-y divide-slate-100">
-                            @php $mockData = [
-                                ['n' => 'Andi Pratama', 't' => '08:15 WIT', 's' => 'Waiting'],
-                                ['n' => 'Siti Aisyah', 't' => '09:30 WIT', 's' => 'Waiting'],
-                                ['n' => 'Budi Sudarsono', 't' => '10:05 WIT', 's' => 'Waiting']
-                            ]; @endphp
-                            @foreach($mockData as $data)
-                            <div class="py-3 first:pt-0 last:pb-0 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center font-black text-[11px]">{{ substr($data['n'], 0, 1) }}</div>
-                                    <div class="text-left leading-none">
-                                        <p class="text-xs font-bold text-slate-800 leading-none">{{ $data['n'] }}</p>
-                                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 leading-none">{{ $data['t'] }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-1.5 shrink-0 pl-2">
-                                    <button class="w-8 h-8 bg-transparent text-emerald-600 hover:text-emerald-700 transition-all"><i class="fas fa-check"></i></button>
-                                    <button class="w-8 h-8 bg-transparent text-slate-400 hover:text-slate-600 transition-all"><i class="fas fa-eye"></i></button>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
                     </div>
                 </div>
             </div>

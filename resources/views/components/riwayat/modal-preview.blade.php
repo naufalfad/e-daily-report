@@ -12,12 +12,12 @@
     x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-    <div class="relative bg-white rounded-2xl overflow-hidden shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh]">
+    <div class="relative bg-white rounded-none overflow-hidden shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh]">
         
         {{-- Header Preview --}}
         <div class="flex items-center justify-between px-4 py-3 bg-slate-900 text-white shrink-0">
             <span class="text-sm font-medium truncate opacity-90" x-text="selectedBukti ? selectedBukti.file_url.split('/').pop() : 'Preview'"></span>
-            <button @click.stop="showPreview = false" class="text-white/70 hover:text-white p-1 rounded-md hover:bg-white/10 transition">
+            <button @click.stop="showPreview = false" class="text-white/70 hover:text-white p-1 rounded-none hover:bg-white/10 transition">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -32,12 +32,12 @@
 
             {{-- PDF --}}
             <template x-if="selectedBukti && getFileType(selectedBukti.file_url) === 'pdf'">
-                <iframe :src="selectedBukti.file_url" class="w-full h-full min-h-[500px] rounded-lg shadow border border-slate-300"></iframe>
+                <iframe :src="selectedBukti.file_url" class="w-full h-full min-h-[500px] rounded-none shadow border border-slate-300"></iframe>
             </template>
 
             {{-- VIDEO --}}
             <template x-if="selectedBukti && getFileType(selectedBukti.file_url) === 'video'">
-                <video controls class="max-w-full max-h-full rounded-lg shadow-lg bg-black">
+                <video controls class="max-w-full max-h-full rounded-none shadow-lg bg-black">
                     <source :src="selectedBukti.file_url" type="video/mp4">
                     Browser tidak support video.
                 </video>
@@ -51,7 +51,7 @@
                     </div>
                     <p class="text-slate-600 font-medium mb-4">File ini tidak dapat dipreview.</p>
                     <a :href="selectedBukti.file_url" target="_blank"
-                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#155FA6] text-white rounded-xl font-bold hover:bg-[#0f4a85] transition shadow-lg shadow-blue-200">
+                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#155FA6] text-white rounded-none font-medium hover:bg-[#0f4a85] transition shadow-lg shadow-blue-200">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Download File
                     </a>

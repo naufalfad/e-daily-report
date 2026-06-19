@@ -12,8 +12,8 @@
     <div class="flex flex-col gap-4 lg:gap-5">
         
         {{-- KIRI ATAS: FORM INPUT LKH --}}
-        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
-            <h2 class="text-[20px] font-bold text-slate-800 mb-4">Form Input LKH</h2>
+        <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 shadow-sm">
+            <h2 class="text-[20px] font-medium text-slate-800 mb-4">Form Input LKH</h2>
 
             <form id="form-lkh" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="status" id="status_input" value="draft">
@@ -29,10 +29,15 @@
                         <div>
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Tanggal</label>
                             <div class="relative">
-                                <input id="tanggal_lkh" name="tanggal_laporan" type="date"
-                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none transition-all" />
+                                <div class="relative w-full">
+    <input id="tanggal_lkh" name="tanggal_laporan"  type="date" 
+                                    class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none transition-all pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 <button type="button" id="tanggal_lkh_btn"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-slate-200 p-1 rounded-md transition-colors">
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-slate-200 p-1 rounded-none transition-colors">
                                     <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80" alt="Date" />
                                 </button>
                             </div>
@@ -51,14 +56,14 @@
 
                             <div class="relative">
                                 <button type="button" @click="open = !open" @click.outside="open = false"
-                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between focus:ring-2 focus:ring-[#1C7C54]/30 transition-all"
+                                    class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between focus:ring-2 focus:ring-[#1C7C54]/30 transition-all"
                                     :class="!value ? 'text-slate-400' : 'text-slate-700'">
                                     <span x-text="label"></span>
                                     <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70" alt="">
                                 </button>
 
                                 <div x-show="open" x-transition
-                                    class="absolute z-20 mt-1 w-full rounded-xl bg-white shadow-lg border border-slate-200 py-1">
+                                    class="absolute z-20 mt-1 w-full rounded-none bg-white shadow-lg border border-slate-200 py-1">
                                     <template x-for="opt in options" :key="opt">
                                         <button type="button"
                                             class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex justify-between transition-colors"
@@ -99,14 +104,14 @@
 
                         <div class="relative">
                             <button type="button" @click="open = !open" @click.outside="open = false"
-                                class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between focus:ring-2 focus:ring-[#1C7C54]/30 transition-all"
+                                class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm pr-3 text-left flex items-center justify-between focus:ring-2 focus:ring-[#1C7C54]/30 transition-all"
                                 :class="!value ? 'text-slate-400' : 'text-slate-700'">
                                 <span x-text="loading ? 'Memuat...' : label" class="truncate mr-2"></span>
                                 <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 flex-shrink-0" alt="">
                             </button>
 
                             <div x-show="open" x-transition
-                                class="absolute z-20 mt-1 w-full rounded-xl bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto custom-scrollbar">
+                                class="absolute z-20 mt-1 w-full rounded-none bg-white shadow-lg border border-slate-200 py-1 max-h-60 overflow-y-auto custom-scrollbar">
                                 <template x-for="opt in options" :key="opt.id">
                                     <button type="button"
                                         class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50 flex justify-between gap-2 border-b border-slate-50 last:border-0"
@@ -125,7 +130,7 @@
                     <div>
                         <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Uraian Kegiatan</label>
                         <textarea name="deskripsi_aktivitas" rows="3"
-                            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] transition-all"
+                            class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] transition-all"
                             placeholder="Tulis uraian kegiatan yang dilakukan secara detail..."></textarea>
                     </div>
 
@@ -185,11 +190,11 @@
                             }">
                         
                         {{-- Row 4: Output & Kategori --}}
-                        <div class="grid md:grid-cols-[2fr_1fr] gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                        <div class="grid md:grid-cols-[2fr_1fr] gap-4 bg-slate-50/50 p-4 rounded-none border border-slate-100">
                             <div>
                                 <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Output / Hasil</label>
                                 <input type="text" name="output_hasil_kerja"
-                                    class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] transition-all"
+                                    class="w-full rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] transition-all"
                                     placeholder="Contoh: Dokumen Laporan">
                             </div>
                             <div class="relative">
@@ -197,13 +202,13 @@
                                 <input type="hidden" name="kategori" x-model="kategori">
                                 <button type="button" @click="kategoriOpen = !kategoriOpen"
                                     @click.outside="kategoriOpen = false"
-                                    class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 transition-all">
+                                    class="w-full flex items-center justify-between rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 transition-all">
                                     <span x-text="kategori === 'skp' ? 'SKP' : 'Non-SKP'"
-                                        :class="kategori === 'skp' ? 'text-[#1C7C54] font-bold' : 'text-slate-700'"></span>
+                                        :class="kategori === 'skp' ? 'text-[#1C7C54] font-medium' : 'text-slate-700'"></span>
                                     <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2">
                                 </button>
                                 <div x-show="kategoriOpen" x-transition
-                                    class="absolute z-20 mt-1 w-full rounded-xl bg-white shadow-lg border border-slate-200 overflow-hidden">
+                                    class="absolute z-20 mt-1 w-full rounded-none bg-white shadow-lg border border-slate-200 overflow-hidden">
                                     <button type="button" @click="setKategori('skp')"
                                         class="w-full text-left px-3.5 py-2 text-sm hover:bg-slate-50">SKP</button>
                                     <button type="button" @click="setKategori('non-skp')"
@@ -218,17 +223,17 @@
                             <input type="hidden" name="skp_rencana_id" x-model="skpId">
                             <div class="relative">
                                 <button type="button" @click="skpOpen = !skpOpen" @click.outside="skpOpen = false"
-                                    class="w-full flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30 transition-all">
+                                    class="w-full flex items-center justify-between rounded-none border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30 transition-all">
                                     <span x-text="skpLoading ? 'Memuat data...' : skpLabel" class="truncate text-emerald-800 font-medium"></span>
                                     <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70 ml-2 text-emerald-800">
                                 </button>
                                 <div x-show="skpOpen" x-transition
-                                    class="absolute z-20 mt-1 w-full rounded-xl bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto custom-scrollbar">
+                                    class="absolute z-20 mt-1 w-full rounded-none bg-white shadow-lg border border-slate-200 max-h-60 overflow-y-auto custom-scrollbar">
                                     <template x-for="opt in skpOptions" :key="opt.value">
                                         <button type="button" @click="pilihSkp(opt)"
                                             class="w-full text-left px-3.5 py-2.5 text-sm hover:bg-slate-50 border-b border-slate-100 transition-colors">
                                             <span x-text="opt.label" class="line-clamp-2 text-slate-700"></span>
-                                            <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full inline-block mt-1 font-bold" x-text="'Target: ' + opt.target + ' ' + opt.satuan"></span>
+                                            <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full inline-block mt-1 font-medium" x-text="'Target: ' + opt.target + ' ' + opt.satuan"></span>
                                         </button>
                                     </template>
                                     <div x-show="!skpOptions.length && !skpLoading" class="p-3 text-sm text-slate-400 italic text-center">Tidak ada data SKP.</div>
@@ -242,19 +247,19 @@
                                 <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Satuan</label>
                                 <input type="hidden" name="satuan" x-model="satuanValue">
                                 <div x-show="isSatuanLocked"
-                                    class="w-full rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500 cursor-not-allowed flex justify-between items-center shadow-inner">
+                                    class="w-full rounded-none border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-sm text-slate-500 cursor-not-allowed flex justify-between items-center shadow-inner">
                                     <span x-text="satuanValue" class="font-medium"></span>
                                     <img src="{{ asset('assets/icon/lock.svg') }}" class="h-3.5 w-3.5 opacity-50">
                                 </div>
                                 <div x-show="!isSatuanLocked">
                                     <button type="button" @click="satuanOpen = !satuanOpen"
                                         @click.outside="satuanOpen = false"
-                                        class="w-full flex justify-between items-center rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30 transition-all">
+                                        class="w-full flex justify-between items-center rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-left focus:ring-2 focus:ring-[#1C7C54]/30 transition-all">
                                         <span x-text="satuanValue || 'Pilih Satuan'" :class="!satuanValue ? 'text-slate-400' : 'text-slate-700 font-medium'"></span>
                                         <img src="{{ asset('assets/icon/chevron-down.svg') }}" class="h-4 w-4 opacity-70">
                                     </button>
                                     <div x-show="satuanOpen" x-transition
-                                        class="absolute z-20 mt-1 w-full rounded-xl bg-white shadow-lg border border-slate-200 py-1 max-h-48 overflow-y-auto custom-scrollbar">
+                                        class="absolute z-20 mt-1 w-full rounded-none bg-white shadow-lg border border-slate-200 py-1 max-h-48 overflow-y-auto custom-scrollbar">
                                         <template x-for="opt in ['Jam', 'Dokumen', 'Kegiatan', 'Laporan', 'Berkas']">
                                             <button type="button" @click="satuanValue = opt; satuanOpen = false"
                                                 class="w-full px-3.5 py-2 text-sm text-left hover:bg-slate-50 transition-colors">
@@ -267,7 +272,7 @@
                             <div>
                                 <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Volume</label>
                                 <input type="number" name="volume" min="0"
-                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] transition-all"
+                                    class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] transition-all"
                                     placeholder="0">
                             </div>
                         </div>
@@ -278,10 +283,15 @@
                         <div>
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Jam Mulai</label>
                             <div class="relative">
-                                <input id="jam_mulai" name="waktu_mulai" type="time"
-                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none transition-all" />
+                                <div class="relative w-full">
+    <input id="jam_mulai" name="waktu_mulai"  type="time" 
+                                    class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none transition-all pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-clock"></i>
+    </button>
+</div>
                                 <button type="button" id="jam_mulai_btn"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-slate-200 p-1 rounded-md transition-colors">
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-slate-200 p-1 rounded-none transition-colors">
                                     <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70">
                                 </button>
                             </div>
@@ -289,10 +299,15 @@
                         <div>
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Jam Selesai</label>
                             <div class="relative">
-                                <input id="jam_selesai" name="waktu_selesai" type="time"
-                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none transition-all" />
+                                <div class="relative w-full">
+    <input id="jam_selesai" name="waktu_selesai"  type="time" 
+                                    class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none transition-all pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-clock"></i>
+    </button>
+</div>
                                 <button type="button" id="jam_selesai_btn"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-slate-200 p-1 rounded-md transition-colors">
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-slate-200 p-1 rounded-none transition-colors">
                                     <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70">
                                 </button>
                             </div>
@@ -303,10 +318,10 @@
                     <div class="grid md:grid-cols-2 gap-4">
                         
                         {{-- Unggah Bukti --}}
-                        <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                        <div class="bg-slate-50/50 p-4 rounded-none border border-slate-100">
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Unggah Bukti</label>
                             <label
-                                class="w-full flex items-center justify-between rounded-xl border-2 border-dashed border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-500 cursor-pointer hover:bg-slate-50 hover:border-[#1C7C54] transition-all">
+                                class="w-full flex items-center justify-between rounded-none border-2 border-dashed border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-500 cursor-pointer hover:bg-slate-50 hover:border-[#1C7C54] transition-all">
                                 <span id="bukti_label_text" class="truncate font-medium">Klik untuk pilih file...</span>
                                 <img src="{{ asset('assets/icon/upload.svg') }}" class="h-4 w-4 opacity-70">
                                 <input type="file" id="bukti_input" name="bukti[]" multiple class="hidden"
@@ -318,13 +333,13 @@
                         </div>
 
                         {{-- Modul Input Lokasi & Kategori [UPDATED] --}}
-                        <div id="lokasi-wrapper" x-data="{ kategori_lokasi: 'WFO' }" class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                        <div id="lokasi-wrapper" x-data="{ kategori_lokasi: 'WFO' }" class="bg-slate-50/50 p-4 rounded-none border border-slate-100">
                             <label class="block font-semibold text-[13px] text-slate-500 uppercase tracking-wide mb-2">Lokasi Aktual</label>
 
                             {{-- NEW: Dropdown Kategori Lokasi --}}
                             <div class="mb-3">
                                 <select id="kategori_lokasi_input" name="kategori_lokasi" x-model="kategori_lokasi" 
-                                    class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] cursor-pointer transition-all shadow-sm">
+                                    class="w-full rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] cursor-pointer transition-all shadow-sm">
                                     <option value="WFO">🏢 WFO (Kantor)</option>
                                     <option value="WFH">🏠 WFH (Rumah)</option>
                                     <option value="WFA">💻 WFA (Bebas)</option>
@@ -346,13 +361,13 @@
                                         <img src="{{ asset('assets/icon/location.svg') }}" class="w-4 h-4 opacity-50">
                                     </div>
                                     <input type="text" id="preview_lokasi" readonly
-                                        class="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed truncate font-medium shadow-sm"
+                                        class="w-full rounded-none border border-slate-200 bg-white pl-9 pr-3.5 py-2.5 text-sm text-slate-600 focus:outline-none cursor-not-allowed truncate font-medium shadow-sm"
                                         placeholder="Koordinat belum diatur">
                                 </div>
 
                                 {{-- Tombol Trigger Fullscreen --}}
                                 <button type="button" id="btnOpenMap"
-                                    class="shrink-0 bg-[#1C7C54] hover:bg-[#156343] text-white px-3 py-2.5 rounded-xl text-sm font-bold flex items-center transition-colors shadow-md hover:shadow-lg active:scale-95">
+                                    class="shrink-0 bg-[#1C7C54] hover:bg-[#156343] text-white px-3 py-2.5 rounded-none text-sm font-medium flex items-center transition-colors shadow-md hover:shadow-lg active:scale-95">
                                     <span class="hidden md:inline">📍 Buka Peta</span>
                                     <span class="md:hidden">📍 Peta</span>
                                 </button>
@@ -366,17 +381,17 @@
                     {{-- Action Buttons --}}
                     <div class="flex flex-wrap items-center justify-end gap-3 pt-4 mt-2 border-t border-slate-100">
                         <button type="button" onclick="exportPDF(this)"
-                            class="btn-action rounded-xl bg-slate-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-slate-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="btn-action rounded-none bg-slate-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             Export PDF
                         </button>
 
                         <button type="button" onclick="submitForm('draft', this)"
-                            class="btn-action rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="btn-action rounded-none bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                             Simpan Draft
                         </button>
 
                         <button type="button" onclick="submitForm('waiting_review', this)"
-                            class="btn-action rounded-xl bg-[#0E7A4A] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#0b633b] shadow-md hover:shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="btn-action rounded-none bg-[#0E7A4A] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#0b633b] shadow-md hover:shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
                             Kirim LKH
                         </button>
                     </div>
@@ -418,12 +433,12 @@
                 });
             }
         }" @update-drafts.window="draftsLimit = $event.detail.limit; draftsAll = $event.detail.all;" x-cloak
-            class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm flex flex-col">
+            class="rounded-none bg-white ring-1 ring-slate-200 p-5 shadow-sm flex flex-col">
 
             <div class="flex items-center justify-between mb-4 shrink-0 border-b border-slate-100 pb-3">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-archive text-amber-500"></i> Brankas Draft</h3>
+                <h3 class="text-lg font-medium text-slate-800 flex items-center gap-2"><i class="fas fa-archive text-amber-500"></i> Brankas Draft</h3>
                 <button type="button" x-show="draftsAll.length > 0"
-                    class="text-sm text-[#0E7A4A] font-bold hover:underline" @click="openDraftModal = true">
+                    class="text-sm text-[#0E7A4A] font-medium hover:underline" @click="openDraftModal = true">
                     Lihat Semua (<span x-text="draftsAll.length"></span>)
                 </button>
             </div>
@@ -433,18 +448,18 @@
                     <p class="text-sm text-slate-400 italic text-center py-4">Belum ada draft tersimpan.</p>
                 </template>
                 <template x-for="item in draftsLimit" :key="item.id">
-                    <div class="bg-slate-50 rounded-xl p-4 flex items-center justify-between gap-3 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                    <div class="bg-slate-50 rounded-none p-4 flex items-center justify-between gap-3 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-bold text-slate-800 truncate" x-text="item.deskripsi"></h4>
+                            <h4 class="text-sm font-medium text-slate-800 truncate" x-text="item.deskripsi"></h4>
                             <p class="text-xs font-medium text-slate-500 mt-1"><i class="far fa-clock mr-1"></i> <span x-text="item.waktu_simpan"></span></p>
                         </div>
                         <div class="flex gap-2">
                             <a :href="'/penilai/input-laporan/' + item.id"
-                                class="bg-[#0E7A4A] text-white text-xs font-bold px-3 py-2 rounded-lg hover:bg-[#0b633b] transition-colors">
+                                class="bg-[#0E7A4A] text-white text-xs font-medium px-3 py-2 rounded-none hover:bg-[#0b633b] transition-colors">
                                 Lanjutkan
                             </a>
                             <button @click="deleteDraft(item.id)"
-                                class="bg-white border border-rose-200 text-rose-600 text-xs font-bold px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors">
+                                class="bg-white border border-rose-200 text-rose-600 text-xs font-medium px-3 py-2 rounded-none hover:bg-rose-50 transition-colors">
                                 Hapus
                             </button>
                         </div>
@@ -456,25 +471,25 @@
             <div x-show="openDraftModal" x-transition.opacity
                 class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display: none;">
                 <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openDraftModal = false"></div>
-                <div class="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh] ring-1 ring-slate-900/5">
+                <div class="relative z-10 w-full max-w-2xl bg-white rounded-none shadow-2xl flex flex-col max-h-[85vh] ring-1 ring-slate-900/5">
                     <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/80 rounded-t-2xl">
-                        <h2 class="text-lg font-bold text-slate-800"><i class="fas fa-archive text-amber-500 mr-2"></i> Semua Draft Tersimpan</h2>
+                        <h2 class="text-lg font-medium text-slate-800"><i class="fas fa-archive text-amber-500 mr-2"></i> Semua Draft Tersimpan</h2>
                         <button @click="openDraftModal = false" class="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-rose-50 transition-colors">&times;</button>
                     </div>
                     <div class="overflow-y-auto p-6 space-y-3 bg-white custom-scrollbar">
                         <template x-for="item in draftsAll" :key="item.id">
-                            <div class="bg-slate-50 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                            <div class="bg-slate-50 rounded-none p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
                                 <div>
-                                    <h4 class="text-sm font-bold text-slate-800" x-text="item.deskripsi"></h4>
+                                    <h4 class="text-sm font-medium text-slate-800" x-text="item.deskripsi"></h4>
                                     <p class="text-xs font-medium text-slate-500 mt-1"><i class="far fa-clock mr-1"></i> <span x-text="item.waktu_simpan"></span></p>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <a :href="'/penilai/input-laporan/' + item.id"
-                                        class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
+                                        class="bg-[#0E7A4A] hover:bg-[#0b633b] text-white text-xs font-medium px-4 py-2 rounded-none transition-colors">
                                         Lanjutkan
                                     </a>
                                     <button @click="deleteDraft(item.id)"
-                                        class="bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold px-4 py-2 rounded-lg transition-colors">
+                                        class="bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium px-4 py-2 rounded-none transition-colors">
                                         Hapus
                                     </button>
                                 </div>
@@ -493,15 +508,15 @@
     <div class="flex flex-col gap-4 lg:gap-5">
         
         {{-- KANAN ATAS: PANDUAN SINGKAT --}}
-        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 flex flex-col shadow-sm">
-            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 flex flex-col shadow-sm">
+            <h3 class="text-lg font-medium text-slate-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-book-open text-blue-500"></i> Panduan Pengisian LKH
             </h3>
 
             <div class="space-y-4">
                 {{-- Panduan Umum --}}
-                <div class="rounded-xl bg-[#155FA6] px-4 py-3.5 text-white shadow-sm">
-                    <p class="text-[14px] font-bold border-b border-blue-400/30 pb-2 mb-2">1. Data Waktu & Kategori</p>
+                <div class="rounded-none bg-[#155FA6] px-4 py-3.5 text-white shadow-sm">
+                    <p class="text-[14px] font-medium border-b border-blue-400/30 pb-2 mb-2">1. Data Waktu & Kategori</p>
                     <ul class="text-[12px] text-blue-50 list-disc pl-4 space-y-1.5 font-medium leading-relaxed">
                         <li>Pastikan <span class="bg-blue-800 px-1 rounded">Jam Mulai</span> lebih awal dari Jam Selesai.</li>
                         <li><strong>[PENTING]</strong> Pilih <strong>Kategori Lokasi</strong> (WFO, WFH, WFA, atau Dinas Luar) dengan jujur sebelum Anda mengirim laporan.</li>
@@ -509,8 +524,8 @@
                 </div>
 
                 {{-- Panduan SKP --}}
-                <div class="rounded-xl bg-emerald-600 px-4 py-3.5 text-white shadow-sm">
-                    <p class="text-[14px] font-bold border-b border-emerald-400/30 pb-2 mb-2">2. Kategori Kinerja & Output</p>
+                <div class="rounded-none bg-emerald-600 px-4 py-3.5 text-white shadow-sm">
+                    <p class="text-[14px] font-medium border-b border-emerald-400/30 pb-2 mb-2">2. Kategori Kinerja & Output</p>
                     <ul class="text-[12px] text-emerald-50 list-disc pl-4 space-y-1.5 font-medium leading-relaxed">
                         <li><strong>Non-SKP:</strong> Tentukan satuan hasil kerja secara manual.</li>
                         <li><strong>SKP:</strong> Sistem mengunci satuan agar selaras dengan perjanjian target tahunan Anda.</li>
@@ -519,8 +534,8 @@
                 </div>
                 
                 {{-- Panduan Lokasi --}}
-                <div class="rounded-xl bg-rose-600 px-4 py-3.5 text-white shadow-sm">
-                    <p class="text-[14px] font-bold border-b border-rose-400/30 pb-2 mb-2">3. Titik Lokasi Validasi</p>
+                <div class="rounded-none bg-rose-600 px-4 py-3.5 text-white shadow-sm">
+                    <p class="text-[14px] font-medium border-b border-rose-400/30 pb-2 mb-2">3. Titik Lokasi Validasi</p>
                     <ul class="text-[12px] text-rose-50 list-disc pl-4 space-y-1.5 font-medium leading-relaxed">
                         <li>Gunakan tombol <strong>Buka Peta</strong> untuk menentukan koordinat GPS yang presisi.</li>
                         <li>Jika WFO, pastikan titik berada di area kantor. Sistem melacak status WFH/WFO ini untuk kebutuhan audit pimpinan.</li>
@@ -528,8 +543,8 @@
                 </div>
 
                 {{-- Panduan Bukti --}}
-                <div class="rounded-xl bg-slate-700 px-4 py-3.5 text-white shadow-sm">
-                    <p class="text-[14px] font-bold border-b border-slate-500/30 pb-2 mb-2">4. Unggah Bukti</p>
+                <div class="rounded-none bg-slate-700 px-4 py-3.5 text-white shadow-sm">
+                    <p class="text-[14px] font-medium border-b border-slate-500/30 pb-2 mb-2">4. Unggah Bukti</p>
                     <ul class="text-[12px] text-slate-100 list-disc pl-4 space-y-1.5 font-medium leading-relaxed">
                         <li>Sertakan dokumen (PDF) atau foto JPG/PNG sebagai bukti dukung.</li>
                         <li>Klik <i class="fas fa-times text-rose-400 mx-1"></i> pada daftar untuk membatalkan file.</li>
@@ -539,8 +554,8 @@
         </div>
 
         {{-- KANAN BAWAH: STATUS LOG --}}
-        <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 shadow-sm">
-            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 shadow-sm">
+            <h3 class="text-lg font-medium text-slate-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-history text-indigo-500"></i> Status Laporan
             </h3>
             <ul class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" id="aktivitas-list">
@@ -558,7 +573,7 @@
     {{-- Close Button --}}
     <div class="absolute top-4 left-4 z-[1001]">
         <button type="button" id="btnCloseMap" 
-            class="h-10 w-10 bg-white rounded-xl shadow-lg flex items-center justify-center hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 transition-all active:scale-95" title="Tutup Peta">
+            class="h-10 w-10 bg-white rounded-none shadow-lg flex items-center justify-center hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 transition-all active:scale-95" title="Tutup Peta">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -579,7 +594,7 @@
 
     {{-- Floating Controls --}}
     <div class="absolute bottom-8 left-4 right-4 z-[1001] max-w-lg mx-auto w-full">
-        <div class="bg-white rounded-2xl shadow-2xl p-5 ring-1 ring-slate-900/5 animate-slide-up">
+        <div class="bg-white rounded-none shadow-2xl p-5 ring-1 ring-slate-900/5 animate-slide-up">
             <div class="flex items-start gap-4 mb-4">
                 <div class="mt-1 shrink-0 bg-rose-50 p-3 rounded-full border border-rose-100">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-rose-600">
@@ -588,8 +603,8 @@
                 </div>
                 
                 <div class="flex-1 min-w-0">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Titik Koordinat</p>
-                    <p id="mapAddressPreview" class="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
+                    <p class="text-[10px] font-medium text-slate-400 tracking-normal mb-0.5">Titik Koordinat</p>
+                    <p id="mapAddressPreview" class="text-sm font-medium text-slate-800 leading-snug line-clamp-2">
                         Sedang mencari lokasi...
                     </p>
                     <div class="flex items-center gap-2 mt-1.5">
@@ -599,7 +614,7 @@
             </div>
 
             <button type="button" id="btnConfirmLocation" 
-                class="w-full bg-[#1C7C54] hover:bg-[#156343] text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group">
+                class="w-full bg-[#1C7C54] hover:bg-[#156343] text-white font-medium text-sm py-3.5 rounded-none shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group">
                 <span>Konfirmasi Lokasi Ini</span>
                 <i class="fas fa-check group-hover:scale-110 transition-transform"></i>
             </button>
@@ -675,7 +690,7 @@ function updateNewFileUI() {
 
     if (files.length > 0) {
         const header = document.createElement('p');
-        header.className = "text-[11px] text-[#155FA6] font-bold mb-2 mt-3 uppercase tracking-wide";
+        header.className = "text-[11px] text-[#155FA6] font-medium mb-2 mt-3 uppercase tracking-wide";
         header.innerText = "Akan diunggah (Baru):";
         container.appendChild(header);
     }
@@ -685,16 +700,16 @@ function updateNewFileUI() {
         const fileSizeKB = (file.size / 1024).toFixed(1);
 
         const div = document.createElement('div');
-        div.className = "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-xl p-2 shadow-sm relative group";
+        div.className = "flex items-center justify-between bg-blue-50 border border-blue-200 rounded-none p-2 shadow-sm relative group";
 
-        let thumbnailHtml = `<div class="h-10 w-10 shrink-0 rounded-lg bg-white flex items-center justify-center border border-blue-100 text-[9px] font-bold text-blue-500 uppercase shadow-sm">${file.name.split('.').pop()}</div>`;
+        let thumbnailHtml = `<div class="h-10 w-10 shrink-0 rounded-none bg-white flex items-center justify-center border border-blue-100 text-[9px] font-medium text-blue-500 uppercase shadow-sm">${file.name.split('.').pop()}</div>`;
 
         div.innerHTML = `
             <div class="flex items-center gap-3 overflow-hidden w-full">
                 <div id="thumb-new-${index}" class="shrink-0">${thumbnailHtml}</div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[12px] font-bold text-slate-800 truncate">${file.name}</p>
-                    <p class="text-[10px] font-medium text-slate-500 mt-0.5">${fileSizeKB} KB <span class="text-emerald-600 ml-1 bg-emerald-100 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider text-[8px]">Baru</span></p>
+                    <p class="text-[12px] font-medium text-slate-800 truncate">${file.name}</p>
+                    <p class="text-[10px] font-medium text-slate-500 mt-0.5">${fileSizeKB} KB <span class="text-emerald-600 ml-1 bg-emerald-100 px-1.5 py-0.5 rounded font-medium tracking-normal text-[8px]">Baru</span></p>
                 </div>
                 <button type="button" onclick="removeNewFile(${index})" 
                     class="h-7 w-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition-colors shrink-0">
@@ -710,7 +725,7 @@ function updateNewFileUI() {
                 const imgContainer = document.getElementById(`thumb-new-${index}`);
                 if (imgContainer) {
                     imgContainer.innerHTML = `
-                        <div class="h-10 w-10 shrink-0 rounded-lg bg-white overflow-hidden border border-blue-100 shadow-sm">
+                        <div class="h-10 w-10 shrink-0 rounded-none bg-white overflow-hidden border border-blue-100 shadow-sm">
                             <img src="${e.target.result}" class="h-full w-full object-cover">
                         </div>`;
                 }
@@ -726,7 +741,7 @@ function renderExistingFiles(files) {
 
     if (!files || files.length === 0) return;
 
-    container.innerHTML = '<p class="text-[11px] font-bold text-slate-500 mb-2 mt-2 uppercase tracking-wide">File Tersimpan:</p>';
+    container.innerHTML = '<p class="text-[11px] font-medium text-slate-500 mb-2 mt-2 uppercase tracking-wide">File Tersimpan:</p>';
 
     files.forEach(file => {
         const ext = file.file_type ? file.file_type.toLowerCase() : 'file';
@@ -734,16 +749,16 @@ function renderExistingFiles(files) {
         const fileUrl = `/storage/${file.file_path}`;
 
         const div = document.createElement('div');
-        div.className = "flex items-center justify-between bg-white border border-slate-200 rounded-xl p-2 shadow-sm";
+        div.className = "flex items-center justify-between bg-white border border-slate-200 rounded-none p-2 shadow-sm";
         div.id = `file-wrapper-${file.id}`;
 
         div.innerHTML = `
             <div class="flex items-center gap-3 overflow-hidden">
-                <div class="h-10 w-10 shrink-0 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm">
-                    ${isImage ? `<img src="${fileUrl}" class="h-full w-full object-cover">` : `<span class="text-[9px] font-bold text-slate-500 uppercase">${ext}</span>`}
+                <div class="h-10 w-10 shrink-0 rounded-none bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm">
+                    ${isImage ? `<img src="${fileUrl}" class="h-full w-full object-cover">` : `<span class="text-[9px] font-medium text-slate-500 uppercase">${ext}</span>`}
                 </div>
                 <div class="min-w-0">
-                    <a href="${fileUrl}" target="_blank" class="text-[12px] font-bold text-slate-800 hover:text-blue-600 hover:underline truncate block">
+                    <a href="${fileUrl}" target="_blank" class="text-[12px] font-medium text-slate-800 hover:text-blue-600 hover:underline truncate block">
                         ${file.file_name_original || 'File Tanpa Nama'}
                     </a>
                     <p class="text-[10px] font-medium text-slate-500 mt-0.5">${(file.file_size / 1024).toFixed(1)} KB</p>
@@ -842,14 +857,14 @@ function renderAktivitas(list) {
         }
 
         el.insertAdjacentHTML("beforeend", `
-            <li class="flex items-start gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                <div class="h-8 w-8 rounded-lg flex items-center justify-center border shrink-0 ${tone}">
+            <li class="flex items-start gap-3 bg-white p-3 rounded-none border border-slate-100 shadow-sm">
+                <div class="h-8 w-8 rounded-none flex items-center justify-center border shrink-0 ${tone}">
                     ${iconHtml}
                 </div>
                 <div class="flex-1 overflow-hidden">
-                    <div class="text-[13px] font-bold text-slate-800 truncate mb-1" title="${item.deskripsi_aktivitas}">${item.deskripsi_aktivitas}</div>
+                    <div class="text-[13px] font-medium text-slate-800 truncate mb-1" title="${item.deskripsi_aktivitas}">${item.deskripsi_aktivitas}</div>
                     <div class="flex justify-between items-center text-[11px] font-medium text-slate-500">
-                        <span class="uppercase tracking-wider ${tone.split(' ')[2]}">${text}</span>
+                        <span class="tracking-normal ${tone.split(' ')[2]}">${text}</span>
                         <span>${new Date(item.tanggal_laporan).toLocaleDateString("id-ID")}</span>
                     </div>
                 </div>

@@ -36,6 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchData(1);
 
+    const LIMIT_SELECT = document.getElementById('limitSelect');
+    if (LIMIT_SELECT) {
+        LIMIT_SELECT.addEventListener('change', (e) => {
+            currentLimit = e.target.value;
+            fetchData(1);
+        });
+    }
+
     // Search Listener with Debounce
     if (SEARCH_INPUT) {
         SEARCH_INPUT.addEventListener('input', (e) => {

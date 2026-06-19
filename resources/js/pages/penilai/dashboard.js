@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     setText("banner-nama", uInfo.name ?? "User");
     setText("profile-nama", uInfo.name ?? "-");
     setText("profile-jabatan", uInfo.jabatan ?? "-");
-    setText("profile-dinas", uInfo.unit ?? "-");
+    setText("profile-bidang", uInfo.bidang ?? "-");
 
     setText("profile-nip", uInfo.nip);
     setText("profile-alamat", uInfo.alamat);

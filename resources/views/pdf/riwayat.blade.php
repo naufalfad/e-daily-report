@@ -21,7 +21,7 @@
         font-size: 11px;
     }
 
-    .font-bold {
+    .font-medium {
         font-weight: bold;
     }
 
@@ -96,7 +96,7 @@
 
 <body>
 
-    <h2 class="text-lg font-bold mb-2">Riwayat Laporan Harian</h2>
+    <h2 class="text-lg font-medium mb-2">Riwayat Laporan Harian</h2>
 
     <p class="text-sm mb-4">
         {{ ucfirst($role) }} — {{ $user->name }} <br>

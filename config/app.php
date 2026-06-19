@@ -42,10 +42,14 @@ return [
     |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
+    |
+    | Here you may specify the default timezone for your application, which
+    | will be used by the PHP date and date-time functions. The timezone
+    | is set to "Asia/Jayapura" by default as it is the default for Mimika.
+    |
     */
 
-    // silakan ganti ke 'Asia/Jakarta' kalau mau
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jayapura'),
 
     /*
     |--------------------------------------------------------------------------

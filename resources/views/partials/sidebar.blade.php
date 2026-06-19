@@ -124,12 +124,12 @@ $iconMap = [
 
 
 {{-- ==================== SIDEBAR UI ==================== --}}
-<aside id="sidebar" class="fixed lg:sticky inset-y-0 left-0 z-40 -translate-x-full lg:translate-x-0 transition-transform duration-200
-              lg:top-5 w-[340px] text-white
-              lg:h-[calc(100dvh-40px)]
-              bg-[#1C7C54] rounded-[20px] overflow-hidden
-              shadow-[0_12px_30px_rgba(0,0,0,0.18)] ring-1 ring-black/5
-              px-4 pt-6 pb-5 flex flex-col">
+<aside id="sidebar" class="fixed lg:sticky inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out
+              lg:top-4 w-[280px] text-white
+              h-[100dvh] lg:h-[calc(100dvh-32px)]
+              bg-[#1C7C54] lg:rounded-none overflow-hidden
+              shadow-[10px_0_30px_rgba(0,0,0,0.15)] lg:shadow-[0_12px_30px_rgba(0,0,0,0.18)] ring-1 ring-black/5
+              px-4 pt-6 pb-5 flex flex-col shrink-0">
 
     {{-- LOGO --}}
     <div class="flex flex-col items-center text-center mb-8 shrink-0">
@@ -150,7 +150,7 @@ $iconMap = [
         $isActive = request()->routeIs($menu['route'].'*');
         @endphp
 
-        <a href="{{ route($menu['route']) }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium
+        <a href="{{ route($menu['route']) }}" class="group flex items-center gap-3 px-4 py-3 rounded-none transition font-medium
                     {{ $isActive ? 'bg-[#36B37E] text-white' : 'text-white/90 hover:bg-[#36B37E]/70' }}">
 
             <img src="{{ asset('assets/icon/' . $iconFile) }}"
@@ -166,7 +166,7 @@ $iconMap = [
         <form id="logout-form" action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="button" id="btn-logout"
-                class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-xl transition">
+                class="w-full flex text-[17px] items-center gap-3 px-4 py-3 hover:bg-[#36B37E]/70 rounded-none transition">
                 <img src="{{ asset('assets/icon/logout.svg') }}" class="h-5 w-5" />
                 <span>Logout</span>
             </button>

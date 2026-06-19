@@ -12,6 +12,11 @@
 
     <title>{{ $title ?? 'E-Daily Report' }}</title>
 
+    {{-- Google Fonts: Roboto --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
     {{-- Anti-FOUC: sembunyikan body sebelum CSS & asset siap --}}
     <style>
         html.loading body {
@@ -155,8 +160,11 @@
         </div>
     </div>
 
-    <div class="p-5 h-screen">
-        <div class="grid h-full grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 overflow-hidden">
+    <div class="p-3 md:p-4 h-[100dvh] w-full overflow-hidden bg-[#EFF0F5]">
+        <!-- Overlay for Mobile Sidebar -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 z-[45] hidden lg:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
+
+        <div class="flex h-full gap-0 lg:gap-5 w-full max-w-[1600px] mx-auto">
 
             {{-- Sidebar --}}
             {{-- Karena $role sudah di-set di atas, Sidebar sekarang menerima role yang BENAR --}}
@@ -166,31 +174,28 @@
             ])
 
             {{-- KONTEN KANAN --}}
-            <div class="h-full flex flex-col pl-9 overflow-hidden">
+            <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
-                {{-- TOPBAR: hanya muncul di dashboard --}}
-                @if (($active ?? null) === 'dashboard')
-                <header class="sticky top-0 z-40 bg-[#EFF0F5] backdrop-blur-xl">
+                {{-- TOPBAR: Selalu muncul di semua halaman agar sidebar mobile bisa ditoggle --}}
+                <header class="sticky top-0 z-30 bg-[#EFF0F5] mb-2 sm:mb-4 shrink-0 transition-all">
                     <div class="py-1">
 
-                        {{-- Burger (mobile) --}}
-                        <button id="sb-toggle"
-                            class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-slate-200/60">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" stroke="currentColor">
-                                <path stroke-width="1.7" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-
-                        {{-- SEARCH + NOTIF --}}
-                        <div class="flex-1 flex items-center justify-between">
+                        <div class="flex items-center justify-between gap-3 sm:gap-4">
+                            {{-- Burger (mobile) --}}
+                            <button id="sb-toggle"
+                                class="lg:hidden inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-white shadow-sm ring-1 ring-slate-200 text-slate-600 hover:bg-slate-50 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
 
                             {{-- SEARCH --}}
-                            <div class="relative flex-1 max-w-[500px]">
-                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-[999px] bg-white border border-slate-200 px-10 py-2.5
-                                    text-sm shadow-sm placeholder:text-slate-400
-                                    focus:ring-2 focus:ring-[#1C7C54]/40 focus:border-[#1C7C54]" />
+                            <div class="relative flex-1 max-w-[500px] hidden sm:block">
+                                <input type="text" placeholder="Cari Pengumuman" class="w-full rounded-none bg-white border border-slate-200 px-10 py-2.5
+                                    text-sm shadow-sm placeholder:text-slate-400 transition-all
+                                    focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54]" />
                                 <div id="search-dropdown"
-                                    class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
+                                    class="absolute left-0 right-0 mt-2 bg-white rounded-none shadow-lg ring-1 ring-slate-200 hidden z-50 max-h-[280px] overflow-y-auto no-scrollbar">
                                 </div>
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
                                     <img src="{{ asset('assets/icon/search.svg') }}"
@@ -198,12 +203,17 @@
                                 </span>
                             </div>
 
+                            {{-- MOBILE TITLE (Muncull jika layar kecil) --}}
+                            <div class="flex-1 sm:hidden flex items-center px-1">
+                                <span class="font-semibold text-slate-700 truncate text-[15px]">E-Daily Report</span>
+                            </div>
+
                             {{-- NOTIFIKASI --}}
-                            <div x-data="{ openNotif:false }" class="relative ml-6">
+                            <div x-data="{ openNotif:false }" class="relative shrink-0">
 
                                 {{-- BUTTON --}}
                                 <button @click="openNotif = !openNotif"
-                                    class="h-10 w-10 flex items-center justify-center transition-transform active:scale-95">
+                                    class="h-10 w-10 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 bg-white rounded-full shadow-sm ring-1 ring-slate-200">
 
                                     {{-- WRAPPER BARU: Agar badge nempel ke icon (bukan ke tombol) --}}
                                     <div class="relative">
@@ -222,7 +232,7 @@
 
                                 {{-- DROPDOWN --}}
                                 <div x-show="openNotif" @click.outside="openNotif = false" x-transition
-                                    class="absolute right-0 top-9 w-[340px] rounded-[15px] bg-white shadow-xl ring-1 ring-slate-200 p-4 z-50 origin-top-right">
+                                    class="absolute right-0 top-12 w-[280px] sm:w-[340px] rounded-none bg-white shadow-xl ring-1 ring-slate-200 p-4 z-50 origin-top-right">
 
                                     <h3 class="text-[14px] font-semibold text-slate-700 mb-3">Pemberitahuan</h3>
 
@@ -235,17 +245,15 @@
                         </div>
                     </div>
                 </header>
-                @endif
 
-                {{-- KONTEN --}}
-                <main class="pt-1 p-0 flex-1 flex flex-col overflow-y-auto no-scrollbar">
+                {{-- KONTEN UTAMA --}}
+                <main class="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar pb-4 rounded-none relative">
                     @yield('content')
                 </main>
 
                 {{-- FOOTER --}}
-                <footer class="pt-3">
-                    <div
-                        class="mx-auto rounded-[10px] bg-white ring-1 ring-slate-200 px-2 py-4 text-center text-xs text-[#9CA3AF]">
+                <footer class="pt-2 pb-1 shrink-0 mt-auto">
+                    <div class="mx-auto rounded-none bg-white ring-1 ring-slate-200 px-3 py-3 text-center text-[10px] sm:text-xs text-[#9CA3AF]">
                         © 2025 Badan Pendapatan Daerah Kabupaten Mimika | Sistem E-Daily Report versi 1.0
                     </div>
                 </footer>
@@ -363,6 +371,35 @@
                 dropdown.classList.add("hidden");
             }
         });
+
+        // Sidebar Toggle Logic
+        const sbToggle = document.getElementById('sb-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+
+        if (sbToggle && sidebar && overlay) {
+            function toggleSidebar() {
+                const isOpen = !sidebar.classList.contains('-translate-x-full');
+                
+                if (isOpen) {
+                    // Close Sidebar
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('opacity-0');
+                    setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for transition
+                } else {
+                    // Open Sidebar
+                    overlay.classList.remove('hidden');
+                    // Small delay to allow display:block to apply before opacity transition
+                    setTimeout(() => {
+                        overlay.classList.remove('opacity-0');
+                        sidebar.classList.remove('-translate-x-full');
+                    }, 10);
+                }
+            }
+
+            sbToggle.addEventListener('click', toggleSidebar);
+            overlay.addEventListener('click', toggleSidebar);
+        }
     });
     </script>
 </body>

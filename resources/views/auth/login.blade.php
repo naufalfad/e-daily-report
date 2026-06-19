@@ -13,7 +13,7 @@
     {{-- Font --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('img/logo-kab-mimika.png') }}">
     <link rel="shortcut icon" href="{{ asset('img/logo-kab-mimika.png') }}" type="image/png">
@@ -24,7 +24,7 @@
 
     <style>
         body {
-            font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif
+            font-family: 'Roboto', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif
         }
     </style>
 </head>
@@ -58,8 +58,7 @@
                 {{-- Feature Cards --}}
                 <div class="mx-auto mt-10 w-fit">
                     <div class="grid grid-cols-2 gap-[10px] justify-items-center">
-                        <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-none bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/monitoring-icon.svg') }}" alt="Monitoring Real-Time"
                                     class="mb-3 h-12 w-12">
@@ -67,8 +66,7 @@
                                 <p class="mt-1 text-sm/6 opacity-90">Pantau kinerja harian pegawai secara langsung</p>
                             </div>
                         </div>
-                        <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-none bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/tracking-icon.svg') }}" alt="Tracking Lokasi"
                                     class="mb-3 h-12 w-12 text-white">
@@ -76,8 +74,7 @@
                                 <p class="mt-1 text-sm/6 opacity-90">Lacak aktivitas lapangan dengan integrasi GPS</p>
                             </div>
                         </div>
-                        <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-none bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/validasi-icon.svg') }}" alt="Validasi Digital"
                                     class="mb-3 h-12 w-12 text-white">
@@ -85,8 +82,7 @@
                                 <p class="mt-1 text-sm/6 opacity-90">Proses persetujuan laporan cepat dan akurat</p>
                             </div>
                         </div>
-                        <div
-                            class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-2xl bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                        <div class="w-[304px] h-[167px] border border-[#CBD6E0]/50 rounded-none bg-[#1C7C54]/40 flex flex-col items-center justify-center text-center text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
                             <div class="flex flex-col items-center text-center text-white">
                                 <img src="{{ asset('assets/icon/proteksi-icon.svg') }}" alt="Data Terproteksi"
                                     class="mb-3 h-12 w-12 text-white">
@@ -107,7 +103,7 @@
 
                 {{-- Tombol Kembali ke Landing Page --}}
                 <a href="{{ url('/') }}"
-                    class="group mb-8 inline-flex w-fit items-center gap-2 rounded-lg pr-3 py-1 text-[14px] font-medium text-slate-500 transition-all hover:text-[#1C7C54] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40">
+                    class="group mb-8 inline-flex w-fit items-center gap-2 rounded-none pr-3 py-1 text-[14px] font-medium text-slate-500 transition-all hover:text-[#1C7C54] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40">
                     <svg xmlns="http://www.w3.org/2000/svg"
                         class="h-5 w-5 transition-transform group-hover:-translate-x-1"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -123,7 +119,7 @@
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">Username</label>
                         <input type="text" name="username" id="username" placeholder="Masukkan NIP atau Email" required
-                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition">
+                            class="w-full rounded-none border border-slate-300 bg-white px-4 py-3 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition">
                     </div>
 
                     <div>
@@ -131,11 +127,11 @@
                         <div class="relative">
                             <input id="password" type="password" name="password" placeholder="Masukkan Password"
                                 required
-                                class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-12 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition">
+                                class="w-full rounded-none border border-slate-300 bg-white px-4 py-3 pr-12 text-[15px] placeholder-slate-400 outline-none focus:border-[#1C7C54] focus:ring-2 focus:ring-[#1C7C54]/20 transition">
 
                             {{-- Toggle Password Button --}}
                             <button type="button" id="togglePassword"
-                                class="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 transition"
+                                class="absolute inset-y-0 right-2 my-auto inline-flex h-9 w-9 items-center justify-center rounded-none hover:bg-slate-100 transition"
                                 aria-label="Tampilkan password" aria-pressed="false">
                                 <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -155,7 +151,7 @@
                     </div>
 
                     <button type="submit" id="btn-submit"
-                        class="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#1C7C54] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm ring-1 ring-inset ring-[#1C7C54]/30 hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40 disabled:opacity-70 disabled:cursor-not-allowed transition">
+                        class="group inline-flex w-full items-center justify-center gap-2 rounded-none bg-[#1C7C54] px-4 py-3.5 text-[15px] font-medium text-white shadow-sm ring-1 ring-inset ring-[#1C7C54]/30 hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C7C54]/40 disabled:opacity-70 disabled:cursor-not-allowed transition">
 
                         {{-- Loading Icon --}}
                         <svg id="btn-loader" class="hidden animate-spin h-5 w-5 text-white"

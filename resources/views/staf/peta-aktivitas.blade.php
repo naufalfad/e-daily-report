@@ -137,12 +137,12 @@
 <section x-data="stafMapData()" x-init="initMap()" class="relative font-poppins pb-10">
 
     {{-- HEADER CARD & FILTERS --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 relative z-10">
+    <div class="bg-white rounded-none shadow-sm border border-slate-200 p-6 mb-6 relative z-10">
         
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
             {{-- Title --}}
             <div>
-                <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Peta Aktivitas Anda</h2>
+                <h2 class="text-2xl font-medium text-slate-800 tracking-tight">Peta Aktivitas Anda</h2>
                 <p class="text-sm text-slate-500 mt-1 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     Riwayat lokasi kinerja personal
@@ -153,7 +153,7 @@
             <div class="flex flex-wrap items-center gap-3">
                 {{-- GPS Button --}}
                 <button @click="zoomToCurrentLocation()"
-                    class="px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2 group"
+                    class="px-4 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-none text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm flex items-center gap-2 group"
                     title="Cek Posisi Saya">
                     <svg class="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     Lokasi Saya
@@ -162,16 +162,21 @@
         </div>
 
         {{-- Filter Bar --}}
-        <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-2">
+        <form @submit.prevent="applyFilter()" class="bg-slate-50 p-5 rounded-none border border-slate-100 mb-2">
             <div class="flex flex-col md:flex-row items-end gap-5">
                 <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
                     
                     {{-- Input Tgl Dari --}}
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Mulai Tanggal</label>
+                        <label class="block text-xs font-medium text-slate-500 tracking-normal mb-2">Mulai Tanggal</label>
                         <div class="relative group">
-                            <input x-model="filter.from" id="tgl_dari" type="date" 
-                                class="w-full h-[42px] rounded-xl border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 cursor-pointer shadow-sm">
+                            <div class="relative w-full">
+    <input x-model="filter.from" id="tgl_dari"  type="date"  
+                                class="w-full h-[42px] rounded-none border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 cursor-pointer shadow-sm cursor-pointer" data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                             <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-emerald-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             </div>
@@ -180,10 +185,15 @@
 
                     {{-- Input Tgl Sampai --}}
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sampai Tanggal</label>
+                        <label class="block text-xs font-medium text-slate-500 tracking-normal mb-2">Sampai Tanggal</label>
                         <div class="relative group">
-                            <input x-model="filter.to" id="tgl_sampai" type="date" 
-                                class="w-full h-[42px] rounded-xl border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 cursor-pointer shadow-sm">
+                            <div class="relative w-full">
+    <input x-model="filter.to" id="tgl_sampai"  type="date"  
+                                class="w-full h-[42px] rounded-none border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 cursor-pointer shadow-sm cursor-pointer" data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                             <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-emerald-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             </div>
@@ -192,9 +202,9 @@
 
                     {{-- [NEW] Dropdown Filter Kategori Lokasi --}}
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Kategori Lokasi</label>
+                        <label class="block text-xs font-medium text-slate-500 tracking-normal mb-2">Kategori Lokasi</label>
                         <div class="relative">
-                            <select x-model="filter.kategori" class="w-full h-[42px] appearance-none rounded-xl border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 shadow-sm cursor-pointer">
+                            <select x-model="filter.kategori" class="w-full h-[42px] appearance-none rounded-none border-slate-200 bg-white text-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all pl-4 pr-10 shadow-sm cursor-pointer">
                                 <option value="all">Semua Kategori</option>
                                 <option value="WFO">WFO (Office)</option>
                                 <option value="WFH">WFH (Home)</option>
@@ -212,7 +222,7 @@
                 {{-- Submit Button --}}
                 <div class="w-full md:w-auto">
                     <button type="submit"
-                        class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
+                        class="w-full md:w-auto h-[42px] px-8 bg-slate-800 text-white rounded-none text-sm font-semibold hover:bg-slate-900 hover:shadow-lg transition-all shadow-sm flex items-center justify-center gap-2 min-w-[140px]"
                         :disabled="loading">
                         <span x-show="!loading">Terapkan Filter</span>
                         <span x-show="loading" class="flex items-center gap-2" style="display: none;">
@@ -226,7 +236,7 @@
 
         {{-- LEGEND --}}
         <div class="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs font-medium text-slate-600 border-t border-slate-100 pt-4">
-            <span class="text-slate-400 uppercase font-bold text-[10px] tracking-widest">Keterangan:</span>
+            <span class="text-slate-400 uppercase font-medium text-[10px] tracking-widest">Keterangan:</span>
             
             {{-- Status Items --}}
             <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-50 transition-colors cursor-help">
@@ -243,14 +253,14 @@
 
             {{-- Cluster Legend --}}
             <div class="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100 text-blue-700 font-semibold cursor-help" title="Menandakan jumlah aktivitas yang menumpuk">
-                <span class="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500 text-[10px] text-white font-bold ring-2 ring-blue-200">N</span>
+                <span class="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500 text-[10px] text-white font-medium ring-2 ring-blue-200">N</span>
                 <span>Area Padat (Cluster)</span>
             </div>
         </div>
     </div>
 
     {{-- MAP CONTAINER --}}
-    <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+    <div class="bg-white p-2 rounded-none shadow-sm border border-slate-200">
         <div class="map-container shadow-inner">
             <div id="map"></div>
         </div>
@@ -271,18 +281,18 @@
         <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" @click="closeModal()"></div>
 
         {{-- Modal Panel --}}
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all flex flex-col max-h-[90vh] ring-1 ring-slate-900/5">
+        <div class="relative bg-white rounded-none shadow-2xl w-full max-w-lg overflow-hidden transform transition-all flex flex-col max-h-[90vh] ring-1 ring-slate-900/5">
 
             {{-- HEADER --}}
             <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white flex justify-between items-start shrink-0">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-xl tracking-tight">Detail Aktivitas</h3>
+                    <h3 class="font-medium text-slate-800 text-xl tracking-tight">Detail Aktivitas</h3>
                     <div class="flex items-center gap-2 mt-1.5">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-medium uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 shadow-sm"
                             x-text="selectedActivity?.kategori_aktivitas">
                         </span>
                         {{-- NEW: Badge Kategori Lokasi di Header Modal --}}
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-medium uppercase tracking-wide bg-slate-100 text-slate-700 border border-slate-200 shadow-sm"
                             x-text="selectedActivity?.kategori_lokasi || 'WFO'">
                         </span>
                     </div>
@@ -298,18 +308,18 @@
                     <div class="space-y-6">
                         
                         {{-- Status Info Card --}}
-                        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-none border border-slate-100 shadow-sm">
                             <div class="flex items-center gap-3">
                                 <div class="h-11 w-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xl shadow-sm shrink-0">📍</div>
                                 <div>
                                     <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Status Laporan</p>
-                                    <p class="text-sm font-bold text-slate-700" x-text="selectedActivity.tanggal"></p>
+                                    <p class="text-sm font-medium text-slate-700" x-text="selectedActivity.tanggal"></p>
                                 </div>
                             </div>
                             
                             {{-- Status Badge --}}
                             <div class="text-right shrink-0">
-                                <span class="px-3 py-1.5 text-xs rounded-lg font-bold border shadow-sm inline-block tracking-wide" 
+                                <span class="px-3 py-1.5 text-xs rounded-none font-medium border shadow-sm inline-block tracking-wide" 
                                     :class="{
                                         'bg-emerald-50 text-emerald-700 border-emerald-200': selectedActivity.status === 'approved',
                                         'bg-rose-50 text-rose-700 border-rose-200': selectedActivity.status === 'rejected',
@@ -322,16 +332,16 @@
 
                         {{-- Main Content --}}
                         <div>
-                            <h4 class="text-slate-800 font-bold text-lg leading-snug mb-4 pb-3 border-b border-slate-100" x-text="selectedActivity.kegiatan"></h4>
+                            <h4 class="text-slate-800 font-medium text-lg leading-snug mb-4 pb-3 border-b border-slate-100" x-text="selectedActivity.kegiatan"></h4>
                             
                             <div class="space-y-5">
                                 {{-- Waktu --}}
                                 <div class="flex gap-4 items-start group">
-                                    <div class="mt-0.5 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-100 transition-colors">
+                                    <div class="mt-0.5 w-10 h-10 rounded-none bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-100 transition-colors">
                                         <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Waktu Pengerjaan</p>
+                                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-0.5">Waktu Pengerjaan</p>
                                         <p class="text-sm text-slate-700 font-medium bg-slate-50 px-2 py-1 rounded inline-block border border-slate-100">
                                             <span x-text="selectedActivity.waktu"></span>
                                         </p>
@@ -340,22 +350,22 @@
 
                                 {{-- Deskripsi --}}
                                 <div class="flex gap-4 items-start group">
-                                    <div class="mt-0.5 w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center shrink-0 border border-purple-100 group-hover:bg-purple-100 transition-colors">
+                                    <div class="mt-0.5 w-10 h-10 rounded-none bg-purple-50 flex items-center justify-center shrink-0 border border-purple-100 group-hover:bg-purple-100 transition-colors">
                                         <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Output / Hasil</p>
+                                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-0.5">Output / Hasil</p>
                                         <p class="text-sm text-slate-600 italic leading-relaxed" x-text="selectedActivity.deskripsi || '- Tidak ada deskripsi -'"></p>
                                     </div>
                                 </div>
 
                                 {{-- Lokasi --}}
                                 <div class="flex gap-4 items-start group">
-                                    <div class="mt-0.5 w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100 group-hover:bg-orange-100 transition-colors">
+                                    <div class="mt-0.5 w-10 h-10 rounded-none bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100 group-hover:bg-orange-100 transition-colors">
                                         <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Lokasi Tercatat</p>
+                                        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide mb-0.5">Lokasi Tercatat</p>
                                         <p class="text-sm text-slate-700 font-medium break-words leading-snug" x-text="selectedActivity.lokasi_teks || 'Hanya Koordinat GPS'"></p>
                                     </div>
                                 </div>
@@ -372,14 +382,14 @@
                     
                     <template x-if="selectedActivity && selectedActivity.status === 'rejected'">
                         <button @click="window.editActivity(selectedActivity.id)"
-                            class="px-6 py-3 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98] flex items-center gap-2">
+                            class="px-6 py-3 bg-amber-500 text-white font-medium text-sm rounded-none hover:bg-amber-600 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98] flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                             Perbaiki Laporan
                         </button>
                     </template>
 
                     <button @click="closeModal()"
-                        class="px-8 py-3 bg-slate-800 text-white font-bold text-sm rounded-xl hover:bg-slate-900 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98]">
+                        class="px-8 py-3 bg-slate-800 text-white font-medium text-sm rounded-none hover:bg-slate-900 transition-all shadow-md hover:shadow-lg transform active:scale-[0.98]">
                         Tutup Detail
                     </button>
                 </div>

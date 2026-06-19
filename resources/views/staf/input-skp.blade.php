@@ -17,33 +17,43 @@
 
         {{-- KOLOM KIRI: FORM INPUT SKP --}}
         <div class="space-y-4">
-            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 h-full">
+            <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 h-full">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-[20px] font-normal text-slate-800">Form Rencana SKP</h2>
                     <span
-                        class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-1 rounded-md font-bold tracking-wide">FORMAT
+                        class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-1 rounded-none font-medium tracking-wide">FORMAT
                         BARU</span>
                 </div>
 
                 <form class="space-y-6" @submit.prevent.stop="submitCreate">
 
                     {{-- A. HEADER RENCANA --}}
-                    <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-4">
-                        <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">A. Rencana Hasil
+                    <div class="bg-slate-50/50 p-4 rounded-none border border-slate-100 space-y-4">
+                        <h3 class="text-sm font-medium text-slate-700 border-b border-slate-200 pb-2">A. Rencana Hasil
                             Kerja</h3>
 
                         {{-- Periode --}}
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-[#5B687A] mb-[10px]">Periode Mulai</label>
-                                <input type="date" x-model="formData.periode_awal" required
-                                    class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none" />
+                                <div class="relative w-full">
+    <input  type="date"  x-model="formData.periode_awal" required
+                                    class="w-full rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-[#5B687A] mb-[10px]">Periode
                                     Selesai</label>
-                                <input type="date" x-model="formData.periode_akhir" required
-                                    class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none" />
+                                <div class="relative w-full">
+    <input  type="date"  x-model="formData.periode_akhir" required
+                                    class="w-full rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                             </div>
                         </div>
 
@@ -52,24 +62,24 @@
                             <label class="block text-xs font-medium text-[#5B687A] mb-[10px]">RHK Pimpinan yang
                                 Diintervensi</label>
                             <textarea x-model="formData.rhk_intervensi" rows="2" required
-                                class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none"
+                                class="w-full rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none"
                                 placeholder="Ketik RHK Atasan (Kepala Bidang/Kasubag) yang Anda dukung..."></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-[#5B687A] mb-[10px]">Rencana Hasil Kerja (RHK)
                                 Anda</label>
                             <textarea x-model="formData.rencana_hasil_kerja" rows="2" required
-                                class="w-full rounded-[10px] border border-slate-200 bg-white px-3.5 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none font-medium text-slate-800"
+                                class="w-full rounded-none border border-slate-200 bg-white px-3.5 py-2.5 text-sm resize-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] outline-none font-medium text-slate-800"
                                 placeholder="Ketik Rencana Kerja Anda..."></textarea>
                         </div>
                     </div>
 
                     {{-- B. TARGET DINAMIS --}}
-                    <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-4">
+                    <div class="bg-slate-50/50 p-4 rounded-none border border-slate-100 space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-                            <h3 class="text-sm font-bold text-slate-700">B. Aspek & Indikator</h3>
+                            <h3 class="text-sm font-medium text-slate-700">B. Aspek & Indikator</h3>
                             <button type="button" @click="addTarget()"
-                                class="text-[11px] font-bold text-[#155FA6] hover:underline flex items-center gap-1">
+                                class="text-[11px] font-medium text-[#155FA6] hover:underline flex items-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor" stroke-width="3">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -82,13 +92,13 @@
                         <div class="space-y-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
                             <template x-for="(item, index) in formData.targets" :key="index">
                                 <div
-                                    class="grid grid-cols-12 gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative group hover:border-[#1C7C54]/40 transition-colors">
+                                    class="grid grid-cols-12 gap-3 bg-white p-3 rounded-none border border-slate-200 shadow-sm relative group hover:border-[#1C7C54]/40 transition-colors">
 
                                     {{-- Jenis Aspek --}}
                                     <div class="col-span-3 md:col-span-2">
-                                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Aspek</label>
+                                        <label class="block text-[10px] font-medium text-slate-400 mb-1">Aspek</label>
                                         <select x-model="item.jenis_aspek"
-                                            class="w-full rounded-[8px] border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-[#1C7C54]">
+                                            class="w-full rounded-none border border-slate-200 bg-slate-50 px-2 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:border-[#1C7C54]">
                                             <option value="Kuantitas">Kuantitas</option>
                                             <option value="Kualitas">Kualitas</option>
                                             <option value="Waktu">Waktu</option>
@@ -98,23 +108,23 @@
 
                                     {{-- Indikator --}}
                                     <div class="col-span-9 md:col-span-5">
-                                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Indikator</label>
+                                        <label class="block text-[10px] font-medium text-slate-400 mb-1">Indikator</label>
                                         <input type="text" x-model="item.indikator" placeholder="Contoh: Jumlah Laporan"
-                                            class="w-full rounded-[8px] border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:border-[#1C7C54]">
+                                            class="w-full rounded-none border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:border-[#1C7C54]">
                                     </div>
 
                                     {{-- Target Angka --}}
                                     <div class="col-span-4 md:col-span-2">
-                                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Target</label>
+                                        <label class="block text-[10px] font-medium text-slate-400 mb-1">Target</label>
                                         <input type="number" x-model="item.target" placeholder="0"
-                                            class="w-full rounded-[8px] border border-slate-200 px-3 py-2 text-xs font-bold text-center focus:outline-none focus:border-[#1C7C54]">
+                                            class="w-full rounded-none border border-slate-200 px-3 py-2 text-xs font-medium text-center focus:outline-none focus:border-[#1C7C54]">
                                     </div>
 
                                     {{-- Satuan --}}
                                     <div class="col-span-6 md:col-span-2">
-                                        <label class="block text-[10px] font-bold text-slate-400 mb-1">Satuan</label>
+                                        <label class="block text-[10px] font-medium text-slate-400 mb-1">Satuan</label>
                                         <input type="text" x-model="item.satuan" placeholder="Dokumen"
-                                            class="w-full rounded-[8px] border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:border-[#1C7C54]">
+                                            class="w-full rounded-none border border-slate-200 px-3 py-2 text-xs focus:outline-none focus:border-[#1C7C54]">
                                     </div>
 
                                     {{-- Hapus --}}
@@ -137,11 +147,11 @@
                     {{-- Actions --}}
                     <div class="flex flex-wrap items-center justify-end gap-3 pt-2">
                         <button type="button" @click="resetForm"
-                            class="rounded-[10px] bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
+                            class="rounded-none bg-slate-100 px-4 py-2 text-sm font-normal text-slate-700 hover:bg-slate-200 ring-1 ring-slate-300">
                             Reset
                         </button>
                         <button type="button" @click="submitCreate"
-                            class="rounded-[10px] bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
+                            class="rounded-none bg-[#0E7A4A] px-4 py-2 text-sm font-normal text-white hover:brightness-95">
                             Tambahkan SKP
                         </button>
                     </div>
@@ -153,7 +163,7 @@
         <div class="space-y-4 flex flex-col">
 
             {{-- Panduan Singkat --}}
-            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex flex-col">
+            <div class="rounded-none bg-white ring-1 ring-slate-200 p-4 flex flex-col">
                 <h3 class="text-sm font-semibold text-slate-800">Panduan Singkat</h3>
                 <div class="mt-3 space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
                     @foreach ([
@@ -165,7 +175,7 @@
                     ['title' => 'Target Waktu', 'desc' => 'Wajib diisi. Estimasi lama pengerjaan.'],
                     ['title' => 'Target Kualitas', 'desc' => 'Opsional. Standar mutu hasil kerja.'],
                     ] as $guide)
-                    <div class="rounded-[10px] bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
+                    <div class="rounded-none bg-[#155FA6] px-3 py-2.5 text-white text-xs leading-snug">
                         <p class="text-[13px] font-semibold">{{ $guide['title'] }}</p>
                         <p class="mt-[2px] text-[11px] text-white/90">{{ $guide['desc'] }}</p>
                     </div>
@@ -174,11 +184,11 @@
             </div>
 
             {{-- Status Laporan Terakhir --}}
-            <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-4 flex-1">
+            <div class="rounded-none bg-white ring-1 ring-slate-200 p-4 flex-1">
                 <h3 class="text-sm font-semibold text-slate-800 mb-3">Status Laporan Terakhir</h3>
                 {{-- Scrollable List --}}
                 <div class="space-y-2 text-xs max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-                    <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                    <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2">
                         <div class="flex items-center gap-2">
                             <span
                                 class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-[11px] font-semibold">P</span>
@@ -189,7 +199,7 @@
                         </div>
                         <span class="text-[11px] text-slate-400 whitespace-nowrap">07 Nov</span>
                     </div>
-                    <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                    <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2">
                         <div class="flex items-center gap-2">
                             <span
                                 class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-semibold">D</span>
@@ -200,7 +210,7 @@
                         </div>
                         <span class="text-[11px] text-slate-400 whitespace-nowrap">09 Nov</span>
                     </div>
-                    <div class="flex items-center justify-between rounded-[10px] bg-slate-50 px-3 py-2">
+                    <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2">
                         <div class="flex items-center gap-2">
                             <span
                                 class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 text-[11px] font-semibold">T</span>
@@ -220,12 +230,12 @@
     {{-- ================================================== --}}
     {{-- BAGIAN BAWAH: DAFTAR SKP (FULL WIDTH) --}}
     {{-- ================================================== --}}
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-5 w-full">
+    <div class="rounded-none bg-white ring-1 ring-slate-200 p-5 w-full">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-[20px] font-normal">Daftar Rencana SKP Saya</h2>
 
             <button @click="previewPdf()"
-                class="rounded-lg bg-red-600 text-white px-4 py-2 text-sm shadow hover:bg-red-700 transition">
+                class="rounded-none bg-red-600 text-white px-4 py-2 text-sm shadow hover:bg-red-700 transition">
                 <i class="fas fa-file-pdf mr-1"></i> Export PDF
             </button>
         </div>
@@ -243,12 +253,12 @@
                     <template x-for="rencana in skpList" :key="rencana.id">
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-3 py-4 align-top text-xs whitespace-nowrap">
-                                <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_awal)"></div>
+                                <div class="font-medium text-slate-800" x-text="formatDate(rencana.periode_awal)"></div>
                                 <div class="text-slate-400 text-[10px]">s.d.</div>
-                                <div class="font-bold text-slate-800" x-text="formatDate(rencana.periode_akhir)"></div>
+                                <div class="font-medium text-slate-800" x-text="formatDate(rencana.periode_akhir)"></div>
                             </td>
                             <td class="px-3 py-4 align-top">
-                                <p class="font-bold text-slate-800 mb-1" x-text="rencana.rencana_hasil_kerja"></p>
+                                <p class="font-medium text-slate-800 mb-1" x-text="rencana.rencana_hasil_kerja"></p>
 
                                 {{-- Preview Target Kuantitas --}}
                                 <div class="flex items-center gap-1.5 mt-2">
@@ -263,16 +273,16 @@
                             <td class="px-3 py-4 align-top text-center">
                                 <div class="flex justify-center gap-2">
                                     <button @click.prevent="openDetailModal(rencana)"
-                                        class="rounded-[8px] bg-[#155FA6]/10 text-[#155FA6] border border-[#155FA6]/20 text-xs px-3 py-1.5 font-medium hover:bg-[#155FA6] hover:text-white transition-all">Detail</button>
+                                        class="rounded-none bg-[#155FA6]/10 text-[#155FA6] border border-[#155FA6]/20 text-xs px-3 py-1.5 font-medium hover:bg-[#155FA6] hover:text-white transition-all">Detail</button>
                                     <button @click.prevent="openEditModal(rencana)"
-                                        class="p-2 rounded-lg hover:bg-amber-50 text-amber-600 transition"><svg
+                                        class="p-2 rounded-none hover:bg-amber-50 text-amber-600 transition"><svg
                                             xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 00 2 2h11a2 2 0 00 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg></button>
                                     <button @click.prevent="deleteSkp(rencana.id)"
-                                        class="p-2 rounded-lg hover:bg-red-50 text-red-600 transition"><svg
+                                        class="p-2 rounded-none hover:bg-red-50 text-red-600 transition"><svg
                                             xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -284,7 +294,7 @@
                     </template>
                     <tr x-show="skpList.length === 0" style="display: none;">
                         <td colspan="4"
-                            class="px-3 py-12 text-center text-slate-400 italic bg-slate-50/30 rounded-lg border border-dashed border-slate-200 m-4">
+                            class="px-3 py-12 text-center text-slate-400 italic bg-slate-50/30 rounded-none border border-dashed border-slate-200 m-4">
                             <div class="flex flex-col items-center">
                                 <img src="{{ asset('assets/icon/doc-skp.svg') }}" class="w-10 h-10 mb-2 opacity-50">
                                 <span>Belum ada Rencana SKP yang dibuat.</span>
@@ -302,10 +312,10 @@
     <div x-show="openDetail" x-cloak
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         x-transition.opacity>
-        <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        <div class="relative w-full max-w-3xl rounded-none bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             @click.outside="openDetail = false">
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
-                <h3 class="text-lg font-bold text-slate-800">Detail Rencana SKP</h3>
+                <h3 class="text-lg font-medium text-slate-800">Detail Rencana SKP</h3>
                 <button @click="openDetail = false" class="text-slate-400 hover:text-slate-600">&times;</button>
             </div>
 
@@ -313,32 +323,32 @@
                 <div class="p-6 overflow-y-auto">
                     <div class="grid grid-cols-2 gap-6 mb-6">
                         <div>
-                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Periode</label>
-                            <p class="text-sm font-bold text-slate-800 mt-1">
+                            <label class="text-[11px] font-medium text-slate-400 tracking-normal">Periode</label>
+                            <p class="text-sm font-medium text-slate-800 mt-1">
                                 <span x-text="formatDate(detailData.periode_awal)"></span> s.d. <span
                                     x-text="formatDate(detailData.periode_akhir)"></span>
                             </p>
                         </div>
                         <div>
-                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">RHK
+                            <label class="text-[11px] font-medium text-slate-400 tracking-normal">RHK
                                 Intervensi</label>
                             <p class="text-sm text-slate-600 mt-1" x-text="detailData.rhk_intervensi || '-'"></p>
                         </div>
                     </div>
 
                     <div class="mb-6">
-                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Rencana Hasil Kerja
+                        <label class="text-[11px] font-medium text-slate-400 tracking-normal">Rencana Hasil Kerja
                             (RHK)</label>
-                        <div class="mt-1 p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm font-medium text-blue-900"
+                        <div class="mt-1 p-3 bg-blue-50 border border-blue-100 rounded-none text-sm font-medium text-blue-900"
                             x-text="detailData.rencana_hasil_kerja"></div>
                     </div>
 
                     <div>
-                        <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Detail
+                        <label class="text-[11px] font-medium text-slate-400 tracking-normal mb-2 block">Detail
                             Target & Indikator</label>
-                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                        <div class="border border-slate-200 rounded-none overflow-hidden">
                             <table class="w-full text-sm text-left">
-                                <thead class="bg-slate-50 text-xs uppercase font-bold text-slate-500">
+                                <thead class="bg-slate-50 text-xs uppercase font-medium text-slate-500">
                                     <tr>
                                         <th class="px-4 py-3 w-[20%]">Aspek</th>
                                         <th class="px-4 py-3 w-[40%]">Indikator</th>
@@ -352,7 +362,7 @@
                                             <td class="px-4 py-3 font-medium text-slate-700"
                                                 x-text="target.jenis_aspek"></td>
                                             <td class="px-4 py-3 text-slate-600" x-text="target.indikator"></td>
-                                            <td class="px-4 py-3 font-bold text-center text-emerald-600"
+                                            <td class="px-4 py-3 font-medium text-center text-emerald-600"
                                                 x-text="target.target"></td>
                                             <td class="px-4 py-3 text-slate-500" x-text="target.satuan"></td>
                                         </tr>
@@ -366,7 +376,7 @@
 
             <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 shrink-0 flex justify-end gap-2">
                 <button @click="openDetail = false"
-                    class="px-4 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">Tutup</button>
+                    class="px-4 py-2 rounded-none bg-white border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50">Tutup</button>
             </div>
         </div>
     </div>
@@ -377,10 +387,10 @@
     <div x-show="openEdit" x-cloak
         class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         x-transition.opacity>
-        <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+        <div class="relative w-full max-w-3xl rounded-none bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             @click.outside="openEdit = false">
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
-                <h3 class="text-lg font-bold text-slate-800">Edit Rencana SKP</h3>
+                <h3 class="text-lg font-medium text-slate-800">Edit Rencana SKP</h3>
                 <button @click="openEdit = false" class="text-slate-400 hover:text-slate-600">&times;</button>
             </div>
 
@@ -391,33 +401,43 @@
                             <div class="grid md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 mb-1">Periode Awal</label>
-                                    <input type="date" x-model="editData.periode_awal" required
-                                        class="w-full rounded-[8px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6]">
+                                    <div class="relative w-full">
+    <input  type="date"  x-model="editData.periode_awal" required
+                                        class="w-full rounded-none border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6] pr-10 cursor-pointer" data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-slate-500 mb-1">Periode Akhir</label>
-                                    <input type="date" x-model="editData.periode_akhir" required
-                                        class="w-full rounded-[8px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6]">
+                                    <div class="relative w-full">
+    <input  type="date"  x-model="editData.periode_akhir" required
+                                        class="w-full rounded-none border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6] pr-10 cursor-pointer" data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 mb-1">RHK Intervensi</label>
                                 <textarea x-model="editData.rhk_intervensi" rows="2" required
-                                    class="w-full rounded-[8px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6]"></textarea>
+                                    class="w-full rounded-none border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6]"></textarea>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-500 mb-1">Rencana Hasil Kerja</label>
                                 <textarea x-model="editData.rencana_hasil_kerja" rows="2" required
-                                    class="w-full rounded-[8px] border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6]"></textarea>
+                                    class="w-full rounded-none border border-slate-300 px-3 py-2 text-sm outline-none focus:border-[#155FA6]"></textarea>
                             </div>
                         </div>
 
                         <div class="border-t border-slate-100 pt-4">
                             <div class="flex justify-between items-center mb-3">
-                                <h4 class="text-sm font-bold text-slate-700">Edit Target</h4>
+                                <h4 class="text-sm font-medium text-slate-700">Edit Target</h4>
                                 <button type="button"
                                     @click="editData.targets.push({jenis_aspek:'Kuantitas', indikator:'', target:'', satuan:''})"
-                                    class="text-xs text-blue-600 font-bold hover:underline">+ Tambah Target</button>
+                                    class="text-xs text-blue-600 font-medium hover:underline">+ Tambah Target</button>
                             </div>
 
                             <div class="space-y-3">
@@ -456,9 +476,9 @@
 
                         <div class="pt-4 flex justify-end gap-3">
                             <button type="button" @click="openEdit = false"
-                                class="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium">Batal</button>
+                                class="px-4 py-2 rounded-none border border-slate-300 text-slate-600 text-sm font-medium">Batal</button>
                             <button type="submit"
-                                class="px-4 py-2 rounded-lg bg-[#155FA6] text-white text-sm font-medium hover:bg-blue-700">Simpan
+                                class="px-4 py-2 rounded-none bg-[#155FA6] text-white text-sm font-medium hover:bg-blue-700">Simpan
                                 Perubahan</button>
                         </div>
                     </form>

@@ -11,7 +11,7 @@
     x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
     x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
-    <div class="relative w-full max-w-lg bg-white rounded-[24px] p-6 shadow-2xl" @click.outside="openBukti = false"
+    <div class="relative w-full max-w-lg bg-white rounded-none p-6 shadow-2xl" @click.outside="openBukti = false"
         x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95"
         x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200"
         x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
@@ -19,7 +19,7 @@
         {{-- Header Modal --}}
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h3 class="text-xl font-bold text-slate-800">Lampiran Bukti</h3>
+                <h3 class="text-xl font-medium text-slate-800">Lampiran Bukti</h3>
                 <p class="text-sm text-slate-500">Dokumen pendukung aktivitas</p>
             </div>
             <button @click="openBukti = false"
@@ -33,7 +33,7 @@
         {{-- Grid Daftar File --}}
         <div class="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
             <template x-for="(bukti, index) in daftarBukti" :key="index">
-                <div class="group relative bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden hover:border-[#155FA6] hover:shadow-md transition-all cursor-pointer"
+                <div class="group relative bg-slate-50 border border-slate-200 rounded-none overflow-hidden hover:border-[#155FA6] hover:shadow-md transition-all cursor-pointer"
                     @click="preview(bukti)">
 
                     {{-- THUMBNAIL AREA --}}
@@ -52,7 +52,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
-                                <span class="text-[10px] font-bold">PDF FILE</span>
+                                <span class="text-[10px] font-medium">PDF FILE</span>
                             </div>
                         </template>
 
@@ -63,7 +63,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
-                                <span class="text-[10px] font-bold">VIDEO</span>
+                                <span class="text-[10px] font-medium">VIDEO</span>
                             </div>
                         </template>
 
@@ -74,7 +74,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <span class="text-[10px] font-bold">FILE</span>
+                                <span class="text-[10px] font-medium">FILE</span>
                             </div>
                         </template>
 
@@ -82,13 +82,13 @@
                         <div
                             class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                             <span
-                                class="bg-white/90 px-3 py-1 rounded-full text-xs font-bold text-slate-800 shadow-sm backdrop-blur-sm">Lihat</span>
+                                class="bg-white/90 px-3 py-1 rounded-full text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm">Lihat</span>
                         </div>
                     </div>
 
                     {{-- Footer Item --}}
                     <div class="p-3 bg-white">
-                        <p class="text-xs font-bold text-slate-700 truncate" x-text="'Lampiran #' + (index + 1)"></p>
+                        <p class="text-xs font-medium text-slate-700 truncate" x-text="'Lampiran #' + (index + 1)"></p>
                         <p class="text-[10px] text-slate-400 truncate mt-0.5" x-text="bukti.file_url.split('/').pop()">
                         </p>
                     </div>

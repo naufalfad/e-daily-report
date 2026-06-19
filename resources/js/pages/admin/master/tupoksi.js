@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Filter & Search
         searchInput: document.getElementById('searchInput'),
         filterBidangSelect: document.getElementById('filterBidang'),
+        limitSelect: document.getElementById('limitSelect'),
 
         // Modal & Form
         modal: document.getElementById('modal-tupoksi'),
@@ -69,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
             searchTimeout = setTimeout(() => {
                 fetchData(1); // Kembali ke halaman 1 saat pencarian berubah
             }, 500);
+        });
+    }
+
+    if (els.limitSelect) {
+        els.limitSelect.addEventListener('change', (e) => {
+            currentLimit = e.target.value;
+            fetchData(1);
         });
     }
 

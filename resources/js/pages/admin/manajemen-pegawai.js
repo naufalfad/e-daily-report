@@ -19,6 +19,7 @@ export function manajemenPegawaiData() {
         filterUnitKerja: "",
         sortBy: "created_at",
         sortDir: "desc",
+        limit: 10,
 
         fileUpload: null,
         isImporting: false,
@@ -142,7 +143,7 @@ export function manajemenPegawaiData() {
                 // Menyelaraskan Parameter dengan Kontrak Controller
                 const params = new URLSearchParams({
                     page: page,
-                    limit: 10,
+                    limit: this.limit,
                     sort: this.sortBy,
                     dir: this.sortDir
                 });

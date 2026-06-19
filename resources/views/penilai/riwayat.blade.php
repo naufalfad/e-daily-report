@@ -10,17 +10,17 @@
     <section x-data="riwayatCore('{{ $role }}')" x-init="initPage()" class="font-poppins">
 
         {{-- CARD UTAMA --}}
-        <div class="bg-white rounded-[24px] shadow-sm border border-slate-200 flex flex-col min-h-[85vh] overflow-hidden">
+        <div class="bg-white rounded-none shadow-sm border border-slate-200 flex flex-col min-h-[85vh] overflow-hidden">
 
             {{-- HEADER + TOOLBAR --}}
             <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800 tracking-tight">Riwayat Laporan</h2>
+                    <h2 class="text-xl font-medium text-slate-800 tracking-tight">Riwayat Laporan</h2>
                     <p class="text-sm text-slate-500 mt-1">Arsip dan histori kinerja pegawai</p>
                 </div>
 
                 <button @click="exportPdf()"
-                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:text-[#155FA6] hover:border-[#155FA6] transition-all shadow-sm active:scale-[0.98]">
+                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-none text-sm font-semibold hover:bg-slate-50 hover:text-[#155FA6] hover:border-[#155FA6] transition-all shadow-sm active:scale-[0.98]">
                     <svg class="w-5 h-5 text-slate-400 group-hover:text-[#155FA6] transition-colors" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -38,7 +38,7 @@
                         {{-- 1. FILTER MODE (KHUSUS PENILAI) --}}
                         @if ($role === 'penilai')
                             <div class="w-full lg:w-56">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
                                     Tampilkan Data
                                 </label>
                                 <div class="relative group">
@@ -50,7 +50,7 @@
                                         </svg>
                                     </div>
                                     <select x-model="filter.mode" @change="filterData()"
-                                        class="w-full pl-10 pr-10 rounded-xl border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 focus:border-[#155FA6] focus:ring-[#155FA6]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 appearance-none">
+                                        class="w-full pl-10 pr-10 rounded-none border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 focus:border-[#155FA6] focus:ring-[#155FA6]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 appearance-none">
                                         <option value="mine">Riwayat Saya</option>
                                         <option value="subordinates">Riwayat Bawahan</option>
                                     </select>
@@ -69,18 +69,28 @@
                         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                             <div>
                                 <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dari</label>
+                                    class="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Dari</label>
                                 <div class="relative">
-                                    <input x-model="filter.from" type="date"
-                                        class="w-full rounded-xl border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300" />
+                                    <div class="relative w-full">
+    <input x-model="filter.from"  type="date" 
+                                        class="w-full rounded-none border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 </div>
                             </div>
                             <div>
                                 <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Sampai</label>
+                                    class="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Sampai</label>
                                 <div class="relative">
-                                    <input x-model="filter.to" type="date"
-                                        class="w-full rounded-xl border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300" />
+                                    <div class="relative w-full">
+    <input x-model="filter.to"  type="date" 
+                                        class="w-full rounded-none border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +98,7 @@
                         {{-- 3. TOMBOL TERAPKAN --}}
                         <div class="w-full lg:w-auto">
                             <button type="submit"
-                                class="w-full lg:w-auto h-[42px] px-8 bg-[#0E7A4A] hover:bg-[#0b633b] text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                class="w-full lg:w-auto h-[42px] px-8 bg-[#0E7A4A] hover:bg-[#0b633b] text-white rounded-none text-sm font-medium shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                                 :disabled="loading">
                                 <span x-show="!loading">Terapkan Filter</span>
                                 <span x-show="loading" class="flex items-center gap-2" style="display: none;">
@@ -113,22 +123,22 @@
                 <table class="w-full min-w-[1000px] text-sm text-left">
                     <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-y border-slate-200">
                         <tr>
-                            <th class="px-6 py-4 font-bold tracking-wider">Tanggal</th>
-                            <th class="px-6 py-4 font-bold tracking-wider w-[30%]">Aktivitas</th>
+                            <th class="px-6 py-4 font-medium tracking-wider">Tanggal</th>
+                            <th class="px-6 py-4 font-medium tracking-wider w-[30%]">Aktivitas</th>
 
                             {{-- KOLOM KHUSUS MODE BAWAHAN --}}
                             <template x-if="filter.mode === 'subordinates'">
-                                <th class="px-6 py-4 font-bold tracking-wider text-[#155FA6]">Pegawai</th>
+                                <th class="px-6 py-4 font-medium tracking-wider text-[#155FA6]">Pegawai</th>
                             </template>
 
-                            <th class="px-6 py-4 font-bold tracking-wider">Tanggal Validasi</th>
-                            <th class="px-6 py-4 font-bold tracking-wider">Penilai</th>
+                            <th class="px-6 py-4 font-medium tracking-wider">Tanggal Validasi</th>
+                            <th class="px-6 py-4 font-medium tracking-wider">Penilai</th>
                             
                             {{-- NEW: Kolom Kategori --}}
-                            <th class="px-6 py-4 font-bold tracking-wider text-center">Kategori</th>
+                            <th class="px-6 py-4 font-medium tracking-wider text-center">Kategori</th>
                             
-                            <th class="px-6 py-4 font-bold tracking-wider text-center">Status</th>
-                            <th class="px-6 py-4 font-bold tracking-wider text-right">Opsi</th>
+                            <th class="px-6 py-4 font-medium tracking-wider text-center">Status</th>
+                            <th class="px-6 py-4 font-medium tracking-wider text-right">Opsi</th>
                         </tr>
                     </thead>
 
@@ -145,7 +155,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
                                         </div>
-                                        <h3 class="text-slate-800 font-bold text-base">Tidak ada data</h3>
+                                        <h3 class="text-slate-800 font-medium text-base">Tidak ada data</h3>
                                         
                                         {{-- LOGIKA PESAN BERBEDA --}}
                                         <p class="text-slate-500 text-xs mt-1 max-w-xs mx-auto">
@@ -185,7 +195,7 @@
                                 </td>
 
                                 <td class="px-6 py-4 align-top">
-                                    <div class="font-bold text-slate-800 mb-1" x-text="item.jenis_kegiatan || '-'"></div>
+                                    <div class="font-medium text-slate-800 mb-1" x-text="item.jenis_kegiatan || '-'"></div>
                                     <div class="text-xs text-slate-500 line-clamp-2 leading-relaxed" x-text="item.deskripsi_aktivitas"></div>
                                 </td>
 
@@ -193,10 +203,10 @@
                                 <template x-if="filter.mode === 'subordinates'">
                                     <td class="px-6 py-4 align-top">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center text-xs font-bold border border-[#BAE6FD]"
+                                            <div class="w-8 h-8 rounded-full bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center text-xs font-medium border border-[#BAE6FD]"
                                                 x-text="(item.user.name || '?').charAt(0)"></div>
                                             <div class="flex flex-col">
-                                                <span class="font-bold text-slate-700 text-xs" x-text="item.user.name || '-'"></span>
+                                                <span class="font-medium text-slate-700 text-xs" x-text="item.user.name || '-'"></span>
                                                 <span class="text-[10px] text-slate-400">Staf</span>
                                             </div>
                                         </div>
@@ -221,7 +231,7 @@
 
                                 <td class="px-6 py-4 align-top text-right">
                                     <button @click="openModal(item)"
-                                        class="inline-flex items-center gap-1.5 text-[#155FA6] hover:text-[#0C4A85] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                                        class="inline-flex items-center gap-1.5 text-[#155FA6] hover:text-[#0C4A85] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-none text-xs font-medium transition-colors">
                                         <span>Detail</span>
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

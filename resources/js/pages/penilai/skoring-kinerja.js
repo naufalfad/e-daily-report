@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingState = document.getElementById('loading-state');
     const emptyState = document.getElementById('empty-state');
 
-    // Filter Elements
     const filterMonth = document.getElementById('filter-month');
     const filterYear = document.getElementById('filter-year');
+    const filterLimit = document.getElementById('filter-limit');
     const btnFilter = document.getElementById('btn-filter');
 
     // Pagination Elements
@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnFilter) {
         btnFilter.addEventListener('click', () => {
             fetchData(1); 
+        });
+    }
+
+    if (filterLimit) {
+        filterLimit.addEventListener('change', () => {
+            fetchData(1);
         });
     }
 
@@ -104,13 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const month = filterMonth ? filterMonth.value : '';
             const year = filterYear ? filterYear.value : '';
             const search = searchInput ? searchInput.value : '';
+            const limit = filterLimit ? filterLimit.value : 10;
 
             const params = new URLSearchParams({
                 month: month,
                 year: year,
                 search: search,
                 page: page,
-                per_page: 10,
+                per_page: limit,
                 t: new Date().getTime() 
             });
 

@@ -23,7 +23,7 @@
         text-align: center;
     }
 
-    .font-bold {
+    .font-medium {
         font-weight: bold;
     }
 
@@ -131,13 +131,13 @@
 
     {{-- HEADER --}}
     <div class="text-center header-line">
-        <h1 class="font-bold uppercase text-sm mb-1">Laporan Kerja Harian Pegawai</h1>
+        <h1 class="font-medium uppercase text-sm mb-1">Laporan Kerja Harian Pegawai</h1>
         <p class="text-sm">Aplikasi E-Daily Report</p>
         <p class="text-sm">Badan Pendapatan Daerah — Kabupaten Mimika</p>
     </div>
 
     {{-- INFORMASI PEGAWAI --}}
-    <h2 class="font-bold text-sm uppercase mb-2">Informasi Pegawai</h2>
+    <h2 class="font-medium text-sm uppercase mb-2">Informasi Pegawai</h2>
     <table class="text-sm mb-4">
         <tr>
             <td class="label">Nama Pegawai</td>
@@ -154,7 +154,7 @@
     </table>
 
     {{-- INFORMASI LAPORAN --}}
-    <h2 class="font-bold text-sm uppercase mb-2">Informasi Laporan</h2>
+    <h2 class="font-medium text-sm uppercase mb-2">Informasi Laporan</h2>
     <table class="text-sm mb-4">
         <tr>
             <td class="label">Tanggal</td>
@@ -193,13 +193,13 @@
     </table>
 
     {{-- URAIAN KEGIATAN --}}
-    <h2 class="font-bold text-sm uppercase mb-2">Uraian Kegiatan</h2>
+    <h2 class="font-medium text-sm uppercase mb-2">Uraian Kegiatan</h2>
     <div class="border rounded bg-gray p-4 leading-relaxed text-sm">
         {!! nl2br(e($uraian_kegiatan)) !!}
     </div>
 
     {{-- OUTPUT --}}
-    <h2 class="font-bold text-sm uppercase mt-6 mb-2">Output Kegiatan</h2>
+    <h2 class="font-medium text-sm uppercase mt-6 mb-2">Output Kegiatan</h2>
     <table class="text-sm">
         <tr>
             <td class="label">Output</td>

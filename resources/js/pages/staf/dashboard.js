@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     setText("banner-nama", uInfo.name ?? "User");
     setText("profile-nama", uInfo.name ?? "-");
     setText("profile-jabatan", uInfo.jabatan ?? "-");
-    setText("profile-dinas", uInfo.unit ?? "-");
+    setText("profile-bidang", uInfo.bidang ?? "-");
 
     // Tidak tersedia → tetap aman
     setText("profile-nip", uInfo.nip);

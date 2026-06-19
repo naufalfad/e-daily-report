@@ -5,24 +5,24 @@
 
 <section x-data="logActivityStaf()" x-init="initLog()" class="flex-1 flex flex-col h-full">
 
-    <div class="rounded-2xl bg-white ring-1 ring-slate-200 p-6 flex-1 flex flex-col h-full overflow-hidden">
+    <div class="rounded-none bg-white ring-1 ring-slate-200 p-6 flex-1 flex flex-col h-full overflow-hidden">
 
         {{-- HEADER & FILTER --}}
         <div class="mb-6">
-            <h2 class="text-xl font-bold text-slate-800 mb-4">
+            <h2 class="text-xl font-medium text-slate-800 mb-4">
                 Log Aktivitas Sistem
             </h2>
 
             {{-- FORM FILTER BARU (Month, Year, Search) --}}
-            <form @submit.prevent="applyFilter()" class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <form @submit.prevent="applyFilter()" class="bg-slate-50 p-4 rounded-none border border-slate-200">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                     
                     {{-- 1. SEARCH INPUT --}}
                     <div class="md:col-span-4">
-                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Pencarian</label>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1 tracking-normal">Pencarian</label>
                         <div class="relative">
                             <input x-model="filter.search" type="text" placeholder="Cari Nama, NIP, atau Aktivitas..."
-                                class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] transition shadow-sm">
+                                class="w-full pl-10 pr-4 py-2 rounded-none border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] transition shadow-sm">
                             <span class="absolute left-3 top-2.5 text-slate-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -33,9 +33,9 @@
 
                     {{-- 2. BULAN SELECT --}}
                     <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Bulan</label>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1 tracking-normal">Bulan</label>
                         <select x-model="filter.month" 
-                            class="w-full rounded-lg border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] shadow-sm cursor-pointer">
+                            class="w-full rounded-none border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] shadow-sm cursor-pointer">
                             @foreach(range(1, 12) as $m)
                                 <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
                             @endforeach
@@ -44,9 +44,9 @@
 
                     {{-- 3. TAHUN SELECT --}}
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Tahun</label>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1 tracking-normal">Tahun</label>
                         <select x-model="filter.year" 
-                            class="w-full rounded-lg border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] shadow-sm cursor-pointer">
+                            class="w-full rounded-none border-slate-300 text-sm focus:ring-[#1C7C54] focus:border-[#1C7C54] shadow-sm cursor-pointer">
                             @for($y = date('Y'); $y >= 2023; $y--)
                                 <option value="{{ $y }}">{{ $y }}</option>
                             @endfor
@@ -56,14 +56,14 @@
                     {{-- 4. TOMBOL AKSI --}}
                     <div class="md:col-span-3 flex gap-2">
                         <button type="submit" 
-                            class="flex-1 bg-[#1C7C54] hover:bg-[#156343] text-white py-2 px-4 rounded-lg text-sm font-medium transition shadow-sm flex items-center justify-center gap-2">
+                            class="flex-1 bg-[#1C7C54] hover:bg-[#156343] text-white py-2 px-4 rounded-none text-sm font-medium transition shadow-sm flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                             </svg>
                             Filter
                         </button>
                         <button type="button" @click="resetFilter()"
-                            class="px-3 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition shadow-sm"
+                            class="px-3 py-2 bg-white border border-slate-300 text-slate-600 rounded-none text-sm font-medium hover:bg-slate-50 transition shadow-sm"
                             title="Reset Filter">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -98,7 +98,7 @@
 
                         {{-- WAKTU (Left Column) --}}
                         <div class="sm:w-32 flex-shrink-0 pt-1">
-                            <div class="font-bold text-slate-700 text-sm" x-text="item.date_formatted"></div>
+                            <div class="font-medium text-slate-700 text-sm" x-text="item.date_formatted"></div>
                             <div class="flex items-center gap-2 mt-0.5">
                                 <span class="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded" x-text="item.time_formatted"></span>
                             </div>
@@ -106,12 +106,12 @@
                         </div>
 
                         {{-- DETAIL BOX (Right Column) --}}
-                        <div class="flex-grow bg-white rounded-xl p-4 ring-1 ring-slate-200 shadow-sm hover:shadow-md hover:ring-[#1C7C54]/30 transition-all duration-200">
+                        <div class="flex-grow bg-white rounded-none p-4 ring-1 ring-slate-200 shadow-sm hover:shadow-md hover:ring-[#1C7C54]/30 transition-all duration-200">
                             
                             {{-- User Info --}}
                             <div class="flex justify-between items-start mb-2 border-b border-slate-50 pb-2">
                                 <div>
-                                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                    <h4 class="font-medium text-slate-800 text-sm flex items-center gap-2">
                                         <span x-text="item.user_name"></span>
                                         <span x-show="item.user_role" class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 font-medium uppercase" x-text="item.user_role"></span>
                                     </h4>

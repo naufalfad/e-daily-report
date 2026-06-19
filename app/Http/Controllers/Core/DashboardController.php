@@ -134,7 +134,8 @@ class DashboardController extends Controller
                 'no_telp' => $user->no_telp,
                 'alamat' => $user->alamat,
                 'jabatan' => $user->jabatan->nama_jabatan ?? '-',
-                'unit' => $user->unitKerja->nama_unit ?? '-'
+                'unit' => $user->unitKerja->nama_unit ?? '-',
+                'bidang' => $user->bidang->nama_bidang ?? '-'
             ],
             'skoring_utama' => [
                 'target_tahunan' => (int) $totalTargetTahunan,

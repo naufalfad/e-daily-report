@@ -24,15 +24,15 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
          x-transition:leave-end="opacity-0 translate-y-4 scale-95"
-         class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+         class="relative w-full max-w-4xl bg-white rounded-none shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
         {{-- Header --}}
         <div class="px-8 py-6 bg-white border-b border-slate-100 flex justify-between items-center shrink-0">
             <div>
-                <h2 class="text-2xl font-bold text-slate-800" x-text="openAdd ? 'Tambah Pegawai Baru' : 'Edit Data Pegawai'"></h2>
+                <h2 class="text-2xl font-medium text-slate-800" x-text="openAdd ? 'Tambah Pegawai Baru' : 'Edit Data Pegawai'"></h2>
                 <p class="text-slate-500 text-sm mt-1">Lengkapi informasi data diri dan jabatan pegawai</p>
             </div>
-            <button type="button" @click="openAdd ? toggleAdd(false) : toggleEdit(false)" class="text-slate-400 hover:text-rose-500 transition-colors p-2 hover:bg-rose-50 rounded-lg">
+            <button type="button" @click="openAdd ? toggleAdd(false) : toggleEdit(false)" class="text-slate-400 hover:text-rose-500 transition-colors p-2 hover:bg-rose-50 rounded-none">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -51,27 +51,27 @@
                             <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                                 <i class="fas fa-user text-sm"></i>
                             </div>
-                            <h3 class="font-bold text-slate-700">Informasi Pribadi</h3>
+                            <h3 class="font-medium text-slate-700">Informasi Pribadi</h3>
                         </div>
 
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Lengkap</label>
                             <input type="text" x-model="form.name" required
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                 placeholder="Contoh: Budi Santoso, S.Kom">
                         </div>
 
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">NIP</label>
                             <input type="text" x-model="form.nip" required
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none font-mono"
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none font-mono"
                                 placeholder="19xxxxxxxxxxxxxxxx">
                         </div>
 
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Email (Opsional)</label>
                             <input type="email" x-model="form.email"
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                 placeholder="email@bapenda.go.id">
                         </div>
                         
@@ -79,13 +79,13 @@
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
                                 <input type="text" x-model="form.username" required
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
+                                    class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                     placeholder="Username login">
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
                                 <input type="password" x-model="form.password" :required="openAdd"
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
+                                    class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none"
                                     placeholder="Min. 6 karakter">
                                 <p x-show="openEdit" class="text-[10px] text-slate-400 mt-1">*Kosongkan jika tidak diubah</p>
                             </div>
@@ -98,14 +98,14 @@
                             <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
                                 <i class="fas fa-briefcase text-sm"></i>
                             </div>
-                            <h3 class="font-bold text-slate-700">Informasi Kepegawaian</h3>
+                            <h3 class="font-medium text-slate-700">Informasi Kepegawaian</h3>
                         </div>
 
                         {{-- Select Unit Kerja (Dinamis dari Alpine) --}}
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Unit Kerja</label>
                             <select x-model="form.unit_kerja_id" required
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
                                 <option value="">Pilih Unit Kerja</option>
                                 <template x-for="uk in unitKerjaList" :key="uk.id">
                                     <option :value="uk.id" x-text="uk.nama_unit"></option>
@@ -118,7 +118,7 @@
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Bidang</label>
                             <div class="relative">
                                 <select x-model="form.bidang_id" required
-                                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white"
+                                    class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white"
                                     :disabled="!form.unit_kerja_id || bidangList.length === 0">
                                     <option value="">Pilih Bidang</option>
                                     <template x-for="bid in bidangList" :key="bid.id">
@@ -138,7 +138,7 @@
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Jabatan</label>
                             <select x-model="form.jabatan_id" required
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
                                 <option value="">Pilih Jabatan</option>
                                 <template x-for="j in jabatanList" :key="j.id">
                                     {{-- 
@@ -165,7 +165,7 @@
                         <div class="form-group">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Role Aplikasi</label>
                             <select x-model="form.role" required
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white">
                                 <option value="">Pilih Role</option>
                                 <template x-for="role in roleList" :key="role.id">
                                     <option :value="role.nama_role" x-text="role.nama_role"></option>
@@ -177,7 +177,7 @@
                         <div class="form-group relative">
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Atasan Langsung</label>
                             <select x-model="form.atasan_id"
-                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white"
+                                class="w-full px-4 py-2.5 rounded-none border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-sm outline-none appearance-none bg-white"
                                 :disabled="isFetchingAtasan">
                                 <option value="">Pilih Atasan (Opsional)</option>
                                 <template x-for="p in atasanList" :key="p.id">
@@ -200,11 +200,11 @@
         {{-- Footer --}}
         <div class="px-8 py-5 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
             <button type="button" @click="openAdd ? toggleAdd(false) : toggleEdit(false)"
-                class="text-sm font-bold text-slate-500 hover:text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200/50 transition-colors">
+                class="text-sm font-medium text-slate-500 hover:text-slate-700 px-4 py-2 rounded-none hover:bg-slate-200/50 transition-colors">
                 Batal
             </button>
             <button form="pegawaiForm" type="submit" :disabled="isLoading"
-                class="px-6 py-2.5 bg-[#1C7C54] text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-600/20 hover:bg-[#166443] hover:shadow-emerald-600/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                class="px-6 py-2.5 bg-[#1C7C54] text-white text-sm font-medium rounded-none shadow-lg shadow-emerald-600/20 hover:bg-[#166443] hover:shadow-emerald-600/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                 <i class="fas" :class="isLoading ? 'fa-circle-notch fa-spin' : 'fa-save'"></i>
                 <span x-text="isLoading ? 'Menyimpan...' : (openAdd ? 'Simpan Data' : 'Update Perubahan')"></span>
             </button>

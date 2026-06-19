@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterYear = document.getElementById('filter-year');
     const filterStatus = document.getElementById('filter-status');
     const filterKategori = document.getElementById('filter-kategori'); // NEW Kategori Filter
+    const filterLimit = document.getElementById('filter-limit');
 
     // Pagination Elements
     const btnPrev = document.getElementById('prev-page');
@@ -167,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             kategori_lokasi: filterKategori ? filterKategori.value : 'all', // INJEKSI FILTER KATEGORI
             search: filterSearch ? filterSearch.value : '',
             page: page,
-            per_page: 10
+            per_page: filterLimit ? filterLimit.value : 10
         });
 
         try {
@@ -357,6 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterYear) filterYear.addEventListener('change', () => fetchLkhList(1));
     if (filterStatus) filterStatus.addEventListener('change', () => fetchLkhList(1));
     if (filterKategori) filterKategori.addEventListener('change', () => fetchLkhList(1)); // NEW
+    if (filterLimit) filterLimit.addEventListener('change', () => fetchLkhList(1));
 
     // Live search with debounce
     if (filterSearch) {

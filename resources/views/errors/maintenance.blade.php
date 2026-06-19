@@ -21,7 +21,7 @@
 <body class="bg-[#EFF0F5] h-screen flex items-center justify-center p-6">
 
     <div class="text-center">
-        <h1 class="text-xl md:text-3xl font-bold text-slate-800 mb-3">
+        <h1 class="text-xl md:text-3xl font-medium text-slate-800 mb-3">
             WEBSITE SEDANG DALAM MASA MAINTENACE
         </h1>
 

@@ -6,7 +6,7 @@
 <div class="container mx-auto px-4 py-6">
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">Profil & Akun Saya</h1>
+        <h1 class="text-2xl font-medium text-gray-800">Profil & Akun Saya</h1>
         <p class="text-gray-500 text-sm mt-1">Kelola data diri dan keamanan akun Anda di sini.</p>
     </div>
 
@@ -21,8 +21,8 @@
     @endif
 
     @if ($errors->any())
-    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl relative shadow-sm">
-        <strong class="font-bold flex items-center"><i class="fas fa-times-circle mr-2"></i> Terjadi Kesalahan:</strong>
+    <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-none relative shadow-sm">
+        <strong class="font-medium flex items-center"><i class="fas fa-times-circle mr-2"></i> Terjadi Kesalahan:</strong>
         <ul class="list-disc list-inside mt-1 ml-6 text-sm">
             @foreach ($errors->all() as $error)
             <li>{{ $error }}</li>
@@ -35,9 +35,9 @@
 
         <div class="lg:col-span-1">
             <div
-                class="bg-white rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-100">
+                class="bg-white rounded-none shadow-[0_4px_20px_rgba(0,0,0,0.05)] overflow-hidden border border-gray-100">
                 <div class="bg-[#1C7C54] px-6 py-4 flex justify-between items-center">
-                    <h6 class="font-bold text-white text-lg">Data Kepegawaian</h6>
+                    <h6 class="font-medium text-white text-lg">Data Kepegawaian</h6>
                     <span
                         class="bg-white/20 text-white text-xs px-2 py-1 rounded-full uppercase tracking-wide border border-white/20">
                         {{ $user->roles->pluck('nama_role')->first() ?? 'User' }}
@@ -53,7 +53,7 @@
                         </div>
                     </div>
 
-                    <h5 class="text-xl font-bold text-gray-800 mb-1">{{ $user->name }}</h5>
+                    <h5 class="text-xl font-medium text-gray-800 mb-1">{{ $user->name }}</h5>
                     <p class="text-gray-500 text-sm mb-4 font-mono bg-gray-100 inline-block px-2 py-1 rounded">
                         {{ $user->nip ?? '-' }}</p>
 
@@ -62,34 +62,33 @@
                     <div class="text-left space-y-4">
                         <div>
                             <label
-                                class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Jabatan</label>
+                                class="block text-xs font-medium text-gray-400 tracking-normal mb-1">Jabatan</label>
                             <div
-                                class="text-gray-800 font-medium bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 flex items-center">
+                                class="text-gray-800 font-medium bg-gray-50 px-3 py-2 rounded-none border border-gray-100 flex items-center">
                                 <i class="fas fa-briefcase text-gray-300 mr-2"></i>
                                 {{ $user->jabatan->nama_jabatan ?? '-' }}
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Unit
-                                Kerja</label>
+                            <label class="block text-xs font-medium text-gray-400 tracking-normal mb-1">Bidang</label>
                             <div
-                                class="text-gray-800 text-sm bg-gray-50 px-3 py-2 rounded-lg border border-gray-100 flex items-center">
+                                class="text-gray-800 text-sm bg-gray-50 px-3 py-2 rounded-none border border-gray-100 flex items-center">
                                 <i class="fas fa-building text-gray-300 mr-2"></i>
-                                {{ $user->unitKerja->nama_unit ?? 'Non-Unit' }}
+                                {{ $user->bidang->nama_bidang ?? '-' }}
                             </div>
                         </div>
 
                         @if($user->atasan)
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative overflow-hidden">
+                        <div class="bg-blue-50 p-4 rounded-none border border-blue-100 relative overflow-hidden">
                             <i
                                 class="fas fa-user-tie absolute -right-3 -bottom-3 text-6xl text-blue-100 opacity-50 transform rotate-12"></i>
 
                             <label
-                                class="flex items-center text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 relative z-10">
+                                class="flex items-center text-xs font-medium text-blue-600 tracking-normal mb-2 relative z-10">
                                 <i class="fas fa-user-check mr-2"></i> Atasan Langsung
                             </label>
-                            <div class="text-gray-800 font-bold text-sm relative z-10">{{ $user->atasan->name }}</div>
+                            <div class="text-gray-800 font-medium text-sm relative z-10">{{ $user->atasan->name }}</div>
                             <small
                                 class="text-gray-500 text-xs relative z-10">{{ $user->atasan->jabatan->nama_jabatan ?? '' }}</small>
                         </div>
@@ -101,7 +100,7 @@
 
         <div class="lg:col-span-2">
             <div
-                class="bg-white rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden min-h-[500px]">
+                class="bg-white rounded-none shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden min-h-[500px]">
 
                 @php
                 $hasAccountErrors = $errors->has('username') || $errors->has('password');
@@ -118,7 +117,7 @@
                         <i class="fas fa-user-lock mr-2"></i> Akun & Keamanan
                         @if($hasAccountErrors)
                         <span
-                            class="ml-2 bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">!</span>
+                            class="ml-2 bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-medium animate-pulse">!</span>
                         @endif
                     </button>
                 </div>
@@ -131,10 +130,10 @@
                             @method('PUT')
 
                             <div class="mb-6">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Ganti Foto Profil</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ganti Foto Profil</label>
                                 <div class="flex items-center justify-center w-full">
                                     <label for="foto_profil"
-                                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition group">
+                                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-none cursor-pointer bg-gray-50 hover:bg-gray-100 transition group">
                                         <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                             <i
                                                 class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2 group-hover:text-[#1C7C54] transition"></i>
@@ -157,14 +156,14 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">No. WhatsApp</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">No. WhatsApp</label>
                                     <div class="relative">
                                         <div
                                             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fab fa-whatsapp text-green-500 text-lg"></i>
                                         </div>
                                         <input type="tel" name="no_telp" value="{{ old('no_telp', $user->no_telp) }}"
-                                            class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
+                                            class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
                                             placeholder="08xxxx" inputmode="numeric" pattern="[0-9]*" autocomplete="tel"
                                             oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     </div>
@@ -172,14 +171,14 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                                     <div class="relative">
                                         <div
                                             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <i class="fas fa-envelope text-gray-400"></i>
                                         </div>
                                         <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                                            class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
+                                            class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
                                             autocomplete="email">
                                     </div>
                                     @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -187,20 +186,20 @@
                             </div>
 
                             <div class="mb-8">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Alamat Domisili</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Alamat Domisili</label>
                                 <div class="relative">
                                     <div class="absolute top-3 left-3 pointer-events-none">
                                         <i class="fas fa-map-marker-alt text-gray-400"></i>
                                     </div>
                                     <textarea name="alamat" rows="3"
-                                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-xl focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
+                                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-[#1C7C54] focus:border-[#1C7C54] transition"
                                         autocomplete="street-address">{{ old('alamat', $user->alamat) }}</textarea>
                                 </div>
                             </div>
 
                             <div class="text-right">
                                 <button type="submit"
-                                    class="bg-[#1C7C54] hover:bg-[#156343] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-green-900/10 transition-all transform hover:-translate-y-1 flex items-center justify-center ml-auto">
+                                    class="bg-[#1C7C54] hover:bg-[#156343] text-white font-medium py-3 px-8 rounded-none shadow-lg shadow-green-900/10 transition-all transform hover:-translate-y-1 flex items-center justify-center ml-auto">
                                     <i class="fas fa-save mr-2"></i> Simpan Biodata
                                 </button>
                             </div>
@@ -227,14 +226,14 @@
                             @method('PUT')
 
                             <div class="mb-6">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Username Login</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Username Login</label>
                                 <div class="relative">
                                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
                                         <i class="fas fa-user"></i>
                                     </span>
                                     <input type="text" name="username" value="{{ old('username', $user->username) }}"
                                         required
-                                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-xl focus:ring-orange-500 focus:border-orange-500 transition @error('username') border-red-500 @enderror"
+                                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-orange-500 focus:border-orange-500 transition @error('username') border-red-500 @enderror"
                                         autocomplete="username">
                                 </div>
                                 @error('username')
@@ -250,7 +249,7 @@
                                     class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-gray-400 text-sm">Keamanan</span>
                             </div>
 
-                            <h6 class="text-red-600 font-bold mb-4 flex items-center">
+                            <h6 class="text-red-600 font-medium mb-4 flex items-center">
                                 <i class="fas fa-key mr-2"></i> Ganti Password (Opsional)
                             </h6>
 
@@ -266,7 +265,7 @@
 
                                         <input type="password" id="password" name="password"
                                             placeholder="Kosongkan jika tidak ganti"
-                                            class="w-full pl-10 pr-10 px-4 py-2 border border-gray-300 rounded-xl focus:ring-red-500 focus:border-red-500 transition @error('password') border-red-500 @enderror"
+                                            class="w-full pl-10 pr-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-red-500 focus:border-red-500 transition @error('password') border-red-500 @enderror"
                                             autocomplete="new-password">
 
                                         <button type="button" onclick="togglePassword('password')"
@@ -289,7 +288,7 @@
 
                                         <input type="password" id="password_confirmation" name="password_confirmation"
                                             placeholder="Ketik ulang password"
-                                            class="w-full pl-10 pr-10 px-4 py-2 border border-gray-300 rounded-xl focus:ring-red-500 focus:border-red-500 transition">
+                                            class="w-full pl-10 pr-10 px-4 py-2 border border-gray-300 rounded-none focus:ring-red-500 focus:border-red-500 transition">
 
                                         <button type="button" onclick="togglePassword('password_confirmation')"
                                             class="absolute inset-y-0 right-0 pr-3 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none z-20 cursor-pointer h-full w-10">
@@ -301,7 +300,7 @@
 
                             <div class="text-right">
                                 <button type="button" id="btn-trigger-modal"
-                                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-red-900/10 transition-all transform hover:-translate-y-1 flex items-center justify-center ml-auto">
+                                    class="bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-8 rounded-none shadow-lg shadow-red-900/10 transition-all transform hover:-translate-y-1 flex items-center justify-center ml-auto">
                                     <i class="fas fa-save mr-2"></i> Simpan Perubahan Akun
                                 </button>
                             </div>
@@ -319,7 +318,7 @@
 
     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
         <div
-            class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border-t-4 border-red-500">
+            class="relative transform overflow-hidden rounded-none bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border-t-4 border-red-500">
             <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                 <div class="sm:flex sm:items-start">
                     <div
@@ -327,7 +326,7 @@
                         <i class="fas fa-key text-red-600 text-lg"></i>
                     </div>
                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                        <h3 class="text-lg font-bold leading-6 text-gray-900" id="modal-title">Konfirmasi Perubahan
+                        <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">Konfirmasi Perubahan
                             Login</h3>
                         <div class="mt-2">
                             <p class="text-sm text-gray-500">
@@ -342,11 +341,11 @@
             </div>
             <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
                 <button type="button" id="btn-confirm-final"
-                    class="inline-flex w-full justify-center rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition transform hover:scale-105">
+                    class="inline-flex w-full justify-center rounded-none bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition transform hover:scale-105">
                     Ya, Simpan
                 </button>
                 <button type="button" id="btn-cancel-modal"
-                    class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition">
+                    class="mt-3 inline-flex w-full justify-center rounded-none bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto transition">
                     Batal
                 </button>
             </div>

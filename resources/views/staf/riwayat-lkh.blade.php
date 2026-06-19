@@ -10,17 +10,17 @@
     <section x-data="riwayatCore('{{ $role }}')" x-init="initPage()" class="font-poppins">
 
         {{-- CARD UTAMA --}}
-        <div class="bg-white rounded-[24px] shadow-sm border border-slate-200 flex flex-col min-h-[85vh] overflow-hidden">
+        <div class="bg-white rounded-none shadow-sm border border-slate-200 flex flex-col min-h-[85vh] overflow-hidden">
 
             {{-- HEADER + TOOLBAR --}}
             <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-slate-800 tracking-tight">Riwayat Laporan</h2>
+                    <h2 class="text-xl font-medium text-slate-800 tracking-tight">Riwayat Laporan</h2>
                     <p class="text-sm text-slate-500 mt-1">Arsip kinerja dan aktivitas harian Anda</p>
                 </div>
 
                 <button @click="exportPdf()"
-                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54] transition-all shadow-sm active:scale-[0.98]">
+                    class="group flex items-center gap-2 bg-white text-slate-700 border border-slate-300 px-5 py-2.5 rounded-none text-sm font-semibold hover:bg-slate-50 hover:text-[#1C7C54] hover:border-[#1C7C54] transition-all shadow-sm active:scale-[0.98]">
                     <svg class="w-5 h-5 text-slate-400 group-hover:text-[#1C7C54] transition-colors" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -38,17 +38,27 @@
                         {{-- 1. FILTER TANGGAL --}}
                         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Dari Tanggal</label>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Dari Tanggal</label>
                                 <div class="relative">
-                                    <input x-model="filter.from" id="tgl_dari" type="date"
-                                        class="w-full rounded-xl border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 text-slate-600 placeholder-slate-400" />
+                                    <div class="relative w-full">
+    <input x-model="filter.from" id="tgl_dari"  type="date" 
+                                        class="w-full rounded-none border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 text-slate-600 placeholder-slate-400 pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Sampai Tanggal</label>
+                                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Sampai Tanggal</label>
                                 <div class="relative">
-                                    <input x-model="filter.to" id="tgl_sampai" type="date"
-                                        class="w-full rounded-xl border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 text-slate-600 placeholder-slate-400" />
+                                    <div class="relative w-full">
+    <input x-model="filter.to" id="tgl_sampai"  type="date" 
+                                        class="w-full rounded-none border-slate-200 bg-white py-2.5 px-4 text-sm focus:border-[#0E7A4A] focus:ring-[#0E7A4A]/20 shadow-sm cursor-pointer transition-all hover:border-slate-300 text-slate-600 placeholder-slate-400 pr-10 cursor-pointer"  data-enhanced="true">
+    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+        <i class="fas fa-calendar-alt"></i>
+    </button>
+</div>
                                 </div>
                             </div>
                         </div>
@@ -56,7 +66,7 @@
                         {{-- 2. BUTTON ACTION --}}
                         <div class="w-full md:w-auto">
                             <button type="submit"
-                                class="w-full md:w-auto h-[42px] px-8 bg-[#0E7A4A] hover:bg-[#0b633b] text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                class="w-full md:w-auto h-[42px] px-8 bg-[#0E7A4A] hover:bg-[#0b633b] text-white rounded-none text-sm font-medium shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                                 :disabled="loading">
                                 <span x-show="!loading">Terapkan Filter</span>
                                 <span x-show="loading" class="flex items-center gap-2" style="display: none;">
@@ -78,14 +88,14 @@
                 <table class="w-full min-w-[1000px] text-sm text-left">
                     <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-y border-slate-200">
                         <tr>
-                            <th class="px-6 py-4 font-bold tracking-wider w-[15%]">Tanggal Laporan</th>
-                            <th class="px-6 py-4 font-bold tracking-wider w-[30%]">Aktivitas</th>
-                            <th class="px-6 py-4 font-bold tracking-wider w-[15%]">Tanggal Validasi</th>
-                            <th class="px-6 py-4 font-bold tracking-wider w-[15%]">Pejabat Penilai</th>
+                            <th class="px-6 py-4 font-medium tracking-wider w-[15%]">Tanggal Laporan</th>
+                            <th class="px-6 py-4 font-medium tracking-wider w-[30%]">Aktivitas</th>
+                            <th class="px-6 py-4 font-medium tracking-wider w-[15%]">Tanggal Validasi</th>
+                            <th class="px-6 py-4 font-medium tracking-wider w-[15%]">Pejabat Penilai</th>
                             {{-- NEW: Kolom Kategori --}}
-                            <th class="px-6 py-4 font-bold tracking-wider text-center w-[10%]">Kategori</th>
-                            <th class="px-6 py-4 font-bold tracking-wider text-center w-[10%]">Status</th>
-                            <th class="px-6 py-4 font-bold tracking-wider text-right w-[5%]">Opsi</th>
+                            <th class="px-6 py-4 font-medium tracking-wider text-center w-[10%]">Kategori</th>
+                            <th class="px-6 py-4 font-medium tracking-wider text-center w-[10%]">Status</th>
+                            <th class="px-6 py-4 font-medium tracking-wider text-right w-[5%]">Opsi</th>
                         </tr>
                     </thead>
 
@@ -102,7 +112,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
                                         </div>
-                                        <h3 class="text-slate-800 font-bold text-base">Tidak ada data</h3>
+                                        <h3 class="text-slate-800 font-medium text-base">Tidak ada data</h3>
                                         <p class="text-slate-500 text-xs mt-1">Anda belum memiliki riwayat laporan pada periode ini.</p>
                                     </div>
                                 </td>
@@ -133,7 +143,7 @@
                                 </td>
 
                                 <td class="px-6 py-4 align-top">
-                                    <div class="font-bold text-slate-800 mb-1" x-text="item.jenis_kegiatan || '-'"></div>
+                                    <div class="font-medium text-slate-800 mb-1" x-text="item.jenis_kegiatan || '-'"></div>
                                     <div class="text-xs text-slate-500 line-clamp-2 leading-relaxed"
                                         x-text="item.deskripsi_aktivitas"></div>
                                 </td>
@@ -156,7 +166,7 @@
 
                                 <td class="px-6 py-4 align-top text-right">
                                     <button @click="openModal(item)"
-                                        class="inline-flex items-center gap-1.5 text-[#1C7C54] hover:text-[#166443] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+                                        class="inline-flex items-center gap-1.5 text-[#1C7C54] hover:text-[#166443] bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-none text-xs font-medium transition-colors">
                                         <span>Detail</span>
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

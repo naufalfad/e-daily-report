@@ -25,7 +25,8 @@ export function riwayatCore(role, baseUrl = window.location.href) {
             last_page: 1,
             total: 0,
             from: 0,
-            to: 0
+            to: 0,
+            limit: 10
         },
 
         // Filter State
@@ -82,6 +83,7 @@ export function riwayatCore(role, baseUrl = window.location.href) {
                 
                 // [BARU] Kirim parameter page ke backend
                 params.append('page', page);
+                params.append('limit', this.pagination.limit);
 
                 if (this.filter.from) params.append('from_date', this.filter.from);
                 if (this.filter.to) params.append('to_date', this.filter.to);
@@ -118,14 +120,15 @@ export function riwayatCore(role, baseUrl = window.location.href) {
                     last_page: data.last_page,
                     total: data.total,
                     from: data.from,
-                    to: data.to
+                    to: data.to,
+                    limit: this.pagination.limit
                 };
 
             } catch (error) {
                 console.error('Error fetching data:', error);
                 this.items = [];
                 // Reset pagination on error
-                this.pagination = { current_page: 1, last_page: 1, total: 0, from: 0, to: 0 };
+                this.pagination = { current_page: 1, last_page: 1, total: 0, from: 0, to: 0, limit: 10 };
             } finally {
                 this.loading = false;
             }

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterMonth = document.getElementById('filter-month');
     const filterYear = document.getElementById('filter-year');
     const filterSearch = document.getElementById('filter-search');
+    const filterLimit = document.getElementById('filter-limit');
 
     // Pagination Elements
     const btnPrev = document.getElementById('prev-page');
@@ -127,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Construct Query Params
         const params = new URLSearchParams({
             page: page,
-            per_page: 10,
+            per_page: filterLimit ? filterLimit.value : 10,
             status: filterStatus ? filterStatus.value : 'waiting_review',
             month: filterMonth ? filterMonth.value : '',
             year: filterYear ? filterYear.value : '',
@@ -317,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterStatus) filterStatus.addEventListener('change', () => fetchLkhList(1));
     if (filterMonth) filterMonth.addEventListener('change', () => fetchLkhList(1));
     if (filterYear) filterYear.addEventListener('change', () => fetchLkhList(1));
+    if (filterLimit) filterLimit.addEventListener('change', () => fetchLkhList(1));
 
     if (filterSearch) {
         filterSearch.addEventListener('input', (e) => {

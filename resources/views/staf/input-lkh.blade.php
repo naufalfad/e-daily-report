@@ -67,18 +67,11 @@
                     {{-- Tanggal --}}
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Tanggal</label>
-                        <div class="relative">
-                            <div class="relative w-full">
-    <input id="tanggal_lkh" name="tanggal_laporan"  type="date" 
+                        <div class="relative w-full">
+                            <input id="tanggal_lkh" name="tanggal_laporan"  type="date" 
                                 class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none pr-10 cursor-pointer"  data-enhanced="true">
-    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
-        <i class="fas fa-calendar-alt"></i>
-    </button>
-</div>
-                            <button type="button" id="tanggal_lkh_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/tanggal.svg') }}" class="h-4 w-4 opacity-80"
-                                    alt="Date" />
+                            <button type="button" id="tanggal_lkh_btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+                                <i class="fas fa-calendar-alt"></i>
                             </button>
                         </div>
                     </div>
@@ -327,35 +320,21 @@
                 <div class="grid md:grid-cols-2 gap-2 mt-4">
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Mulai</label>
-                        <div class="relative">
-                            {{-- PERUBAHAN: Tambahkan lang="en-GB" untuk memaksa format 24 jam di browser --}}
-                            <div class="relative w-full">
-    <input id="jam_mulai" name="waktu_mulai"  type="time"  step="60" lang="en-GB"
+                        <div class="relative w-full">
+                            <input id="jam_mulai" name="waktu_mulai"  type="time"  step="60" lang="en-GB"
                                 class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none pr-10 cursor-pointer"  data-enhanced="true">
-    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
-        <i class="fas fa-clock"></i>
-    </button>
-</div>
-                            <button type="button" id="jam_mulai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70">
+                            <button type="button" id="jam_mulai_btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+                                <i class="fas fa-clock"></i>
                             </button>
                         </div>
                     </div>
                     <div>
                         <label class="block font-normal text-[15px] text-[#5B687A] mb-[10px]">Jam Selesai</label>
-                        <div class="relative">
-                            {{-- PERUBAHAN: Tambahkan lang="en-GB" dan step="60" (untuk menghilangkan detik) --}}
-                            <div class="relative w-full">
-    <input id="jam_selesai" name="waktu_selesai"  type="time"  step="60" lang="en-GB"
+                        <div class="relative w-full">
+                            <input id="jam_selesai" name="waktu_selesai"  type="time"  step="60" lang="en-GB"
                                 class="w-full rounded-none border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/30 focus:border-[#1C7C54] appearance-none pr-10 cursor-pointer"  data-enhanced="true">
-    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
-        <i class="fas fa-clock"></i>
-    </button>
-</div>
-                            <button type="button" id="jam_selesai_btn"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                                <img src="{{ asset('assets/icon/time.svg') }}" class="h-4 w-4 opacity-70">
+                            <button type="button" id="jam_selesai_btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
+                                <i class="fas fa-clock"></i>
                             </button>
                         </div>
                     </div>

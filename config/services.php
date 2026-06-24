@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'office' => [
+        'latitude' => env('OFFICE_LATITUDE', -6.175392),
+        'longitude' => env('OFFICE_LONGITUDE', 106.827153),
+        'lat' => env('OFFICE_LATITUDE', -6.175392),
+        'lng' => env('OFFICE_LONGITUDE', 106.827153),
+        'radius' => env('OFFICE_RADIUS', 100), // in meters
+    ],
+
 ];

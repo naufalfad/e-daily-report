@@ -100,16 +100,16 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Hapus icon bawaan input tanggal */
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            opacity: 0 !important;
-            display: none !important;
-        }
-
-        /* Hapus icon bawaan input time */
+        /* Hapus icon bawaan input tanggal & time agar tidak double tapi showPicker tetap jalan */
+        input[type="date"]::-webkit-calendar-picker-indicator,
         input[type="time"]::-webkit-calendar-picker-indicator {
             opacity: 0 !important;
-            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            pointer-events: none !important;
+            position: absolute !important;
         }
 
         /* Hilangkan spinners Android/Edge */
@@ -299,74 +299,72 @@
     <script>
     document.addEventListener("DOMContentLoaded", () => {
 
+        // 1. Search Dropdown Logic
         const input = document.querySelector('input[placeholder="Cari Pengumuman"]');
         const dropdown = document.getElementById("search-dropdown");
 
-        if (!input || !dropdown) return;
+        if (input && dropdown) {
+            let typingTimer;
 
-        let typingTimer;
+            input.addEventListener("keyup", function () {
+                clearTimeout(typingTimer);
 
-        input.addEventListener("keyup", function () {
-            clearTimeout(typingTimer);
+                const query = this.value.trim();
+                if (query.length < 2) {
+                    dropdown.classList.add("hidden");
+                    return;
+                }
 
-            const query = this.value.trim();
-            if (query.length < 2) {
-                dropdown.classList.add("hidden");
-                return;
-            }
+                typingTimer = setTimeout(() => {
+                    const token = localStorage.getItem("auth_token");
 
-            typingTimer = setTimeout(() => {
+                    fetch(`/api/search/pengumuman?q=${encodeURIComponent(query)}`, {
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Accept": "application/json"
+                        }
+                    })
+                    .then(res => {
+                        if (res.status === 401) {
+                            console.error("UNAUTHORIZED – token tidak dikirim / salah");
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (!Array.isArray(data) || !data.length) {
+                            dropdown.innerHTML = `
+                                <div class="p-3 text-sm text-slate-500">Tidak ada hasil.</div>
+                            `;
+                            dropdown.classList.remove("hidden");
+                            return;
+                        }
 
-                const token = localStorage.getItem("auth_token");
+                        dropdown.innerHTML = data.map(item => `
+                            <div class="px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-sm">
+                                <div class="font-semibold text-slate-700">${item.judul}</div>
+                                <div class="text-xs text-slate-500 line-clamp-1">${item.isi_pengumuman}</div>
+                                <div class="text-[10px] text-slate-400 mt-1">
+                                    Pembuat: ${item.creator ? item.creator.name : 'Tidak diketahui'}
+                                </div>
+                                <div class="text-[10px] text-slate-400">
+                                    ${new Date(item.created_at).toLocaleDateString()}
+                                </div>
+                            </div>
+                        `).join('');
 
-                fetch(`/api/search/pengumuman?q=${encodeURIComponent(query)}`, {
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Accept": "application/json"
-                    }
-                })
-                .then(res => {
-                    if (res.status === 401) {
-                        console.error("UNAUTHORIZED – token tidak dikirim / salah");
-                    }
-                    return res.json();
-                })
-                .then(data => {
-
-                    if (!Array.isArray(data) || !data.length) {
-                        dropdown.innerHTML = `
-                            <div class="p-3 text-sm text-slate-500">Tidak ada hasil.</div>
-                        `;
                         dropdown.classList.remove("hidden");
-                        return;
-                    }
+                    });
+                }, 300);
+            });
 
-                    dropdown.innerHTML = data.map(item => `
-                        <div class="px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-sm">
-                            <div class="font-semibold text-slate-700">${item.judul}</div>
-                            <div class="text-xs text-slate-500 line-clamp-1">${item.isi_pengumuman}</div>
-                            <div class="text-[10px] text-slate-400 mt-1">
-                                Pembuat: ${item.creator ? item.creator.name : 'Tidak diketahui'}
-                            </div>
-                            <div class="text-[10px] text-slate-400">
-                                ${new Date(item.created_at).toLocaleDateString()}
-                            </div>
-                        </div>
-                    `).join('');
+            document.addEventListener("click", (e) => {
+                if (!dropdown.contains(e.target) && !input.contains(e.target)) {
+                    dropdown.classList.add("hidden");
+                }
+            });
+        }
 
-                    dropdown.classList.remove("hidden");
-                });
-
-            }, 300);
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!dropdown.contains(e.target) && !input.contains(e.target)) {
-                dropdown.classList.add("hidden");
-            }
-        });
-
-        // Sidebar Toggle Logic
+        // 2. Sidebar Toggle Logic
         const sbToggle = document.getElementById('sb-toggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
@@ -383,7 +381,7 @@
                 } else {
                     // Open Sidebar
                     overlay.classList.remove('hidden');
-                    // Small delay to allow display:block to apply before opacity transition
+                    // Small delay to allow display:block to allow opacity transition
                     setTimeout(() => {
                         overlay.classList.remove('opacity-0');
                         sidebar.classList.remove('-translate-x-full');
@@ -394,6 +392,24 @@
             sbToggle.addEventListener('click', toggleSidebar);
             overlay.addEventListener('click', toggleSidebar);
         }
+
+        // 3. Global Date/Time Input Picker Event Listener
+        document.addEventListener("click", (e) => {
+            const pickerInput = e.target.closest('input[type="date"], input[type="time"]');
+            if (pickerInput) {
+                if (!pickerInput.disabled && !pickerInput.readOnly) {
+                    if (typeof pickerInput.showPicker === 'function') {
+                        try {
+                            pickerInput.showPicker();
+                        } catch (err) {
+                            console.error('showPicker error:', err);
+                        }
+                    } else {
+                        pickerInput.focus();
+                    }
+                }
+            }
+        });
     });
     </script>
 </body>

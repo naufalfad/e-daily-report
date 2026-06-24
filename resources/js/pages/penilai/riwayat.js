@@ -299,11 +299,11 @@ export function riwayatDataPenilai(role) {
                     if (typeof bukti === "string") {
                         return { file_url: `/storage/uploads/bukti/${bukti}` };
                     }
-                    if (bukti.path) {
-                        return { file_url: `/storage/${bukti.path}` };
+                    if (bukti.file_path || bukti.path) {
+                        return { file_url: `/storage/${bukti.file_path || bukti.path}` };
                     }
                     if (bukti.file_url) {
-                        return bukti;
+                        return { file_url: bukti.file_url };
                     }
                     return null;
                 })

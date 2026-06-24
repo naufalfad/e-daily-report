@@ -116,7 +116,7 @@
                                     {{-- Target Angka --}}
                                     <div class="col-span-4 md:col-span-2">
                                         <label class="block text-[10px] font-medium text-slate-400 mb-1">Target</label>
-                                        <input type="number" x-model="item.target" placeholder="0"
+                                        <input type="number" x-model="item.target" placeholder="0" min="1" required
                                             class="w-full rounded-none border border-slate-200 px-3 py-2 text-xs font-medium text-center focus:outline-none focus:border-[#1C7C54]">
                                     </div>
 
@@ -187,40 +187,38 @@
             <div class="rounded-none bg-white ring-1 ring-slate-200 p-4 flex-1">
                 <h3 class="text-sm font-semibold text-slate-800 mb-3">Status Laporan Terakhir</h3>
                 {{-- Scrollable List --}}
-                <div class="space-y-2 text-xs max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-                    <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-[11px] font-semibold">P</span>
-                            <div>
-                                <p class="font-medium text-slate-800">Rapat Koordinasi</p>
-                                <p class="text-[11px] text-slate-500">Menunggu Validasi</p>
+                <div class="space-y-2 text-xs max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
+                    <template x-if="lkhList.length === 0">
+                        <p class="text-xs text-slate-400 italic py-2 text-center">Belum ada aktivitas laporan.</p>
+                    </template>
+                    <template x-for="item in lkhList" :key="item.id">
+                        <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2 border border-slate-100 hover:bg-slate-100/50 transition-colors">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-none font-bold text-[10px] shrink-0"
+                                    :class="{
+                                        'bg-emerald-100 text-emerald-700 border border-emerald-200': item.status === 'approved',
+                                        'bg-rose-100 text-rose-700 border border-rose-200': item.status === 'rejected',
+                                        'bg-amber-100 text-amber-700 border border-amber-200': item.status === 'waiting_review',
+                                        'bg-slate-100 text-slate-700 border border-slate-200': item.status === 'draft'
+                                    }"
+                                    x-text="item.status === 'approved' ? 'A' : (item.status === 'rejected' ? 'R' : (item.status === 'waiting_review' ? 'W' : 'D'))">
+                                </span>
+                                <div class="min-w-0">
+                                    <p class="font-medium text-slate-800 truncate text-[11px]" x-text="item.deskripsi_aktivitas || 'Aktivitas LKH'"></p>
+                                    <p class="text-[9px]"
+                                        :class="{
+                                            'text-emerald-600 font-semibold': item.status === 'approved',
+                                            'text-rose-600 font-semibold': item.status === 'rejected',
+                                            'text-amber-600 font-semibold': item.status === 'waiting_review',
+                                            'text-slate-500 font-medium': item.status === 'draft'
+                                        }"
+                                        x-text="item.status === 'approved' ? 'Disetujui' : (item.status === 'rejected' ? 'Ditolak' : (item.status === 'waiting_review' ? 'Menunggu Review' : 'Draft'))">
+                                    </p>
+                                </div>
                             </div>
+                            <span class="text-[9px] text-slate-400 whitespace-nowrap ml-2 font-medium" x-text="formatDate(item.tanggal_laporan)"></span>
                         </div>
-                        <span class="text-[11px] text-slate-400 whitespace-nowrap">07 Nov</span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-semibold">D</span>
-                            <div>
-                                <p class="font-medium text-slate-800">Rekapitulasi Pajak</p>
-                                <p class="text-[11px] text-slate-500">Laporan Disetujui</p>
-                            </div>
-                        </div>
-                        <span class="text-[11px] text-slate-400 whitespace-nowrap">09 Nov</span>
-                    </div>
-                    <div class="flex items-center justify-between rounded-none bg-slate-50 px-3 py-2">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 text-[11px] font-semibold">T</span>
-                            <div>
-                                <p class="font-medium text-slate-800">Dinas Luar Kota</p>
-                                <p class="text-[11px] text-slate-500">Laporan Ditolak</p>
-                            </div>
-                        </div>
-                        <span class="text-[11px] text-slate-400 whitespace-nowrap">10 Nov</span>
-                    </div>
+                    </template>
                 </div>
             </div>
 
@@ -459,7 +457,7 @@
                                                 placeholder="Indikator">
                                         </div>
                                         <div class="col-span-2">
-                                            <input type="number" x-model="item.target"
+                                            <input type="number" x-model="item.target" min="1" required
                                                 class="w-full text-xs rounded border-slate-300 py-1" placeholder="Jml">
                                         </div>
                                         <div class="col-span-2 flex gap-1">
@@ -495,6 +493,7 @@ document.addEventListener("alpine:init", () => {
     Alpine.data("skpPageData", () => ({
 
         skpList: [],
+        lkhList: [],
 
         // State Form
         formData: {
@@ -524,6 +523,7 @@ document.addEventListener("alpine:init", () => {
 
         initPage() {
             this.fetchSkpList();
+            this.fetchLkhList();
         },
 
         async fetchSkpList() {
@@ -537,6 +537,24 @@ document.addEventListener("alpine:init", () => {
                 });
                 const json = await res.json();
                 if (res.ok) this.skpList = json.data || [];
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        async fetchLkhList() {
+            const token = localStorage.getItem('auth_token');
+            try {
+                const res = await fetch('/api/dashboard/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                const json = await res.json();
+                if (res.ok) {
+                    this.lkhList = json.aktivitas_terbaru || [];
+                }
             } catch (e) {
                 console.error(e);
             }

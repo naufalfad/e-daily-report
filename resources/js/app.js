@@ -1,5 +1,58 @@
 // resources/js/app.js
 
+// Global fetch interceptor to handle CSRF tokens, Authorization headers, and AJAX indicators automatically.
+const { fetch: originalFetch } = window;
+window.fetch = async (resource, config = {}) => {
+    // Check if the URL is local/relative or matches the current origin to avoid sending headers to third-party APIs
+    let isLocalRequest = false;
+    try {
+        const urlObj = new URL(resource, window.location.origin);
+        isLocalRequest = urlObj.origin === window.location.origin;
+    } catch (e) {
+        isLocalRequest = false;
+    }
+
+    if (isLocalRequest) {
+        const headers = config.headers instanceof Headers 
+            ? config.headers 
+            : new Headers(config.headers || {});
+
+        // 1. Add X-Requested-With header to mark request as AJAX (ensuring JSON responses from Laravel)
+        if (!headers.has('X-Requested-With')) {
+            headers.set('X-Requested-With', 'XMLHttpRequest');
+        }
+
+        // 2. Automatically add CSRF Token from meta tag
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfTokenMeta) {
+            const tokenVal = csrfTokenMeta.getAttribute('content');
+            if (tokenVal && !headers.has('X-CSRF-TOKEN')) {
+                headers.set('X-CSRF-TOKEN', tokenVal);
+            }
+        }
+
+        // 3. Automatically add Authorization Bearer Token if stored in localStorage
+        const authToken = localStorage.getItem('auth_token');
+        if (authToken && !headers.has('Authorization')) {
+            headers.set('Authorization', `Bearer ${authToken}`);
+        }
+
+        config.headers = headers;
+    }
+
+    const response = await originalFetch(resource, config);
+
+    if (isLocalRequest && response.status === 401) {
+        // Prevent redirect loop if already on login page
+        if (!window.location.pathname.startsWith('/login')) {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+        }
+    }
+
+    return response;
+};
+
 // =========================
 // GLOBAL STYLE & LOGIN
 // =========================

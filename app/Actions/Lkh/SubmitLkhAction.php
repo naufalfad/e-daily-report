@@ -63,8 +63,10 @@ class SubmitLkhAction
             $data['atasan_id'] = $user->atasan_id; // Chain of Responsibility: Atasan langsung
             $data['is_luar_lokasi'] = $isLuarLokasi;
             
-            // [FIX] Paksa status menjadi 'waiting_review' agar masuk ke list validasi atasan
-            if ($request->input('status') !== 'draft') {
+            // [FIX] Paksa status menjadi 'waiting_review' agar masuk ke list validasi atasan, kecuali jika memang disimpan sebagai draft
+            if ($request->input('status') === 'draft') {
+                $data['status'] = 'draft';
+            } else {
                 $data['status'] = 'waiting_review';
             }
             

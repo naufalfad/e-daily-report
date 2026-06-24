@@ -267,7 +267,7 @@ class PetaAktivitasController extends Controller
             $meta = [
                 'generated_by'   => $user->name,
                 'user_nip'       => $user->nip ?? '-',
-                'unit_kerja'     => $user->unitKerja->nama_unit_kerja ?? 'Pemerintah Kabupaten Mimika',
+                'unit_kerja'     => $user->unitKerja->nama_unit ?? 'Pemerintah Kabupaten Mimika',
                 'timestamp'      => $now->format('d F Y, H:i') . ' WIB',
                 'filter_scope'   => $scopeText,
                 'filter_kategori'=> $kategoriFilterText, // [NEW] Info filter untuk PDF

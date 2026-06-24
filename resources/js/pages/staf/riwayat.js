@@ -206,8 +206,8 @@ export function riwayatDataStaf(role) {
 
                 this.daftarBukti = arr.map((bukti) => {
                     if (typeof bukti === "string") return { file_url: `/storage/uploads/bukti/${bukti}` };
-                    if (bukti.path) return { file_url: `/storage/${bukti.path}` };
-                    if (bukti.file_url) return bukti;
+                    if (bukti.file_path || bukti.path) return { file_url: `/storage/${bukti.file_path || bukti.path}` };
+                    if (bukti.file_url) return { file_url: bukti.file_url };
                     return null;
                 }).filter(Boolean);
 

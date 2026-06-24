@@ -250,6 +250,7 @@ class LkhController extends Controller
             return response()->json(['message' => 'Laporan Approved tidak bisa diedit'], 403);
 
         $validator = Validator::make($request->all(), [
+            'status' => 'sometimes|required|string|in:draft,waiting_review',
             'tupoksi_id' => 'sometimes|nullable|exists:tupoksi,id',
             'jenis_kegiatan' => 'sometimes|required|in:' . $validAktivitas,
             
@@ -281,7 +282,31 @@ class LkhController extends Controller
         try {
             DB::beginTransaction();
 
-            $updateData = $request->except(['bukti', 'hapus_bukti', 'latitude', 'longitude']);
+            // Prevent mass-assignment / privilege escalation by whitelisting allowed update fields
+            $allowedKeys = [
+                'tupoksi_id',
+                'jenis_kegiatan',
+                'kategori_lokasi',
+                'skp_rencana_id',
+                'tanggal_laporan',
+                'waktu_mulai',
+                'waktu_selesai',
+                'deskripsi_aktivitas',
+                'output_hasil_kerja',
+                'volume',
+                'satuan',
+                'mode_lokasi',
+                'lokasi_teks',
+                'status',
+                'location_provider',
+                'location_accuracy',
+                'address_auto',
+            ];
+            $updateData = $request->only($allowedKeys);
+
+            // Automatically clear legacy validation comments and timestamps on update/resubmission
+            $updateData['komentar_validasi'] = null;
+            $updateData['waktu_validasi'] = null;
 
             if ($request->has('latitude') && $request->has('longitude') && $request->latitude && $request->longitude) {
 
@@ -290,14 +315,22 @@ class LkhController extends Controller
                 $isLuarLokasi = true;
 
                 if (config('services.office.lat')) {
-                    $distanceQuery = DB::selectOne("
-                        SELECT ST_DistanceSphere(
-                            ST_Point(?, ?), 
-                            ST_Point(?, ?)  
-                        ) as distance
-                    ", [$finalLng, $finalLat, config('services.office.lng'), config('services.office.lat')]);
+                    $earthRadius = 6371000;
+                    $officeLat = (float) config('services.office.lat');
+                    $officeLng = (float) config('services.office.lng');
+                    $radiusAllowed = (int) config('services.office.radius', 100);
 
-                    if ($distanceQuery && $distanceQuery->distance <= config('services.office.radius')) {
+                    $dLat = deg2rad($finalLat - $officeLat);
+                    $dLng = deg2rad($finalLng - $officeLng);
+                    
+                    $a = sin($dLat / 2) * sin($dLat / 2) +
+                         cos(deg2rad($officeLat)) * cos(deg2rad($finalLat)) *
+                         sin($dLng / 2) * sin($dLng / 2);
+                         
+                    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+                    $distance = $earthRadius * $c;
+
+                    if ($distance <= $radiusAllowed) {
                         $isLuarLokasi = false;
                     }
                 }

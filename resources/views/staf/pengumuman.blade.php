@@ -43,12 +43,9 @@
             <div class="md:col-span-3">
                 <label for="filter-start-date" class="block text-[11px] font-semibold text-slate-500 mb-1.5 tracking-normal">Dari Tanggal</label>
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
                     <div class="relative w-full">
     <input  type="date"  id="filter-start-date" 
-                        class="block w-full pl-9 pr-3 py-2.5 rounded-none border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer pr-10 cursor-pointer" data-enhanced="true">
+                        class="block w-full pl-4 pr-10 py-2.5 rounded-none border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer" data-enhanced="true">
     <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
         <i class="fas fa-calendar-alt"></i>
     </button>
@@ -60,12 +57,9 @@
             <div class="md:col-span-3">
                 <label for="filter-end-date" class="block text-[11px] font-semibold text-slate-500 mb-1.5 tracking-normal">Sampai Tanggal</label>
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
                     <div class="relative w-full">
     <input  type="date"  id="filter-end-date" 
-                        class="block w-full pl-9 pr-3 py-2.5 rounded-none border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer pr-10 cursor-pointer" data-enhanced="true">
+                        class="block w-full pl-4 pr-10 py-2.5 rounded-none border border-slate-200 bg-white text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1C7C54]/20 focus:border-[#1C7C54] transition-all cursor-pointer" data-enhanced="true">
     <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-[#1C7C54] hover:bg-emerald-50 rounded-full transition-colors z-10" onclick="if(this.previousElementSibling.showPicker) this.previousElementSibling.showPicker(); else this.previousElementSibling.focus();">
         <i class="fas fa-calendar-alt"></i>
     </button>

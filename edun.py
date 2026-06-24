@@ -23,25 +23,32 @@ class LaravelAggregatorConfig:
     # 2. Folder Whitelist (Hanya turun ke folder di bawah ini jika di root)
     # Memastikan kita tidak mengambil folder tidak relevan di root
     ALLOWED_DIRS = {
-        "app", "config", "database", "routes", "resources", 
-        "tests", "bootstrap", "public"
+        "app", "config", "database", "routes"
     }
 
     # 3. Ekstensi Berkas Teks yang Diizinkan
     INCLUDE_EXTENSIONS = {
-        ".php", ".json", ".js", ".css", ".yaml", ".yml", 
-        ".md", ".xml", ".csv", ".conf"
+        ".php", ".json", ".js", ".yaml", ".yml", ".md"
+    }
+    
+    # 4. Controller Folder Whitelist (Folder spesifik di app/Http/Controllers)
+    ALLOWED_CONTROLLER_DIRS = {
+        "Auth", "Core", "Admin"
+    }
+    
+    # 5. Admin Master Subfolders
+    ALLOWED_ADMIN_MASTERS = {
+        "Master"
     }
 
-    # 4. Berkas Konfigurasi Wajib di Tingkat Root
+    # 6. Berkas Konfigurasi Wajib di Tingkat Root
     ESSENTIAL_ROOT_FILES = {
-        "composer.json", "composer.lock", "package.json", "package-lock.json", 
-        ".env.example", ".env", "artisan", "phpunit.xml", "docker-compose.yml", 
-        "Dockerfile", ".gitignore"
+        "composer.json", "package.json", "artisan", 
+        ".env.example", "docker-compose.yml", "Dockerfile"
     }
 
-    # 5. Batas Maksimum Ukuran Berkas (1 MB)
-    MAX_FILE_SIZE_BYTES = 1024 * 1024  
+    # 7. Batas Maksimum Ukuran Berkas (500 KB)
+    MAX_FILE_SIZE_BYTES = 512 * 1024  
 
     # Pre-compiled Regex untuk Sensor Keamanan Kunci Privat
     # Mencegah ekstraksi berkas SSL atau credential secara tidak sengaja
@@ -118,12 +125,48 @@ class LaravelCodebaseAggregator:
                 print(f"[WARN] Anomali saat memproses .gitignore: {e}")
         return ignored_items
 
+    def _is_important_file(self, file_path: Path, relative_path: Path) -> bool:
+        """Validasi cerdas: file ini penting untuk konteks FE aplikasi?"""
+        path_str = str(relative_path).replace("\\", "/")
+        file_name = file_path.name
+        
+        # Controllers: app/Http/Controllers/**/*.php
+        if "app/Http/Controllers/" in path_str and file_name.endswith(".php"):
+            # Exclude base controller
+            if file_name == "Controller.php" and path_str == "app/Http/Controllers/Controller.php":
+                return False
+            return True
+        
+        # Models: app/Models/* - AMBIL MODEL PENTING!
+        if path_str.startswith("app/Models/") and file_name.endswith(".php"):
+            important_models = {
+                "User.php", "LaporanHarian.php", "SkpRencana.php", "SkpTarget.php",
+                "UnitKerja.php", "Bidang.php", "Jabatan.php", "Tupoksi.php",
+                "Notifikasi.php", "Pengumuman.php", "Role.php", "ActivityLog.php"
+            }
+            return file_name in important_models
+        
+        # Routes
+        if file_name in {"web.php", "api.php"} and path_str.startswith("routes/"):
+            return True
+        
+        # Config penting
+        if path_str.startswith("config/"):
+            important_configs = {"app.php", "auth.php", "database.php", "services.php"}
+            return file_name in important_configs
+        
+        # Root-level files
+        if "/" not in path_str and file_name in self.config.ESSENTIAL_ROOT_FILES:
+            return True
+        
+        return False
+
     def execute(self):
-        print(f"🔍 [INIT] Menganalisa struktur Laravel di: {self.target_path}")
+        print(f"🔍 [INIT] Menganalisa struktur Laravel (MODE: FRONTEND OPTIMIZED) di: {self.target_path}")
+        print(f"📌 Target: Controller Core/Admin + Model Penting + Routes\n")
         
         git_ignored = self._parse_gitignore()
         forbidden_dirs_union = self.config.FORBIDDEN_DIRS.union(git_ignored)
-        forbidden_files_union = git_ignored
 
         file_count = 0
         original_total_size = 0
@@ -131,41 +174,31 @@ class LaravelCodebaseAggregator:
 
         try:
             with open(self.output_file, "w", encoding="utf-8") as out_file:
-                out_file.write("=== STRUKTUR & ISI KODE (LARAVEL MONOLITH MODE) ===\n\n")
+                out_file.write("=== e-DAILY REPORT: KONTEKS APLIKASI FRONTEND ===\n")
+                out_file.write("Fokus: Controller Core/Admin + Model Penting + Routes\n")
+                out_file.write("=" * 70 + "\n\n")
 
                 for root, dirs, files in os.walk(self.target_path):
                     root_path = Path(root)
                     relative_root = root_path.relative_to(self.target_path)
                     is_root_level = len(relative_root.parts) == 0
 
-                    # 1. Pruning subdirektori terlarang untuk efisiensi kompleksitas waktu O(N)
+                    # Pruning direktori terlarang
                     dirs[:] = [d for d in dirs if d not in forbidden_dirs_union]
 
-                    # 2. Isolasi pencarian root-level agar direktori liar terbuang
+                    # Root-level: hanya ALLOWED_DIRS
                     if is_root_level:
                         dirs[:] = [d for d in dirs if d in self.config.ALLOWED_DIRS]
 
                     for file_name in files:
                         file_path = root_path / file_name
                         relative_file_path = file_path.relative_to(self.target_path)
-                        is_root_file = len(relative_file_path.parts) == 1
 
-                        is_essential_root = is_root_file and file_name in self.config.ESSENTIAL_ROOT_FILES
-
-                        # Logika Penapisan Defensif
-                        if file_name in forbidden_files_union:
-                            continue
-                        
-                        if not is_essential_root and self.config.SENSITIVE_REGEX.match(file_name):
+                        # Gunakan logic cerdas untuk menentukan apakah file penting
+                        if not self._is_important_file(file_path, relative_file_path):
                             continue
 
-                        if is_root_file and not is_essential_root:
-                            continue
-
-                        if not is_essential_root and file_path.suffix not in self.config.INCLUDE_EXTENSIONS:
-                            continue
-                            
-                        # Bypass perlindungan ukuran berkas untuk menghindari buffer overflow memory
+                        # Bypass perlindungan ukuran berkas
                         try:
                             if file_path.stat().st_size > self.config.MAX_FILE_SIZE_BYTES:
                                 continue
@@ -181,25 +214,32 @@ class LaravelCodebaseAggregator:
                             content = file_path.read_text("utf-8", errors="ignore")
                             compressed_content = self.optimizer.compress_code(content)
 
-                            out_file.write(f"\n--- FILE: {relative_file_path} ---\n")
+                            out_file.write(f"\n{'='*70}\n")
+                            out_file.write(f"FILE: {relative_file_path}\n")
+                            out_file.write(f"{'='*70}\n")
                             out_file.write(compressed_content)
                             out_file.write("\n")
 
                             file_count += 1
                             original_total_size += file_size
                             compressed_total_size += len(compressed_content.encode('utf-8'))
-                            print(f"-> Diindeks: {relative_file_path}")
+                            print(f"✓ {relative_file_path}")
 
                         except Exception as e:
-                            print(f"-> Terminated {relative_file_path}: {e}")
+                            print(f"✗ {relative_file_path}: {e}")
 
-            print(f"\n✅ Build Selesai. {file_count} komponen tergabung di:\n   {self.output_file}")
+            print(f"\n{'='*70}")
+            print(f"✅ BUILD SELESAI")
+            print(f"{'='*70}")
+            print(f"📁 Total Files: {file_count}")
             print(f"📊 Original Size : {original_total_size / 1024:.2f} KB")
             print(f"🚀 Context Size  : {compressed_total_size / 1024:.2f} KB")
             
             if original_total_size > 0:
                 saving_percent = ((original_total_size - compressed_total_size) / original_total_size) * 100
                 print(f"📉 LLM Token Saving: ~{saving_percent:.1f}%")
+            
+            print(f"\n📄 Output: {self.output_file}")
 
         except Exception as e:
             print(f"[FATAL] I/O Stream Exception: {e}")

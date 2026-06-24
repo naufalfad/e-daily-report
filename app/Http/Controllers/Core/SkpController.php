@@ -58,7 +58,7 @@ class SkpController extends Controller
             'targets' => 'required|array|min:1', // Minimal ada 1 target
             'targets.*.jenis_aspek' => 'required|in:Kuantitas,Kualitas,Waktu,Biaya',
             'targets.*.indikator' => 'required|string',
-            'targets.*.target' => 'required|integer',
+            'targets.*.target' => 'required|integer|min:1',
             'targets.*.satuan' => 'required|string|max:50',
         ]);
 
@@ -140,7 +140,7 @@ class SkpController extends Controller
             'targets' => 'required|array|min:1',
             'targets.*.jenis_aspek' => 'required|in:Kuantitas,Kualitas,Waktu,Biaya',
             'targets.*.indikator' => 'required|string',
-            'targets.*.target' => 'required|integer',
+            'targets.*.target' => 'required|integer|min:1',
             'targets.*.satuan' => 'required|string|max:50',
         ]);
 

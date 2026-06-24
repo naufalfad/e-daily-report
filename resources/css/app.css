@@ -167,3 +167,30 @@
     flex-direction: column;
     gap: 8px;
 }
+
+/* -------------------------------------------------------------------------- */
+/* 4. CUSTOM DATE & TIME INPUTS                                              */
+/* -------------------------------------------------------------------------- */
+.relative input[type="date"],
+.relative input[type="time"] {
+    position: relative;
+    padding-right: 2.5rem !important;
+}
+
+/* Hide native webkit calendar/clock icon by making it transparent and 0x0 size to allow showPicker to run */
+.relative input[type="date"]::-webkit-calendar-picker-indicator,
+.relative input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+}
+
+/* Allow custom Font Awesome buttons to be clickable and interactive */
+.relative button.absolute {
+    pointer-events: auto !important;
+    z-index: 10 !important;
+}

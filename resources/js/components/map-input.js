@@ -21,7 +21,9 @@ export default class MapInput {
         // State Management
         this.historyStack = []; 
         this.isUndoAction = false;
+        this.isProgrammaticMove = false;
         this.debounceTimer = null;
+        this.geodecodeTimer = null;
         this.currentLocationData = null;
         this.currentLayer = 'roadmap'; // Default layer
         
@@ -123,12 +125,12 @@ export default class MapInput {
      * Setup Leaflet JS
      */
     initLeaflet() {
-        const defaultLat = -4.546759;
-        const defaultLng = 136.883713;
+        const defaultLat = -4.560506265336082;
+        const defaultLng = 136.88910533349744;
 
         this.map = L.map(this.config.mapContainerId, {
             center: [defaultLat, defaultLng],
-            zoom: 13,
+            zoom: 18,
             zoomControl: false 
         });
 
@@ -160,6 +162,14 @@ export default class MapInput {
                 return;
             }
             this.handleMapMove();
+
+            if (this.isProgrammaticMove) {
+                this.isProgrammaticMove = false;
+            } else {
+                if (this.dom.inputProvider) {
+                    this.dom.inputProvider.value = 'manual_pin';
+                }
+            }
         });
     }
 
@@ -348,9 +358,10 @@ export default class MapInput {
             const lat = parseFloat(selectedOption.getAttribute('data-lat'));
             const lng = parseFloat(selectedOption.getAttribute('data-lng'));
             if (lat && lng) {
+                self.isProgrammaticMove = true;
                 self.map.flyTo([lat, lng], 16, { animate: true, duration: 1.5 });
                 self.updateMarker(lat, lng);
-                if(self.dom.inputProvider) self.dom.inputProvider.value = 'internal_db_search';
+                if(self.dom.inputProvider) self.dom.inputProvider.value = 'search_result';
                 
                 // Auto collapse on mobile
                 if (window.innerWidth < 640) {
@@ -407,12 +418,13 @@ export default class MapInput {
                     const lat = parseFloat(place.lat);
                     const lng = parseFloat(place.lon);
                     
+                    this.isProgrammaticMove = true;
                     this.map.flyTo([lat, lng], 17);
                     this.updateMarker(lat, lng); 
                     
                     resultsContainer.classList.add('hidden');
                     document.getElementById('stack-search-input').value = place.display_name.split(',')[0];
-                    if(this.dom.inputProvider) this.dom.inputProvider.value = 'manual_search'; 
+                    if(this.dom.inputProvider) this.dom.inputProvider.value = 'search_result'; 
                 };
                 resultsContainer.appendChild(item);
             });
@@ -486,13 +498,20 @@ export default class MapInput {
         const cachedLng = localStorage.getItem(this.CACHE_KEY_LNG);
 
         if (editLat && editLng) {
+            this.isProgrammaticMove = true;
             this.updateMarker(parseFloat(editLat), parseFloat(editLng));
             this.map.setView([editLat, editLng], 18);
         } else if (cachedLat && cachedLng) {
+            this.isProgrammaticMove = true;
             this.updateMarker(parseFloat(cachedLat), parseFloat(cachedLng));
             this.map.setView([cachedLat, cachedLng], 15);
         } else {
-            this.handleLocateMe(); 
+            // Default ke Kantor Bapenda jika belum ada koordinat / cache
+            const defaultLat = -4.560506265336082;
+            const defaultLng = 136.88910533349744;
+            this.isProgrammaticMove = true;
+            this.updateMarker(defaultLat, defaultLng);
+            this.map.setView([defaultLat, defaultLng], 18);
         }
     }
 
@@ -518,6 +537,7 @@ export default class MapInput {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
 
+                this.isProgrammaticMove = true;
                 this.updateMarker(lat, lng);
                 this.map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
 
@@ -549,22 +569,46 @@ export default class MapInput {
         if(this.dom.modalCoordsPreview) this.dom.modalCoordsPreview.innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = "Memuat alamat...";
 
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
-                headers: { 'User-Agent': 'E-Daily-Report-App' }
-            });
-            const data = await response.json();
-            
-            const shortAddress = data.name || (data.address ? (data.address.road || data.address.village || data.address.suburb) : "Lokasi Terpilih");
-            const fullAddress = data.display_name;
+        // Debounce reverse geocoding to prevent spamming OSM Nominatim API (Max 1 req/sec policy)
+        clearTimeout(this.geodecodeTimer);
+        this.geodecodeTimer = setTimeout(async () => {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+                    headers: { 'User-Agent': 'E-Daily-Report-App' }
+                });
+                if (!response.ok) {
+                    throw new Error(`Nominatim HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data && data.error) {
+                    throw new Error(data.error);
+                }
 
-            this.currentLocationData = { lat, lng, shortAddress, fullAddress };
-            if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = shortAddress;
+                // Get short address (road, village, suburb, municipality, or name)
+                const shortAddress = data.name || (data.address ? (data.address.road || data.address.village || data.address.suburb || data.address.municipality) : null) || `Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                const fullAddress = data.display_name || `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
-        } catch (e) {
-            this.currentLocationData = { lat, lng, shortAddress: "Lokasi Terpilih", fullAddress: "" };
-            if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = "Gagal memuat nama jalan";
-        }
+                this.currentLocationData = { lat, lng, shortAddress, fullAddress };
+                if(this.dom.modalAddressPreview) this.dom.modalAddressPreview.innerText = shortAddress;
+
+            } catch (e) {
+                console.warn("Reverse geocoding failed or rate limited:", e);
+                // Graceful fallback to coordinates instead of "Gagal memuat nama jalan" or "undefined"
+                const fallbackShort = `Koordinat: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                const fallbackFull = `Koordinat: ${lat.toFixed(6)}, ${lng.toFixed(6)} (Alamat tidak ditemukan)`;
+                
+                this.currentLocationData = { 
+                    lat, 
+                    lng, 
+                    shortAddress: fallbackShort, 
+                    fullAddress: fallbackFull 
+                };
+                if(this.dom.modalAddressPreview) {
+                    this.dom.modalAddressPreview.innerText = `${fallbackShort} (Alamat tidak termuat)`;
+                }
+            }
+        }, 600); // 600ms debounce
     }
 
     /**
@@ -611,7 +655,7 @@ export default class MapInput {
             this.currentLocationData = {
                 lat: c.lat,
                 lng: c.lng,
-                shortAddress: `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`,
+                shortAddress: `Koordinat: ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`,
                 fullAddress: ""
             };
         }
@@ -620,14 +664,14 @@ export default class MapInput {
 
         this.dom.inputLat.value = data.lat;
         this.dom.inputLng.value = data.lng;
-        this.dom.inputAddress.value = data.shortAddress;
-        this.dom.inputAddressAuto.value = data.fullAddress;
+        this.dom.inputAddress.value = data.shortAddress || "";
+        this.dom.inputAddressAuto.value = data.fullAddress || "";
         
         if (this.dom.inputProvider && this.dom.inputProvider.value === '') {
              this.dom.inputProvider.value = 'manual_pin';
         }
 
-        this.dom.previewInput.value = data.fullAddress || data.shortAddress;
+        this.dom.previewInput.value = data.fullAddress || data.shortAddress || "";
         
         localStorage.setItem(this.CACHE_KEY_LAT, data.lat);
         localStorage.setItem(this.CACHE_KEY_LNG, data.lng);

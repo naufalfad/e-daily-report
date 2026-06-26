@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('riwayat/export-pdf', [RiwayatController::class, 'exportPdf'])->name('riwayat.export.pdf');
     Route::get('/penilai/skoring/export-pdf', [SkoringController::class, 'exportPdf']);
     Route::get('/skp/export/pdf', [SkpController::class, 'exportPdf'])->name('skp.export.pdf');
+    Route::get('/lkh/{id}/export-pdf', [LkhController::class, 'exportPdf'])->name('lkh.export.pdf');
     Route::post('/export-map', [PetaAktivitasController::class, 'exportMap']);
     Route::get('/preview-map-pdf', [PetaAktivitasController::class, 'previewMapPdf']);
 

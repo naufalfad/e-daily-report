@@ -148,6 +148,14 @@
                 </button>
             </template>
 
+            <template x-if="modalData && modalData.status === 'approved'">
+                <button @click="window.open('/lkh/' + modalData.id + '/export-pdf', '_blank')"
+                    class="px-4 py-2 bg-[#1C7C54] hover:bg-[#166443] border border-transparent text-white text-sm font-medium transition-all shadow-sm flex items-center gap-1.5">
+                    <i class="fas fa-file-pdf"></i>
+                    Export PDF
+                </button>
+            </template>
+
             <button @click="open = false"
                 class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-none text-sm font-medium hover:bg-slate-50 transition-all shadow-sm">
                 Tutup

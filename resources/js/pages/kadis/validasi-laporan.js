@@ -446,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Tampilkan Action Buttons hanya jika status pending
         const actions = document.getElementById('validation-actions');
         const info = document.getElementById('validation-info');
+        const btnExportPdf = document.getElementById('btn-export-pdf');
 
         if (actions && info) {
             if (lkhData.status === 'waiting_review') {
@@ -457,6 +458,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 actions.classList.remove('flex');
                 info.classList.remove('hidden');
                 info.classList.add('flex');
+
+                if (btnExportPdf) {
+                    if (lkhData.status === 'approved') {
+                        btnExportPdf.classList.remove('hidden');
+                    } else {
+                        btnExportPdf.classList.add('hidden');
+                    }
+                }
             }
         }
 
@@ -635,6 +644,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         submitValidation('rejected', note);
     });
+
+    const btnExportPdf = document.getElementById('btn-export-pdf');
+    if (btnExportPdf) {
+        btnExportPdf.addEventListener('click', () => {
+            const lkhId = detailModal.dataset.lkhId;
+            if (lkhId) {
+                window.open(`/lkh/${lkhId}/export-pdf`, '_blank');
+            }
+        });
+    }
 
     // Jalankan tarikan data awal
     fetchLkhList(1);

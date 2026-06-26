@@ -557,6 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Handle Tombol Aksi
         const actions = document.getElementById('validation-actions');
         const info = document.getElementById('validation-info');
+        const btnExportPdf = document.getElementById('btn-export-pdf');
 
         if (lkhData.status === "waiting_review") {
             actions?.classList.remove('hidden');
@@ -567,6 +568,14 @@ document.addEventListener('DOMContentLoaded', () => {
             actions?.classList.remove('flex');
             info?.classList.remove('hidden');
             info?.classList.add('flex');
+
+            if (btnExportPdf) {
+                if (lkhData.status === 'approved') {
+                    btnExportPdf.classList.remove('hidden');
+                } else {
+                    btnExportPdf.classList.add('hidden');
+                }
+            }
         }
 
         // Handle Button Bukti
@@ -582,6 +591,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         detailModal.classList.remove('hidden');
+    }
+
+    const btnExportPdf = document.getElementById('btn-export-pdf');
+    if (btnExportPdf) {
+        btnExportPdf.addEventListener('click', () => {
+            const lkhId = detailModal.dataset.lkhId;
+            if (lkhId) {
+                window.open(`/lkh/${lkhId}/export-pdf`, '_blank');
+            }
+        });
     }
 
     const btnOpenApprove = document.querySelector('.js-open-approve');

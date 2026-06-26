@@ -409,12 +409,18 @@ class LkhController extends Controller
         $lkh = LaporanHarian::with([
             'tupoksi',
             'rencana',
-            'user.unitKerja'
+            'user.unitKerja',
+            'user.jabatan',
+            'atasan'
         ])
         ->select('*')
         ->selectRaw('ST_Y(lokasi) AS latitude')
         ->selectRaw('ST_X(lokasi) AS longitude')
         ->findOrFail($id);
+
+        if ($lkh->status !== 'approved') {
+            abort(403, 'Hanya laporan yang disetujui yang dapat diexport.');
+        }
 
         $missingFields = [];
 
@@ -443,16 +449,14 @@ class LkhController extends Controller
             ], 422);
         }
 
-        $pdf = Pdf::loadView('pdf.lkh', [
+        $pdf = Pdf::loadView('pdf.laporan-harian', [
             'pegawai_nama' => $lkh->user->name,
             'pegawai_nip' => $lkh->user->nip,
             'pegawai_unit' => $lkh->user->unitKerja->nama_unit ?? '-',
-            'tanggal' => $lkh->tanggal_laporan,
+            'pegawai_jabatan' => $lkh->user->jabatan->nama_jabatan ?? '-',
+            'tanggal' => $lkh->tanggal_laporan ? $lkh->tanggal_laporan->translatedFormat('d F Y') : '-',
             'jenis_kegiatan' => $lkh->jenis_kegiatan,
-            
-            // [UPDATE] Tampilkan Kategori Lokasi di PDF
             'kategori_lokasi' => $lkh->kategori_lokasi, 
-            
             'tupoksi' => $lkh->tupoksi->uraian_tugas ?? '-',
             'kategori' => $lkh->skp_rencana_id ? 'SKP' : 'Non-SKP',
             'jam_mulai' => $lkh->waktu_mulai,
@@ -467,10 +471,16 @@ class LkhController extends Controller
             'satuan' => $lkh->satuan,
             'target_skp' => optional($lkh->rencana)->rencana_hasil_kerja ?? '-',
 
-            'uraian_kegiatan' => $lkh->deskripsi_aktivitas 
+            'uraian_kegiatan' => $lkh->deskripsi_aktivitas,
+            'status' => $lkh->status,
+            'waktu_validasi' => $lkh->waktu_validasi ? $lkh->waktu_validasi->translatedFormat('d F Y H:i') : null,
+            'komentar_validasi' => $lkh->komentar_validasi,
+            'atasan_nama' => $lkh->atasan->name ?? '-',
+            'atasan_nip' => $lkh->atasan->nip ?? '-',
+            'bukti_status' => null,
         ]);
 
-        return $pdf->stream("LKH-{$id}.pdf");
+        return $pdf->setPaper('a4', 'portrait')->stream("LKH-{$id}.pdf");
     }
 
     public function exportPdfDirect(Request $request)
@@ -546,12 +556,10 @@ class LkhController extends Controller
             'pegawai_nama' => $user->name,
             'pegawai_nip' => $user->nip,
             'pegawai_unit' => $user->unitKerja->nama_unit ?? '-',
-            'tanggal' => $request->tanggal_laporan,
+            'pegawai_jabatan' => $user->jabatan->nama_jabatan ?? '-',
+            'tanggal' => $request->tanggal_laporan ? \Carbon\Carbon::parse($request->tanggal_laporan)->translatedFormat('d F Y') : '-',
             'jenis_kegiatan' => $request->jenis_kegiatan,
-            
-            // [UPDATE] Parsing ke cetakan PDF
             'kategori_lokasi' => $request->kategori_lokasi,
-            
             'tupoksi' => $tupoksi->uraian_tugas ?? '-',
             'kategori' => $request->kategori === 'skp' ? 'SKP' : 'Non-SKP',
             'jam_mulai' => $request->waktu_mulai,
@@ -568,6 +576,13 @@ class LkhController extends Controller
             'target_skp' => $rencana ? $rencana->rencana_hasil_kerja : null,
             'target_qty' => $targetQty,
             'target_satuan' => $targetSatuan,
+            
+            // Validation/Draft Info
+            'status' => 'draft',
+            'waktu_validasi' => null,
+            'komentar_validasi' => null,
+            'atasan_nama' => $user->atasan->name ?? '-',
+            'atasan_nip' => $user->atasan->nip ?? '-',
             'bukti_status' => "Preview Draft",
         ];
 

@@ -328,11 +328,18 @@ $rows = [
 
                 {{-- Action Footer --}}
                 <div class="bg-slate-50 px-6 py-4 flex items-center justify-between border-t border-slate-200">
-                    <div id="validation-info" class="hidden text-sm font-medium text-slate-500 italic items-center gap-2">
-                        <svg class="w-4 h-4 text-[#1C7C54]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Laporan ini telah selesai divalidasi.
+                    <div id="validation-info" class="hidden text-sm font-medium text-slate-500 italic items-center justify-between w-full">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#1C7C54]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Laporan ini telah selesai divalidasi.</span>
+                        </div>
+                        <button type="button" id="btn-export-pdf"
+                            class="px-4 py-2 bg-[#1C7C54] text-white hover:bg-[#166443] text-sm font-medium rounded-none shadow-md shadow-emerald-700/20 transition-all focus:ring-2 focus:ring-[#1C7C54]/30 flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i>
+                            Export PDF
+                        </button>
                     </div>
                     <div id="validation-actions" class="flex items-center gap-1.5 w-full justify-end">
                         <button type="button"

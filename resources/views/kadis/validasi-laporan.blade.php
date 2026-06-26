@@ -268,10 +268,14 @@ $title = 'Validasi Laporan';
         </div>
 
         {{-- Sudah tervalidasi --}}
-        <div id="validation-info" class="hidden px-6 py-4 text-center bg-slate-50 border-t border-slate-200">
-            <span class="text-sm text-slate-500 font-medium flex items-center justify-center gap-2">
+        <div id="validation-info" class="hidden px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <span class="text-sm text-slate-500 font-medium flex items-center gap-2">
                 <i class="fas fa-lock text-[#1C7C54]"></i> Laporan ini telah selesai divalidasi.
             </span>
+            <button type="button" id="btn-export-pdf"
+                class="px-4 py-2 bg-[#1C7C54] text-white hover:bg-[#156343] text-sm font-medium shadow transition-colors flex items-center gap-2">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
         </div>
     </div>
 </div>

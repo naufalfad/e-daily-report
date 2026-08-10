@@ -38,8 +38,8 @@ export function kadisMapData() {
                 const savedLng = sessionStorage.getItem('kadis_map_lng');
                 const savedZoom = sessionStorage.getItem('kadis_map_zoom');
 
-                const initialLat = savedLat ? parseFloat(savedLat) : -4.5467;
-                const initialLng = savedLng ? parseFloat(savedLng) : 136.8833;
+                const initialLat = savedLat ? parseFloat(savedLat) : -4.560458;
+                const initialLng = savedLng ? parseFloat(savedLng) : 136.889332;
                 const initialZoom = savedZoom ? parseInt(savedZoom) : 13;
 
                 // 2. INISIALISASI PETA

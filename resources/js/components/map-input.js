@@ -125,8 +125,8 @@ export default class MapInput {
      * Setup Leaflet JS
      */
     initLeaflet() {
-        const defaultLat = -4.560506265336082;
-        const defaultLng = 136.88910533349744;
+        const defaultLat = -4.560570;
+        const defaultLng = 136.889160;
 
         this.map = L.map(this.config.mapContainerId, {
             center: [defaultLat, defaultLng],

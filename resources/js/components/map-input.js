@@ -507,8 +507,8 @@ export default class MapInput {
             this.map.setView([cachedLat, cachedLng], 15);
         } else {
             // Default ke Kantor Bapenda jika belum ada koordinat / cache
-            const defaultLat = -4.560458;
-            const defaultLng = 136.889332;
+            const defaultLat = -4.560570;
+            const defaultLng = 136.889160;
             this.isProgrammaticMove = true;
             this.updateMarker(defaultLat, defaultLng);
             this.map.setView([defaultLat, defaultLng], 18);

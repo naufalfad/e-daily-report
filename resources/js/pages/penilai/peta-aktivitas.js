@@ -36,8 +36,8 @@ export function penilaiMapData() {
                 const savedLng = sessionStorage.getItem('map_lng');
                 const savedZoom = sessionStorage.getItem('map_zoom');
 
-                const initialLat = savedLat ? parseFloat(savedLat) : -4.560458;
-                const initialLng = savedLng ? parseFloat(savedLng) : 136.889332;
+                const initialLat = savedLat ? parseFloat(savedLat) : -4.560570;
+                const initialLng = savedLng ? parseFloat(savedLng) : 136.889160;
                 const initialZoom = savedZoom ? parseInt(savedZoom) : 13;
 
                 // ------------------------------------------------------------------

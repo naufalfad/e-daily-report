@@ -87,7 +87,13 @@ class Bidang extends Model
         return $this->hasOne(User::class, 'bidang_id')
             ->whereHas('jabatan', function ($query) {
                 $query->whereRaw('LOWER(nama_jabatan) LIKE ?', ['%kepala bidang%'])
-                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kabid%']);
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kepla bidang%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kabid%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%sekretaris%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kepala sub bagian%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kasubag%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kepala sub bidang%'])
+                      ->orWhereRaw('LOWER(nama_jabatan) LIKE ?', ['%kasubid%']);
             });
     }
 }

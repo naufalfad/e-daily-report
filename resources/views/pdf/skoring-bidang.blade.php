@@ -91,8 +91,8 @@
             <thead>
                 <tr>
                     <th width="5%">No</th>
-                    <th width="35%">Nama Bidang</th>
-                    <th width="25%">Kepala Bidang</th>
+                    <th width="35%">Bidang / Sub Bidang</th>
+                    <th width="25%">Pimpinan</th>
                     <th width="15%" style="text-align:center;">Realisasi</th>
                     <th width="10%" style="text-align:center;">Skor</th>
                     <th width="10%" style="text-align:center;">Predikat</th>
@@ -103,10 +103,18 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>
-                        <div style="font-weight:bold; color:#0f172a;">{{ $item['nama_bidang'] }}</div>
+                        <div style="{{ ($item['level'] ?? '') === 'sub_bidang' ? 'padding-left:14px; color:#334155;' : 'font-weight:bold; color:#0f172a;' }}">
+                            {{ ($item['level'] ?? '') === 'sub_bidang' ? '↳ ' : '' }}{{ $item['nama_bidang'] }}
+                        </div>
+                        <div style="font-size:9px; color:#64748b; {{ ($item['level'] ?? '') === 'sub_bidang' ? 'padding-left:14px;' : '' }}">
+                            {{ $item['jumlah_pegawai'] ?? 0 }} pegawai
+                        </div>
                     </td>
                     <td>
-                        <div style="font-size:11px;">{{ $item['nama_kabid'] }}</div>
+                        <div style="font-size:11px; color:#0f172a;">{{ $item['nama_kabid'] ?? 'Belum ada pejabat' }}</div>
+                        @if(!empty($item['jabatan_pimpinan']))
+                            <div style="font-size:9px; color:#64748b;">{{ $item['jabatan_pimpinan'] }}</div>
+                        @endif
                     </td>
                     <td style="text-align:center;">
                         <span style="font-weight:bold;">{{ $item['total_approved'] }}</span> 

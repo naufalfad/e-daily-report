@@ -46,19 +46,19 @@ class KabanSkoringService
         $startOfMonth = $date->startOfMonth()->toDateString();
         $endOfMonth = $date->endOfMonth()->toDateString();
         
-        // 2. Ambil semua Bidang yang akan dinilai
+        // 2. Ambil semua Bidang & Sub Bidang yang akan dinilai secara terurut
         $bidangs = $this->bidang->with([
-            // FIX: Mengubah 'nama' menjadi 'name' untuk kolom user
-            'kepalaBidang:id,name,jabatan_id,bidang_id', 
-            'users' 
-        ])->get();
+            'kepalaBidang:id,name,jabatan_id,bidang_id',
+            'kepalaBidang.jabatan:id,nama_jabatan',
+            'users:id,bidang_id'
+        ])->orderBy('id')->get();
         
         $results = collect();
 
         // 3. Loop melalui setiap Bidang dan hitung statistik LKH
         foreach ($bidangs as $bidang) {
             
-            // Dapatkan ID user staf dan Kabid di bidang ini 
+            // Dapatkan ID user staf dan pimpinan di bidang/sub-bidang ini 
             $userIds = $bidang->users->pluck('id');
             
             // Skip Bidang yang tidak memiliki pegawai
@@ -75,10 +75,12 @@ class KabanSkoringService
 
             $results->push([
                 'id' => $bidang->id,
-                // FIX LOGIKA: Mengganti $bidang->nama menjadi $bidang->nama_bidang
-                'nama_bidang' => $bidang->nama_bidang, 
-                // Mengakses kolom 'name' dari model User untuk Kepala Bidang
-                'nama_kabid' => $bidang->kepalaBidang->name ?? 'N/A', 
+                'level' => $bidang->level,
+                'parent_id' => $bidang->parent_id,
+                'nama_bidang' => $bidang->nama_bidang,
+                'jumlah_pegawai' => $userIds->count(),
+                'nama_kabid' => $bidang->kepalaBidang->name ?? null,
+                'jabatan_pimpinan' => $bidang->kepalaBidang?->jabatan?->nama_jabatan ?? null,
                 'total_submitted' => $stats['total_submitted'],
                 'total_approved' => $stats['total_approved'],
                 'persentase' => $persentase,

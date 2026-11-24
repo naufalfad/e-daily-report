@@ -115,14 +115,34 @@ document.addEventListener('DOMContentLoaded', function () {
 
         data.forEach((item, index) => {
             const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 border-b border-gray-100 transition duration-150';
+            const isSubBidang = item.level === 'sub_bidang';
+            row.className = isSubBidang
+                ? 'hover:bg-gray-50 border-b border-gray-100 transition duration-150'
+                : 'bg-slate-50/70 hover:bg-slate-100/70 border-b border-gray-200 transition duration-150';
 
             const persentase = item.persentase ? parseFloat(item.persentase).toFixed(2) : '0.00';
+            const bidangDisplay = isSubBidang
+                ? `<div class="pl-5 flex items-start gap-2">
+                       <span class="text-gray-400 select-none">↳</span>
+                       <div>
+                           <div class="font-medium text-gray-700">${item.nama_bidang || '-'}</div>
+                           <div class="text-xs text-gray-400">${item.jumlah_pegawai ?? 0} pegawai</div>
+                       </div>
+                   </div>`
+                : `<div>
+                       <div class="font-semibold text-gray-900">${item.nama_bidang || '-'}</div>
+                       <div class="text-xs text-indigo-600 font-medium">Bidang Induk • ${item.jumlah_pegawai ?? 0} pegawai</div>
+                   </div>`;
+
+            const pimpinanDisplay = item.nama_kabid
+                ? `<div class="font-medium text-gray-800">${item.nama_kabid}</div>
+                   ${item.jabatan_pimpinan ? `<div class="text-xs text-gray-500 mt-0.5">${item.jabatan_pimpinan}</div>` : ''}`
+                : `<span class="text-xs italic text-gray-400">Belum ada pejabat</span>`;
 
             row.innerHTML = `
                 <td class="py-4 px-6 text-center text-gray-500">${index + 1}</td>
-                <td class="py-4 px-6 font-medium text-gray-800">${item.nama_bidang || '-'}</td>
-                <td class="py-4 px-6 text-gray-600">${item.nama_kabid || '-'}</td>
+                <td class="py-4 px-6">${bidangDisplay}</td>
+                <td class="py-4 px-6">${pimpinanDisplay}</td>
                 <td class="py-4 px-6 text-center text-blue-600 font-medium">${item.total_approved || 0} / ${item.total_submitted || 0}</td>
                 <td class="py-4 px-6 text-center">
                     <span class="font-bold text-gray-800">${persentase}%</span>
